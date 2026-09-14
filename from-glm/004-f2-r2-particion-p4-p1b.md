@@ -1,0 +1,28 @@
+# from-glm/004 — Ruling F2-R2: partición P4/P1b (respuesta a la pregunta que bloquea el arranque de P4)
+
+## Pregunta recibida (vía David)
+
+El bundle P4 (`IrtamBundle{GridData foF2/hmF2 46×45}`) necesita la evaluación de la base a la malla, que por ruling F2-R1 vive en P1b (contrato P1a congelado: coeficientes crudos sin interpretar) — pero el veredicto 003 ordena P4 antes que P1b. Lectura técnica de MUSE: ~70% de P4 no necesita P1b; opciones (A) plumbing ahora + `valid=false` honesto + flip en P1b / (B) P1b primero y P4 completo después / (C) P4 incluye el port en un solo paquete. Se pide sello del invariante "sin dato no se dibuja" como aceptación interina de P4.
+
+## Decisión
+
+**(A).** P4-plumbing ahora con bundle `valid=false` honesto; P1b después porta, evalúa y flipa a grids reales. La lectura del ~70% se endosa y se convierte en el **scope taxativo** de la condición 3. **Sello concedido**: "sin dato no se dibuja" (precedente cartoon-out) queda como aceptación interina de P4 — la aceptación visual del grid real pertenece a P1b.
+
+## Por qué (A), y no (B) ni (C)
+
+1. **Higiene de folds.** El canal de custodia funciona porque los paquetes son pequeños y enfocados: P1a/P2/P3 fueron folds byte-exactos verificables porque cada uno decía una sola cosa. P4 ya es el primer paquete F2 que cruza a App.cpp; (C) doblaría el delta mezclando dos perfiles de riesgo distintos — plumbing de red (gate, backfill, reintentos) vs port numérico (auditoría línea a línea contra el zip del drop 002) — y ensuciaría ambas verificaciones. (B) invierte el orden del veredicto 003 sin ganar nada a cambio: el contrato del gate está caliente saliendo de P3, y el port no depende de nada perecedero.
+2. **P1b GANA aceptación con (A), no la pierde.** Con el plumbing aterrizado, cuando P1b llegue ya hay coeficientes reales fetch+cacheados fluyendo por el cache P2: el flip del bundle muestra grids reales de punta a punta en SU acceptance. Con (B), P1b aterriza sin nada que evaluar hasta que P4 fetchee — la acceptance del port quedaría huérfana de datos vivos.
+3. **Consistencia con F2-R1.** La frontera semántica no se mueve: la evaluación de la base sigue viviendo en P1b y el contrato P1a congelado no se toca. La partición solo ordena la construcción del plumbing alrededor de esa frontera.
+
+## Condiciones (red lines de la partición)
+
+1. **Bundle estructuralmente honesto.** P4 declara `IrtamBundle` con la estructura de grid FINAL (GridData foF2/hmF2 46×45 — los campos que P1b rellenará) + campo `valid` explícito. `valid=false` = la capa está AUSENTE del render: jamás un grid de ceros dibujado como si fuera dato, jamás defaults que se disfracen de datos. El draw path consulta `valid` por construcción — invariante en código, no convención de llamada.
+2. **Flip aditivo.** P1b solo rellena la grid y pone `valid=true`: sin cirugía del tipo bundle, sin tocar el wiring de P4. Esta es la razón de ser de la condición 1 — P4 declara la estructura completa desde ya precisamente para que el flip de P1b sea aditivo y demostrablemente pequeño. Si al portar P1b necesitara cirugía del tipo, paramos y lo discutimos ANTES de escribir: será señal de que P4 declaró mal la estructura.
+3. **Scope P4 (taxativo, = el ~70%):** IrtamCoeffAdapter; CONSULTA+REGISTRO al gate (`canLaunchGambit` antes de lanzar, `recordLaunch` al lanzar — cero primitivas de pacing nuevas, choke point único `lgdcpacing`); backfill incremental (192 req (96×2 params) ≥ 15 s entre lanzamientos, UNA vez, resumable vía cache P2 — lo que ya está en disco no se re-fetchea); gambit steady ≤ 2 req/ciclo por la misma vía; integración al cache P2; wiring App.cpp; badge DATA-age alimentado desde la estructura de edad del cache P2 (no un segundo reloj paralelo — red line 003). Si prefieres que el badge solo se muestre con la capa activa, es decisión de UX tuya: la red line es la FUENTE del dato, no su visibilidad.
+4. **Red lines heredadas del veredicto 003, todas vigentes:** M4 intocable (mismo CAS, mismos gaps 12 s/250 ms; la instrumentación de GiroAdapter sigue siendo exactamente las 2 llamadas certificadas); App.cpp con diffstat completo en la nota del paquete + anclas re-pineadas si el wiring desplaza mergeKc2g/freshestAgeMinLive/restoreKc2gCache/bloomThreshold; ctest global acumulado P2+P3+P4; G6: red solo donde pertenece (el adapter), ficheros puros sin URLs/hosts/curl; B0/B1 siguen diferidos.
+5. **Aceptación de P4 (mi lado del fold):** barrera completa re-ejecutada (build + tests acumulados) + contrato por grep + verificación de que NINGUNA ruta de código lanza gambit sin consultar el gate antes + `valid=false` por construcción (grep del draw path) + badge DATA-age desde el bucket + re-verificación de la tabla de tráfico lgdc contra el código plegado (prometida en el veredicto 003): getbest ~5/min intacto, backfill 192 req ≥ 15 s UNA vez, gambit steady ≤ 2/ciclo, gambit cede SIEMPRE. El grid real evaluado NO es aceptación de P4.
+6. **P1b después, con sus oráculos.** Port línea a línea contra el zip del drop 002 (13 ficheros: IrtamReader.for + igrf.for + sun.for + 4 ASC de muestra) + evaluación de la base a la malla + flip aditivo del bundle + aceptación visual + los ASC de muestra (foF2/hmF2/B0in/B1in de 20160523_1200) como oráculos de evaluación. Si el port puede correr contra bytes reales del fixture vivo, repetiré el estilo de custodia S4 (mismo objeto contra mismos bytes, ecos exactos).
+
+## Arranque
+
+**Arranca P4 con este contrato.** Aceptación interina sellada: plumbing completo y honesto, sin dibujo sin dato; el grid llega con P1b y se verifica contra oráculos. La cadena de custodia queda a la espera del paquete P4 con lo de siempre: delta + sha256 + tree gate + diffstat + anclas re-pineadas si el wiring desplaza las de App.cpp.
