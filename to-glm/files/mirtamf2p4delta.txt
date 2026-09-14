@@ -1,0 +1,701 @@
+From 42dc233a8f965e3be534037f7c83972bed5f0043 Mon Sep 17 00:00:00 2001
+From: David Lopez Salvador <davidlopezsalvador@users.noreply.github.com>
+Date: Mon, 14 Sep 2026 23:45:00 +0200
+Subject: [PATCH] M-IRTAM-F2 P4: plumbing gambit (adapter + backfill + wiring +
+ badge DATA-age, bundle valid=false F2-R2)
+
+---
+ CMakeLists.txt                 |  13 ++-
+ src/App.cpp                    | 143 ++++++++++++++++++++++------
+ src/Data/IrtamCoeffAdapter.cpp | 168 +++++++++++++++++++++++++++++++++
+ src/Data/IrtamCoeffAdapter.h   | 116 +++++++++++++++++++++++
+ tests/test_irtam_adapter.cpp   | 101 ++++++++++++++++++++
+ 5 files changed, 509 insertions(+), 32 deletions(-)
+ create mode 100644 src/Data/IrtamCoeffAdapter.cpp
+ create mode 100644 src/Data/IrtamCoeffAdapter.h
+ create mode 100644 tests/test_irtam_adapter.cpp
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index a9e3d52..d08549f 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -72,6 +72,7 @@ set(SOURCES
+     src/Data/IrtamCoeffParse.cpp  # M-IRTAM-F2 (P1a): parse gambit-coeffs (puro, sin curl/GL)
+     src/Data/IrtamCoeffCache.cpp  # M-IRTAM-F2 (P2): cache numerica (puro, sin curl/GL)
+     src/Data/LgdcPacing.cpp  # M-IRTAM-F2 (P3): gate lgdc compartido (puro, sin curl/GL)
++    src/Data/IrtamCoeffAdapter.cpp  # M-IRTAM-F2 (P4): adaptador gambit (curl/gate; URL vive aqui)
+     src/Data/SdoImageAdapter.cpp  # M11: imagenes SDO (stb decode en worker)
+     src/UI/SidePanel.cpp
+     src/UI/TimelineBar.cpp
+@@ -243,4 +244,14 @@ add_test(NAME irtamc_cache COMMAND test_irtamc_cache)
+ # (namespace lgdcpacing en src/Data/LgdcPacing), no replica.
+ add_executable(test_irtamc_gate tests/test_irtamc_gate.cpp src/Data/LgdcPacing.cpp)
+ target_include_directories(test_irtamc_gate PRIVATE src)
+-add_test(NAME irtamc_gate COMMAND test_irtamc_gate)
++add_test(NAME irtamc_gate COMMAND test_irtamc_gate)
++# M-IRTAM-F2 (P4): planificacion del backfill — llama a PRODUCCION
++# (namespace irtamfetch en src/Data/IrtamCoeffAdapter), no replica.
++# El adapter usa curl (twin getbest_parse): enlaza CURL::libcurl.
++add_executable(test_irtam_adapter tests/test_irtam_adapter.cpp src/Data/IrtamCoeffAdapter.cpp src/Data/IrtamCoeffCache.cpp src/Data/IrtamCoeffParse.cpp src/Data/LgdcPacing.cpp)
++target_include_directories(test_irtam_adapter PRIVATE src libs/glad/include)  # GridData via GridLayer.h: glad solo cabeceras (patron kc2g_parse)
++target_link_libraries(test_irtam_adapter PRIVATE CURL::libcurl)
++if(NOT WIN32)
++    target_link_libraries(test_irtam_adapter PRIVATE Threads::Threads)
++endif()
++add_test(NAME irtam_adapter COMMAND test_irtam_adapter)
+diff --git a/src/App.cpp b/src/App.cpp
+index 92b6bda..77050bd 100644
+--- a/src/App.cpp
++++ b/src/App.cpp
+@@ -49,7 +49,8 @@
+ #include "Data/AuroraAdapter.h"
+ #include "Data/EbroAdapter.h"
+ #include "Data/XrayAdapter.h"
+-#include "Data/DiasAdapter.h"
++#include "Data/DiasAdapter.h"
++#include "Data/IrtamCoeffAdapter.h"  // M-IRTAM-F2 (P4): backfill gambit + bundle
+ #include "Ionosphere/FaradayLayer.h"
+ #include "Ionosphere/RefShells.h"
+ #include "Ionosphere/VolumeRenderer.h"
+@@ -83,7 +84,9 @@ struct App::Impl {
+         std::string error;
+     };
+     struct XrayBundle { XraySample latest; };
+-    struct SdoBundle { SdoImage img; };  // M11: frame SDO publicado
++    struct SdoBundle { SdoImage img; };  // M11: frame SDO publicado
++    // M-IRTAM-F2 (P4, F2-R2): el bundle VIENE del adapter (estructura final +
++    // valid). P4 publica valid=false siempre; P1b hara flip aditivo.
+     mutable std::mutex bundleMutex;
+     std::shared_ptr<const TecBundle> tec;
+     std::shared_ptr<const IndicesBundle> indices;
+@@ -91,20 +94,23 @@ struct App::Impl {
+     std::shared_ptr<const AuroraBundle> auroraB;
+     std::shared_ptr<const RadioBundle> radio;
+     std::shared_ptr<const XrayBundle> xray;
+-    std::shared_ptr<const SdoBundle> sdoB;  // M11
++    std::shared_ptr<const SdoBundle> sdoB;  // M11
++    std::shared_ptr<const irtamfetch::IrtamBundle> irtam;  // M-IRTAM-F2 (P4)
+     std::shared_ptr<const TecBundle> getTec() const { std::lock_guard<std::mutex> lk(bundleMutex); return tec; }
+     std::shared_ptr<const IndicesBundle> getIndices() const { std::lock_guard<std::mutex> lk(bundleMutex); return indices; }
+     std::shared_ptr<const WindBundle> getWind() const { std::lock_guard<std::mutex> lk(bundleMutex); return wind; }
+     std::shared_ptr<const AuroraBundle> getAurora() const { std::lock_guard<std::mutex> lk(bundleMutex); return auroraB; }
+     std::shared_ptr<const RadioBundle> getRadio() const { std::lock_guard<std::mutex> lk(bundleMutex); return radio; }
+     std::shared_ptr<const XrayBundle> getXray() const { std::lock_guard<std::mutex> lk(bundleMutex); return xray; }
+-    std::shared_ptr<const SdoBundle> getSdo() const { std::lock_guard<std::mutex> lk(bundleMutex); return sdoB; }  // M11
++    std::shared_ptr<const SdoBundle> getSdo() const { std::lock_guard<std::mutex> lk(bundleMutex); return sdoB; }  // M11
++    std::shared_ptr<const irtamfetch::IrtamBundle> getIrtam() const { std::lock_guard<std::mutex> lk(bundleMutex); return irtam; }  // M-IRTAM-F2 (P4)
+     // Hilo worker de red + progreso de carga inicial.
+     std::thread fetchThread;
+     // M0.2: las precargas en background pasan de detach() a miembros joinables
+     // (cerrar la ventana durante una precarga podia usar impl tras liberarlo).
+-    std::thread histPreloadThread;
+-    std::thread catalogPreloadThread;
++    std::thread histPreloadThread;
++    std::thread catalogPreloadThread;
++    std::thread irtamBackfillThread;  // M-IRTAM-F2 (P4): backfill gambit (joinable, M0.2)
+     std::atomic<bool> shutdownRequested{false};
+     std::atomic<int> loadTotal{6}, loadDone{0};
+     std::atomic<bool> initialLoadDone{false};
+@@ -183,7 +189,8 @@ struct App::Impl {
+     float atmoIntensity = 1.0f;   // slider 0.25-2 (atmosphere.frag u_intensity)
+     float tecOpacity = 1.0f;
+     // Variable del mapa de colores esferico (Seccion A del plan + Fase 5):
+-    // 0=TEC(GloTEC), 1=foF2, 2=MUF, 3=hmF2, 4=NmF2 (1-4 GIRO),
++    // 0=TEC(GloTEC), 1=foF2, 2=MUF, 3=hmF2, 4=NmF2 (1-4 GIRO),
++    // 5-7 derivados Radio, 8-9 IRTAM retrospectivo (M-IRTAM-F2 P4).
+     // 5=LUF, 6=FOT, 7=Spread-F (5-7 derivados GIRO via RadioPropagationAdapter).
+     int mapVariable = 0;
+     // Colormap manual (override): si colormapOverride es true, el colormap elegido
+@@ -1136,8 +1143,46 @@ bool App::init(int width, int height, const char* title) {
+                     std::this_thread::sleep_for(std::chrono::seconds(1));
+             }
+             self->impl->catalogDone.store(true);   // M4R-A: catalogo intentado (exito o fallo)
+-        });
+-    }
++        });
++    }
++
++    // M-IRTAM-F2 (P4, F2-R2): backfill gambit-coeffs en background (foF2+hmF2).
++    // Hilo propio joinable (molde M0.2): el pase worker va a 300 s y el
++    // backfill frio necesita ritmo de gate (1 req/15 s ~= 48 min UNA vez).
++    // Steady: rechequeo cada 300 s (nace ~1 slot/ciclo, natural <= 2).
++    // Publica IrtamBundle con valid=false SIEMPRE en P4 (grids en P1b).
++    {
++        App* self = this;
++        impl->irtamBackfillThread = std::thread([self]() {
++            irtamfetch::IrtamCoeffAdapter irt;  // instancia propia del hilo
++            irt.init();  // solo curl_global_init + printf (sin red)
++            irt.setCacheDir("cache");
++            auto publish = [&]() {
++                auto b = std::make_shared<irtamfetch::IrtamBundle>();
++                b->dataEpoch = irt.freshestTov();
++                b->valid = false;  // P4: sin dato no se dibuja (F2-R2)
++                b->error = irt.getErrorMessage();
++                { std::lock_guard<std::mutex> lk(self->impl->bundleMutex); self->impl->irtam = b; }
++            };
++            auto sleepIntr = [&](int ms100) {
++                for (int i = 0; i < ms100 && !self->impl->shutdownRequested.load(); i++)
++                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
++            };
++            publish();
++            for (;;) {
++                if (self->impl->shutdownRequested.load()) break;
++                const double now = (double)std::time(nullptr);
++                const std::vector<irtamfetch::FetchTarget> targets =
++                    irt.planBackfill(now);
++                if (targets.empty()) { sleepIntr(3000); continue; }  // steady: 300 s
++                if (irt.fetchOnce(targets.front())) publish();
++                else {
++                    publish();
++                    sleepIntr(50);  // gate o fallo: reintento en ~5 s (sin burst, C1)
++                }
++            }
++        });
++    }
+     impl->dias.init();
+     impl->dias.fetchAsync((double)std::time(nullptr));  // complemento EU en background
+     impl->kc2g.init();   // M4R-A: failover (solo curl_global_init + printf)
+@@ -1569,8 +1614,13 @@ void App::update(float dt) {
+         // del LUF en la rejilla (mismo guard que el flare del volumen).
+         float xrFlux = (impl->lastXray && impl->lastXray->latest.valid)
+             ? impl->lastXray->latest.flux : 0.0f;
+-        updateMainGrid(radioInterpGrid(gsAct,
++        updateMainGrid(radioInterpGrid(gsAct,
+             impl->mapVariable - 5, 72, 72, epoch, kpProxy, xrFlux));
++    } else if (impl->mapVariable == 8 || impl->mapVariable == 9) {
++        // M-IRTAM-F2 (P4, F2-R2): streaming honesto — sin valid no se dibuja.
++        auto ib = impl->getIrtam();
++        if (ib && ib->valid)
++            updateMainGrid(impl->mapVariable == 8 ? ib->foF2 : ib->hmF2);
+     }
+ 
+     // M8 (plan 11.5): grids del circuito HF cacheados en impl + rebuild del
+@@ -1844,7 +1894,7 @@ void App::loadSettings() {
+         }
+         if (sscanf(line, "%63s %lf", key, &v) != 2) continue;
+         std::string k = key;
+-        if (k == "mapVariable") impl->mapVariable = glm::clamp((int)v, 0, 7);
++        if (k == "mapVariable") impl->mapVariable = glm::clamp((int)v, 0, 9);  // M-IRTAM-F2 (P4): 8-9 IRTAM
+         else if (k == "manualColormap") impl->manualColormap = glm::clamp((int)v, 0, 3);
+         else if (k == "colormapOverride") impl->colormapOverride = clB(v);
+         else if (k == "tecOpacity") impl->tecOpacity = glm::clamp((float)v, 0.0f, 2.0f);
+@@ -2417,11 +2467,10 @@ void App::drawSunPanel() {
+     impl->sunPanel.draw(in, impl->sunGeom);
+ }
+ 
+-void App::applyColorLayer() {    // 0 = TEC (GloTEC real). 1-4 = foF2/MUF/hmF2/NmF2 interpoladas de GIRO.
+-    // 5-7 = LUF/FOT/Spread-F derivados GIRO via RadioPropagationAdapter (Fase 5).
+-    // Si hay override manual se respeta; si no, automatico por variable.
+-    static const char* CM_NAMES[4] = { "viridis", "inferno", "plasma", "turbo" };
+-    static const int VAR_AUTO_CM[8] = { 0, 2, 1, 3, 3, 2, 1, 3 };  // TEC,foF2,MUF,hmF2,NmF2,LUF,FOT,SpF
++void App::applyColorLayer() {    // 0 = TEC (GloTEC real). 1-4 = GIRO. 5-7 = derivados Radio. 8-9 = IRTAM retrospectivo (P4: sin dato no se dibuja).
++    // Si hay override manual se respeta; si no, automatico por variable.
++    static const char* CM_NAMES[4] = { "viridis", "inferno", "plasma", "turbo" };
++    static const int VAR_AUTO_CM[10] = { 0, 2, 1, 3, 3, 2, 1, 3, 2, 3 };  // ... + IRTAM foF2=plasma, hmF2=turbo (espejo GIRO)
+ 
+     // M4R-A: fuente viva por modo (kc2g-fallback -> fusion cacheada;
+     // misma cache/estampado que usa update() — lambda dentro del metodo
+@@ -2466,10 +2515,21 @@ void App::applyColorLayer() {    // 0 = TEC (GloTEC real). 1-4 = foF2/MUF/hmF2/N
+         if (!g.valid) return;
+         if (var == 2) impl->tecLayer.setRange(0.0f, 100.0f);  // Spread-F % fijo
+         else impl->tecLayer.clearRange();
+-        updateMainGrid(g);
+-        if (var != 2) { /* rango auto para LUF/FOT */ }
+-    } else {
+-        return;
++        updateMainGrid(g);
++        if (var != 2) { /* rango auto para LUF/FOT */ }
++    } else if (impl->mapVariable == 8 || impl->mapVariable == 9) {
++        // M-IRTAM-F2 (P4, F2-R2 cond. 1): el draw path EXIGE valid. P4 publica
++        // valid=false siempre -> la capa esta AUSENTE (return sin dibujar).
++        // P1b rellenara grids 46x45 + valid=true (flip aditivo).
++        auto b = impl->getIrtam();
++        if (!b || !b->valid) return;
++        const bool centered = (impl->mapVariable == 9);  // IRTAM hmF2: relieve real
++        impl->tecLayer.setDisplaceCentered(centered);
++        impl->shellLayer.setDisplaceCentered(centered);
++        impl->tecLayer.clearRange();
++        updateMainGrid(impl->mapVariable == 8 ? b->foF2 : b->hmF2);
++    } else {
++        return;
+     }
+ 
+     if (impl->colormapOverride) {
+@@ -2837,6 +2897,7 @@ void App::render() {
+         ImGui::TextWrapped("GIRO / LGDC community ionosonde data (CC BY-NC-SA 4.0, non-commercial educational use). Please cite: Reinisch, B. W., and I. A. Galkin, Global ionospheric radio observatory (GIRO), Earth, Planets and Space, 63, 377-381, doi:10.5047/eps.2011.03.001, 2011. SPASE: http://spase.info/SMWG/Observatory/GIRO.");
+         ImGui::TextWrapped("Failover: prop.kc2g.com redistribution (GIRO data with permission, WWROF-supported, plus eSWua/INGV and NOAA feeds). Also: eSWua/INGV, DIAS, NOAA SWPC (GloTEC, SDO/HMI, sunspots).");
+         ImGui::TextWrapped("Access policy: polite cadence and mirrors lower the risk; they don't remove it - we have measured 429/504 under load, which is why the kc2g failover exists.");
++        ImGui::TextWrapped("IRTAM/GAMBIT (UML): retrospective IRTAM coefficients via LGDC gambit-coeffs (same GIRO citation above; 1 req/15 s per client, last 3 days unavailable by design).");
+     }
+     ImGui::End();
+ 
+@@ -2878,13 +2939,32 @@ void App::render() {
+     ImGui::Separator();
+     ImGui::Text("Ionosphere");
+     HelpMarker("Color shell over the globe. Pick the variable (real TEC or GIRO/HF interpolations) and it is painted with its colormap.");
+-    // Variable de la capa de colores esferica (Seccion A + Fase 5):
+-    // TEC / GIRO (foF2,MUF,hmF2,NmF2) / Radio (LUF,FOT,Spread-F).
+-    const char* mapVars[] = { "TEC", "foF2", "MUF", "hmF2", "NmF2", "LUF", "FOT", "Spread-F" };
+-    if (ImGui::Combo("Variable", &impl->mapVariable, mapVars, 8)) {
+-        applyColorLayer();
++    // Variable de la capa de colores esferica (Seccion A + Fase 5 + M-IRTAM-F2 P4):
++    // TEC / GIRO (foF2,MUF,hmF2,NmF2) / Radio (LUF,FOT,Spread-F) / IRTAM (foF2,hmF2 retrospectivos).
++    const char* mapVars[] = { "TEC", "foF2", "MUF", "hmF2", "NmF2", "LUF", "FOT", "Spread-F", "IRTAM foF2", "IRTAM hmF2" };
++    if (ImGui::Combo("Variable", &impl->mapVariable, mapVars, 10)) {
++        applyColorLayer();
++    }
++    if (ImGui::IsItemHovered()) ImGui::SetItemTooltip("TEC: electron content (TECU, NOAA GloTEC).\nfoF2: F2-layer critical frequency (MHz, GIRO).\nMUF: max usable at 3000 km (MHz, GIRO).\nhmF2: F2 peak height (km, GIRO).\nNmF2: F2 peak density (e/m3, from foF2).\nLUF: lowest usable (MHz, ITU-style derived).\nFOT: optimum working = 0.85*MUF (MHz).\nSpread-F: % spread-echo occurrence (diverging).\nIRTAM foF2/hmF2: retrospective IRTAM grids (MHz/km, gambit-coeffs, lag ~3 d).");
++    // M-IRTAM-F2 (P4, F2-R2 cond. 3): badge DATA-age desde el cache P2.
++    // Fuente = TOV del bucket (red line); visibilidad = solo con capa IRTAM.
++    // Edad andante: se calcula AL PINTAR con el reloj de lectura (E10).
++    if (impl->mapVariable == 8 || impl->mapVariable == 9) {
++        const char* ipName = (impl->mapVariable == 8) ? "foF2" : "hmF2";
++        auto ib = impl->getIrtam();
++        const double nowUtc = (double)std::time(nullptr);
++        const double ageMin = (ib && ib->dataEpoch > 0.0)
++            ? (nowUtc - ib->dataEpoch) / 60.0 : -1.0;
++        if (ageMin < 0.0) {
++            ImGui::TextDisabled("IRTAM %s: sin datos (backfill en curso)", ipName);
++            if (ib && !ib->error.empty() && ImGui::IsItemHovered())
++                ImGui::SetItemTooltip("IRTAM: %s", ib->error.c_str());
++        } else {
++            ImGui::Text("IRTAM %s | retrospectivo (lag ~3d) | %.0f min",
++                ipName, ageMin);
++            if (ImGui::IsItemHovered()) ImGui::SetItemTooltip("DATA-age del bucket gambit-coeffs (TOV del mensaje, no del fetch). Malla pendiente de P1b: la capa no se dibuja hasta el flip.");
++        }
+     }
+-    if (ImGui::IsItemHovered()) ImGui::SetItemTooltip("TEC: electron content (TECU, NOAA GloTEC).\nfoF2: F2-layer critical frequency (MHz, GIRO).\nMUF: max usable at 3000 km (MHz, GIRO).\nhmF2: F2 peak height (km, GIRO).\nNmF2: F2 peak density (e/m3, from foF2).\nLUF: lowest usable (MHz, ITU-style derived).\nFOT: optimum working = 0.85*MUF (MHz).\nSpread-F: % spread-echo occurrence (diverging).");
+     bool showTEC = impl->tecVisible;
+     if (ImGui::Checkbox("Color Layer", &showTEC)) {
+         impl->tecVisible = showTEC;
+@@ -3732,9 +3812,9 @@ void App::render() {
+ 
+     // ---- Legend: active color scale of the spherical layer (units + range) ----
+     {
+-        static const char* LEG_NAMES[8] = { "TEC", "foF2", "MUF", "hmF2", "NmF2", "LUF", "FOT", "Spread-F" };
+-        static const char* LEG_UNITS[8] = { "TECU", "MHz", "MHz", "km", "e/m3", "MHz", "MHz", "%" };
+-        int li = glm::clamp(impl->mapVariable, 0, 7);
++        static const char* LEG_NAMES[10] = { "TEC", "foF2", "MUF", "hmF2", "NmF2", "LUF", "FOT", "Spread-F", "IRTAM foF2", "IRTAM hmF2" };
++        static const char* LEG_UNITS[10] = { "TECU", "MHz", "MHz", "km", "e/m3", "MHz", "MHz", "%", "MHz", "km" };
++        int li = glm::clamp(impl->mapVariable, 0, 9);
+         ImGui::SetNextWindowPos(ImVec2(10, (float)winH - 130), ImGuiCond_FirstUseEver);
+         ImGui::SetNextWindowSize(ImVec2(220, 110), ImGuiCond_FirstUseEver);
+         ImGui::Begin("Legend");
+@@ -4076,8 +4156,9 @@ void App::shutdown() {
+     impl->shutdownRequested.store(true);
+     if (impl->fetchThread.joinable()) impl->fetchThread.join();
+     // M0.2: esperar las precargas ANTES de destruir impl (leen impl).
+-    if (impl->histPreloadThread.joinable()) impl->histPreloadThread.join();
+-    if (impl->catalogPreloadThread.joinable()) impl->catalogPreloadThread.join();
++    if (impl->histPreloadThread.joinable()) impl->histPreloadThread.join();
++    if (impl->catalogPreloadThread.joinable()) impl->catalogPreloadThread.join();
++    if (impl->irtamBackfillThread.joinable()) impl->irtamBackfillThread.join();  // M-IRTAM-F2 (P4)
+     impl->tecLayer.destroy();
+     impl->volumeLayer.destroy();
+     impl->peakShell.destroy();
+diff --git a/src/Data/IrtamCoeffAdapter.cpp b/src/Data/IrtamCoeffAdapter.cpp
+new file mode 100644
+index 0000000..66d53ed
+--- /dev/null
++++ b/src/Data/IrtamCoeffAdapter.cpp
+@@ -0,0 +1,168 @@
++// M-IRTAM-F2 (P4): adaptador gambit-coeffs (implementacion; ver .h).
++#include "Data/IrtamCoeffAdapter.h"
++
++#include "Data/IrtamCoeffCache.h"  // P2: persistencia familia irtamc_
++#include "Data/IrtamCoeffParse.h"  // P1a: validacion estructural
++#include "Data/LgdcPacing.h"       // P3: gate lgdc compartido (C1)
++
++#include <curl/curl.h>
++
++#include <chrono>
++#include <cmath>
++#include <cstdio>
++#include <ctime>
++
++namespace irtamfetch {
++
++// Reloj del gate: ms desde Unix epoch (misma base que GiroAdapter::msNow).
++static long long wallMs() {
++    return (long long)std::chrono::duration_cast<std::chrono::milliseconds>(
++        std::chrono::system_clock::now().time_since_epoch()).count();
++}
++
++double quantizeSlot(double epoch) {
++    return std::floor(epoch / kSlotSec) * kSlotSec;
++}
++
++double windowEndFor(double nowUtc) {
++    return quantizeSlot(nowUtc - kGambitLagSec);
++}
++
++std::string formatGambitTime(double epoch) {
++    const std::time_t tt = (std::time_t)(long long)epoch;
++    std::tm g{};
++#ifdef _WIN32
++    gmtime_s(&g, &tt);
++#else
++    gmtime_r(&tt, &g);
++#endif
++    char buf[24];
++    std::snprintf(buf, sizeof(buf), "%04d.%02d.%02dT%02d:%02d",
++                  g.tm_year + 1900, g.tm_mon + 1, g.tm_mday,
++                  g.tm_hour, g.tm_min);
++    return std::string(buf);
++}
++
++double dataAgeMin(double dataEpoch, double nowUtc) {
++    if (dataEpoch <= 0.0) return -1.0;
++    return (nowUtc - dataEpoch) / 60.0;
++}
++
++std::vector<FetchTarget> planMissing(const CacheHave& have, double windowEnd) {
++    std::vector<FetchTarget> out;
++    for (int pi = 0; pi < 2; pi++) {
++        const std::string param(kParams[pi]);
++        const std::vector<double>* present = nullptr;
++        const auto it = have.epochs.find(param);
++        if (it != have.epochs.end()) present = &it->second;
++        for (int s = kSlots - 1; s >= 0; s--) {  // oldest-first
++            const double slot = windowEnd - (double)s * kSlotSec;
++            bool found = false;
++            if (present) {
++                for (double e : *present) {
++                    if (std::fabs(e - slot) < 1.0) { found = true; break; }
++                }
++            }
++            if (!found) out.push_back(FetchTarget{param, slot});
++        }
++    }
++    return out;
++}
++
++void IrtamCoeffAdapter::init() {
++    curl_global_init(CURL_GLOBAL_DEFAULT);
++    printf("[OK] IrtamCoeffAdapter initialized\n");
++}
++
++std::string IrtamCoeffAdapter::urlFor(const std::string& param, double epoch) {
++    return "https://lgdc.uml.edu/rix/gambit-coeffs?time=" +
++           formatGambitTime(epoch) + "&charName=" + param;
++}
++
++size_t IrtamCoeffAdapter::writeCallback(void* contents, size_t size,
++                                        size_t nmemb, std::string* userp) {
++    const size_t total = size * nmemb;
++    userp->append((const char*)contents, total);
++    return total;
++}
++
++bool IrtamCoeffAdapter::fetchURL(const std::string& url,
++                                 std::string& response) {
++    CURL* curl = curl_easy_init();
++    if (!curl) return false;
++    response.clear();
++    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
++    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeCallback);
++    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
++    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 20L);
++    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
++    curl_easy_setopt(curl, CURLOPT_USERAGENT, "IonosphereLive3D/1.0");
++    lgdcpacing::recordLaunch(wallMs());  // P3 gate: REGISTRO al lanzar (C1)
++    const CURLcode res = curl_easy_perform(curl);
++    long http = 0;
++    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http);
++    curl_easy_cleanup(curl);
++    if (res != CURLE_OK || http != 200) return false;
++    return irtamccache::shouldCacheBucket(response.size());  // pre-gate P2 (256 B-1 MB)
++}
++
++CacheHave IrtamCoeffAdapter::scan() {
++    CacheHave have;
++    const irtamccache::ScanResult sweep = irtamccache::loadCached(dir_);
++    for (const irtamccache::Bucket& b : sweep.buckets) {
++        // Nombre "irtamc_<param>_<epoch>.txt": param en minusculas; el plan
++        // usa forma display ("foF2"): se mapea de vuelta aqui.
++        std::string disp = b.param;
++        if (disp == "fof2") disp = "foF2";
++        else if (disp == "hmf2") disp = "hmF2";
++        else continue;  // B0/B1 u otros: fuera del scope P4
++        have.epochs[disp].push_back(b.epoch);
++        if (b.tovEpoch > have.freshestTov) have.freshestTov = b.tovEpoch;
++    }
++    freshestTov_ = have.freshestTov;
++    return have;
++}
++
++std::vector<FetchTarget> IrtamCoeffAdapter::planBackfill(double nowUtc) {
++    return planMissing(scan(), windowEndFor(nowUtc));
++}
++
++bool IrtamCoeffAdapter::fetchOnce(const FetchTarget& t) {
++    // P3 gate: CONSULTA antes de lanzar (C1). Sin espera activa aqui: el
++    // hilo de backfill reintenta en su siguiente iteracion.
++    if (!lgdcpacing::canLaunchGambit(wallMs())) {
++        error_ = "gate: <15 s desde request lgdc previo (reintento proximo ciclo)";
++        return false;
++    }
++    std::string body;
++    if (!fetchURL(urlFor(t.param, t.epoch), body)) {
++        error_ = "http/curl o pre-gate de tamano";
++        printf("[Irtam] fetch %s %s: fallo red/pre-gate\n",
++               t.param.c_str(), formatGambitTime(t.epoch).c_str());
++        return false;
++    }
++    irtamcoeff::Message m;
++    std::string perr;
++    if (!irtamcoeff::parseMessage(body, m, perr)) {
++        error_ = "no-estructural: " + perr;
++        printf("[Irtam] fetch %s %s: rechazo estructural (%s)\n",
++               t.param.c_str(), formatGambitTime(t.epoch).c_str(), perr.c_str());
++        return false;  // fail-soft: el cache se conserva, sin re-burst (C1)
++    }
++    const std::vector<uint8_t> bytes(body.begin(), body.end());
++    // serverLastMod "": el sidecar lo admite (fallback honesto P2); la edad
++    // del dato (DATA-age, red line) viene del TOV del mensaje, no del HTTP.
++    if (!irtamccache::saveBucket(dir_, t.param, t.epoch, bytes.data(),
++                                 bytes.size(), "")) {
++        error_ = "cache-reject (gate tamano o escritura)";
++        return false;
++    }
++    if (m.header.tovEpoch > freshestTov_) freshestTov_ = m.header.tovEpoch;
++    error_.clear();
++    printf("[Irtam] bucket %s %s OK (TOV %.0f)\n",
++           t.param.c_str(), formatGambitTime(t.epoch).c_str(),
++           m.header.tovEpoch);
++    return true;
++}
++
++}  // namespace irtamfetch
+diff --git a/src/Data/IrtamCoeffAdapter.h b/src/Data/IrtamCoeffAdapter.h
+new file mode 100644
+index 0000000..9abc376
+--- /dev/null
++++ b/src/Data/IrtamCoeffAdapter.h
+@@ -0,0 +1,116 @@
++#pragma once
++// =============================================================================
++// M-IRTAM-F2 (P4): adaptador gambit-coeffs (via numerica IRTAM) — plumbing.
++//
++// Worker/backfill-local, twin SdoImageAdapter/GiroAdapter: curl + UA
++// IonosphereLive3D/1.0 + timeout 20 s + FOLLOWLOCATION. La URL gambit vive
++// AQUI y solo aqui (UN sitio, G6: 3er endpoint lgdc sancionado).
++//
++// Reglas de trafico (C1 refinada, ruling F2-R2 cond. 3):
++//   - CONSULTA el gate antes de lanzar (canLaunchGambit) y REGISTRA al lanzar
++//     (recordLaunch). Cero primitivas de pacing nuevas: el choke point unico
++//     sigue siendo lgdcpacing.
++//   - Backfill incremental: solo faltantes de la ventana (96 slots x 2 params
++//     = 192 req >= 15 s UNA vez, resumable via cache P2); steady: el hilo de
++//     backfill rechequea cada 300 s (de forma natural <= 2: nace ~1 slot/ciclo).
++//   - B0/B1 DIFERIDOS a backlog (scope tight: foF2 + hmF2).
++//
++// El contenido se valida con irtamcoeff::parseMessage (P1a) y persiste via
++// irtamccache (P2, familia irtamc_). La EVALUACION a malla 46x45 es P1b: este
++// modulo mueve bytes+buckets, jamas grids.
++//
++// Bundle honesto (F2-R2 cond. 1): IrtamBundle declara la estructura FINAL
++// (GridData foF2/hmF2) + valid explicito. P4 publica valid=false SIEMPRE:
++// la capa esta AUSENTE del render (jamas un grid de ceros como dato).
++// P1b hara flip aditivo (rellena + valid=true, sin tocar tipos ni wiring).
++// =============================================================================
++#include "Ionosphere/GridLayer.h"  // GridData (estructura final del bundle)
++
++#include <map>
++#include <string>
++#include <vector>
++
++namespace irtamfetch {
++
++// Nombres declarados para el fold (grep): irtamfetch::FetchTarget,
++// irtamfetch::planMissing, irtamfetch::quantizeSlot, irtamfetch::windowEndFor,
++// irtamfetch::formatGambitTime, irtamfetch::dataAgeMin,
++// irtamfetch::kGambitLagSec, irtamfetch::IrtamCoeffAdapter::fetchOnce,
++// irtamfetch::IrtamBundle.
++
++inline constexpr int kSlots = 96;               // 24 h a cadencia IRTAM 15 min
++inline constexpr double kSlotSec = 900.0;       // 15 min
++inline constexpr double kGambitLagSec = 259200.0;  // 3 d: ultimos 3 dias NO disponibles (E11)
++inline constexpr const char* kParams[2] = {"foF2", "hmF2"};  // B0/B1 diferidos
++
++struct FetchTarget {
++    std::string param;  // "foF2" | "hmF2" (forma display; el fichero sanea a minusculas)
++    double epoch = 0.0;  // TOV objetivo, cuantizada a 900 s
++};
++
++// Piso a multiplo de 900 s (los slots del backfill).
++double quantizeSlot(double epoch);
++
++// Fin de ventana objetivo: el slot de 15 min mas reciente con dato
++// disponible (lag de diseno 3 d). Toda la ventana = [fin-95*900, fin].
++double windowEndFor(double nowUtc);
++
++// "2026.09.10T12:00" UTC (formato time= del endpoint, E11).
++std::string formatGambitTime(double epoch);
++
++// Edad del DATO en minutos (nowUtc - dataEpoch)/60; -1 si dataEpoch <= 0
++// (sin buckets). Se calcula AL PINTAR con el reloj de lectura (E10).
++double dataAgeMin(double dataEpoch, double nowUtc);
++
++struct CacheHave {
++    std::map<std::string, std::vector<double>> epochs;  // param display -> epochs presentes
++    double freshestTov = 0.0;  // TOV mas fresco visto (0 = cache vacio)
++};
++
++// Faltantes de la ventana, oldest-first, param-major (foF2 y luego hmF2).
++// Puro (sin I/O): el adapter aporta el scan, el test aporta sinteticos.
++std::vector<FetchTarget> planMissing(const CacheHave& have, double windowEnd);
++
++// Bundle publicado al hilo principal (molde TecBundle/SdoBundle).
++// P4: grids VACIOS (0x0, jamas 46x45 de ceros) + valid=false SIEMPRE.
++struct IrtamBundle {
++    GridData foF2;  // P1b: malla 46x45 real + valid=true (flip aditivo)
++    GridData hmF2;
++    double dataEpoch = 0.0;  // TOV fresca del cache P2 (fuente del badge DATA-age)
++    bool valid = false;
++    std::string error;
++};
++
++class IrtamCoeffAdapter {
++public:
++    void init();  // solo curl_global_init + printf (sin red)
++    void setCacheDir(const std::string& d) { dir_ = d; }
++
++    // Escaneo del cache P2 (have-sets + TOV fresca). Nunca lanza.
++    CacheHave scan();
++
++    // scan() + planMissing(): lo que falta fetchgear ahora.
++    std::vector<FetchTarget> planBackfill(double nowUtc);
++
++    // UN intento: gate-consulta -> curl -> gate-registro -> parse -> save.
++    // false si el gate no permite, fallo HTTP/curl, o bucket no-estructural
++    // (fail-soft: el error queda en getErrorMessage, el cache se conserva).
++    bool fetchOnce(const FetchTarget& t);
++
++    double freshestTov() const { return freshestTov_; }
++    const std::string& getErrorMessage() const { return error_; }
++
++    // La URL gambit vive AQUI una vez (G6). E11: time=yyyy.mm.ddThh:mm.
++    static std::string urlFor(const std::string& param, double epoch);
++
++private:
++    static size_t writeCallback(void* contents, size_t size, size_t nmemb,
++                                std::string* userp);
++    bool fetchURL(const std::string& url, std::string& response);
++
++    std::string dir_ = "cache";
++    double freshestTov_ = 0.0;
++    std::string error_;
++};
++
++}  // namespace irtamfetch
+diff --git a/tests/test_irtam_adapter.cpp b/tests/test_irtam_adapter.cpp
+new file mode 100644
+index 0000000..2d3be18
+--- /dev/null
++++ b/tests/test_irtam_adapter.cpp
+@@ -0,0 +1,101 @@
++// =============================================================================
++// test_irtam_adapter — planificacion del backfill gambit (M-IRTAM-F2 P4).
++//
++// Test de logica pura: sin GL, sin red, reloj EXPLICITO. Llama a PRODUCCION
++// (namespace irtamfetch en src/Data/IrtamCoeffAdapter.{h,cpp}), no replica.
++// Cubre F2 G10 (ventana/cadencia/plan incremental) y F2-R2 cond. 1 (bundle
++// honesto: valid=false + grids vacios, jamas 46x45 de ceros).
++//
++// La red (fetchOnce/fetchURL) NO se testea aqui (G3): el gate que la regula
++// esta cubierto en test_irtamc_gate con reloj simulado.
++// =============================================================================
++#include "Data/IrtamCoeffAdapter.h"
++#include "Data/IrtamCoeffParse.h"  // solo parseIsoUtc (ancla del formato time=)
++
++#include <cmath>
++#include <cstdio>
++#include <string>
++
++static int g_ok = 0, g_fail = 0;
++
++static void check_bool(const char* what, bool cond) {
++    if (cond) ++g_ok;
++    else ++g_fail;
++    std::printf("[%s] %s\n", cond ? "OK" : "FAIL", what);
++}
++
++int main() {
++    using namespace irtamfetch;
++
++    // Ancla: 2026-09-10T12:00:00Z via el parse de produccion (P1a).
++    double t0 = 0.0;
++    check_bool("parseIsoUtc ancla", irtamcoeff::parseIsoUtc("2026-09-10T12:00:00Z", t0));
++
++    std::printf("--- F2 P4: slots + ventana + formato ---\n");
++    check_bool("slot ya cuantizado queda igual", quantizeSlot(t0) == t0);
++    check_bool("slot redondea a piso (+300 s)", quantizeSlot(t0 + 300.0) == t0);
++    check_bool("slot redondea a piso (+899 s)", quantizeSlot(t0 + 899.0) == t0);
++    check_bool("ventana = ahora - 3 d (lag E11)",
++               windowEndFor(t0) == t0 - 259200.0);
++    check_bool("formato time= del endpoint",
++               formatGambitTime(t0) == "2026.09.10T12:00");
++    // La URL completa vive SOLO en el adapter (G6): aqui se verifica el
++    // cableado (time= cuantizado + charName) sin repetir el endpoint.
++    const std::string u = IrtamCoeffAdapter::urlFor("foF2", t0);
++    check_bool("url: lleva time= cuantizado",
++               u.find("time=2026.09.10T12:00") != std::string::npos);
++    check_bool("url: lleva charName",
++               u.find("charName=foF2") != std::string::npos);
++
++    std::printf("--- F2 P4: planMissing incremental ---\n");
++    const double wend = windowEndFor(t0 + 86400.0);  // un dia despues: ventana corrida
++    {
++        CacheHave vacio;
++        const std::vector<FetchTarget> p = planMissing(vacio, wend);
++        check_bool("cache vacio: 192 targets (96 x 2)",
++                   p.size() == 192);
++        check_bool("orden: foF2 primero (param-major)",
++                   p.front().param == "foF2" && p[96].param == "hmF2");
++        check_bool("oldest-first dentro de foF2",
++                   p[0].epoch == wend - 95.0 * 900.0 && p[95].epoch == wend);
++    }
++    {
++        // Lleno: 96 slots x 2 params -> 0 faltantes (steady: nada que hacer).
++        CacheHave lleno;
++        for (int s = 0; s < 96; s++) {
++            lleno.epochs["foF2"].push_back(wend - (double)s * 900.0);
++            lleno.epochs["hmF2"].push_back(wend - (double)s * 900.0);
++        }
++        check_bool("cache lleno: 0 targets",
++                   planMissing(lleno, wend).empty());
++    }
++    {
++        // Parcial: solo faltan 3 (2 foF2 + 1 hmF2); el resto se respeta.
++        CacheHave parcial;
++        for (int s = 0; s < 96; s++) {
++            const double slot = wend - (double)s * 900.0;
++            if (s != 3 && s != 40) parcial.epochs["foF2"].push_back(slot);
++            if (s != 90) parcial.epochs["hmF2"].push_back(slot);
++        }
++        const std::vector<FetchTarget> p = planMissing(parcial, wend);
++        check_bool("parcial: exactamente los 3 faltantes", p.size() == 3);
++    }
++
++    std::printf("--- F2 P4: DATA-age + bundle honesto ---\n");
++    check_bool("edad del dato: 3 d en minutos",
++               std::fabs(dataAgeMin(t0 - 259200.0, t0) - 4320.0) < 1e-6);
++    check_bool("sin buckets: edad -1 (indefinida, no 0)",
++               dataAgeMin(0.0, t0) == -1.0);
++    {
++        const IrtamBundle b;  // P4 publica esto: F2-R2 cond. 1
++        check_bool("bundle P4: valid=false", !b.valid);
++        check_bool("bundle P4: foF2 vacio (jamas 46x45 de ceros)",
++                   b.foF2.values.empty() && b.foF2.width == 0);
++        check_bool("bundle P4: hmF2 vacio",
++                   b.hmF2.values.empty() && b.hmF2.width == 0);
++        check_bool("bundle P4: sin epoca de dato", b.dataEpoch == 0.0);
++    }
++
++    std::printf("\n[test_irtam_adapter] %d OK, %d FAIL\n", g_ok, g_fail);
++    return g_fail == 0 ? 0 : 1;
++}
+-- 
+2.53.0.windows.3
+
