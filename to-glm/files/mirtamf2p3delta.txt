@@ -1,0 +1,279 @@
+From 459e8bcb8f42cef632ee479c298dfe1edcbba95c Mon Sep 17 00:00:00 2001
+From: David Lopez Salvador <davidlopezsalvador@users.noreply.github.com>
+Date: Mon, 14 Sep 2026 23:07:13 +0200
+Subject: [PATCH] M-IRTAM-F2 P3: gate lgdc compartido (C1: LgdcPacing +
+ instrumentacion GiroAdapter, test reloj simulado)
+
+---
+ CMakeLists.txt             | 10 ++++-
+ src/Data/GiroAdapter.cpp   | 18 +++++++--
+ src/Data/LgdcPacing.cpp    | 44 ++++++++++++++++++++++
+ src/Data/LgdcPacing.h      | 48 ++++++++++++++++++++++++
+ tests/test_irtamc_gate.cpp | 77 ++++++++++++++++++++++++++++++++++++++
+ 5 files changed, 191 insertions(+), 6 deletions(-)
+ create mode 100644 src/Data/LgdcPacing.cpp
+ create mode 100644 src/Data/LgdcPacing.h
+ create mode 100644 tests/test_irtamc_gate.cpp
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 30226cd..a9e3d52 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -71,6 +71,7 @@ set(SOURCES
+     src/Data/IrtamCache.cpp  # M-IRTAM (F1): cache IRTAM en disco (puro, sin curl/GL)
+     src/Data/IrtamCoeffParse.cpp  # M-IRTAM-F2 (P1a): parse gambit-coeffs (puro, sin curl/GL)
+     src/Data/IrtamCoeffCache.cpp  # M-IRTAM-F2 (P2): cache numerica (puro, sin curl/GL)
++    src/Data/LgdcPacing.cpp  # M-IRTAM-F2 (P3): gate lgdc compartido (puro, sin curl/GL)
+     src/Data/SdoImageAdapter.cpp  # M11: imagenes SDO (stb decode en worker)
+     src/UI/SidePanel.cpp
+     src/UI/TimelineBar.cpp
+@@ -137,7 +138,7 @@ enable_testing()
+ # (GiroAdapter::parseGetbest real sobre fixture real), no replica.
+ add_executable(test_getbest_parse tests/test_getbest_parse.cpp)
+ target_include_directories(test_getbest_parse PRIVATE src)
+-target_sources(test_getbest_parse PRIVATE src/Data/GiroAdapter.cpp)
++target_sources(test_getbest_parse PRIVATE src/Data/GiroAdapter.cpp src/Data/LgdcPacing.cpp)  # M-IRTAM-F2 (P3): GiroAdapter registra en el gate
+ target_link_libraries(test_getbest_parse PRIVATE CURL::libcurl)
+ if(NOT WIN32)
+     # Linux: GiroAdapter.cpp usa std::thread -> pthread. En MSYS2 (winpthreads)
+@@ -237,4 +238,9 @@ add_test(NAME irtam_coeff_parse COMMAND test_irtam_coeff_parse)
+ # (namespace irtamccache en src/Data/IrtamCoeffCache), no replica.
+ add_executable(test_irtamc_cache tests/test_irtamc_cache.cpp src/Data/IrtamCoeffCache.cpp src/Data/IrtamCoeffParse.cpp)
+ target_include_directories(test_irtamc_cache PRIVATE src)
+-add_test(NAME irtamc_cache COMMAND test_irtamc_cache)
++add_test(NAME irtamc_cache COMMAND test_irtamc_cache)
++# M-IRTAM-F2 (P3): gate lgdc compartido — llama a PRODUCCION
++# (namespace lgdcpacing en src/Data/LgdcPacing), no replica.
++add_executable(test_irtamc_gate tests/test_irtamc_gate.cpp src/Data/LgdcPacing.cpp)
++target_include_directories(test_irtamc_gate PRIVATE src)
++add_test(NAME irtamc_gate COMMAND test_irtamc_gate)
+diff --git a/src/Data/GiroAdapter.cpp b/src/Data/GiroAdapter.cpp
+index ac0081b..d50f1bc 100644
+--- a/src/Data/GiroAdapter.cpp
++++ b/src/Data/GiroAdapter.cpp
+@@ -1,4 +1,5 @@
+-#include "GiroAdapter.h"
++#include "GiroAdapter.h"
++#include "Data/LgdcPacing.h"  // M-IRTAM-F2 (P3, C1): registra lanzamientos; pacing M4 intacto
+ #include <curl/curl.h>
+ #include <cstdio>
+ #include <cmath>
+@@ -106,8 +107,12 @@ bool GiroAdapter::getbestGet(const std::string& ursi, std::string& response) {
+ }
+ 
+ bool GiroAdapter::fetchCatalog() {
+-    std::string html;
+-    if (!fetchURL(GIRO_CATALOG_URL, html)) {
++    std::string html;
++    const bool catalogOk = fetchURL(GIRO_CATALOG_URL, html);
++    // P3 C1: registra el lanzamiento en el gate (exito o fallo: hubo trafico).
++    lgdcpacing::recordLaunch(std::chrono::duration_cast<std::chrono::milliseconds>(
++        std::chrono::system_clock::now().time_since_epoch()).count());
++    if (!catalogOk) {
+         fprintf(stderr, "[GiroAdapter] No se pudo obtener el catalogo de estaciones\n");
+         return false;
+     }
+@@ -333,7 +338,12 @@ int GiroAdapter::pollRound(double nowUtc) {
+             for (;;) {   // esperar ventana de lanzamiento (cortesia, T1)
+                 long long now = msNow();
+                 long long last = lastLaunchMs.load();
+-                if (now - last >= gapMs && lastLaunchMs.compare_exchange_weak(last, now)) break;
++                if (now - last >= gapMs && lastLaunchMs.compare_exchange_weak(last, now)) {
++                    // M-IRTAM-F2 (P3, C1): instrumenta el lanzamiento getbest
++                    // en el gate lgdc. El pacing M4 no cambia (mismo CAS).
++                    lgdcpacing::recordLaunch(now);
++                    break;
++                }
+                 std::this_thread::sleep_for(std::chrono::milliseconds(10));
+             }
+             StationSample s = todo[(size_t)i];
+diff --git a/src/Data/LgdcPacing.cpp b/src/Data/LgdcPacing.cpp
+new file mode 100644
+index 0000000..c18e17c
+--- /dev/null
++++ b/src/Data/LgdcPacing.cpp
+@@ -0,0 +1,44 @@
++// M-IRTAM-F2 (P3): gate lgdc compartido (ver LgdcPacing.h).
++#include "Data/LgdcPacing.h"
++
++namespace lgdcpacing {
++namespace {
++
++// Choke point unico de la app: ultimo lanzamiento lgdc en ms (0 = ninguno).
++// Function-local static (Meyers): una sola instancia en todo el proceso,
++// compartida por catalogo + getbest + gambit.
++std::atomic<long long>& gate() {
++    static std::atomic<long long> last{0};
++    return last;
++}
++
++}  // namespace
++
++void recordLaunch(long long nowMs) {
++    // CAS-max: solo avanzar. Un worker tardio no retrasa el reloj.
++    long long cur = gate().load(std::memory_order_relaxed);
++    while (nowMs > cur) {
++        if (gate().compare_exchange_weak(cur, nowMs,
++                                         std::memory_order_relaxed)) {
++            break;
++        }
++    }
++}
++
++long long lastLaunchMs() {
++    return gate().load(std::memory_order_relaxed);
++}
++
++long long msSinceLastLaunch(long long nowMs) {
++    return nowMs - lastLaunchMs();
++}
++
++bool canLaunchGambit(long long nowMs) {
++    return msSinceLastLaunch(nowMs) >= kGambitGapMs;
++}
++
++void resetForTest() {
++    gate().store(0, std::memory_order_relaxed);
++}
++
++}  // namespace lgdcpacing
+diff --git a/src/Data/LgdcPacing.h b/src/Data/LgdcPacing.h
+new file mode 100644
+index 0000000..95fe46f
+--- /dev/null
++++ b/src/Data/LgdcPacing.h
+@@ -0,0 +1,48 @@
++#pragma once
++// =============================================================================
++// M-IRTAM-F2 (P3): gate lgdc compartido (C1) — choke point unico de pacing.
++//
++// Modulo PURO: solo std (atomic/cstdint). Sin curl, sin GL, sin App, sin URLs,
++// sin hosts, sin endpoints. Testeable en CI (tests/test_irtamc_gate.cpp) con
++// reloj simulado: toda la API recibe nowMs explicito (ms desde Unix epoch,
++// misma base que el msNow de GiroAdapter::pollRound).
++//
++// Invariante C1: gambit NUNCA a <15 s de CUALQUIER request lgdc de la app
++// (catalogo incluido). El pacing M4 de getbest queda intacto y grandfathered:
++// GiroAdapter solo REGISTRA sus lanzamientos (catalogo + punto CAS de getbest),
++// cero cambio de comportamiento. El fetcher gambit (P4) CONSULTA + REGISTRA.
++//
++// Semantica forward-only: recordLaunch solo avanza el reloj (CAS-max). Dos
++// workers getbest registrando fuera de orden no pueden retrasar el reloj y
++// abrir una ventana gambit prematura.
++// =============================================================================
++#include <atomic>
++#include <cstdint>
++
++namespace lgdcpacing {
++
++// Nombres declarados para el fold (grep): lgdcpacing::recordLaunch,
++// lgdcpacing::canLaunchGambit, lgdcpacing::lastLaunchMs,
++// lgdcpacing::msSinceLastLaunch, lgdcpacing::kGambitGapMs.
++
++inline constexpr long long kGambitGapMs = 15000;  // 1 req/15 s POR CLIENTE (E11)
++
++// Registra un lanzamiento lgdc (catalogo, getbest o gambit) en nowMs.
++// Solo avanza: un registro tardio con timestamp viejo no mueve el reloj.
++void recordLaunch(long long nowMs);
++
++// Ultimo lanzamiento registrado (0 = ninguno: arranque frio).
++long long lastLaunchMs();
++
++// nowMs - lastLaunchMs() (puede ser negativo si el reloj simulado retrocede).
++long long msSinceLastLaunch(long long nowMs);
++
++// true si gambit puede lanzarse en nowMs: >= kGambitGapMs desde CUALQUIER
++// lanzamiento lgdc previo. Arranque frio (sin registros) = true.
++bool canLaunchGambit(long long nowMs);
++
++// Solo tests: vuelve a arranque frio. Patron FASE B (launchGapSec publica
++// para tests): el hook de test vive en la cabecera de produccion.
++void resetForTest();
++
++}  // namespace lgdcpacing
+diff --git a/tests/test_irtamc_gate.cpp b/tests/test_irtamc_gate.cpp
+new file mode 100644
+index 0000000..fd6f5bb
+--- /dev/null
++++ b/tests/test_irtamc_gate.cpp
+@@ -0,0 +1,77 @@
++// =============================================================================
++// test_irtamc_gate — gate lgdc compartido (M-IRTAM-F2 P3, C1, spec-hija).
++//
++// Test de logica pura: sin GL, sin red, reloj SIMULADO (nowMs explicito).
++// Llama a PRODUCCION (namespace lgdcpacing en src/Data/LgdcPacing.{h,cpp}),
++// no replica. Cubre F2 G8: primitiva unica, gap >= 15 s desde CUALQUIER
++// lanzamiento previo, secuencia catalogo->getbest->gambit, rechazo en burst,
++// semantica forward-only, arranque frio.
++//
++// El pacing M4 de getbest NO se toca aqui (regresion cubierta por los tests
++// existentes + ctest global): este test prueba el gate, no el adapter.
++// =============================================================================
++#include "Data/LgdcPacing.h"
++
++#include <cstdio>
++
++static int g_ok = 0, g_fail = 0;
++
++static void check_bool(const char* what, bool cond) {
++    if (cond) ++g_ok;
++    else ++g_fail;
++    std::printf("[%s] %s\n", cond ? "OK" : "FAIL", what);
++}
++
++int main() {
++    using lgdcpacing::canLaunchGambit;
++    using lgdcpacing::kGambitGapMs;
++    using lgdcpacing::lastLaunchMs;
++    using lgdcpacing::msSinceLastLaunch;
++    using lgdcpacing::recordLaunch;
++    using lgdcpacing::resetForTest;
++
++    std::printf("--- F2 P3: arranque frio + borde 15 s ---\n");
++    resetForTest();
++    check_bool("gap declarado 15000 ms", kGambitGapMs == 15000);
++    check_bool("frio: last == 0", lastLaunchMs() == 0);
++    check_bool("frio: gambit permitido", canLaunchGambit(1000000));
++
++    resetForTest();
++    recordLaunch(1000000);
++    check_bool("registra last", lastLaunchMs() == 1000000);
++    check_bool("gap 0 recien registrado", msSinceLastLaunch(1000000) == 0);
++    check_bool("14999 ms: denegado", !canLaunchGambit(1000000 + 14999));
++    check_bool("15000 ms: permitido (borde >=)", canLaunchGambit(1000000 + 15000));
++    check_bool("15001 ms: permitido", canLaunchGambit(1000000 + 15001));
++
++    std::printf("--- F2 P3: secuencia catalogo->getbest->gambit ---\n");
++    resetForTest();
++    recordLaunch(2000000);          // catalogo (fetchCatalog instrumentado)
++    check_bool("tras catalogo: gambit denegado a +1 s",
++               !canLaunchGambit(2000000 + 1000));
++    recordLaunch(2000000 + 5000);   // getbest (punto CAS instrumentado)
++    check_bool("last = getbest (el mas reciente)", lastLaunchMs() == 2005000);
++    // El gap se mide desde CUALQUIER previo: el mas reciente manda.
++    check_bool("gambit a +14 s del catalogo pero +9 s del getbest: denegado",
++               !canLaunchGambit(2000000 + 14000));
++    check_bool("gambit a +15 s del getbest: permitido",
++               canLaunchGambit(2005000 + 15000));
++    check_bool("gambit a +15 s - 1 ms del getbest: denegado",
++               !canLaunchGambit(2005000 + 14999));
++
++    std::printf("--- F2 P3: burst + forward-only ---\n");
++    resetForTest();
++    recordLaunch(3000000);
++    check_bool("burst a +10 ms: denegado", !canLaunchGambit(3000010));
++    check_bool("burst a +1000 ms: denegado", !canLaunchGambit(3001000));
++    recordLaunch(3000000 - 5000);   // registro tardio (worker fuera de orden)
++    check_bool("stale no retrasa el reloj", lastLaunchMs() == 3000000);
++    check_bool("gap sigue midiendose desde el maximo",
++               msSinceLastLaunch(3015000) == 15000);
++    check_bool("tras ventana: permitido", canLaunchGambit(3015000));
++    resetForTest();
++    check_bool("reset aisla casos", lastLaunchMs() == 0);
++
++    std::printf("\n[test_irtamc_gate] %d OK, %d FAIL\n", g_ok, g_fail);
++    return g_fail == 0 ? 0 : 1;
++}
+-- 
+2.53.0.windows.3
+
