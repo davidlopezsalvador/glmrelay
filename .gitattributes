@@ -1,0 +1,5 @@
+# glmrelay: los payloads de drops viajan byte-exactos (acción preventiva del
+# veredicto from-glm/001 — el autocrlf del push se comía CRs de deltas con
+# EOL mixto). Los mensajes .md siguen la convención de plataforma.
+to-glm/files/* -text
+from-glm/files/* -text
