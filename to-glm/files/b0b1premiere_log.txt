@@ -1,0 +1,1821 @@
+[OK] OpenGL 4.0.0 - Build 20.19.15.5171
+[OK] Renderer: Intel(R) HD Graphics 4600
+[Earth] textures/earth-night-hires.jpg: 13500x6750 (GL max 16384)
+[OK] GridLayer initialized
+[OK] DataManager initialized (cache: data/cache)
+[OK] GridLayer initialized
+[OK] GiroAdapter initialized
+[OK] IonosondeLayer initialized
+[OK] HFTraceLayer initialized
+[OK] DiasAdapter initialized (Ionostream EU)
+[OK] IrtamCoeffAdapter initialized
+[OK] Kc2gAdapter initialized (failover-only)
+[OK] SolarWindLayer initialized
+[OK] FaradayLayer initialized
+[OK] VolumeRenderer initialized
+[OK] GridLayer initialized
+[OK] GridLayer initialized
+[OK] SliceLayer initialized
+[OK] RefShells initialized (3888 verts)
+[OK] GridLayer initialized
+[OK] EbroAdapter initialized (FTP Ebre EB040)
+[OK] SdoImageAdapter inFramebuffer (MSitiaAlized
+A 4x) incomplete
+Framebuffer: MSAA 4x no soportado, cayendo a 0x
+[App] settings.cfg loaded
+[Sdo] switch -> HMIIF (cache 21280 s) (stale, refrescando...)
+[App] TEC cache: 72 restored, newest 09:37 UTC (pruned 75, dropped 0)
+[kc2g] cache: 4 batches restored, 30 st con historia, rango [05:15..09:30 UTC]
+[OK] All initialized
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 8 estaciones EU
+[Ebro] EB040_2026258183001.SAO: foF2=7.70 MUF=26.2 hmF2=266 foEs=nan
+[LGDC 2026-09-15T18:34:18.029Z] launch catalog
+[GiroAdapter] Catalogo cargado: 129 estaciones
+[LGDC 2026-09-15T18:34:18.068Z] launch getbest EB040
+[Sdo] fetch HMIIF 512x512 (age 21280s)
+[LGDC 2026-09-15T18:34:19.254Z] launch gambit foF2 2026.09.11T18:45
+[LGDC 2026-09-15T18:34:19.261Z] result ok gambit foF2 2026.09.11T18:45
+[Irtam] bucket foF2 2026.09.11T18:45 OK (TOV 1789152300)
+[LGDC 2026-09-15T18:34:19.507Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=1439
+[Sdo] fetch A304 512x512 (age 21280s)
+Framebuffer (MSAA 4x) incomplete
+[LGDC 2026-09-15T18:34:25.322Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=7254
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=1.80 max=67.74 TECU
+[GloTecAdapter] Index OK: 4465 frames
+[SolarIndices] sunspots: 412 filas
+[SolarIndices] Kp=0.00 Dst=-7 F10.7=105 Ap=20 SSN=23 (5/5 real)
+[SolarIndices] sunspots: 412 filas -> 5 regiones <=48 h (392 descartadas)
+[LGDC 2026-09-15T18:34:30.074Z] launch getbest KL154
+[LGDC 2026-09-15T18:34:31.143Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=1069
+[LGDC 2026-09-15T18:34:36.929Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=6855
+[SolarWindAdapter] Viento solar real: speed=736 km/s density=3.7 cm^-3 Bz=-9.7 nT (hist 3932 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=14.0
+[RadioProp] MUF=26.1 FOT=22.2 LUF=6.9 S4=0.08 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 2.84e-07 W/m2 (B2.8)
+[App] Initial fetch pass done
+[LGDC 2026-09-15T18:34:42.076Z] launch getbest EA036
+[LGDC 2026-09-15T18:34:42.686Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=610
+[LGDC 2026-09-15T18:34:48.454Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=6378
+[LGDC 2026-09-15T18:34:54.083Z] launch getbest JR055
+[LGDC 2026-09-15T18:34:54.257Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=174
+[LGDC 2026-09-15T18:35:00.121Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=6038
+[LGDC 2026-09-15T18:35:05.990Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=11907
+[LGDC 2026-09-15T18:35:06.092Z] launch getbest PQ052
+[LGDC 2026-09-15T18:35:11.808Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=5716
+[LGDC 2026-09-15T18:35:17.612Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=11520
+[LGDC 2026-09-15T18:35:18.099Z] launch getbest GM037
+[LGDC 2026-09-15T18:35:23.394Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=5296
+[LGDC 2026-09-15T18:35:29.200Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=11102
+[LGDC 2026-09-15T18:35:30.107Z] launch getbest FF051
+[LGDC 2026-09-15T18:35:35.035Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=4928
+[LGDC 2026-09-15T18:35:40.823Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=10716
+[LGDC 2026-09-15T18:35:42.117Z] launch getbest VT139
+[LGDC 2026-09-15T18:35:46.625Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=4508
+[LGDC 2026-09-15T18:35:52.465Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=10348
+[LGDC 2026-09-15T18:35:54.129Z] launch getbest AT138
+[LGDC 2026-09-15T18:35:58.337Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=4208
+[LGDC 2026-09-15T18:36:04.180Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=10051
+[LGDC 2026-09-15T18:36:06.143Z] launch getbest LD160
+[LGDC 2026-09-15T18:36:10.007Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=3864
+[LGDC 2026-09-15T18:36:15.792Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=9649
+[LGDC 2026-09-15T18:36:18.158Z] launch getbest OL246
+[LGDC 2026-09-15T18:36:21.575Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=3416
+[LGDC 2026-09-15T18:36:27.334Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=9176
+[LGDC 2026-09-15T18:36:30.159Z] launch getbest TR170
+[LGDC 2026-09-15T18:36:33.129Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=2970
+[LGDC 2026-09-15T18:36:38.935Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=8776
+[LGDC 2026-09-15T18:36:42.167Z] launch getbest MZ152
+[LGDC 2026-09-15T18:36:44.730Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=2563
+[LGDC 2026-09-15T18:36:50.565Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=8398
+[LGDC 2026-09-15T18:36:54.180Z] launch getbest RV149
+[LGDC 2026-09-15T18:36:56.465Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=2285
+[LGDC 2026-09-15T18:37:02.356Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=8176
+[LGDC 2026-09-15T18:37:06.184Z] launch getbest KI167
+[LGDC 2026-09-15T18:37:08.257Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=2073
+[LGDC 2026-09-15T18:37:14.142Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=7958
+[LGDC 2026-09-15T18:37:18.194Z] launch getbest DB049
+[LGDC 2026-09-15T18:37:19.974Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=1780
+[LGDC 2026-09-15T18:37:25.751Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=7557
+[LGDC 2026-09-15T18:37:30.205Z] launch getbest RL052
+[LGDC 2026-09-15T18:37:31.544Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=1339
+[LGDC 2026-09-15T18:37:37.327Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=7122
+[LGDC 2026-09-15T18:37:42.212Z] launch getbest SO148
+[LGDC 2026-09-15T18:37:43.152Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=940
+[LGDC 2026-09-15T18:37:48.960Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=6748
+[LGDC 2026-09-15T18:37:54.222Z] launch getbest EG931
+[LGDC 2026-09-15T18:37:54.705Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=483
+[LGDC 2026-09-15T18:38:00.486Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=6264
+[LGDC 2026-09-15T18:38:06.224Z] launch getbest AC843
+[LGDC 2026-09-15T18:38:06.294Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=70
+[LGDC 2026-09-15T18:38:12.145Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=5921
+[LGDC 2026-09-15T18:38:17.953Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=11729
+[LGDC 2026-09-15T18:38:18.236Z] launch getbest TR169
+[LGDC 2026-09-15T18:38:23.756Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=5520
+[LGDC 2026-09-15T18:38:29.545Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=11309
+[LGDC 2026-09-15T18:38:30.240Z] launch getbest EI764
+[LGDC 2026-09-15T18:38:35.328Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=5087
+[App] History preload: 72 cached + 50 fetched
+[LGDC 2026-09-15T18:38:41.126Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=10886
+[LGDC 2026-09-15T18:38:42.253Z] launch getbest PF765
+[LGDC 2026-09-15T18:38:46.894Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=4641
+[LGDC 2026-09-15T18:38:52.657Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=10404
+[LGDC 2026-09-15T18:38:54.260Z] launch getbest AU930
+[LGDC 2026-09-15T18:38:58.456Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=4196
+[LGDC 2026-09-15T18:39:04.224Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=9964
+[LGDC 2026-09-15T18:39:06.275Z] launch getbest CS839
+[LGDC 2026-09-15T18:39:10.030Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=3755
+[LGDC 2026-09-15T18:39:15.824Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=9549
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 9 estaciones EU
+[Ebro] EB040_2026258183501.SAO: foF2=7.65 MUF=26.0 hmF2=267 foEs=nan
+[LGDC 2026-09-15T18:39:18.280Z] launch getbest BVJ03
+[LGDC 2026-09-15T18:39:21.630Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=3351
+[LGDC 2026-09-15T18:39:27.431Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=9152
+[LGDC 2026-09-15T18:39:30.279Z] launch getbest BC840
+[LGDC 2026-09-15T18:39:33.183Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=2904
+[LGDC 2026-09-15T18:39:38.949Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=8670
+[LGDC 2026-09-15T18:39:42.288Z] launch getbest TNJ20
+[LGDC 2026-09-15T18:39:44.752Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=2464
+[LGDC 2026-09-15T18:39:50.538Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=8250
+[LGDC 2026-09-15T18:39:54.301Z] launch getbest CXM9B
+[LGDC 2026-09-15T18:39:56.357Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=2056
+[LGDC 2026-09-15T18:40:02.193Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=7892
+[LGDC 2026-09-15T18:40:06.315Z] launch getbest BLJ03
+[LGDC 2026-09-15T18:40:07.988Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=1673
+[LGDC 2026-09-15T18:40:13.797Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=7482
+[LGDC 2026-09-15T18:40:18.322Z] launch getbest SMK29
+[LGDC 2026-09-15T18:40:19.621Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=1299
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=1.81 max=68.92 TECU
+[SolarIndices] Kp=0.00 Dst=-7 F10.7=105 Ap=20 SSN=23 (5/5 real)
+[LGDC 2026-09-15T18:40:25.387Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=7065
+[SolarWindAdapter] Viento solar real: speed=757 km/s density=3.8 cm^-3 Bz=-10.4 nT (hist 3932 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=15.0
+[RadioProp] MUF=18.5 FOT=15.7 LUF=7.2 S4=0.08 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 3.16e-07 W/m2 (B3.2)
+[LGDC 2026-09-15T18:40:30.333Z] launch getbest LA42Q
+[LGDC 2026-09-15T18:40:31.159Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=826
+[LGDC 2026-09-15T18:40:36.962Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=6629
+[LGDC 2026-09-15T18:40:42.348Z] launch getbest DW41K
+[LGDC 2026-09-15T18:40:42.776Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=428
+[LGDC 2026-09-15T18:40:48.568Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=6220
+[LGDC 2026-09-15T18:40:54.342Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=11994
+[LGDC 2026-09-15T18:40:54.363Z] launch getbest CAJ2M
+[LGDC 2026-09-15T18:41:00.100Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=5737
+[LGDC 2026-09-15T18:41:05.910Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=11547
+[LGDC 2026-09-15T18:41:06.371Z] launch getbest TO535
+[LGDC 2026-09-15T18:41:11.701Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=5330
+[LGDC 2026-09-15T18:41:17.512Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=11141
+[LGDC 2026-09-15T18:41:18.385Z] launch getbest IC437
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=1.81 max=68.92 TECU
+[LGDC 2026-09-15T18:41:23.319Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=4934
+[SolarIndices] Kp=0.00 Dst=-7 F10.7=105 Ap=20 SSN=23 (5/5 real)
+[LGDC 2026-09-15T18:41:29.126Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=10741
+[LGDC 2026-09-15T18:41:30.401Z] launch getbest CB53N
+[SolarWindAdapter] Viento solar real: speed=757 km/s density=3.8 cm^-3 Bz=-10.4 nT (hist 3932 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=15.0
+[RadioProp] MUF=18.5 FOT=15.7 LUF=7.2 S4=0.08 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 3.16e-07 W/m2 (B3.2)
+[LGDC 2026-09-15T18:41:34.927Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=4526
+[LGDC 2026-09-15T18:41:40.764Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=10363
+[LGDC 2026-09-15T18:41:42.408Z] launch getbest DH224
+[LGDC 2026-09-15T18:41:46.548Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=4140
+[LGDC 2026-09-15T18:41:52.373Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=9965
+[LGDC 2026-09-15T18:41:54.428Z] launch getbest XI434
+[LGDC 2026-09-15T18:41:58.193Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=3765
+[LGDC 2026-09-15T18:42:04.002Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=9574
+[LGDC 2026-09-15T18:42:06.431Z] launch getbest NI135
+[LGDC 2026-09-15T18:42:09.795Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=3364
+[LGDC 2026-09-15T18:42:15.608Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=9177
+[LGDC 2026-09-15T18:42:18.446Z] launch getbest TV51R
+[LGDC 2026-09-15T18:42:21.434Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=2988
+[LGDC 2026-09-15T18:42:27.234Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=8788
+[LGDC 2026-09-15T18:42:30.454Z] launch getbest MA155
+[LGDC 2026-09-15T18:42:32.974Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=2520
+[LGDC 2026-09-15T18:42:38.763Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=8309
+[LGDC 2026-09-15T18:42:42.464Z] launch getbest ML10L
+[LGDC 2026-09-15T18:42:44.598Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=2134
+[LGDC 2026-09-15T18:42:50.481Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=8017
+[LGDC 2026-09-15T18:42:54.467Z] launch getbest MO155
+[LGDC 2026-09-15T18:42:56.302Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=1836
+[LGDC 2026-09-15T18:43:02.094Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=7628
+[LGDC 2026-09-15T18:43:06.474Z] launch getbest MU12K
+[LGDC 2026-09-15T18:43:07.908Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=1434
+[LGDC 2026-09-15T18:43:13.759Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=7285
+[LGDC 2026-09-15T18:43:18.489Z] launch getbest RM041
+[LGDC 2026-09-15T18:43:19.583Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=1094
+[LGDC 2026-09-15T18:43:25.350Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=6861
+[LGDC 2026-09-15T18:43:30.496Z] launch getbest TR0P2
+[LGDC 2026-09-15T18:43:31.152Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=656
+[LGDC 2026-09-15T18:43:36.947Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=6451
+[LGDC 2026-09-15T18:43:42.498Z] launch getbest NDA81
+[LGDC 2026-09-15T18:43:42.751Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=253
+[LGDC 2026-09-15T18:43:48.614Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=6116
+[LGDC 2026-09-15T18:43:54.409Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=11911
+[LGDC 2026-09-15T18:43:54.513Z] launch getbest GR13L
+[LGDC 2026-09-15T18:44:00.245Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=5732
+[LGDC 2026-09-15T18:44:06.201Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=11688
+[LGDC 2026-09-15T18:44:06.520Z] launch getbest CS31K
+[GiroAdapter] getbest async: 22 estaciones actualizadas
+[LGDC 2026-09-15T18:44:12.248Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=5728
+[GiroAdapter] getbest async: 0 estaciones actualizadas
+[LGDC 2026-09-15T18:44:18.109Z] gate-consult deny gambit foF2 2026.09.11T19:00 ms-since-last=11589
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 9 estaciones EU
+[Ebro] EB040_2026258184001.SAO: foF2=7.50 MUF=25.8 hmF2=262 foEs=nan
+[LGDC 2026-09-15T18:44:27.239Z] launch gambit foF2 2026.09.11T19:00
+[LGDC 2026-09-15T18:44:27.245Z] result ok gambit foF2 2026.09.11T19:00
+[Irtam] bucket foF2 2026.09.11T19:00 OK (TOV 1789153200)
+[LGDC 2026-09-15T18:44:27.481Z] gate-consult deny gambit foF2 2026.09.11T19:15 ms-since-last=3581
+[LGDC 2026-09-15T18:44:33.284Z] gate-consult deny gambit foF2 2026.09.11T19:15 ms-since-last=9384
+[LGDC 2026-09-15T18:44:41.937Z] launch gambit foF2 2026.09.11T19:15
+[LGDC 2026-09-15T18:44:41.943Z] result ok gambit foF2 2026.09.11T19:15
+[Irtam] bucket foF2 2026.09.11T19:15 OK (TOV 1789154100)
+[LGDC 2026-09-15T18:44:42.171Z] gate-consult deny gambit foF2 2026.09.11T19:30 ms-since-last=3119
+[LGDC 2026-09-15T18:44:47.937Z] gate-consult deny gambit foF2 2026.09.11T19:30 ms-since-last=8885
+[LGDC 2026-09-15T18:44:53.725Z] gate-consult deny gambit foF2 2026.09.11T19:30 ms-since-last=14673
+[LGDC 2026-09-15T18:45:01.660Z] launch gambit foF2 2026.09.11T19:30
+[LGDC 2026-09-15T18:45:01.665Z] result ok gambit foF2 2026.09.11T19:30
+[Irtam] bucket foF2 2026.09.11T19:30 OK (TOV 1789155000)
+[LGDC 2026-09-15T18:45:01.903Z] gate-consult deny gambit foF2 2026.09.11T19:45 ms-since-last=2399
+[LGDC 2026-09-15T18:45:07.700Z] gate-consult deny gambit foF2 2026.09.11T19:45 ms-since-last=8196
+[LGDC 2026-09-15T18:45:13.469Z] gate-consult deny gambit foF2 2026.09.11T19:45 ms-since-last=13965
+[LGDC 2026-09-15T18:45:21.390Z] launch gambit foF2 2026.09.11T19:45
+[LGDC 2026-09-15T18:45:21.395Z] result ok gambit foF2 2026.09.11T19:45
+[Irtam] bucket foF2 2026.09.11T19:45 OK (TOV 1789155900)
+[LGDC 2026-09-15T18:45:21.643Z] gate-consult deny gambit foF2 2026.09.11T20:00 ms-since-last=2378
+[LGDC 2026-09-15T18:45:27.452Z] gate-consult deny gambit foF2 2026.09.11T20:00 ms-since-last=8187
+[LGDC 2026-09-15T18:45:33.310Z] gate-consult deny gambit foF2 2026.09.11T20:00 ms-since-last=14045
+[LGDC 2026-09-15T18:45:42.131Z] launch gambit foF2 2026.09.11T20:00
+[LGDC 2026-09-15T18:45:42.139Z] result ok gambit foF2 2026.09.11T20:00
+[Irtam] bucket foF2 2026.09.11T20:00 OK (TOV 1789156800)
+[LGDC 2026-09-15T18:45:42.403Z] gate-consult deny gambit foF2 2026.09.11T20:15 ms-since-last=3298
+[LGDC 2026-09-15T18:45:48.202Z] gate-consult deny gambit foF2 2026.09.11T20:15 ms-since-last=9097
+[LGDC 2026-09-15T18:45:54.024Z] gate-consult deny gambit foF2 2026.09.11T20:15 ms-since-last=14919
+[LGDC 2026-09-15T18:46:04.709Z] launch gambit foF2 2026.09.11T20:15
+[LGDC 2026-09-15T18:46:04.714Z] result ok gambit foF2 2026.09.11T20:15
+[Irtam] bucket foF2 2026.09.11T20:15 OK (TOV 1789157700)
+[LGDC 2026-09-15T18:46:04.946Z] gate-consult deny gambit foF2 2026.09.11T20:30 ms-since-last=5138
+[LGDC 2026-09-15T18:46:10.952Z] gate-consult deny gambit foF2 2026.09.11T20:30 ms-since-last=11144
+[LGDC 2026-09-15T18:46:18.106Z] result fail gambit foF2 2026.09.11T20:30 red/pre-gate
+[Irtam] fetch foF2 2026.09.11T20:30: fallo red/pre-gate
+[LGDC 2026-09-15T18:46:25.261Z] gate-consult deny gambit foF2 2026.09.11T20:30 ms-since-last=8312
+[LGDC 2026-09-15T18:46:37.942Z] launch gambit foF2 2026.09.11T20:30
+[LGDC 2026-09-15T18:46:37.948Z] result ok gambit foF2 2026.09.11T20:30
+[Irtam] bucket foF2 2026.09.11T20:30 OK (TOV 1789158600)
+[LGDC 2026-09-15T18:46:38.325Z] gate-consult deny gambit foF2 2026.09.11T20:45 ms-since-last=3413
+[LGDC 2026-09-15T18:46:44.395Z] gate-consult deny gambit foF2 2026.09.11T20:45 ms-since-last=9483
+[LGDC 2026-09-15T18:46:53.188Z] launch gambit foF2 2026.09.11T20:45
+[LGDC 2026-09-15T18:46:53.194Z] result ok gambit foF2 2026.09.11T20:45
+[Irtam] bucket foF2 2026.09.11T20:45 OK (TOV 1789159500)
+[LGDC 2026-09-15T18:46:53.747Z] gate-consult deny gambit foF2 2026.09.11T21:00 ms-since-last=3171
+[LGDC 2026-09-15T18:46:59.681Z] gate-consult deny gambit foF2 2026.09.11T21:00 ms-since-last=9105
+[LGDC 2026-09-15T18:47:05.523Z] gate-consult deny gambit foF2 2026.09.11T21:00 ms-since-last=14947
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=1.72 max=68.93 TECU
+[LGDC 2026-09-15T18:47:13.661Z] launch gambit foF2 2026.09.11T21:00
+[LGDC 2026-09-15T18:47:13.667Z] result ok gambit foF2 2026.09.11T21:00
+[Irtam] bucket foF2 2026.09.11T21:00 OK (TOV 1789160400)
+[LGDC 2026-09-15T18:47:13.953Z] gate-consult deny gambit foF2 2026.09.11T21:15 ms-since-last=2586
+[SolarIndices] Kp=0.00 Dst=-7 F10.7=105 Ap=20 SSN=23 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=755 km/s density=3.5 cm^-3 Bz=-10.8 nT (hist 3932 pts)
+[LGDC 2026-09-15T18:47:19.775Z] gate-consult deny gambit foF2 2026.09.11T21:15 ms-since-last=8408
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=15.0
+[RadioProp] MUF=17.3 FOT=14.7 LUF=6.8 S4=0.08 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 3.03e-07 W/m2 (B3.0)
+[LGDC 2026-09-15T18:47:25.602Z] gate-consult deny gambit foF2 2026.09.11T21:15 ms-since-last=14235
+[LGDC 2026-09-15T18:47:34.595Z] launch gambit foF2 2026.09.11T21:15
+[LGDC 2026-09-15T18:47:34.602Z] result ok gambit foF2 2026.09.11T21:15
+[Irtam] bucket foF2 2026.09.11T21:15 OK (TOV 1789161300)
+[LGDC 2026-09-15T18:47:34.955Z] gate-consult deny gambit foF2 2026.09.11T21:30 ms-since-last=3448
+[LGDC 2026-09-15T18:47:40.866Z] gate-consult deny gambit foF2 2026.09.11T21:30 ms-since-last=9359
+[LGDC 2026-09-15T18:47:48.843Z] launch gambit foF2 2026.09.11T21:30
+[LGDC 2026-09-15T18:47:48.849Z] result ok gambit foF2 2026.09.11T21:30
+[Irtam] bucket foF2 2026.09.11T21:30 OK (TOV 1789162200)
+[LGDC 2026-09-15T18:47:49.165Z] gate-consult deny gambit foF2 2026.09.11T21:45 ms-since-last=2427
+[LGDC 2026-09-15T18:47:55.009Z] gate-consult deny gambit foF2 2026.09.11T21:45 ms-since-last=8271
+[LGDC 2026-09-15T18:48:00.846Z] gate-consult deny gambit foF2 2026.09.11T21:45 ms-since-last=14108
+[LGDC 2026-09-15T18:48:08.870Z] launch gambit foF2 2026.09.11T21:45
+[LGDC 2026-09-15T18:48:08.875Z] result ok gambit foF2 2026.09.11T21:45
+[Irtam] bucket foF2 2026.09.11T21:45 OK (TOV 1789163100)
+[LGDC 2026-09-15T18:48:09.191Z] gate-consult deny gambit foF2 2026.09.11T22:00 ms-since-last=2510
+[LGDC 2026-09-15T18:48:15.014Z] gate-consult deny gambit foF2 2026.09.11T22:00 ms-since-last=8333
+[LGDC 2026-09-15T18:48:20.863Z] gate-consult deny gambit foF2 2026.09.11T22:00 ms-since-last=14182
+[LGDC 2026-09-15T18:48:28.921Z] launch gambit foF2 2026.09.11T22:00
+[LGDC 2026-09-15T18:48:28.926Z] result ok gambit foF2 2026.09.11T22:00
+[Irtam] bucket foF2 2026.09.11T22:00 OK (TOV 1789164000)
+[LGDC 2026-09-15T18:48:29.307Z] gate-consult deny gambit foF2 2026.09.11T22:15 ms-since-last=2588
+[LGDC 2026-09-15T18:48:35.139Z] gate-consult deny gambit foF2 2026.09.11T22:15 ms-since-last=8420
+[LGDC 2026-09-15T18:48:40.991Z] gate-consult deny gambit foF2 2026.09.11T22:15 ms-since-last=14272
+[LGDC 2026-09-15T18:48:49.535Z] launch gambit foF2 2026.09.11T22:15
+[LGDC 2026-09-15T18:48:49.599Z] result ok gambit foF2 2026.09.11T22:15
+[Irtam] bucket foF2 2026.09.11T22:15 OK (TOV 1789164900)
+[LGDC 2026-09-15T18:48:50.106Z] gate-consult deny gambit foF2 2026.09.11T22:30 ms-since-last=3232
+[LGDC 2026-09-15T18:48:55.940Z] gate-consult deny gambit foF2 2026.09.11T22:30 ms-since-last=9066
+[LGDC 2026-09-15T18:49:02.418Z] result fail gambit foF2 2026.09.11T22:30 red/pre-gate
+[Irtam] fetch foF2 2026.09.11T22:30: fallo red/pre-gate
+[LGDC 2026-09-15T18:49:08.367Z] gate-consult deny gambit foF2 2026.09.11T22:30 ms-since-last=6488
+[LGDC 2026-09-15T18:49:14.313Z] gate-consult deny gambit foF2 2026.09.11T22:30 ms-since-last=12434
+[LGDC 2026-09-15T18:49:16.695Z] launch getbest EB040
+[LGDC 2026-09-15T18:49:16.946Z] launch getbest EA036
+[LGDC 2026-09-15T18:49:17.211Z] launch getbest PQ052
+[Ebro] EB040_2026258184501.SAO: foF2=7.40 MUF=25.0 hmF2=269 foEs=nan
+[LGDC 2026-09-15T18:49:17.463Z] launch getbest JR055
+[LGDC 2026-09-15T18:49:17.852Z] launch getbest FF051
+[LGDC 2026-09-15T18:49:18.440Z] launch getbest GM037
+[LGDC 2026-09-15T18:49:18.702Z] launch getbest MZ152
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 9 estaciones EU
+[LGDC 2026-09-15T18:49:18.958Z] launch getbest AT138
+[LGDC 2026-09-15T18:49:19.208Z] launch getbest SO148
+[LGDC 2026-09-15T18:49:19.462Z] launch getbest TR169
+[LGDC 2026-09-15T18:49:19.725Z] launch getbest DB049
+[LGDC 2026-09-15T18:49:19.980Z] launch getbest VT139
+[LGDC 2026-09-15T18:49:20.169Z] gate-consult deny gambit foF2 2026.09.11T22:30 ms-since-last=189
+[LGDC 2026-09-15T18:49:20.237Z] launch getbest EI764
+[LGDC 2026-09-15T18:49:20.498Z] launch getbest EG931
+[GiroAdapter] getbest async: 14 estaciones actualizadas
+[LGDC 2026-09-15T18:49:26.021Z] gate-consult deny gambit foF2 2026.09.11T22:30 ms-since-last=5523
+[LGDC 2026-09-15T18:49:31.860Z] gate-consult deny gambit foF2 2026.09.11T22:30 ms-since-last=11362
+[LGDC 2026-09-15T18:49:39.811Z] launch gambit foF2 2026.09.11T22:30
+[LGDC 2026-09-15T18:49:39.817Z] result ok gambit foF2 2026.09.11T22:30
+[Irtam] bucket foF2 2026.09.11T22:30 OK (TOV 1789165800)
+[LGDC 2026-09-15T18:49:40.147Z] gate-consult deny gambit foF2 2026.09.11T22:45 ms-since-last=2449
+[LGDC 2026-09-15T18:49:46.015Z] gate-consult deny gambit foF2 2026.09.11T22:45 ms-since-last=8317
+[LGDC 2026-09-15T18:49:51.881Z] gate-consult deny gambit foF2 2026.09.11T22:45 ms-since-last=14183
+[LGDC 2026-09-15T18:49:59.890Z] launch gambit foF2 2026.09.11T22:45
+[LGDC 2026-09-15T18:49:59.896Z] result ok gambit foF2 2026.09.11T22:45
+[Irtam] bucket foF2 2026.09.11T22:45 OK (TOV 1789166700)
+[LGDC 2026-09-15T18:50:00.243Z] gate-consult deny gambit foF2 2026.09.11T23:00 ms-since-last=2501
+[LGDC 2026-09-15T18:50:06.073Z] gate-consult deny gambit foF2 2026.09.11T23:00 ms-since-last=8331
+[LGDC 2026-09-15T18:50:11.923Z] gate-consult deny gambit foF2 2026.09.11T23:00 ms-since-last=14181
+[LGDC 2026-09-15T18:50:19.830Z] launch gambit foF2 2026.09.11T23:00
+[LGDC 2026-09-15T18:50:19.835Z] result ok gambit foF2 2026.09.11T23:00
+[Irtam] bucket foF2 2026.09.11T23:00 OK (TOV 1789167600)
+[LGDC 2026-09-15T18:50:20.163Z] gate-consult deny gambit foF2 2026.09.11T23:15 ms-since-last=2380
+[LGDC 2026-09-15T18:50:26.019Z] gate-consult deny gambit foF2 2026.09.11T23:15 ms-since-last=8236
+[LGDC 2026-09-15T18:50:31.879Z] gate-consult deny gambit foF2 2026.09.11T23:15 ms-since-last=14096
+[LGDC 2026-09-15T18:50:41.593Z] launch gambit foF2 2026.09.11T23:15
+[LGDC 2026-09-15T18:50:41.599Z] result ok gambit foF2 2026.09.11T23:15
+[Irtam] bucket foF2 2026.09.11T23:15 OK (TOV 1789168500)
+[LGDC 2026-09-15T18:50:41.944Z] gate-consult deny gambit foF2 2026.09.11T23:30 ms-since-last=4210
+[LGDC 2026-09-15T18:50:47.878Z] gate-consult deny gambit foF2 2026.09.11T23:30 ms-since-last=10144
+[LGDC 2026-09-15T18:50:56.103Z] launch gambit foF2 2026.09.11T23:30
+[LGDC 2026-09-15T18:50:56.107Z] result ok gambit foF2 2026.09.11T23:30
+[Irtam] bucket foF2 2026.09.11T23:30 OK (TOV 1789169400)
+[LGDC 2026-09-15T18:50:56.501Z] gate-consult deny gambit foF2 2026.09.11T23:45 ms-since-last=2597
+[LGDC 2026-09-15T18:51:02.414Z] gate-consult deny gambit foF2 2026.09.11T23:45 ms-since-last=8510
+[LGDC 2026-09-15T18:51:08.370Z] gate-consult deny gambit foF2 2026.09.11T23:45 ms-since-last=14466
+[LGDC 2026-09-15T18:51:16.382Z] launch gambit foF2 2026.09.11T23:45
+[LGDC 2026-09-15T18:51:16.389Z] result ok gambit foF2 2026.09.11T23:45
+[Irtam] bucket foF2 2026.09.11T23:45 OK (TOV 1789170300)
+[LGDC 2026-09-15T18:51:16.808Z] gate-consult deny gambit foF2 2026.09.12T00:00 ms-since-last=2509
+[LGDC 2026-09-15T18:51:22.805Z] gate-consult deny gambit foF2 2026.09.12T00:00 ms-since-last=8506
+[LGDC 2026-09-15T18:51:28.725Z] gate-consult deny gambit foF2 2026.09.12T00:00 ms-since-last=14426
+[LGDC 2026-09-15T18:51:36.835Z] launch gambit foF2 2026.09.12T00:00
+[LGDC 2026-09-15T18:51:36.841Z] result ok gambit foF2 2026.09.12T00:00
+[Irtam] bucket foF2 2026.09.12T00:00 OK (TOV 1789171200)
+[LGDC 2026-09-15T18:51:37.209Z] gate-consult deny gambit foF2 2026.09.12T00:15 ms-since-last=2544
+[LGDC 2026-09-15T18:51:43.097Z] gate-consult deny gambit foF2 2026.09.12T00:15 ms-since-last=8432
+[LGDC 2026-09-15T18:51:49.011Z] gate-consult deny gambit foF2 2026.09.12T00:15 ms-since-last=14346
+[LGDC 2026-09-15T18:51:56.969Z] launch gambit foF2 2026.09.12T00:15
+[LGDC 2026-09-15T18:51:56.974Z] result ok gambit foF2 2026.09.12T00:15
+[Irtam] bucket foF2 2026.09.12T00:15 OK (TOV 1789172100)
+[LGDC 2026-09-15T18:51:57.297Z] gate-consult deny gambit foF2 2026.09.12T00:30 ms-since-last=2394
+[LGDC 2026-09-15T18:52:03.169Z] gate-consult deny gambit foF2 2026.09.12T00:30 ms-since-last=8266
+[LGDC 2026-09-15T18:52:09.064Z] gate-consult deny gambit foF2 2026.09.12T00:30 ms-since-last=14161
+[LGDC 2026-09-15T18:52:17.152Z] launch gambit foF2 2026.09.12T00:30
+[LGDC 2026-09-15T18:52:17.157Z] result ok gambit foF2 2026.09.12T00:30
+[Irtam] bucket foF2 2026.09.12T00:30 OK (TOV 1789173000)
+[LGDC 2026-09-15T18:52:17.542Z] gate-consult deny gambit foF2 2026.09.12T00:45 ms-since-last=2526
+[LGDC 2026-09-15T18:52:23.466Z] gate-consult deny gambit foF2 2026.09.12T00:45 ms-since-last=8450
+[LGDC 2026-09-15T18:52:29.433Z] gate-consult deny gambit foF2 2026.09.12T00:45 ms-since-last=14417
+[LGDC 2026-09-15T18:52:37.487Z] launch gambit foF2 2026.09.12T00:45
+[LGDC 2026-09-15T18:52:37.494Z] result ok gambit foF2 2026.09.12T00:45
+[Irtam] bucket foF2 2026.09.12T00:45 OK (TOV 1789173900)
+[LGDC 2026-09-15T18:52:37.893Z] gate-consult deny gambit foF2 2026.09.12T01:00 ms-since-last=2521
+[LGDC 2026-09-15T18:52:43.827Z] gate-consult deny gambit foF2 2026.09.12T01:00 ms-since-last=8455
+[LGDC 2026-09-15T18:52:49.797Z] gate-consult deny gambit foF2 2026.09.12T01:00 ms-since-last=14425
+[LGDC 2026-09-15T18:52:57.942Z] launch gambit foF2 2026.09.12T01:00
+[LGDC 2026-09-15T18:52:57.948Z] result ok gambit foF2 2026.09.12T01:00
+[Irtam] bucket foF2 2026.09.12T01:00 OK (TOV 1789174800)
+[LGDC 2026-09-15T18:52:58.395Z] gate-consult deny gambit foF2 2026.09.12T01:15 ms-since-last=2639
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=1.72 max=68.93 TECU
+[SolarIndices] Kp=0.00 Dst=18 F10.7=105 Ap=20 SSN=23 (5/5 real)
+[LGDC 2026-09-15T18:53:04.426Z] gate-consult deny gambit foF2 2026.09.12T01:15 ms-since-last=8670
+[SolarWindAdapter] Viento solar real: speed=733 km/s density=4.0 cm^-3 Bz=-9.4 nT (hist 3933 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=17.0
+[RadioProp] MUF=17.1 FOT=14.5 LUF=6.7 S4=0.08 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 2.90e-07 W/m2 (B2.9)
+[LGDC 2026-09-15T18:53:10.406Z] gate-consult deny gambit foF2 2026.09.12T01:15 ms-since-last=14650
+[LGDC 2026-09-15T18:53:18.397Z] launch gambit foF2 2026.09.12T01:15
+[LGDC 2026-09-15T18:53:18.403Z] result ok gambit foF2 2026.09.12T01:15
+[Irtam] bucket foF2 2026.09.12T01:15 OK (TOV 1789175700)
+[LGDC 2026-09-15T18:53:18.804Z] gate-consult deny gambit foF2 2026.09.12T01:30 ms-since-last=2466
+[LGDC 2026-09-15T18:53:24.789Z] gate-consult deny gambit foF2 2026.09.12T01:30 ms-since-last=8451
+[LGDC 2026-09-15T18:53:30.756Z] gate-consult deny gambit foF2 2026.09.12T01:30 ms-since-last=14418
+[LGDC 2026-09-15T18:53:39.514Z] launch gambit foF2 2026.09.12T01:30
+[LGDC 2026-09-15T18:53:39.518Z] result ok gambit foF2 2026.09.12T01:30
+[Irtam] bucket foF2 2026.09.12T01:30 OK (TOV 1789176600)
+[LGDC 2026-09-15T18:53:39.934Z] gate-consult deny gambit foF2 2026.09.12T01:45 ms-since-last=3222
+[LGDC 2026-09-15T18:53:45.912Z] gate-consult deny gambit foF2 2026.09.12T01:45 ms-since-last=9200
+[LGDC 2026-09-15T18:53:54.419Z] launch gambit foF2 2026.09.12T01:45
+[LGDC 2026-09-15T18:53:54.428Z] result ok gambit foF2 2026.09.12T01:45
+[Irtam] bucket foF2 2026.09.12T01:45 OK (TOV 1789177500)
+[LGDC 2026-09-15T18:53:54.871Z] gate-consult deny gambit foF2 2026.09.12T02:00 ms-since-last=2987
+[LGDC 2026-09-15T18:54:00.856Z] gate-consult deny gambit foF2 2026.09.12T02:00 ms-since-last=8972
+[LGDC 2026-09-15T18:54:06.833Z] gate-consult deny gambit foF2 2026.09.12T02:00 ms-since-last=14949
+[LGDC 2026-09-15T18:54:14.805Z] launch gambit foF2 2026.09.12T02:00
+[LGDC 2026-09-15T18:54:14.810Z] result ok gambit foF2 2026.09.12T02:00
+[Irtam] bucket foF2 2026.09.12T02:00 OK (TOV 1789178400)
+[LGDC 2026-09-15T18:54:15.237Z] gate-consult deny gambit foF2 2026.09.12T02:15 ms-since-last=2417
+[LGDC 2026-09-15T18:54:16.699Z] launch getbest CAJ2M
+[LGDC 2026-09-15T18:54:16.955Z] launch getbest DW41K
+[LGDC 2026-09-15T18:54:17.208Z] launch getbest NI135
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 9 estaciones EU
+[Ebro] EB040_2026258185001.SAO: foF2=7.25 MUF=24.3 hmF2=267 foEs=nan
+[LGDC 2026-09-15T18:54:17.461Z] launch getbest CB53N
+[LGDC 2026-09-15T18:54:17.714Z] launch getbest TV51R
+[LGDC 2026-09-15T18:54:17.968Z] launch getbest RM041
+[LGDC 2026-09-15T18:54:18.219Z] launch getbest TR0P2
+[LGDC 2026-09-15T18:54:18.472Z] launch getbest GR13L
+[GiroAdapter] getbest async: 8 estaciones actualizadas
+[LGDC 2026-09-15T18:54:21.214Z] gate-consult deny gambit foF2 2026.09.12T02:15 ms-since-last=2742
+[LGDC 2026-09-15T18:54:27.192Z] gate-consult deny gambit foF2 2026.09.12T02:15 ms-since-last=8720
+[LGDC 2026-09-15T18:54:33.212Z] gate-consult deny gambit foF2 2026.09.12T02:15 ms-since-last=14740
+[LGDC 2026-09-15T18:54:42.376Z] launch gambit foF2 2026.09.12T02:15
+[LGDC 2026-09-15T18:54:42.383Z] result ok gambit foF2 2026.09.12T02:15
+[Irtam] bucket foF2 2026.09.12T02:15 OK (TOV 1789179300)
+[LGDC 2026-09-15T18:54:42.828Z] gate-consult deny gambit foF2 2026.09.12T02:30 ms-since-last=3616
+[LGDC 2026-09-15T18:54:48.824Z] gate-consult deny gambit foF2 2026.09.12T02:30 ms-since-last=9613
+[LGDC 2026-09-15T18:54:56.933Z] launch gambit foF2 2026.09.12T02:30
+[LGDC 2026-09-15T18:54:56.939Z] result ok gambit foF2 2026.09.12T02:30
+[Irtam] bucket foF2 2026.09.12T02:30 OK (TOV 1789180200)
+[LGDC 2026-09-15T18:54:57.403Z] gate-consult deny gambit foF2 2026.09.12T02:45 ms-since-last=2592
+[LGDC 2026-09-15T18:55:03.408Z] gate-consult deny gambit foF2 2026.09.12T02:45 ms-since-last=8597
+[LGDC 2026-09-15T18:55:09.460Z] gate-consult deny gambit foF2 2026.09.12T02:45 ms-since-last=14649
+[LGDC 2026-09-15T18:55:18.050Z] launch gambit foF2 2026.09.12T02:45
+[LGDC 2026-09-15T18:55:18.056Z] result ok gambit foF2 2026.09.12T02:45
+[Irtam] bucket foF2 2026.09.12T02:45 OK (TOV 1789181100)
+[LGDC 2026-09-15T18:55:18.513Z] gate-consult deny gambit foF2 2026.09.12T03:00 ms-since-last=3046
+[LGDC 2026-09-15T18:55:24.534Z] gate-consult deny gambit foF2 2026.09.12T03:00 ms-since-last=9067
+[LGDC 2026-09-15T18:55:34.023Z] launch gambit foF2 2026.09.12T03:00
+[LGDC 2026-09-15T18:55:34.030Z] result ok gambit foF2 2026.09.12T03:00
+[Irtam] bucket foF2 2026.09.12T03:00 OK (TOV 1789182000)
+[LGDC 2026-09-15T18:55:34.502Z] gate-consult deny gambit foF2 2026.09.12T03:15 ms-since-last=3960
+[LGDC 2026-09-15T18:55:40.459Z] gate-consult deny gambit foF2 2026.09.12T03:15 ms-since-last=9917
+[LGDC 2026-09-15T18:55:49.300Z] launch gambit foF2 2026.09.12T03:15
+[LGDC 2026-09-15T18:55:49.312Z] result ok gambit foF2 2026.09.12T03:15
+[Irtam] bucket foF2 2026.09.12T03:15 OK (TOV 1789182900)
+[LGDC 2026-09-15T18:55:49.785Z] gate-consult deny gambit foF2 2026.09.12T03:30 ms-since-last=3339
+[LGDC 2026-09-15T18:55:55.794Z] gate-consult deny gambit foF2 2026.09.12T03:30 ms-since-last=9348
+[LGDC 2026-09-15T18:56:04.735Z] launch gambit foF2 2026.09.12T03:30
+[LGDC 2026-09-15T18:56:04.740Z] result ok gambit foF2 2026.09.12T03:30
+[Irtam] bucket foF2 2026.09.12T03:30 OK (TOV 1789183800)
+[LGDC 2026-09-15T18:56:05.227Z] gate-consult deny gambit foF2 2026.09.12T03:45 ms-since-last=3414
+[LGDC 2026-09-15T18:56:11.247Z] gate-consult deny gambit foF2 2026.09.12T03:45 ms-since-last=9434
+[LGDC 2026-09-15T18:56:20.445Z] launch gambit foF2 2026.09.12T03:45
+[LGDC 2026-09-15T18:56:20.451Z] result ok gambit foF2 2026.09.12T03:45
+[Irtam] bucket foF2 2026.09.12T03:45 OK (TOV 1789184700)
+[LGDC 2026-09-15T18:56:20.940Z] gate-consult deny gambit foF2 2026.09.12T04:00 ms-since-last=3684
+[LGDC 2026-09-15T18:56:26.947Z] gate-consult deny gambit foF2 2026.09.12T04:00 ms-since-last=9691
+[LGDC 2026-09-15T18:56:35.242Z] launch gambit foF2 2026.09.12T04:00
+[LGDC 2026-09-15T18:56:35.248Z] result ok gambit foF2 2026.09.12T04:00
+[Irtam] bucket foF2 2026.09.12T04:00 OK (TOV 1789185600)
+[LGDC 2026-09-15T18:56:35.793Z] gate-consult deny gambit foF2 2026.09.12T04:15 ms-since-last=2610
+[LGDC 2026-09-15T18:56:41.830Z] gate-consult deny gambit foF2 2026.09.12T04:15 ms-since-last=8647
+[LGDC 2026-09-15T18:56:47.935Z] gate-consult deny gambit foF2 2026.09.12T04:15 ms-since-last=14752
+[LGDC 2026-09-15T18:57:00.662Z] launch gambit foF2 2026.09.12T04:15
+[LGDC 2026-09-15T18:57:00.667Z] result ok gambit foF2 2026.09.12T04:15
+[Irtam] bucket foF2 2026.09.12T04:15 OK (TOV 1789186500)
+[LGDC 2026-09-15T18:57:01.261Z] gate-consult deny gambit foF2 2026.09.12T04:30 ms-since-last=7176
+[LGDC 2026-09-15T18:57:07.368Z] gate-consult deny gambit foF2 2026.09.12T04:30 ms-since-last=13283
+[LGDC 2026-09-15T18:57:15.507Z] launch gambit foF2 2026.09.12T04:30
+[LGDC 2026-09-15T18:57:15.518Z] result ok gambit foF2 2026.09.12T04:30
+[Irtam] bucket foF2 2026.09.12T04:30 OK (TOV 1789187400)
+[LGDC 2026-09-15T18:57:16.093Z] gate-consult deny gambit foF2 2026.09.12T04:45 ms-since-last=2633
+[LGDC 2026-09-15T18:57:22.200Z] gate-consult deny gambit foF2 2026.09.12T04:45 ms-since-last=8740
+[LGDC 2026-09-15T18:57:28.265Z] gate-consult deny gambit foF2 2026.09.12T04:45 ms-since-last=14805
+[LGDC 2026-09-15T18:57:37.416Z] launch gambit foF2 2026.09.12T04:45
+[LGDC 2026-09-15T18:57:37.422Z] result ok gambit foF2 2026.09.12T04:45
+[Irtam] bucket foF2 2026.09.12T04:45 OK (TOV 1789188300)
+[LGDC 2026-09-15T18:57:38.123Z] gate-consult deny gambit foF2 2026.09.12T05:00 ms-since-last=3033
+[LGDC 2026-09-15T18:57:44.261Z] gate-consult deny gambit foF2 2026.09.12T05:00 ms-since-last=9171
+[LGDC 2026-09-15T18:57:53.241Z] launch gambit foF2 2026.09.12T05:00
+[LGDC 2026-09-15T18:57:53.542Z] result ok gambit foF2 2026.09.12T05:00
+[Irtam] bucket foF2 2026.09.12T05:00 OK (TOV 1789189200)
+[LGDC 2026-09-15T18:57:54.253Z] gate-consult deny gambit foF2 2026.09.12T05:15 ms-since-last=3966
+[LGDC 2026-09-15T18:58:00.410Z] gate-consult deny gambit foF2 2026.09.12T05:15 ms-since-last=10123
+[LGDC 2026-09-15T18:58:08.775Z] launch gambit foF2 2026.09.12T05:15
+[LGDC 2026-09-15T18:58:08.780Z] result ok gambit foF2 2026.09.12T05:15
+[Irtam] bucket foF2 2026.09.12T05:15 OK (TOV 1789190100)
+[LGDC 2026-09-15T18:58:09.461Z] gate-consult deny gambit foF2 2026.09.12T05:30 ms-since-last=2984
+[LGDC 2026-09-15T18:58:15.676Z] gate-consult deny gambit foF2 2026.09.12T05:30 ms-since-last=9199
+[LGDC 2026-09-15T18:58:25.585Z] launch gambit foF2 2026.09.12T05:30
+[LGDC 2026-09-15T18:58:25.591Z] result ok gambit foF2 2026.09.12T05:30
+[Irtam] bucket foF2 2026.09.12T05:30 OK (TOV 1789191000)
+[LGDC 2026-09-15T18:58:26.359Z] gate-consult deny gambit foF2 2026.09.12T05:45 ms-since-last=4490
+[LGDC 2026-09-15T18:58:32.763Z] gate-consult deny gambit foF2 2026.09.12T05:45 ms-since-last=10894
+[LGDC 2026-09-15T18:58:41.163Z] launch gambit foF2 2026.09.12T05:45
+[LGDC 2026-09-15T18:58:41.173Z] result ok gambit foF2 2026.09.12T05:45
+[Irtam] bucket foF2 2026.09.12T05:45 OK (TOV 1789191900)
+[LGDC 2026-09-15T18:58:42.298Z] gate-consult deny gambit foF2 2026.09.12T06:00 ms-since-last=3328
+[LGDC 2026-09-15T18:58:48.549Z] gate-consult deny gambit foF2 2026.09.12T06:00 ms-since-last=9579
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=1.67 max=68.61 TECU
+[SolarIndices] Kp=0.00 Dst=11 F10.7=105 Ap=20 SSN=23 (5/5 real)
+[LGDC 2026-09-15T18:58:57.517Z] launch gambit foF2 2026.09.12T06:00
+[LGDC 2026-09-15T18:58:57.522Z] result ok gambit foF2 2026.09.12T06:00
+[Irtam] bucket foF2 2026.09.12T06:00 OK (TOV 1789192800)
+[LGDC 2026-09-15T18:58:58.448Z] gate-consult deny gambit foF2 2026.09.12T06:15 ms-since-last=3572
+[SolarWindAdapter] Viento solar real: speed=739 km/s density=3.4 cm^-3 Bz=-11.7 nT (hist 3936 pts)
+[LGDC 2026-09-15T18:59:04.979Z] gate-consult deny gambit foF2 2026.09.12T06:15 ms-since-last=10103
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=20.0
+[RadioProp] MUF=17.1 FOT=14.5 LUF=6.7 S4=0.08 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 2.86e-07 W/m2 (B2.9)
+[LGDC 2026-09-15T18:59:13.709Z] launch gambit foF2 2026.09.12T06:15
+[LGDC 2026-09-15T18:59:13.715Z] result ok gambit foF2 2026.09.12T06:15
+[Irtam] bucket foF2 2026.09.12T06:15 OK (TOV 1789193700)
+[LGDC 2026-09-15T18:59:14.308Z] gate-consult deny gambit foF2 2026.09.12T06:30 ms-since-last=3215
+[LGDC 2026-09-15T18:59:16.702Z] launch getbest EB040
+[LGDC 2026-09-15T18:59:16.960Z] launch getbest KL154
+[LGDC 2026-09-15T18:59:17.211Z] launch getbest EA036
+[LGDC 2026-09-15T18:59:17.479Z] launch getbest KI167
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 9 estaciones EU
+[Ebro] EB040_2026258185501.SAO: foF2=7.10 MUF=23.6 hmF2=268 foEs=nan
+[LGDC 2026-09-15T18:59:18.090Z] launch getbest OL246
+[LGDC 2026-09-15T18:59:18.347Z] launch getbest RV149
+[LGDC 2026-09-15T18:59:18.600Z] launch getbest TR170
+[LGDC 2026-09-15T18:59:18.865Z] launch getbest RL052
+[LGDC 2026-09-15T18:59:19.117Z] launch getbest CS839
+[LGDC 2026-09-15T18:59:19.367Z] launch getbest AC843
+[LGDC 2026-09-15T18:59:19.638Z] launch getbest AU930
+[LGDC 2026-09-15T18:59:19.903Z] launch getbest LD160
+[LGDC 2026-09-15T18:59:20.153Z] launch getbest PF765
+[LGDC 2026-09-15T18:59:20.500Z] gate-consult deny gambit foF2 2026.09.12T06:30 ms-since-last=347
+[GiroAdapter] getbest async: 2 estaciones actualizadas
+[LGDC 2026-09-15T18:59:26.702Z] gate-consult deny gambit foF2 2026.09.12T06:30 ms-since-last=6549
+[LGDC 2026-09-15T18:59:32.771Z] gate-consult deny gambit foF2 2026.09.12T06:30 ms-since-last=12618
+[LGDC 2026-09-15T18:59:41.837Z] launch gambit foF2 2026.09.12T06:30
+[LGDC 2026-09-15T18:59:41.842Z] result ok gambit foF2 2026.09.12T06:30
+[Irtam] bucket foF2 2026.09.12T06:30 OK (TOV 1789194600)
+[LGDC 2026-09-15T18:59:42.387Z] gate-consult deny gambit foF2 2026.09.12T06:45 ms-since-last=3493
+[LGDC 2026-09-15T18:59:48.444Z] gate-consult deny gambit foF2 2026.09.12T06:45 ms-since-last=9550
+[LGDC 2026-09-15T18:59:56.841Z] launch gambit foF2 2026.09.12T06:45
+[LGDC 2026-09-15T18:59:56.845Z] result ok gambit foF2 2026.09.12T06:45
+[Irtam] bucket foF2 2026.09.12T06:45 OK (TOV 1789195500)
+[LGDC 2026-09-15T18:59:57.353Z] gate-consult deny gambit foF2 2026.09.12T07:00 ms-since-last=2841
+[LGDC 2026-09-15T19:00:03.405Z] gate-consult deny gambit foF2 2026.09.12T07:00 ms-since-last=8893
+[LGDC 2026-09-15T19:00:11.741Z] launch gambit foF2 2026.09.12T07:00
+[LGDC 2026-09-15T19:00:11.748Z] result ok gambit foF2 2026.09.12T07:00
+[Irtam] bucket foF2 2026.09.12T07:00 OK (TOV 1789196400)
+[LGDC 2026-09-15T19:00:12.260Z] gate-consult deny gambit foF2 2026.09.12T07:15 ms-since-last=2742
+[LGDC 2026-09-15T19:00:18.310Z] gate-consult deny gambit foF2 2026.09.12T07:15 ms-since-last=8792
+[LGDC 2026-09-15T19:00:24.370Z] gate-consult deny gambit foF2 2026.09.12T07:15 ms-since-last=14852
+[LGDC 2026-09-15T19:00:32.359Z] launch gambit foF2 2026.09.12T07:15
+[LGDC 2026-09-15T19:00:32.364Z] result ok gambit foF2 2026.09.12T07:15
+[Irtam] bucket foF2 2026.09.12T07:15 OK (TOV 1789197300)
+[LGDC 2026-09-15T19:00:32.979Z] gate-consult deny gambit foF2 2026.09.12T07:30 ms-since-last=2548
+[LGDC 2026-09-15T19:00:39.124Z] gate-consult deny gambit foF2 2026.09.12T07:30 ms-since-last=8693
+[LGDC 2026-09-15T19:00:45.189Z] gate-consult deny gambit foF2 2026.09.12T07:30 ms-since-last=14758
+[LGDC 2026-09-15T19:00:53.836Z] launch gambit foF2 2026.09.12T07:30
+[LGDC 2026-09-15T19:00:53.841Z] result ok gambit foF2 2026.09.12T07:30
+[Irtam] bucket foF2 2026.09.12T07:30 OK (TOV 1789198200)
+[LGDC 2026-09-15T19:00:54.374Z] gate-consult deny gambit foF2 2026.09.12T07:45 ms-since-last=3114
+[LGDC 2026-09-15T19:01:00.438Z] gate-consult deny gambit foF2 2026.09.12T07:45 ms-since-last=9178
+[LGDC 2026-09-15T19:01:08.469Z] launch gambit foF2 2026.09.12T07:45
+[LGDC 2026-09-15T19:01:08.474Z] result ok gambit foF2 2026.09.12T07:45
+[Irtam] bucket foF2 2026.09.12T07:45 OK (TOV 1789199100)
+[LGDC 2026-09-15T19:01:09.016Z] gate-consult deny gambit foF2 2026.09.12T08:00 ms-since-last=2486
+[LGDC 2026-09-15T19:01:15.089Z] gate-consult deny gambit foF2 2026.09.12T08:00 ms-since-last=8559
+[LGDC 2026-09-15T19:01:21.175Z] gate-consult deny gambit foF2 2026.09.12T08:00 ms-since-last=14645
+[LGDC 2026-09-15T19:01:29.317Z] launch gambit foF2 2026.09.12T08:00
+[LGDC 2026-09-15T19:01:29.324Z] result ok gambit foF2 2026.09.12T08:00
+[Irtam] bucket foF2 2026.09.12T08:00 OK (TOV 1789200000)
+[LGDC 2026-09-15T19:01:29.943Z] gate-consult deny gambit foF2 2026.09.12T08:15 ms-since-last=2652
+[LGDC 2026-09-15T19:01:36.082Z] gate-consult deny gambit foF2 2026.09.12T08:15 ms-since-last=8791
+[LGDC 2026-09-15T19:01:42.221Z] gate-consult deny gambit foF2 2026.09.12T08:15 ms-since-last=14930
+[LGDC 2026-09-15T19:01:51.001Z] launch gambit foF2 2026.09.12T08:15
+[LGDC 2026-09-15T19:01:51.005Z] result ok gambit foF2 2026.09.12T08:15
+[Irtam] bucket foF2 2026.09.12T08:15 OK (TOV 1789200900)
+[LGDC 2026-09-15T19:01:51.541Z] gate-consult deny gambit foF2 2026.09.12T08:30 ms-since-last=3180
+[LGDC 2026-09-15T19:01:57.684Z] gate-consult deny gambit foF2 2026.09.12T08:30 ms-since-last=9323
+[LGDC 2026-09-15T19:02:06.452Z] launch gambit foF2 2026.09.12T08:30
+[LGDC 2026-09-15T19:02:06.460Z] result ok gambit foF2 2026.09.12T08:30
+[Irtam] bucket foF2 2026.09.12T08:30 OK (TOV 1789201800)
+[LGDC 2026-09-15T19:02:07.042Z] gate-consult deny gambit foF2 2026.09.12T08:45 ms-since-last=3225
+[LGDC 2026-09-15T19:02:13.180Z] gate-consult deny gambit foF2 2026.09.12T08:45 ms-since-last=9363
+[LGDC 2026-09-15T19:02:21.616Z] launch gambit foF2 2026.09.12T08:45
+[LGDC 2026-09-15T19:02:21.622Z] result ok gambit foF2 2026.09.12T08:45
+[Irtam] bucket foF2 2026.09.12T08:45 OK (TOV 1789202700)
+[LGDC 2026-09-15T19:02:22.209Z] gate-consult deny gambit foF2 2026.09.12T09:00 ms-since-last=2911
+[LGDC 2026-09-15T19:02:28.357Z] gate-consult deny gambit foF2 2026.09.12T09:00 ms-since-last=9059
+[LGDC 2026-09-15T19:02:36.692Z] launch gambit foF2 2026.09.12T09:00
+[LGDC 2026-09-15T19:02:36.697Z] result ok gambit foF2 2026.09.12T09:00
+[Irtam] bucket foF2 2026.09.12T09:00 OK (TOV 1789203600)
+[LGDC 2026-09-15T19:02:37.491Z] gate-consult deny gambit foF2 2026.09.12T09:15 ms-since-last=2879
+[LGDC 2026-09-15T19:02:43.864Z] gate-consult deny gambit foF2 2026.09.12T09:15 ms-since-last=9252
+[LGDC 2026-09-15T19:02:52.317Z] launch gambit foF2 2026.09.12T09:15
+[LGDC 2026-09-15T19:02:52.321Z] result ok gambit foF2 2026.09.12T09:15
+[Irtam] bucket foF2 2026.09.12T09:15 OK (TOV 1789204500)
+[LGDC 2026-09-15T19:02:53.121Z] gate-consult deny gambit foF2 2026.09.12T09:30 ms-since-last=2905
+[LGDC 2026-09-15T19:02:59.455Z] gate-consult deny gambit foF2 2026.09.12T09:30 ms-since-last=9239
+[LGDC 2026-09-15T19:03:09.089Z] launch gambit foF2 2026.09.12T09:30
+[LGDC 2026-09-15T19:03:09.093Z] result ok gambit foF2 2026.09.12T09:30
+[Irtam] bucket foF2 2026.09.12T09:30 OK (TOV 1789205400)
+[LGDC 2026-09-15T19:03:10.048Z] gate-consult deny gambit foF2 2026.09.12T09:45 ms-since-last=3934
+[LGDC 2026-09-15T19:03:16.303Z] gate-consult deny gambit foF2 2026.09.12T09:45 ms-since-last=10189
+[LGDC 2026-09-15T19:03:26.502Z] launch gambit foF2 2026.09.12T09:45
+[LGDC 2026-09-15T19:03:26.508Z] result ok gambit foF2 2026.09.12T09:45
+[Irtam] bucket foF2 2026.09.12T09:45 OK (TOV 1789206300)
+[LGDC 2026-09-15T19:03:27.203Z] gate-consult deny gambit foF2 2026.09.12T10:00 ms-since-last=4548
+[LGDC 2026-09-15T19:03:33.696Z] gate-consult deny gambit foF2 2026.09.12T10:00 ms-since-last=11041
+[LGDC 2026-09-15T19:03:43.615Z] launch gambit foF2 2026.09.12T10:00
+[LGDC 2026-09-15T19:03:43.621Z] result ok gambit foF2 2026.09.12T10:00
+[Irtam] bucket foF2 2026.09.12T10:00 OK (TOV 1789207200)
+[LGDC 2026-09-15T19:03:44.216Z] gate-consult deny gambit foF2 2026.09.12T10:15 ms-since-last=3953
+[LGDC 2026-09-15T19:03:50.368Z] gate-consult deny gambit foF2 2026.09.12T10:15 ms-since-last=10105
+[LGDC 2026-09-15T19:03:59.284Z] launch gambit foF2 2026.09.12T10:15
+[LGDC 2026-09-15T19:03:59.294Z] result ok gambit foF2 2026.09.12T10:15
+[Irtam] bucket foF2 2026.09.12T10:15 OK (TOV 1789208100)
+[LGDC 2026-09-15T19:03:59.947Z] gate-consult deny gambit foF2 2026.09.12T10:30 ms-since-last=3406
+[LGDC 2026-09-15T19:04:06.161Z] gate-consult deny gambit foF2 2026.09.12T10:30 ms-since-last=9620
+[LGDC 2026-09-15T19:04:16.714Z] launch getbest PQ052
+[LGDC 2026-09-15T19:04:16.967Z] launch getbest GM037
+[LGDC 2026-09-15T19:04:17.221Z] launch getbest FF051
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 9 estaciones EU
+[Ebro] EB040_2026258190001.SAO: foF2=6.95 MUF=23.3 hmF2=268 foEs=nan
+[LGDC 2026-09-15T19:04:17.485Z] launch getbest JR055
+[LGDC 2026-09-15T19:04:17.519Z] launch gambit foF2 2026.09.12T10:30
+[LGDC 2026-09-15T19:04:17.529Z] result ok gambit foF2 2026.09.12T10:30
+[Irtam] bucket foF2 2026.09.12T10:30 OK (TOV 1789209000)
+[LGDC 2026-09-15T19:04:17.745Z] launch getbest AT138
+[LGDC 2026-09-15T19:04:18.002Z] launch getbest VT139
+[LGDC 2026-09-15T19:04:18.255Z] launch getbest SO148
+[LGDC 2026-09-15T19:04:18.261Z] gate-consult deny gambit foF2 2026.09.12T10:45 ms-since-last=6
+[LGDC 2026-09-15T19:04:18.520Z] launch getbest TR169
+[LGDC 2026-09-15T19:04:18.785Z] launch getbest DB049
+[LGDC 2026-09-15T19:04:19.056Z] launch getbest MZ152
+[LGDC 2026-09-15T19:04:19.313Z] launch getbest EG931
+[LGDC 2026-09-15T19:04:19.578Z] launch getbest BC840
+[LGDC 2026-09-15T19:04:19.829Z] launch getbest EI764
+[LGDC 2026-09-15T19:04:20.079Z] launch getbest SMK29
+[LGDC 2026-09-15T19:04:20.333Z] launch getbest BVJ03
+[LGDC 2026-09-15T19:04:21.311Z] launch getbest TNJ20
+[LGDC 2026-09-15T19:04:21.675Z] launch getbest CAJ2M
+[LGDC 2026-09-15T19:04:21.926Z] launch getbest CXM9B
+[LGDC 2026-09-15T19:04:22.191Z] launch getbest LA42Q
+[LGDC 2026-09-15T19:04:22.456Z] launch getbest BLJ03
+[LGDC 2026-09-15T19:04:22.710Z] launch getbest DW41K
+[LGDC 2026-09-15T19:04:22.964Z] launch getbest IC437
+[LGDC 2026-09-15T19:04:23.225Z] launch getbest TO535
+[LGDC 2026-09-15T19:04:23.480Z] launch getbest XI434
+[LGDC 2026-09-15T19:04:23.748Z] launch getbest DH224
+[LGDC 2026-09-15T19:04:24.001Z] launch getbest CS31K
+[LGDC 2026-09-15T19:04:24.260Z] launch getbest ML10L
+[LGDC 2026-09-15T19:04:24.518Z] launch getbest MA155
+[LGDC 2026-09-15T19:04:24.656Z] gate-consult deny gambit foF2 2026.09.12T10:45 ms-since-last=138
+[LGDC 2026-09-15T19:04:24.774Z] launch getbest MO155
+[LGDC 2026-09-15T19:04:25.029Z] launch getbest NDA81
+[LGDC 2026-09-15T19:04:25.286Z] launch getbest MU12K
+[GiroAdapter] getbest async: 14 estaciones actualizadas
+[LGDC 2026-09-15T19:04:31.674Z] gate-consult deny gambit foF2 2026.09.12T10:45 ms-since-last=6388
+[LGDC 2026-09-15T19:04:38.022Z] gate-consult deny gambit foF2 2026.09.12T10:45 ms-since-last=12736
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=1.67 max=68.61 TECU
+[LGDC 2026-09-15T19:04:46.650Z] launch gambit foF2 2026.09.12T10:45
+[LGDC 2026-09-15T19:04:46.655Z] result ok gambit foF2 2026.09.12T10:45
+[Irtam] bucket foF2 2026.09.12T10:45 OK (TOV 1789209900)
+[LGDC 2026-09-15T19:04:47.306Z] gate-consult deny gambit foF2 2026.09.12T11:00 ms-since-last=2760
+[SolarIndices] Kp=0.00 Dst=0 F10.7=105 Ap=20 SSN=23 (5/5 real)
+[LGDC 2026-09-15T19:04:54.111Z] gate-consult deny gambit foF2 2026.09.12T11:00 ms-since-last=9565
+[SolarWindAdapter] Viento solar real: speed=733 km/s density=0.4 cm^-3 Bz=-11.9 nT (hist 3934 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=27.0
+[RadioProp] MUF=15.9 FOT=13.5 LUF=6.3 S4=0.08 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 2.78e-07 W/m2 (B2.8)
+[LGDC 2026-09-15T19:05:02.563Z] launch gambit foF2 2026.09.12T11:00
+[LGDC 2026-09-15T19:05:02.570Z] result ok gambit foF2 2026.09.12T11:00
+[Irtam] bucket foF2 2026.09.12T11:00 OK (TOV 1789210800)
+[LGDC 2026-09-15T19:05:03.342Z] gate-consult deny gambit foF2 2026.09.12T11:15 ms-since-last=3081
+[LGDC 2026-09-15T19:05:09.599Z] gate-consult deny gambit foF2 2026.09.12T11:15 ms-since-last=9338
+[LGDC 2026-09-15T19:05:17.887Z] launch gambit foF2 2026.09.12T11:15
+[LGDC 2026-09-15T19:05:17.891Z] result ok gambit foF2 2026.09.12T11:15
+[Irtam] bucket foF2 2026.09.12T11:15 OK (TOV 1789211700)
+[LGDC 2026-09-15T19:05:18.607Z] gate-consult deny gambit foF2 2026.09.12T11:30 ms-since-last=2809
+[LGDC 2026-09-15T19:05:24.878Z] gate-consult deny gambit foF2 2026.09.12T11:30 ms-since-last=9080
+[LGDC 2026-09-15T19:05:33.693Z] launch gambit foF2 2026.09.12T11:30
+[LGDC 2026-09-15T19:05:33.697Z] result ok gambit foF2 2026.09.12T11:30
+[Irtam] bucket foF2 2026.09.12T11:30 OK (TOV 1789212600)
+[LGDC 2026-09-15T19:05:34.388Z] gate-consult deny gambit foF2 2026.09.12T11:45 ms-since-last=3349
+[LGDC 2026-09-15T19:05:40.555Z] gate-consult deny gambit foF2 2026.09.12T11:45 ms-since-last=9516
+[LGDC 2026-09-15T19:05:48.835Z] launch gambit foF2 2026.09.12T11:45
+[LGDC 2026-09-15T19:05:48.840Z] result ok gambit foF2 2026.09.12T11:45
+[Irtam] bucket foF2 2026.09.12T11:45 OK (TOV 1789213500)
+[LGDC 2026-09-15T19:05:49.438Z] gate-consult deny gambit foF2 2026.09.12T12:00 ms-since-last=2701
+[LGDC 2026-09-15T19:05:55.603Z] gate-consult deny gambit foF2 2026.09.12T12:00 ms-since-last=8866
+[LGDC 2026-09-15T19:06:02.279Z] result fail gambit foF2 2026.09.12T12:00 red/pre-gate
+[Irtam] fetch foF2 2026.09.12T12:00: fallo red/pre-gate
+[LGDC 2026-09-15T19:06:08.444Z] gate-consult deny gambit foF2 2026.09.12T12:00 ms-since-last=6675
+[LGDC 2026-09-15T19:06:14.620Z] gate-consult deny gambit foF2 2026.09.12T12:00 ms-since-last=12851
+[LGDC 2026-09-15T19:06:23.364Z] launch gambit foF2 2026.09.12T12:00
+[LGDC 2026-09-15T19:06:23.369Z] result ok gambit foF2 2026.09.12T12:00
+[Irtam] bucket foF2 2026.09.12T12:00 OK (TOV 1789214400)
+[LGDC 2026-09-15T19:06:24.016Z] gate-consult deny gambit foF2 2026.09.12T12:15 ms-since-last=3225
+[LGDC 2026-09-15T19:06:30.173Z] gate-consult deny gambit foF2 2026.09.12T12:15 ms-since-last=9383
+[LGDC 2026-09-15T19:06:39.013Z] launch gambit foF2 2026.09.12T12:15
+[LGDC 2026-09-15T19:06:39.018Z] result ok gambit foF2 2026.09.12T12:15
+[Irtam] bucket foF2 2026.09.12T12:15 OK (TOV 1789215300)
+[LGDC 2026-09-15T19:06:39.630Z] gate-consult deny gambit foF2 2026.09.12T12:30 ms-since-last=3258
+[LGDC 2026-09-15T19:06:45.777Z] gate-consult deny gambit foF2 2026.09.12T12:30 ms-since-last=9405
+[LGDC 2026-09-15T19:06:54.037Z] launch gambit foF2 2026.09.12T12:30
+[LGDC 2026-09-15T19:06:54.042Z] result ok gambit foF2 2026.09.12T12:30
+[Irtam] bucket foF2 2026.09.12T12:30 OK (TOV 1789216200)
+[LGDC 2026-09-15T19:06:54.640Z] gate-consult deny gambit foF2 2026.09.12T12:45 ms-since-last=2725
+[LGDC 2026-09-15T19:07:00.787Z] gate-consult deny gambit foF2 2026.09.12T12:45 ms-since-last=8872
+[LGDC 2026-09-15T19:07:09.138Z] launch gambit foF2 2026.09.12T12:45
+[LGDC 2026-09-15T19:07:09.144Z] result ok gambit foF2 2026.09.12T12:45
+[Irtam] bucket foF2 2026.09.12T12:45 OK (TOV 1789217100)
+[LGDC 2026-09-15T19:07:09.751Z] gate-consult deny gambit foF2 2026.09.12T13:00 ms-since-last=2822
+[LGDC 2026-09-15T19:07:15.943Z] gate-consult deny gambit foF2 2026.09.12T13:00 ms-since-last=9014
+[LGDC 2026-09-15T19:07:24.098Z] launch gambit foF2 2026.09.12T13:00
+[LGDC 2026-09-15T19:07:24.102Z] result ok gambit foF2 2026.09.12T13:00
+[Irtam] bucket foF2 2026.09.12T13:00 OK (TOV 1789218000)
+[LGDC 2026-09-15T19:07:24.564Z] gate-consult deny gambit foF2 2026.09.12T13:15 ms-since-last=2592
+[LGDC 2026-09-15T19:07:30.620Z] gate-consult deny gambit foF2 2026.09.12T13:15 ms-since-last=8648
+[LGDC 2026-09-15T19:07:36.642Z] gate-consult deny gambit foF2 2026.09.12T13:15 ms-since-last=14670
+[LGDC 2026-09-15T19:07:44.742Z] launch gambit foF2 2026.09.12T13:15
+[LGDC 2026-09-15T19:07:44.750Z] result ok gambit foF2 2026.09.12T13:15
+[Irtam] bucket foF2 2026.09.12T13:15 OK (TOV 1789218900)
+[LGDC 2026-09-15T19:07:45.215Z] gate-consult deny gambit foF2 2026.09.12T13:30 ms-since-last=2519
+[LGDC 2026-09-15T19:07:51.258Z] gate-consult deny gambit foF2 2026.09.12T13:30 ms-since-last=8562
+[LGDC 2026-09-15T19:07:57.301Z] gate-consult deny gambit foF2 2026.09.12T13:30 ms-since-last=14605
+[LGDC 2026-09-15T19:08:03.863Z] result fail gambit foF2 2026.09.12T13:30 red/pre-gate
+[Irtam] fetch foF2 2026.09.12T13:30: fallo red/pre-gate
+[LGDC 2026-09-15T19:08:09.914Z] gate-consult deny gambit foF2 2026.09.12T13:30 ms-since-last=6581
+[LGDC 2026-09-15T19:08:15.977Z] gate-consult deny gambit foF2 2026.09.12T13:30 ms-since-last=12644
+[LGDC 2026-09-15T19:08:24.120Z] launch gambit foF2 2026.09.12T13:30
+[LGDC 2026-09-15T19:08:24.127Z] result ok gambit foF2 2026.09.12T13:30
+[Irtam] bucket foF2 2026.09.12T13:30 OK (TOV 1789219800)
+[LGDC 2026-09-15T19:08:24.582Z] gate-consult deny gambit foF2 2026.09.12T13:45 ms-since-last=2576
+[LGDC 2026-09-15T19:08:30.586Z] gate-consult deny gambit foF2 2026.09.12T13:45 ms-since-last=8580
+[LGDC 2026-09-15T19:08:36.616Z] gate-consult deny gambit foF2 2026.09.12T13:45 ms-since-last=14610
+[LGDC 2026-09-15T19:08:50.923Z] launch gambit foF2 2026.09.12T13:45
+[LGDC 2026-09-15T19:08:50.928Z] result ok gambit foF2 2026.09.12T13:45
+[Irtam] bucket foF2 2026.09.12T13:45 OK (TOV 1789220700)
+[LGDC 2026-09-15T19:08:51.385Z] gate-consult deny gambit foF2 2026.09.12T14:00 ms-since-last=8720
+[LGDC 2026-09-15T19:08:57.395Z] gate-consult deny gambit foF2 2026.09.12T14:00 ms-since-last=14730
+[LGDC 2026-09-15T19:09:05.523Z] launch gambit foF2 2026.09.12T14:00
+[LGDC 2026-09-15T19:09:05.532Z] result ok gambit foF2 2026.09.12T14:00
+[Irtam] bucket foF2 2026.09.12T14:00 OK (TOV 1789221600)
+[LGDC 2026-09-15T19:09:05.979Z] gate-consult deny gambit foF2 2026.09.12T14:15 ms-since-last=2554
+[LGDC 2026-09-15T19:09:12.033Z] gate-consult deny gambit foF2 2026.09.12T14:15 ms-since-last=8608
+[LGDC 2026-09-15T19:09:16.752Z] launch getbest EB040
+[LGDC 2026-09-15T19:09:17.017Z] launch getbest TV51R
+[LGDC 2026-09-15T19:09:17.269Z] launch getbest NI135
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 9 estaciones EU
+[Ebro] EB040_2026258190501.SAO: foF2=6.85 MUF=22.7 hmF2=272 foEs=nan
+[LGDC 2026-09-15T19:09:17.521Z] launch getbest CB53N
+[LGDC 2026-09-15T19:09:17.773Z] launch getbest RM041
+[LGDC 2026-09-15T19:09:18.024Z] launch getbest GR13L
+[LGDC 2026-09-15T19:09:18.045Z] gate-consult deny gambit foF2 2026.09.12T14:15 ms-since-last=21
+[LGDC 2026-09-15T19:09:18.276Z] launch getbest TR0P2
+[GiroAdapter] getbest async: 7 estaciones actualizadas
+[LGDC 2026-09-15T19:09:24.065Z] gate-consult deny gambit foF2 2026.09.12T14:15 ms-since-last=5789
+[LGDC 2026-09-15T19:09:30.105Z] gate-consult deny gambit foF2 2026.09.12T14:15 ms-since-last=11829
+[LGDC 2026-09-15T19:09:38.281Z] launch gambit foF2 2026.09.12T14:15
+[LGDC 2026-09-15T19:09:38.285Z] result ok gambit foF2 2026.09.12T14:15
+[Irtam] bucket foF2 2026.09.12T14:15 OK (TOV 1789222500)
+[LGDC 2026-09-15T19:09:38.746Z] gate-consult deny gambit foF2 2026.09.12T14:30 ms-since-last=2587
+[LGDC 2026-09-15T19:09:44.749Z] gate-consult deny gambit foF2 2026.09.12T14:30 ms-since-last=8590
+[LGDC 2026-09-15T19:09:50.802Z] gate-consult deny gambit foF2 2026.09.12T14:30 ms-since-last=14643
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=1.47 max=67.80 TECU
+[SolarIndices] Kp=0.00 Dst=-10 F10.7=105 Ap=20 SSN=23 (5/5 real)
+[LGDC 2026-09-15T19:09:58.965Z] launch gambit foF2 2026.09.12T14:30
+[LGDC 2026-09-15T19:09:58.970Z] result ok gambit foF2 2026.09.12T14:30
+[Irtam] bucket foF2 2026.09.12T14:30 OK (TOV 1789223400)
+[LGDC 2026-09-15T19:09:59.441Z] gate-consult deny gambit foF2 2026.09.12T14:45 ms-since-last=2635
+[SolarWindAdapter] Viento solar real: speed=712 km/s density=3.4 cm^-3 Bz=1.3 nT (hist 3934 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=37.0
+[RadioProp] MUF=15.9 FOT=13.5 LUF=6.3 S4=0.08 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 2.75e-07 W/m2 (B2.8)
+[Sdo] switch -> A304 (cache 2134 s) (stale, refrescando...)
+[LGDC 2026-09-15T19:10:05.481Z] gate-consult deny gambit foF2 2026.09.12T14:45 ms-since-last=8675
+[Sdo] fetch A304 512x512 (age 2134s)
+[Sdo] fetch HMIIF 512x512 (age 2134s)
+[LGDC 2026-09-15T19:10:11.527Z] gate-consult deny gambit foF2 2026.09.12T14:45 ms-since-last=14721
+[Sdo] switch -> HMIIF (cache 25 s)
+[Sdo] switch -> A304 (cache 26 s)
+[LGDC 2026-09-15T19:10:19.622Z] launch gambit foF2 2026.09.12T14:45
+[LGDC 2026-09-15T19:10:19.626Z] result ok gambit foF2 2026.09.12T14:45
+[Irtam] bucket foF2 2026.09.12T14:45 OK (TOV 1789224300)
+[LGDC 2026-09-15T19:10:20.095Z] gate-consult deny gambit foF2 2026.09.12T15:00 ms-since-last=2556
+[LGDC 2026-09-15T19:10:26.133Z] gate-consult deny gambit foF2 2026.09.12T15:00 ms-since-last=8594
+[LGDC 2026-09-15T19:10:32.164Z] gate-consult deny gambit foF2 2026.09.12T15:00 ms-since-last=14625
+[LGDC 2026-09-15T19:10:41.031Z] launch gambit foF2 2026.09.12T15:00
+[LGDC 2026-09-15T19:10:41.035Z] result ok gambit foF2 2026.09.12T15:00
+[Irtam] bucket foF2 2026.09.12T15:00 OK (TOV 1789225200)
+[LGDC 2026-09-15T19:10:41.486Z] gate-consult deny gambit foF2 2026.09.12T15:15 ms-since-last=3288
+[LGDC 2026-09-15T19:10:47.522Z] gate-consult deny gambit foF2 2026.09.12T15:15 ms-since-last=9324
+[LGDC 2026-09-15T19:10:55.660Z] launch gambit foF2 2026.09.12T15:15
+[LGDC 2026-09-15T19:10:55.666Z] result ok gambit foF2 2026.09.12T15:15
+[Irtam] bucket foF2 2026.09.12T15:15 OK (TOV 1789226100)
+[LGDC 2026-09-15T19:10:56.259Z] gate-consult deny gambit foF2 2026.09.12T15:30 ms-since-last=2616
+[LGDC 2026-09-15T19:11:02.384Z] gate-consult deny gambit foF2 2026.09.12T15:30 ms-since-last=8741
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=1.47 max=67.80 TECU
+[LGDC 2026-09-15T19:11:08.535Z] gate-consult deny gambit foF2 2026.09.12T15:30 ms-since-last=14892
+[SolarIndices] Kp=0.00 Dst=-10 F10.7=105 Ap=20 SSN=23 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=712 km/s density=3.4 cm^-3 Bz=1.3 nT (hist 3934 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=37.0
+[RadioProp] MUF=15.9 FOT=13.5 LUF=6.3 S4=0.08 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 2.75e-07 W/m2 (B2.8)
+[LGDC 2026-09-15T19:11:16.855Z] launch gambit foF2 2026.09.12T15:30
+[LGDC 2026-09-15T19:11:16.860Z] result ok gambit foF2 2026.09.12T15:30
+[Irtam] bucket foF2 2026.09.12T15:30 OK (TOV 1789227000)
+[LGDC 2026-09-15T19:11:17.422Z] gate-consult deny gambit foF2 2026.09.12T15:45 ms-since-last=2741
+[LGDC 2026-09-15T19:11:23.551Z] gate-consult deny gambit foF2 2026.09.12T15:45 ms-since-last=8870
+[LGDC 2026-09-15T19:11:31.784Z] launch gambit foF2 2026.09.12T15:45
+[LGDC 2026-09-15T19:11:31.788Z] result ok gambit foF2 2026.09.12T15:45
+[Irtam] bucket foF2 2026.09.12T15:45 OK (TOV 1789227900)
+[LGDC 2026-09-15T19:11:32.379Z] gate-consult deny gambit foF2 2026.09.12T16:00 ms-since-last=2698
+[LGDC 2026-09-15T19:11:38.488Z] gate-consult deny gambit foF2 2026.09.12T16:00 ms-since-last=8807
+[LGDC 2026-09-15T19:11:44.642Z] gate-consult deny gambit foF2 2026.09.12T16:00 ms-since-last=14961
+[LGDC 2026-09-15T19:11:53.752Z] launch gambit foF2 2026.09.12T16:00
+[LGDC 2026-09-15T19:11:53.759Z] result ok gambit foF2 2026.09.12T16:00
+[Irtam] bucket foF2 2026.09.12T16:00 OK (TOV 1789228800)
+[LGDC 2026-09-15T19:11:54.343Z] gate-consult deny gambit foF2 2026.09.12T16:15 ms-since-last=3558
+[LGDC 2026-09-15T19:12:00.489Z] gate-consult deny gambit foF2 2026.09.12T16:15 ms-since-last=9704
+[LGDC 2026-09-15T19:12:08.786Z] launch gambit foF2 2026.09.12T16:15
+[LGDC 2026-09-15T19:12:08.791Z] result ok gambit foF2 2026.09.12T16:15
+[Irtam] bucket foF2 2026.09.12T16:15 OK (TOV 1789229700)
+[LGDC 2026-09-15T19:12:09.420Z] gate-consult deny gambit foF2 2026.09.12T16:30 ms-since-last=2811
+[LGDC 2026-09-15T19:12:15.619Z] gate-consult deny gambit foF2 2026.09.12T16:30 ms-since-last=9010
+[LGDC 2026-09-15T19:12:23.865Z] launch gambit foF2 2026.09.12T16:30
+[LGDC 2026-09-15T19:12:23.870Z] result ok gambit foF2 2026.09.12T16:30
+[Irtam] bucket foF2 2026.09.12T16:30 OK (TOV 1789230600)
+[LGDC 2026-09-15T19:12:24.482Z] gate-consult deny gambit foF2 2026.09.12T16:45 ms-since-last=2741
+[LGDC 2026-09-15T19:12:30.617Z] gate-consult deny gambit foF2 2026.09.12T16:45 ms-since-last=8876
+[LGDC 2026-09-15T19:12:38.702Z] launch gambit foF2 2026.09.12T16:45
+[LGDC 2026-09-15T19:12:38.708Z] result ok gambit foF2 2026.09.12T16:45
+[Irtam] bucket foF2 2026.09.12T16:45 OK (TOV 1789231500)
+[LGDC 2026-09-15T19:12:39.284Z] gate-consult deny gambit foF2 2026.09.12T17:00 ms-since-last=2527
+[LGDC 2026-09-15T19:12:45.381Z] gate-consult deny gambit foF2 2026.09.12T17:00 ms-since-last=8624
+[LGDC 2026-09-15T19:12:51.483Z] gate-consult deny gambit foF2 2026.09.12T17:00 ms-since-last=14726
+[LGDC 2026-09-15T19:12:59.906Z] launch gambit foF2 2026.09.12T17:00
+[LGDC 2026-09-15T19:12:59.911Z] result ok gambit foF2 2026.09.12T17:00
+[Irtam] bucket foF2 2026.09.12T17:00 OK (TOV 1789232400)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=1.47 max=67.80 TECU
+[LGDC 2026-09-15T19:13:00.635Z] gate-consult deny gambit foF2 2026.09.12T17:15 ms-since-last=3013
+[SolarIndices] Kp=0.33 Dst=-20 F10.7=105 Ap=20 SSN=23 (5/5 real)
+[LGDC 2026-09-15T19:13:06.803Z] gate-consult deny gambit foF2 2026.09.12T17:15 ms-since-last=9181
+[SolarWindAdapter] Viento solar real: speed=757 km/s density=0.4 cm^-3 Bz=-0.5 nT (hist 3934 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=43.0
+[RadioProp] MUF=15.9 FOT=13.5 LUF=6.3 S4=0.08 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 2.78e-07 W/m2 (B2.8)
+[LGDC 2026-09-15T19:13:15.082Z] launch gambit foF2 2026.09.12T17:15
+[LGDC 2026-09-15T19:13:15.088Z] result ok gambit foF2 2026.09.12T17:15
+[Irtam] bucket foF2 2026.09.12T17:15 OK (TOV 1789233300)
+[LGDC 2026-09-15T19:13:15.668Z] gate-consult deny gambit foF2 2026.09.12T17:30 ms-since-last=2700
+[LGDC 2026-09-15T19:13:21.997Z] gate-consult deny gambit foF2 2026.09.12T17:30 ms-since-last=9029
+[LGDC 2026-09-15T19:13:30.223Z] launch gambit foF2 2026.09.12T17:30
+[LGDC 2026-09-15T19:13:30.236Z] result ok gambit foF2 2026.09.12T17:30
+[Irtam] bucket foF2 2026.09.12T17:30 OK (TOV 1789234200)
+[LGDC 2026-09-15T19:13:31.077Z] gate-consult deny gambit foF2 2026.09.12T17:45 ms-since-last=2944
+[LGDC 2026-09-15T19:13:37.392Z] gate-consult deny gambit foF2 2026.09.12T17:45 ms-since-last=9259
+[LGDC 2026-09-15T19:13:45.661Z] launch gambit foF2 2026.09.12T17:45
+[LGDC 2026-09-15T19:13:45.666Z] result ok gambit foF2 2026.09.12T17:45
+[Irtam] bucket foF2 2026.09.12T17:45 OK (TOV 1789235100)
+[LGDC 2026-09-15T19:13:46.385Z] gate-consult deny gambit foF2 2026.09.12T18:00 ms-since-last=2695
+[LGDC 2026-09-15T19:13:52.710Z] gate-consult deny gambit foF2 2026.09.12T18:00 ms-since-last=9020
+[LGDC 2026-09-15T19:14:01.786Z] launch gambit foF2 2026.09.12T18:00
+[LGDC 2026-09-15T19:14:01.793Z] result ok gambit foF2 2026.09.12T18:00
+[Irtam] bucket foF2 2026.09.12T18:00 OK (TOV 1789236000)
+[LGDC 2026-09-15T19:14:02.416Z] gate-consult deny gambit foF2 2026.09.12T18:15 ms-since-last=3485
+[LGDC 2026-09-15T19:14:08.745Z] gate-consult deny gambit foF2 2026.09.12T18:15 ms-since-last=9814
+[LGDC 2026-09-15T19:14:16.754Z] launch getbest EA036
+[LGDC 2026-09-15T19:14:17.015Z] launch getbest GM037
+[LGDC 2026-09-15T19:14:17.269Z] launch getbest PQ052
+[LGDC 2026-09-15T19:14:17.944Z] launch gambit foF2 2026.09.12T18:15
+[LGDC 2026-09-15T19:14:17.952Z] result ok gambit foF2 2026.09.12T18:15
+[Irtam] bucket foF2 2026.09.12T18:15 OK (TOV 1789236900)
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 9 estaciones EU
+[Ebro] EB040_2026258191001.SAO: foF2=6.65 MUF=22.3 hmF2=264 foEs=nan
+[GiroAdapter] getbest async: 3 estaciones actualizadas
+[LGDC 2026-09-15T19:14:18.757Z] gate-consult deny gambit foF2 2026.09.12T18:30 ms-since-last=1488
+[LGDC 2026-09-15T19:14:25.114Z] gate-consult deny gambit foF2 2026.09.12T18:30 ms-since-last=7845
+[LGDC 2026-09-15T19:14:31.350Z] gate-consult deny gambit foF2 2026.09.12T18:30 ms-since-last=14081
+[LGDC 2026-09-15T19:14:40.432Z] launch gambit foF2 2026.09.12T18:30
+[LGDC 2026-09-15T19:14:40.438Z] result ok gambit foF2 2026.09.12T18:30
+[Irtam] bucket foF2 2026.09.12T18:30 OK (TOV 1789237800)
+[LGDC 2026-09-15T19:14:41.201Z] gate-consult deny gambit foF2 2026.09.12T18:45 ms-since-last=3433
+[LGDC 2026-09-15T19:14:47.557Z] gate-consult deny gambit foF2 2026.09.12T18:45 ms-since-last=9789
+[LGDC 2026-09-15T19:14:59.071Z] launch gambit foF2 2026.09.12T18:45
+[LGDC 2026-09-15T19:14:59.079Z] result ok gambit foF2 2026.09.12T18:45
+[Irtam] bucket foF2 2026.09.12T18:45 OK (TOV 1789238700)
+[LGDC 2026-09-15T19:14:59.865Z] gate-consult deny gambit foF2 2026.09.12T19:00 ms-since-last=6016
+[LGDC 2026-09-15T19:15:06.193Z] gate-consult deny gambit foF2 2026.09.12T19:00 ms-since-last=12344
+[LGDC 2026-09-15T19:15:16.483Z] launch gambit foF2 2026.09.12T19:00
+[LGDC 2026-09-15T19:15:16.489Z] result ok gambit foF2 2026.09.12T19:00
+[Irtam] bucket foF2 2026.09.12T19:00 OK (TOV 1789239600)
+[LGDC 2026-09-15T19:15:17.136Z] gate-consult deny gambit foF2 2026.09.12T19:15 ms-since-last=4755
+[LGDC 2026-09-15T19:15:23.732Z] gate-consult deny gambit foF2 2026.09.12T19:15 ms-since-last=11351
+[LGDC 2026-09-15T19:15:34.374Z] launch gambit foF2 2026.09.12T19:15
+[LGDC 2026-09-15T19:15:34.411Z] result ok gambit foF2 2026.09.12T19:15
+[Irtam] bucket foF2 2026.09.12T19:15 OK (TOV 1789240500)
+[LGDC 2026-09-15T19:15:36.032Z] gate-consult deny gambit hmF2 2026.09.11T19:30 ms-since-last=5244
+[LGDC 2026-09-15T19:15:42.520Z] gate-consult deny gambit hmF2 2026.09.11T19:30 ms-since-last=11732
+[LGDC 2026-09-15T19:15:51.639Z] launch gambit hmF2 2026.09.11T19:30
+[LGDC 2026-09-15T19:15:51.647Z] result ok gambit hmF2 2026.09.11T19:30
+[Irtam] bucket hmF2 2026.09.11T19:30 OK (TOV 1789155000)
+[LGDC 2026-09-15T19:15:52.672Z] gate-consult deny gambit hmF2 2026.09.11T19:45 ms-since-last=3562
+[LGDC 2026-09-15T19:15:59.161Z] gate-consult deny gambit hmF2 2026.09.11T19:45 ms-since-last=10051
+[LGDC 2026-09-15T19:16:07.410Z] launch gambit hmF2 2026.09.11T19:45
+[LGDC 2026-09-15T19:16:07.415Z] result ok gambit hmF2 2026.09.11T19:45
+[Irtam] bucket hmF2 2026.09.11T19:45 OK (TOV 1789155900)
+[LGDC 2026-09-15T19:16:08.035Z] gate-consult deny gambit hmF2 2026.09.11T20:00 ms-since-last=2700
+[LGDC 2026-09-15T19:16:14.174Z] gate-consult deny gambit hmF2 2026.09.11T20:00 ms-since-last=8839
+[LGDC 2026-09-15T19:16:20.319Z] gate-consult deny gambit hmF2 2026.09.11T20:00 ms-since-last=14984
+[LGDC 2026-09-15T19:16:28.566Z] launch gambit hmF2 2026.09.11T20:00
+[LGDC 2026-09-15T19:16:28.570Z] result ok gambit hmF2 2026.09.11T20:00
+[Irtam] bucket hmF2 2026.09.11T20:00 OK (TOV 1789156800)
+[LGDC 2026-09-15T19:16:29.163Z] gate-consult deny gambit hmF2 2026.09.11T20:15 ms-since-last=2703
+[LGDC 2026-09-15T19:16:35.362Z] gate-consult deny gambit hmF2 2026.09.11T20:15 ms-since-last=8902
+[LGDC 2026-09-15T19:16:44.030Z] launch gambit hmF2 2026.09.11T20:15
+[LGDC 2026-09-15T19:16:44.036Z] result ok gambit hmF2 2026.09.11T20:15
+[Irtam] bucket hmF2 2026.09.11T20:15 OK (TOV 1789157700)
+[LGDC 2026-09-15T19:16:44.647Z] gate-consult deny gambit hmF2 2026.09.11T20:30 ms-since-last=2913
+[LGDC 2026-09-15T19:16:51.263Z] gate-consult deny gambit hmF2 2026.09.11T20:30 ms-since-last=9529
+[LGDC 2026-09-15T19:16:59.635Z] launch gambit hmF2 2026.09.11T20:30
+[LGDC 2026-09-15T19:16:59.640Z] result ok gambit hmF2 2026.09.11T20:30
+[Irtam] bucket hmF2 2026.09.11T20:30 OK (TOV 1789158600)
+[LGDC 2026-09-15T19:17:00.304Z] gate-consult deny gambit hmF2 2026.09.11T20:45 ms-since-last=2837
+[LGDC 2026-09-15T19:17:06.496Z] gate-consult deny gambit hmF2 2026.09.11T20:45 ms-since-last=9029
+[LGDC 2026-09-15T19:17:14.752Z] launch gambit hmF2 2026.09.11T20:45
+[LGDC 2026-09-15T19:17:14.757Z] result ok gambit hmF2 2026.09.11T20:45
+[Irtam] bucket hmF2 2026.09.11T20:45 OK (TOV 1789159500)
+[LGDC 2026-09-15T19:17:15.402Z] gate-consult deny gambit hmF2 2026.09.11T21:00 ms-since-last=2753
+[LGDC 2026-09-15T19:17:21.563Z] gate-consult deny gambit hmF2 2026.09.11T21:00 ms-since-last=8914
+[LGDC 2026-09-15T19:17:29.908Z] launch gambit hmF2 2026.09.11T21:00
+[LGDC 2026-09-15T19:17:29.914Z] result ok gambit hmF2 2026.09.11T21:00
+[Irtam] bucket hmF2 2026.09.11T21:00 OK (TOV 1789160400)
+[LGDC 2026-09-15T19:17:30.717Z] gate-consult deny gambit hmF2 2026.09.11T21:15 ms-since-last=2977
+[LGDC 2026-09-15T19:17:36.946Z] gate-consult deny gambit hmF2 2026.09.11T21:15 ms-since-last=9206
+[LGDC 2026-09-15T19:17:45.272Z] launch gambit hmF2 2026.09.11T21:15
+[LGDC 2026-09-15T19:17:45.277Z] result ok gambit hmF2 2026.09.11T21:15
+[Irtam] bucket hmF2 2026.09.11T21:15 OK (TOV 1789161300)
+[LGDC 2026-09-15T19:17:45.924Z] gate-consult deny gambit hmF2 2026.09.11T21:30 ms-since-last=2788
+[LGDC 2026-09-15T19:17:52.140Z] gate-consult deny gambit hmF2 2026.09.11T21:30 ms-since-last=9004
+[LGDC 2026-09-15T19:18:00.443Z] launch gambit hmF2 2026.09.11T21:30
+[LGDC 2026-09-15T19:18:00.448Z] result ok gambit hmF2 2026.09.11T21:30
+[Irtam] bucket hmF2 2026.09.11T21:30 OK (TOV 1789162200)
+[LGDC 2026-09-15T19:18:01.095Z] gate-consult deny gambit hmF2 2026.09.11T21:45 ms-since-last=2765
+[LGDC 2026-09-15T19:18:07.281Z] gate-consult deny gambit hmF2 2026.09.11T21:45 ms-since-last=8951
+[LGDC 2026-09-15T19:18:15.694Z] launch gambit hmF2 2026.09.11T21:45
+[LGDC 2026-09-15T19:18:15.699Z] result ok gambit hmF2 2026.09.11T21:45
+[Irtam] bucket hmF2 2026.09.11T21:45 OK (TOV 1789163100)
+[LGDC 2026-09-15T19:18:16.354Z] gate-consult deny gambit hmF2 2026.09.11T22:00 ms-since-last=2920
+[LGDC 2026-09-15T19:18:22.564Z] gate-consult deny gambit hmF2 2026.09.11T22:00 ms-since-last=9130
+[LGDC 2026-09-15T19:18:29.231Z] result fail gambit hmF2 2026.09.11T22:00 red/pre-gate
+[Irtam] fetch hmF2 2026.09.11T22:00: fallo red/pre-gate
+[LGDC 2026-09-15T19:18:35.432Z] gate-consult deny gambit hmF2 2026.09.11T22:00 ms-since-last=6710
+[LGDC 2026-09-15T19:18:41.630Z] gate-consult deny gambit hmF2 2026.09.11T22:00 ms-since-last=12908
+[GloTecAdapter] Error: indice GloTEC vacio
+[SolarIndices] Kp=0.67 Dst=-29 F10.7=105 Ap=20 SSN=23 (5/5 real)
+[LGDC 2026-09-15T19:18:50.211Z] launch gambit hmF2 2026.09.11T22:00
+[LGDC 2026-09-15T19:18:50.216Z] result ok gambit hmF2 2026.09.11T22:00
+[Irtam] bucket hmF2 2026.09.11T22:00 OK (TOV 1789164000)
+[LGDC 2026-09-15T19:18:50.900Z] gate-consult deny gambit hmF2 2026.09.11T22:15 ms-since-last=3062
+[SolarWindAdapter] Viento solar real: speed=615 km/s density=0.2 cm^-3 Bz=1.2 nT (hist 3933 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=52.0
+[RadioProp] MUF=15.9 FOT=13.5 LUF=6.3 S4=0.13 AE=132 TAI=0.6 FR=33deg SpF=12% (GIRO real) (Kp NOAA)
+[Xray] GOES long 3.03e-07 W/m2 (B3.0)
+[LGDC 2026-09-15T19:18:57.126Z] gate-consult deny gambit hmF2 2026.09.11T22:15 ms-since-last=9288
+[LGDC 2026-09-15T19:19:05.460Z] launch gambit hmF2 2026.09.11T22:15
+[LGDC 2026-09-15T19:19:05.466Z] result ok gambit hmF2 2026.09.11T22:15
+[Irtam] bucket hmF2 2026.09.11T22:15 OK (TOV 1789164900)
+[LGDC 2026-09-15T19:19:06.112Z] gate-consult deny gambit hmF2 2026.09.11T22:30 ms-since-last=2809
+[LGDC 2026-09-15T19:19:12.314Z] gate-consult deny gambit hmF2 2026.09.11T22:30 ms-since-last=9011
+[LGDC 2026-09-15T19:19:16.756Z] launch getbest EB040
+[LGDC 2026-09-15T19:19:17.013Z] launch getbest JR055
+[LGDC 2026-09-15T19:19:17.267Z] launch getbest AT138
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 9 estaciones EU
+[Ebro] EB040_2026258191501.SAO: foF2=6.50 MUF=21.8 hmF2=262 foEs=nan
+[LGDC 2026-09-15T19:19:17.521Z] launch getbest FF051
+[LGDC 2026-09-15T19:19:17.774Z] launch getbest MZ152
+[LGDC 2026-09-15T19:19:18.027Z] launch getbest VT139
+[LGDC 2026-09-15T19:19:18.280Z] launch getbest TR169
+[LGDC 2026-09-15T19:19:18.526Z] gate-consult deny gambit hmF2 2026.09.11T22:30 ms-since-last=246
+[LGDC 2026-09-15T19:19:18.533Z] launch getbest DB049
+[LGDC 2026-09-15T19:19:18.785Z] launch getbest EG931
+[LGDC 2026-09-15T19:19:19.037Z] launch getbest EI764
+[LGDC 2026-09-15T19:19:19.292Z] launch getbest SO148
+[LGDC 2026-09-15T19:19:19.643Z] launch getbest CAJ2M
+[LGDC 2026-09-15T19:19:19.908Z] launch getbest DW41K
+[GiroAdapter] getbest async: 13 estaciones actualizadas
+[LGDC 2026-09-15T19:19:24.772Z] gate-consult deny gambit hmF2 2026.09.11T22:30 ms-since-last=4864
+[LGDC 2026-09-15T19:19:30.979Z] gate-consult deny gambit hmF2 2026.09.11T22:30 ms-since-last=11071
+[LGDC 2026-09-15T19:19:39.279Z] launch gambit hmF2 2026.09.11T22:30
+[LGDC 2026-09-15T19:19:39.285Z] result ok gambit hmF2 2026.09.11T22:30
+[Irtam] bucket hmF2 2026.09.11T22:30 OK (TOV 1789165800)
+[LGDC 2026-09-15T19:19:39.917Z] gate-consult deny gambit hmF2 2026.09.11T22:45 ms-since-last=2737
+[LGDC 2026-09-15T19:19:46.134Z] gate-consult deny gambit hmF2 2026.09.11T22:45 ms-since-last=8954
+[LGDC 2026-09-15T19:19:54.457Z] launch gambit hmF2 2026.09.11T22:45
+[LGDC 2026-09-15T19:19:54.462Z] result ok gambit hmF2 2026.09.11T22:45
+[Irtam] bucket hmF2 2026.09.11T22:45 OK (TOV 1789166700)
+[LGDC 2026-09-15T19:19:55.134Z] gate-consult deny gambit hmF2 2026.09.11T23:00 ms-since-last=2806
+[LGDC 2026-09-15T19:20:01.338Z] gate-consult deny gambit hmF2 2026.09.11T23:00 ms-since-last=9010
+[LGDC 2026-09-15T19:20:09.570Z] launch gambit hmF2 2026.09.11T23:00
+[LGDC 2026-09-15T19:20:09.575Z] result ok gambit hmF2 2026.09.11T23:00
+[Irtam] bucket hmF2 2026.09.11T23:00 OK (TOV 1789167600)
+[LGDC 2026-09-15T19:20:10.255Z] gate-consult deny gambit hmF2 2026.09.11T23:15 ms-since-last=2721
+[LGDC 2026-09-15T19:20:16.491Z] gate-consult deny gambit hmF2 2026.09.11T23:15 ms-since-last=8957
+[LGDC 2026-09-15T19:20:26.184Z] launch gambit hmF2 2026.09.11T23:15
+[LGDC 2026-09-15T19:20:26.189Z] result ok gambit hmF2 2026.09.11T23:15
+[Irtam] bucket hmF2 2026.09.11T23:15 OK (TOV 1789168500)
+[LGDC 2026-09-15T19:20:26.878Z] gate-consult deny gambit hmF2 2026.09.11T23:30 ms-since-last=4155
+[LGDC 2026-09-15T19:20:33.080Z] gate-consult deny gambit hmF2 2026.09.11T23:30 ms-since-last=10357
+[LGDC 2026-09-15T19:20:41.522Z] launch gambit hmF2 2026.09.11T23:30
+[LGDC 2026-09-15T19:20:41.528Z] result ok gambit hmF2 2026.09.11T23:30
+[Irtam] bucket hmF2 2026.09.11T23:30 OK (TOV 1789169400)
+[LGDC 2026-09-15T19:20:42.218Z] gate-consult deny gambit hmF2 2026.09.11T23:45 ms-since-last=2920
+[LGDC 2026-09-15T19:20:48.456Z] gate-consult deny gambit hmF2 2026.09.11T23:45 ms-since-last=9158
+[LGDC 2026-09-15T19:20:56.770Z] launch gambit hmF2 2026.09.11T23:45
+[LGDC 2026-09-15T19:20:56.775Z] result ok gambit hmF2 2026.09.11T23:45
+[Irtam] bucket hmF2 2026.09.11T23:45 OK (TOV 1789170300)
+[LGDC 2026-09-15T19:20:57.454Z] gate-consult deny gambit hmF2 2026.09.12T00:00 ms-since-last=2811
+[LGDC 2026-09-15T19:21:03.695Z] gate-consult deny gambit hmF2 2026.09.12T00:00 ms-since-last=9052
+[LGDC 2026-09-15T19:21:12.469Z] launch gambit hmF2 2026.09.12T00:00
+[LGDC 2026-09-15T19:21:12.475Z] result ok gambit hmF2 2026.09.12T00:00
+[Irtam] bucket hmF2 2026.09.12T00:00 OK (TOV 1789171200)
+[LGDC 2026-09-15T19:21:13.163Z] gate-consult deny gambit hmF2 2026.09.12T00:15 ms-since-last=3244
+[LGDC 2026-09-15T19:21:19.384Z] gate-consult deny gambit hmF2 2026.09.12T00:15 ms-since-last=9465
+[LGDC 2026-09-15T19:21:27.716Z] launch gambit hmF2 2026.09.12T00:15
+[LGDC 2026-09-15T19:21:27.721Z] result ok gambit hmF2 2026.09.12T00:15
+[Irtam] bucket hmF2 2026.09.12T00:15 OK (TOV 1789172100)
+[LGDC 2026-09-15T19:21:28.407Z] gate-consult deny gambit hmF2 2026.09.12T00:30 ms-since-last=2805
+[LGDC 2026-09-15T19:21:34.663Z] gate-consult deny gambit hmF2 2026.09.12T00:30 ms-since-last=9061
+[LGDC 2026-09-15T19:21:43.452Z] launch gambit hmF2 2026.09.12T00:30
+[LGDC 2026-09-15T19:21:43.457Z] result ok gambit hmF2 2026.09.12T00:30
+[Irtam] bucket hmF2 2026.09.12T00:30 OK (TOV 1789173000)
+[LGDC 2026-09-15T19:21:44.158Z] gate-consult deny gambit hmF2 2026.09.12T00:45 ms-since-last=3242
+[LGDC 2026-09-15T19:21:50.422Z] gate-consult deny gambit hmF2 2026.09.12T00:45 ms-since-last=9506
+[LGDC 2026-09-15T19:21:58.729Z] launch gambit hmF2 2026.09.12T00:45
+[LGDC 2026-09-15T19:21:58.734Z] result ok gambit hmF2 2026.09.12T00:45
+[Irtam] bucket hmF2 2026.09.12T00:45 OK (TOV 1789173900)
+[LGDC 2026-09-15T19:21:59.449Z] gate-consult deny gambit hmF2 2026.09.12T01:00 ms-since-last=2767
+[LGDC 2026-09-15T19:22:05.703Z] gate-consult deny gambit hmF2 2026.09.12T01:00 ms-since-last=9021
+[LGDC 2026-09-15T19:22:15.348Z] launch gambit hmF2 2026.09.12T01:00
+[LGDC 2026-09-15T19:22:15.353Z] result ok gambit hmF2 2026.09.12T01:00
+[Irtam] bucket hmF2 2026.09.12T01:00 OK (TOV 1789174800)
+[LGDC 2026-09-15T19:22:16.073Z] gate-consult deny gambit hmF2 2026.09.12T01:15 ms-since-last=4111
+[LGDC 2026-09-15T19:22:22.352Z] gate-consult deny gambit hmF2 2026.09.12T01:15 ms-since-last=10390
+[LGDC 2026-09-15T19:22:30.661Z] launch gambit hmF2 2026.09.12T01:15
+[LGDC 2026-09-15T19:22:30.665Z] result ok gambit hmF2 2026.09.12T01:15
+[Irtam] bucket hmF2 2026.09.12T01:15 OK (TOV 1789175700)
+[LGDC 2026-09-15T19:22:31.410Z] gate-consult deny gambit hmF2 2026.09.12T01:30 ms-since-last=2808
+[LGDC 2026-09-15T19:22:37.703Z] gate-consult deny gambit hmF2 2026.09.12T01:30 ms-since-last=9101
+[LGDC 2026-09-15T19:22:46.009Z] launch gambit hmF2 2026.09.12T01:30
+[LGDC 2026-09-15T19:22:46.014Z] result ok gambit hmF2 2026.09.12T01:30
+[Irtam] bucket hmF2 2026.09.12T01:30 OK (TOV 1789176600)
+[LGDC 2026-09-15T19:22:46.741Z] gate-consult deny gambit hmF2 2026.09.12T01:45 ms-since-last=2791
+[LGDC 2026-09-15T19:22:53.051Z] gate-consult deny gambit hmF2 2026.09.12T01:45 ms-since-last=9101
+[LGDC 2026-09-15T19:23:02.005Z] launch gambit hmF2 2026.09.12T01:45
+[LGDC 2026-09-15T19:23:02.011Z] result ok gambit hmF2 2026.09.12T01:45
+[Irtam] bucket hmF2 2026.09.12T01:45 OK (TOV 1789177500)
+[LGDC 2026-09-15T19:23:02.750Z] gate-consult deny gambit hmF2 2026.09.12T02:00 ms-since-last=3440
+[LGDC 2026-09-15T19:23:09.079Z] gate-consult deny gambit hmF2 2026.09.12T02:00 ms-since-last=9769
+[LGDC 2026-09-15T19:23:17.764Z] launch gambit hmF2 2026.09.12T02:00
+[LGDC 2026-09-15T19:23:17.769Z] result ok gambit hmF2 2026.09.12T02:00
+[Irtam] bucket hmF2 2026.09.12T02:00 OK (TOV 1789178400)
+[LGDC 2026-09-15T19:23:18.572Z] gate-consult deny gambit hmF2 2026.09.12T02:15 ms-since-last=3155
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=1.30 max=66.82 TECU
+[SolarIndices] Kp=0.67 Dst=-31 F10.7=105 Ap=20 SSN=23 (5/5 real)
+[LGDC 2026-09-15T19:23:24.915Z] gate-consult deny gambit hmF2 2026.09.12T02:15 ms-since-last=9498
+[SolarWindAdapter] Viento solar real: speed=637 km/s density=1.6 cm^-3 Bz=-5.6 nT (hist 3933 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=62.0
+[RadioProp] MUF=16.4 FOT=13.9 LUF=6.5 S4=0.13 AE=132 TAI=0.6 FR=33deg SpF=12% (GIRO real) (Kp NOAA)
+[Xray] GOES long 3.01e-07 W/m2 (B3.0)
+[Sdo] switch -> HMIIF (cache 804 s)
+[LGDC 2026-09-15T19:23:34.104Z] launch gambit hmF2 2026.09.12T02:15
+[LGDC 2026-09-15T19:23:34.106Z] result ok gambit hmF2 2026.09.12T02:15
+[Irtam] bucket hmF2 2026.09.12T02:15 OK (TOV 1789179300)
+[LGDC 2026-09-15T19:23:34.847Z] gate-consult deny gambit hmF2 2026.09.12T02:30 ms-since-last=3606
+[LGDC 2026-09-15T19:23:41.158Z] gate-consult deny gambit hmF2 2026.09.12T02:30 ms-since-last=9917
+[LGDC 2026-09-15T19:23:49.564Z] launch gambit hmF2 2026.09.12T02:30
+[LGDC 2026-09-15T19:23:49.570Z] result ok gambit hmF2 2026.09.12T02:30
+[Irtam] bucket hmF2 2026.09.12T02:30 OK (TOV 1789180200)
+[LGDC 2026-09-15T19:23:50.287Z] gate-consult deny gambit hmF2 2026.09.12T02:45 ms-since-last=2839
+[LGDC 2026-09-15T19:23:56.588Z] gate-consult deny gambit hmF2 2026.09.12T02:45 ms-since-last=9140
+[LGDC 2026-09-15T19:24:06.139Z] launch gambit hmF2 2026.09.12T02:45
+[LGDC 2026-09-15T19:24:06.145Z] result ok gambit hmF2 2026.09.12T02:45
+[Irtam] bucket hmF2 2026.09.12T02:45 OK (TOV 1789181100)
+[LGDC 2026-09-15T19:24:06.759Z] gate-consult deny gambit hmF2 2026.09.12T03:00 ms-since-last=3860
+[LGDC 2026-09-15T19:24:12.939Z] gate-consult deny gambit hmF2 2026.09.12T03:00 ms-since-last=10040
+[LGDC 2026-09-15T19:24:16.777Z] launch getbest EA036
+[LGDC 2026-09-15T19:24:17.030Z] launch getbest TV51R
+[LGDC 2026-09-15T19:24:17.282Z] launch getbest NI135
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 9 estaciones EU
+[Ebro] EB040_2026258192001.SAO: foF2=6.35 MUF=21.6 hmF2=259 foEs=nan
+[LGDC 2026-09-15T19:24:17.534Z] launch getbest GR13L
+[LGDC 2026-09-15T19:24:17.787Z] launch getbest CB53N
+[LGDC 2026-09-15T19:24:18.040Z] launch getbest TR0P2
+[LGDC 2026-09-15T19:24:18.294Z] launch getbest RM041
+[GiroAdapter] getbest async: 7 estaciones actualizadas
+[LGDC 2026-09-15T19:24:19.079Z] gate-consult deny gambit hmF2 2026.09.12T03:00 ms-since-last=785
+[LGDC 2026-09-15T19:24:25.198Z] gate-consult deny gambit hmF2 2026.09.12T03:00 ms-since-last=6904
+[LGDC 2026-09-15T19:24:31.353Z] gate-consult deny gambit hmF2 2026.09.12T03:00 ms-since-last=13059
+[LGDC 2026-09-15T19:24:39.652Z] launch gambit hmF2 2026.09.12T03:00
+[LGDC 2026-09-15T19:24:39.660Z] result ok gambit hmF2 2026.09.12T03:00
+[Irtam] bucket hmF2 2026.09.12T03:00 OK (TOV 1789182000)
+[LGDC 2026-09-15T19:24:40.252Z] gate-consult deny gambit hmF2 2026.09.12T03:15 ms-since-last=2709
+[LGDC 2026-09-15T19:24:46.422Z] gate-consult deny gambit hmF2 2026.09.12T03:15 ms-since-last=8879
+[LGDC 2026-09-15T19:24:54.761Z] launch gambit hmF2 2026.09.12T03:15
+[LGDC 2026-09-15T19:24:54.772Z] result ok gambit hmF2 2026.09.12T03:15
+[Irtam] bucket hmF2 2026.09.12T03:15 OK (TOV 1789182900)
+[LGDC 2026-09-15T19:24:55.382Z] gate-consult deny gambit hmF2 2026.09.12T03:30 ms-since-last=2837
+[LGDC 2026-09-15T19:25:01.528Z] gate-consult deny gambit hmF2 2026.09.12T03:30 ms-since-last=8983
+[LGDC 2026-09-15T19:25:10.123Z] launch gambit hmF2 2026.09.12T03:30
+[LGDC 2026-09-15T19:25:10.127Z] result ok gambit hmF2 2026.09.12T03:30
+[Irtam] bucket hmF2 2026.09.12T03:30 OK (TOV 1789183800)
+[LGDC 2026-09-15T19:25:10.706Z] gate-consult deny gambit hmF2 2026.09.12T03:45 ms-since-last=3019
+[LGDC 2026-09-15T19:25:16.861Z] gate-consult deny gambit hmF2 2026.09.12T03:45 ms-since-last=9174
+[LGDC 2026-09-15T19:25:25.354Z] launch gambit hmF2 2026.09.12T03:45
+[LGDC 2026-09-15T19:25:25.358Z] result ok gambit hmF2 2026.09.12T03:45
+[Irtam] bucket hmF2 2026.09.12T03:45 OK (TOV 1789184700)
+[LGDC 2026-09-15T19:25:25.951Z] gate-consult deny gambit hmF2 2026.09.12T04:00 ms-since-last=2923
+[LGDC 2026-09-15T19:25:32.108Z] gate-consult deny gambit hmF2 2026.09.12T04:00 ms-since-last=9080
+[LGDC 2026-09-15T19:25:40.345Z] launch gambit hmF2 2026.09.12T04:00
+[LGDC 2026-09-15T19:25:40.354Z] result ok gambit hmF2 2026.09.12T04:00
+[Irtam] bucket hmF2 2026.09.12T04:00 OK (TOV 1789185600)
+[LGDC 2026-09-15T19:25:41.053Z] gate-consult deny gambit hmF2 2026.09.12T04:15 ms-since-last=2780
+[LGDC 2026-09-15T19:25:47.185Z] gate-consult deny gambit hmF2 2026.09.12T04:15 ms-since-last=8912
+[LGDC 2026-09-15T19:25:55.430Z] launch gambit hmF2 2026.09.12T04:15
+[LGDC 2026-09-15T19:25:55.439Z] result ok gambit hmF2 2026.09.12T04:15
+[Irtam] bucket hmF2 2026.09.12T04:15 OK (TOV 1789186500)
+[LGDC 2026-09-15T19:25:56.061Z] gate-consult deny gambit hmF2 2026.09.12T04:30 ms-since-last=2724
+[LGDC 2026-09-15T19:26:02.227Z] gate-consult deny gambit hmF2 2026.09.12T04:30 ms-since-last=8890
+[LGDC 2026-09-15T19:26:10.553Z] launch gambit hmF2 2026.09.12T04:30
+[LGDC 2026-09-15T19:26:10.557Z] result ok gambit hmF2 2026.09.12T04:30
+[Irtam] bucket hmF2 2026.09.12T04:30 OK (TOV 1789187400)
+[LGDC 2026-09-15T19:26:11.151Z] gate-consult deny gambit hmF2 2026.09.12T04:45 ms-since-last=2772
+[LGDC 2026-09-15T19:26:17.334Z] gate-consult deny gambit hmF2 2026.09.12T04:45 ms-since-last=8955
+[LGDC 2026-09-15T19:26:25.796Z] launch gambit hmF2 2026.09.12T04:45
+[LGDC 2026-09-15T19:26:25.810Z] result ok gambit hmF2 2026.09.12T04:45
+[Irtam] bucket hmF2 2026.09.12T04:45 OK (TOV 1789188300)
+[LGDC 2026-09-15T19:26:26.413Z] gate-consult deny gambit hmF2 2026.09.12T05:00 ms-since-last=2888
+[LGDC 2026-09-15T19:26:32.591Z] gate-consult deny gambit hmF2 2026.09.12T05:00 ms-since-last=9066
+[LGDC 2026-09-15T19:26:40.817Z] launch gambit hmF2 2026.09.12T05:00
+[LGDC 2026-09-15T19:26:40.821Z] result ok gambit hmF2 2026.09.12T05:00
+[Irtam] bucket hmF2 2026.09.12T05:00 OK (TOV 1789189200)
+[LGDC 2026-09-15T19:26:41.448Z] gate-consult deny gambit hmF2 2026.09.12T05:15 ms-since-last=2668
+[LGDC 2026-09-15T19:26:47.622Z] gate-consult deny gambit hmF2 2026.09.12T05:15 ms-since-last=8842
+[LGDC 2026-09-15T19:26:53.775Z] gate-consult deny gambit hmF2 2026.09.12T05:15 ms-since-last=14995
+[LGDC 2026-09-15T19:27:02.050Z] launch gambit hmF2 2026.09.12T05:15
+[LGDC 2026-09-15T19:27:02.054Z] result ok gambit hmF2 2026.09.12T05:15
+[Irtam] bucket hmF2 2026.09.12T05:15 OK (TOV 1789190100)
+[LGDC 2026-09-15T19:27:02.681Z] gate-consult deny gambit hmF2 2026.09.12T05:30 ms-since-last=2725
+[LGDC 2026-09-15T19:27:08.900Z] gate-consult deny gambit hmF2 2026.09.12T05:30 ms-since-last=8944
+[LGDC 2026-09-15T19:27:17.297Z] launch gambit hmF2 2026.09.12T05:30
+[LGDC 2026-09-15T19:27:17.303Z] result ok gambit hmF2 2026.09.12T05:30
+[Irtam] bucket hmF2 2026.09.12T05:30 OK (TOV 1789191000)
+[LGDC 2026-09-15T19:27:17.916Z] gate-consult deny gambit hmF2 2026.09.12T05:45 ms-since-last=2819
+[LGDC 2026-09-15T19:27:24.109Z] gate-consult deny gambit hmF2 2026.09.12T05:45 ms-since-last=9012
+[LGDC 2026-09-15T19:27:32.349Z] launch gambit hmF2 2026.09.12T05:45
+[LGDC 2026-09-15T19:27:32.354Z] result ok gambit hmF2 2026.09.12T05:45
+[Irtam] bucket hmF2 2026.09.12T05:45 OK (TOV 1789191900)
+[LGDC 2026-09-15T19:27:32.971Z] gate-consult deny gambit hmF2 2026.09.12T06:00 ms-since-last=2692
+[LGDC 2026-09-15T19:27:39.210Z] gate-consult deny gambit hmF2 2026.09.12T06:00 ms-since-last=8931
+[LGDC 2026-09-15T19:27:47.728Z] launch gambit hmF2 2026.09.12T06:00
+[LGDC 2026-09-15T19:27:47.739Z] result ok gambit hmF2 2026.09.12T06:00
+[Irtam] bucket hmF2 2026.09.12T06:00 OK (TOV 1789192800)
+[LGDC 2026-09-15T19:27:48.378Z] gate-consult deny gambit hmF2 2026.09.12T06:15 ms-since-last=2972
+[LGDC 2026-09-15T19:27:54.589Z] gate-consult deny gambit hmF2 2026.09.12T06:15 ms-since-last=9183
+[LGDC 2026-09-15T19:28:02.863Z] launch gambit hmF2 2026.09.12T06:15
+[LGDC 2026-09-15T19:28:02.867Z] result ok gambit hmF2 2026.09.12T06:15
+[Irtam] bucket hmF2 2026.09.12T06:15 OK (TOV 1789193700)
+[LGDC 2026-09-15T19:28:03.537Z] gate-consult deny gambit hmF2 2026.09.12T06:30 ms-since-last=2760
+[LGDC 2026-09-15T19:28:09.741Z] gate-consult deny gambit hmF2 2026.09.12T06:30 ms-since-last=8963
+[LGDC 2026-09-15T19:28:18.570Z] launch gambit hmF2 2026.09.12T06:30
+[LGDC 2026-09-15T19:28:18.581Z] result ok gambit hmF2 2026.09.12T06:30
+[Irtam] bucket hmF2 2026.09.12T06:30 OK (TOV 1789194600)
+[LGDC 2026-09-15T19:28:19.244Z] gate-consult deny gambit hmF2 2026.09.12T06:45 ms-since-last=3291
+[GloTecAdapter] Error: indice GloTEC vacio
+[LGDC 2026-09-15T19:28:25.472Z] gate-consult deny gambit hmF2 2026.09.12T06:45 ms-since-last=9519
+[SolarIndices] Kp=0.67 Dst=-36 F10.7=105 Ap=20 SSN=23 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=644 km/s density=1.9 cm^-3 Bz=-4.7 nT (hist 3934 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=67.0
+[RadioProp] MUF=16.4 FOT=13.9 LUF=6.5 S4=0.13 AE=132 TAI=0.6 FR=33deg SpF=12% (GIRO real) (Kp NOAA)
+[Xray] GOES long 3.11e-07 W/m2 (B3.1)
+[LGDC 2026-09-15T19:28:33.912Z] launch gambit hmF2 2026.09.12T06:45
+[LGDC 2026-09-15T19:28:33.917Z] result ok gambit hmF2 2026.09.12T06:45
+[Irtam] bucket hmF2 2026.09.12T06:45 OK (TOV 1789195500)
+[LGDC 2026-09-15T19:28:34.595Z] gate-consult deny gambit hmF2 2026.09.12T07:00 ms-since-last=2909
+[LGDC 2026-09-15T19:28:40.871Z] gate-consult deny gambit hmF2 2026.09.12T07:00 ms-since-last=9186
+[LGDC 2026-09-15T19:28:49.197Z] launch gambit hmF2 2026.09.12T07:00
+[LGDC 2026-09-15T19:28:49.202Z] result ok gambit hmF2 2026.09.12T07:00
+[Irtam] bucket hmF2 2026.09.12T07:00 OK (TOV 1789196400)
+[LGDC 2026-09-15T19:28:49.881Z] gate-consult deny gambit hmF2 2026.09.12T07:15 ms-since-last=2782
+[LGDC 2026-09-15T19:28:56.120Z] gate-consult deny gambit hmF2 2026.09.12T07:15 ms-since-last=9021
+[LGDC 2026-09-15T19:29:04.792Z] launch gambit hmF2 2026.09.12T07:15
+[LGDC 2026-09-15T19:29:04.802Z] result ok gambit hmF2 2026.09.12T07:15
+[Irtam] bucket hmF2 2026.09.12T07:15 OK (TOV 1789197300)
+[LGDC 2026-09-15T19:29:05.466Z] gate-consult deny gambit hmF2 2026.09.12T07:30 ms-since-last=3111
+[LGDC 2026-09-15T19:29:11.742Z] gate-consult deny gambit hmF2 2026.09.12T07:30 ms-since-last=9387
+[LGDC 2026-09-15T19:29:16.801Z] launch getbest EB040
+[LGDC 2026-09-15T19:29:17.064Z] launch getbest GM037
+[LGDC 2026-09-15T19:29:17.317Z] launch getbest KL154
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 9 estaciones EU
+[Ebro] EB040_2026258192501.SAO: foF2=6.20 MUF=20.7 hmF2=269 foEs=nan
+[LGDC 2026-09-15T19:29:17.568Z] launch getbest PQ052
+[LGDC 2026-09-15T19:29:17.980Z] gate-consult deny gambit hmF2 2026.09.12T07:30 ms-since-last=412
+[GiroAdapter] getbest async: 3 estaciones actualizadas
+[LGDC 2026-09-15T19:29:24.214Z] gate-consult deny gambit hmF2 2026.09.12T07:30 ms-since-last=6646
+[LGDC 2026-09-15T19:29:30.449Z] gate-consult deny gambit hmF2 2026.09.12T07:30 ms-since-last=12881
+[LGDC 2026-09-15T19:29:42.193Z] launch gambit hmF2 2026.09.12T07:30
+[LGDC 2026-09-15T19:29:42.202Z] result ok gambit hmF2 2026.09.12T07:30
+[Irtam] bucket hmF2 2026.09.12T07:30 OK (TOV 1789198200)
+[LGDC 2026-09-15T19:29:42.860Z] gate-consult deny gambit hmF2 2026.09.12T07:45 ms-since-last=6205
+[LGDC 2026-09-15T19:29:49.117Z] gate-consult deny gambit hmF2 2026.09.12T07:45 ms-since-last=12462
+[LGDC 2026-09-15T19:29:58.063Z] launch gambit hmF2 2026.09.12T07:45
+[LGDC 2026-09-15T19:29:58.069Z] result ok gambit hmF2 2026.09.12T07:45
+[Irtam] bucket hmF2 2026.09.12T07:45 OK (TOV 1789199100)
+[LGDC 2026-09-15T19:29:58.731Z] gate-consult deny gambit hmF2 2026.09.12T08:00 ms-since-last=3406
+[LGDC 2026-09-15T19:30:05.003Z] gate-consult deny gambit foF2 2026.09.12T19:30 ms-since-last=9678
+[LGDC 2026-09-15T19:30:13.432Z] launch gambit foF2 2026.09.12T19:30
+[LGDC 2026-09-15T19:30:13.442Z] result ok gambit foF2 2026.09.12T19:30
+[Irtam] bucket foF2 2026.09.12T19:30 OK (TOV 1789241400)
+[LGDC 2026-09-15T19:30:14.103Z] gate-consult deny gambit hmF2 2026.09.12T08:00 ms-since-last=2863
+[LGDC 2026-09-15T19:30:20.323Z] gate-consult deny gambit hmF2 2026.09.12T08:00 ms-since-last=9083
+[LGDC 2026-09-15T19:30:28.607Z] launch gambit hmF2 2026.09.12T08:00
+[LGDC 2026-09-15T19:30:28.617Z] result ok gambit hmF2 2026.09.12T08:00
+[Irtam] bucket hmF2 2026.09.12T08:00 OK (TOV 1789200000)
+[LGDC 2026-09-15T19:30:29.282Z] gate-consult deny gambit hmF2 2026.09.12T08:15 ms-since-last=2714
+[LGDC 2026-09-15T19:30:35.529Z] gate-consult deny gambit hmF2 2026.09.12T08:15 ms-since-last=8961
+[LGDC 2026-09-15T19:30:44.006Z] launch gambit hmF2 2026.09.12T08:15
+[LGDC 2026-09-15T19:30:44.010Z] result ok gambit hmF2 2026.09.12T08:15
+[Irtam] bucket hmF2 2026.09.12T08:15 OK (TOV 1789200900)
+[LGDC 2026-09-15T19:30:44.702Z] gate-consult deny gambit hmF2 2026.09.12T08:30 ms-since-last=2952
+[LGDC 2026-09-15T19:30:50.951Z] gate-consult deny gambit hmF2 2026.09.12T08:30 ms-since-last=9201
+[LGDC 2026-09-15T19:31:00.909Z] launch gambit hmF2 2026.09.12T08:30
+[LGDC 2026-09-15T19:31:00.918Z] result ok gambit hmF2 2026.09.12T08:30
+[Irtam] bucket hmF2 2026.09.12T08:30 OK (TOV 1789201800)
+[LGDC 2026-09-15T19:31:01.605Z] gate-consult deny gambit hmF2 2026.09.12T08:45 ms-since-last=4420
+[LGDC 2026-09-15T19:31:07.846Z] gate-consult deny gambit hmF2 2026.09.12T08:45 ms-since-last=10661
+[LGDC 2026-09-15T19:31:16.005Z] launch gambit hmF2 2026.09.12T08:45
+[LGDC 2026-09-15T19:31:16.012Z] result ok gambit hmF2 2026.09.12T08:45
+[Irtam] bucket hmF2 2026.09.12T08:45 OK (TOV 1789202700)
+[LGDC 2026-09-15T19:31:16.707Z] gate-consult deny gambit hmF2 2026.09.12T09:00 ms-since-last=2642
+[LGDC 2026-09-15T19:31:22.994Z] gate-consult deny gambit hmF2 2026.09.12T09:00 ms-since-last=8929
+[LGDC 2026-09-15T19:31:31.281Z] launch gambit hmF2 2026.09.12T09:00
+[LGDC 2026-09-15T19:31:31.285Z] result ok gambit hmF2 2026.09.12T09:00
+[Irtam] bucket hmF2 2026.09.12T09:00 OK (TOV 1789203600)
+[LGDC 2026-09-15T19:31:32.003Z] gate-consult deny gambit hmF2 2026.09.12T09:15 ms-since-last=2752
+[LGDC 2026-09-15T19:31:38.247Z] gate-consult deny gambit hmF2 2026.09.12T09:15 ms-since-last=8996
+[LGDC 2026-09-15T19:31:46.555Z] launch gambit hmF2 2026.09.12T09:15
+[LGDC 2026-09-15T19:31:46.561Z] result ok gambit hmF2 2026.09.12T09:15
+[Irtam] bucket hmF2 2026.09.12T09:15 OK (TOV 1789204500)
+[LGDC 2026-09-15T19:31:47.265Z] gate-consult deny gambit hmF2 2026.09.12T09:30 ms-since-last=2769
+[LGDC 2026-09-15T19:31:53.550Z] gate-consult deny gambit hmF2 2026.09.12T09:30 ms-since-last=9054
+[LGDC 2026-09-15T19:32:01.874Z] launch gambit hmF2 2026.09.12T09:30
+[LGDC 2026-09-15T19:32:01.878Z] result ok gambit hmF2 2026.09.12T09:30
+[Irtam] bucket hmF2 2026.09.12T09:30 OK (TOV 1789205400)
+[LGDC 2026-09-15T19:32:02.581Z] gate-consult deny gambit hmF2 2026.09.12T09:45 ms-since-last=2767
+[LGDC 2026-09-15T19:32:08.832Z] gate-consult deny gambit hmF2 2026.09.12T09:45 ms-since-last=9018
+[LGDC 2026-09-15T19:32:17.181Z] launch gambit hmF2 2026.09.12T09:45
+[LGDC 2026-09-15T19:32:17.186Z] result ok gambit hmF2 2026.09.12T09:45
+[Irtam] bucket hmF2 2026.09.12T09:45 OK (TOV 1789206300)
+[LGDC 2026-09-15T19:32:17.895Z] gate-consult deny gambit hmF2 2026.09.12T10:00 ms-since-last=2792
+[LGDC 2026-09-15T19:32:24.160Z] gate-consult deny gambit hmF2 2026.09.12T10:00 ms-since-last=9057
+[LGDC 2026-09-15T19:32:32.518Z] launch gambit hmF2 2026.09.12T10:00
+[LGDC 2026-09-15T19:32:32.524Z] result ok gambit hmF2 2026.09.12T10:00
+[Irtam] bucket hmF2 2026.09.12T10:00 OK (TOV 1789207200)
+[LGDC 2026-09-15T19:32:33.220Z] gate-consult deny gambit hmF2 2026.09.12T10:15 ms-since-last=2799
+[LGDC 2026-09-15T19:32:39.517Z] gate-consult deny gambit hmF2 2026.09.12T10:15 ms-since-last=9096
+[LGDC 2026-09-15T19:32:47.859Z] launch gambit hmF2 2026.09.12T10:15
+[LGDC 2026-09-15T19:32:47.865Z] result ok gambit hmF2 2026.09.12T10:15
+[Irtam] bucket hmF2 2026.09.12T10:15 OK (TOV 1789208100)
+[LGDC 2026-09-15T19:32:48.572Z] gate-consult deny gambit hmF2 2026.09.12T10:30 ms-since-last=2804
+[LGDC 2026-09-15T19:32:54.869Z] gate-consult deny gambit hmF2 2026.09.12T10:30 ms-since-last=9101
+[LGDC 2026-09-15T19:33:03.216Z] launch gambit hmF2 2026.09.12T10:30
+[LGDC 2026-09-15T19:33:03.225Z] result ok gambit hmF2 2026.09.12T10:30
+[Irtam] bucket hmF2 2026.09.12T10:30 OK (TOV 1789209000)
+[LGDC 2026-09-15T19:33:03.945Z] gate-consult deny gambit hmF2 2026.09.12T10:45 ms-since-last=2781
+[LGDC 2026-09-15T19:33:10.237Z] gate-consult deny gambit hmF2 2026.09.12T10:45 ms-since-last=9073
+[LGDC 2026-09-15T19:33:18.621Z] launch gambit hmF2 2026.09.12T10:45
+[LGDC 2026-09-15T19:33:18.625Z] result ok gambit hmF2 2026.09.12T10:45
+[Irtam] bucket hmF2 2026.09.12T10:45 OK (TOV 1789209900)
+[LGDC 2026-09-15T19:33:19.388Z] gate-consult deny gambit hmF2 2026.09.12T11:00 ms-since-last=2894
+[LGDC 2026-09-15T19:33:25.684Z] gate-consult deny gambit hmF2 2026.09.12T11:00 ms-since-last=9190
+[LGDC 2026-09-15T19:33:34.218Z] launch gambit hmF2 2026.09.12T11:00
+[LGDC 2026-09-15T19:33:34.223Z] result ok gambit hmF2 2026.09.12T11:00
+[Irtam] bucket hmF2 2026.09.12T11:00 OK (TOV 1789210800)
+[LGDC 2026-09-15T19:33:35.479Z] gate-consult deny gambit hmF2 2026.09.12T11:15 ms-since-last=3442
+[LGDC 2026-09-15T19:33:41.842Z] gate-consult deny gambit hmF2 2026.09.12T11:15 ms-since-last=9805
+[LGDC 2026-09-15T19:33:51.258Z] launch gambit hmF2 2026.09.12T11:15
+[LGDC 2026-09-15T19:33:51.262Z] result ok gambit hmF2 2026.09.12T11:15
+[Irtam] bucket hmF2 2026.09.12T11:15 OK (TOV 1789211700)
+[LGDC 2026-09-15T19:33:52.347Z] gate-consult deny gambit hmF2 2026.09.12T11:30 ms-since-last=4142
+[LGDC 2026-09-15T19:33:58.988Z] gate-consult deny gambit hmF2 2026.09.12T11:30 ms-since-last=10783
+[LGDC 2026-09-15T19:34:07.762Z] launch gambit hmF2 2026.09.12T11:30
+[LGDC 2026-09-15T19:34:07.765Z] result ok gambit hmF2 2026.09.12T11:30
+[Irtam] bucket hmF2 2026.09.12T11:30 OK (TOV 1789212600)
+[LGDC 2026-09-15T19:34:08.655Z] gate-consult deny gambit hmF2 2026.09.12T11:45 ms-since-last=3067
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=1.55 max=66.78 TECU
+[SolarIndices] Kp=0.67 Dst=-37 F10.7=105 Ap=20 SSN=23 (5/5 real)
+[LGDC 2026-09-15T19:34:14.977Z] gate-consult deny gambit hmF2 2026.09.12T11:45 ms-since-last=9389
+[LGDC 2026-09-15T19:34:16.858Z] launch getbest EA036
+[LGDC 2026-09-15T19:34:17.110Z] launch getbest JR055
+[LGDC 2026-09-15T19:34:17.361Z] launch getbest FF051
+[LGDC 2026-09-15T19:34:17.613Z] launch getbest KI167
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 9 estaciones EU
+[LGDC 2026-09-15T19:34:17.867Z] launch getbest AT138
+[Ebro] EB040_2026258193001.SAO: foF2=5.90 MUF=19.9 hmF2=262 foEs=nan
+[LGDC 2026-09-15T19:34:18.117Z] launch getbest VT139
+[LGDC 2026-09-15T19:34:18.370Z] launch getbest LD160
+[LGDC 2026-09-15T19:34:18.624Z] launch getbest OL246
+[LGDC 2026-09-15T19:34:18.876Z] launch getbest MZ152
+[LGDC 2026-09-15T19:34:19.128Z] launch getbest TR170
+[LGDC 2026-09-15T19:34:19.381Z] launch getbest RV149
+[LGDC 2026-09-15T19:34:19.634Z] launch getbest RL052
+[LGDC 2026-09-15T19:34:19.886Z] launch getbest TR169
+[LGDC 2026-09-15T19:34:20.139Z] launch getbest DB049
+[LGDC 2026-09-15T19:34:20.391Z] launch getbest EG931
+[LGDC 2026-09-15T19:34:20.642Z] launch getbest SO148
+[SolarWindAdapter] Viento solar real: speed=560 km/s density=0.8 cm^-3 Bz=-10.1 nT (hist 3936 pts)
+[LGDC 2026-09-15T19:34:20.893Z] launch getbest CS839
+[LGDC 2026-09-15T19:34:21.146Z] launch getbest AC843
+[LGDC 2026-09-15T19:34:21.389Z] gate-consult deny gambit hmF2 2026.09.12T11:45 ms-since-last=243
+[LGDC 2026-09-15T19:34:21.397Z] launch getbest EI764
+[LGDC 2026-09-15T19:34:21.649Z] launch getbest AU930
+[LGDC 2026-09-15T19:34:21.900Z] launch getbest PF765
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=64.0
+[LGDC 2026-09-15T19:34:22.152Z] launch getbest CAJ2M
+[RadioProp] MUF=15.9 FOT=13.5 LUF=6.3 S4=0.13 AE=132 TAI=0.6 FR=33deg SpF=12% (GIRO real) (Kp NOAA)
+[LGDC 2026-09-15T19:34:22.403Z] launch getbest DW41K
+[Xray] GOES long 3.36e-07 W/m2 (B3.4)
+[GiroAdapter] getbest async: 13 estaciones actualizadas
+[LGDC 2026-09-15T19:34:27.945Z] gate-consult deny gambit hmF2 2026.09.12T11:45 ms-since-last=5542
+[LGDC 2026-09-15T19:34:34.235Z] gate-consult deny gambit hmF2 2026.09.12T11:45 ms-since-last=11832
+[LGDC 2026-09-15T19:34:42.763Z] launch gambit hmF2 2026.09.12T11:45
+[LGDC 2026-09-15T19:34:42.768Z] result ok gambit hmF2 2026.09.12T11:45
+[Irtam] bucket hmF2 2026.09.12T11:45 OK (TOV 1789213500)
+[LGDC 2026-09-15T19:34:43.918Z] gate-consult deny gambit hmF2 2026.09.12T12:00 ms-since-last=3299
+[LGDC 2026-09-15T19:34:50.621Z] gate-consult deny gambit hmF2 2026.09.12T12:00 ms-since-last=10002
+[LGDC 2026-09-15T19:34:59.274Z] launch gambit hmF2 2026.09.12T12:00
+[LGDC 2026-09-15T19:34:59.280Z] result ok gambit hmF2 2026.09.12T12:00
+[Irtam] bucket hmF2 2026.09.12T12:00 OK (TOV 1789214400)
+[LGDC 2026-09-15T19:35:00.052Z] gate-consult deny gambit hmF2 2026.09.12T12:15 ms-since-last=2847
+[LGDC 2026-09-15T19:35:06.332Z] gate-consult deny gambit hmF2 2026.09.12T12:15 ms-since-last=9127
+[LGDC 2026-09-15T19:35:14.909Z] launch gambit hmF2 2026.09.12T12:15
+[LGDC 2026-09-15T19:35:14.918Z] result ok gambit hmF2 2026.09.12T12:15
+[Irtam] bucket hmF2 2026.09.12T12:15 OK (TOV 1789215300)
+[LGDC 2026-09-15T19:35:15.692Z] gate-consult deny gambit hmF2 2026.09.12T12:30 ms-since-last=2944
+[LGDC 2026-09-15T19:35:22.009Z] gate-consult deny gambit hmF2 2026.09.12T12:30 ms-since-last=9261
+[LGDC 2026-09-15T19:35:30.488Z] launch gambit hmF2 2026.09.12T12:30
+[LGDC 2026-09-15T19:35:30.493Z] result ok gambit hmF2 2026.09.12T12:30
+[Irtam] bucket hmF2 2026.09.12T12:30 OK (TOV 1789216200)
+[LGDC 2026-09-15T19:35:31.227Z] gate-consult deny gambit hmF2 2026.09.12T12:45 ms-since-last=2882
+[LGDC 2026-09-15T19:35:37.723Z] gate-consult deny gambit hmF2 2026.09.12T12:45 ms-since-last=9378
+[LGDC 2026-09-15T19:35:46.269Z] launch gambit hmF2 2026.09.12T12:45
+[LGDC 2026-09-15T19:35:46.273Z] result ok gambit hmF2 2026.09.12T12:45
+[Irtam] bucket hmF2 2026.09.12T12:45 OK (TOV 1789217100)
+[LGDC 2026-09-15T19:35:47.029Z] gate-consult deny gambit hmF2 2026.09.12T13:00 ms-since-last=2876
+[LGDC 2026-09-15T19:35:53.465Z] gate-consult deny gambit hmF2 2026.09.12T13:00 ms-since-last=9312
+[LGDC 2026-09-15T19:36:02.346Z] launch gambit hmF2 2026.09.12T13:00
+[LGDC 2026-09-15T19:36:02.351Z] result ok gambit hmF2 2026.09.12T13:00
+[Irtam] bucket hmF2 2026.09.12T13:00 OK (TOV 1789218000)
+[LGDC 2026-09-15T19:36:03.092Z] gate-consult deny gambit hmF2 2026.09.12T13:15 ms-since-last=3001
+[LGDC 2026-09-15T19:36:09.562Z] gate-consult deny gambit hmF2 2026.09.12T13:15 ms-since-last=9471
+[LGDC 2026-09-15T19:36:18.375Z] launch gambit hmF2 2026.09.12T13:15
+[LGDC 2026-09-15T19:36:18.380Z] result ok gambit hmF2 2026.09.12T13:15
+[Irtam] bucket hmF2 2026.09.12T13:15 OK (TOV 1789218900)
+[LGDC 2026-09-15T19:36:19.504Z] gate-consult deny gambit hmF2 2026.09.12T13:30 ms-since-last=3305
+[LGDC 2026-09-15T19:36:26.233Z] gate-consult deny gambit hmF2 2026.09.12T13:30 ms-since-last=10034
+[LGDC 2026-09-15T19:36:35.176Z] launch gambit hmF2 2026.09.12T13:30
+[LGDC 2026-09-15T19:36:35.181Z] result ok gambit hmF2 2026.09.12T13:30
+[Irtam] bucket hmF2 2026.09.12T13:30 OK (TOV 1789219800)
+[LGDC 2026-09-15T19:36:36.347Z] gate-consult deny gambit hmF2 2026.09.12T13:45 ms-since-last=3386
+[LGDC 2026-09-15T19:36:43.042Z] gate-consult deny gambit hmF2 2026.09.12T13:45 ms-since-last=10081
+[LGDC 2026-09-15T19:36:51.830Z] launch gambit hmF2 2026.09.12T13:45
+[LGDC 2026-09-15T19:36:51.836Z] result ok gambit hmF2 2026.09.12T13:45
+[Irtam] bucket hmF2 2026.09.12T13:45 OK (TOV 1789220700)
+[LGDC 2026-09-15T19:36:52.955Z] gate-consult deny gambit hmF2 2026.09.12T14:00 ms-since-last=3275
+[LGDC 2026-09-15T19:36:59.681Z] gate-consult deny gambit hmF2 2026.09.12T14:00 ms-since-last=10001
+[LGDC 2026-09-15T19:37:08.597Z] launch gambit hmF2 2026.09.12T14:00
+[LGDC 2026-09-15T19:37:08.603Z] result ok gambit hmF2 2026.09.12T14:00
+[Irtam] bucket hmF2 2026.09.12T14:00 OK (TOV 1789221600)
+[LGDC 2026-09-15T19:37:09.778Z] gate-consult deny gambit hmF2 2026.09.12T14:15 ms-since-last=3366
+[LGDC 2026-09-15T19:37:16.517Z] gate-consult deny gambit hmF2 2026.09.12T14:15 ms-since-last=10105
+[LGDC 2026-09-15T19:37:25.821Z] launch gambit hmF2 2026.09.12T14:15
+[LGDC 2026-09-15T19:37:25.832Z] result ok gambit hmF2 2026.09.12T14:15
+[Irtam] bucket hmF2 2026.09.12T14:15 OK (TOV 1789222500)
+[LGDC 2026-09-15T19:37:27.583Z] gate-consult deny gambit hmF2 2026.09.12T14:30 ms-since-last=4305
+[LGDC 2026-09-15T19:37:34.794Z] gate-consult deny gambit hmF2 2026.09.12T14:30 ms-since-last=11516
+[LGDC 2026-09-15T19:37:43.577Z] launch gambit hmF2 2026.09.12T14:30
+[LGDC 2026-09-15T19:37:43.582Z] result ok gambit hmF2 2026.09.12T14:30
+[Irtam] bucket hmF2 2026.09.12T14:30 OK (TOV 1789223400)
+[LGDC 2026-09-15T19:37:44.776Z] gate-consult deny gambit hmF2 2026.09.12T14:45 ms-since-last=3257
+[LGDC 2026-09-15T19:37:51.490Z] gate-consult deny gambit hmF2 2026.09.12T14:45 ms-since-last=9971
+[LGDC 2026-09-15T19:38:04.654Z] launch gambit hmF2 2026.09.12T14:45
+[LGDC 2026-09-15T19:38:04.661Z] result ok gambit hmF2 2026.09.12T14:45
+[Irtam] bucket hmF2 2026.09.12T14:45 OK (TOV 1789224300)
+[LGDC 2026-09-15T19:38:06.168Z] gate-consult deny gambit hmF2 2026.09.12T15:00 ms-since-last=7570
+[LGDC 2026-09-15T19:38:13.255Z] gate-consult deny gambit hmF2 2026.09.12T15:00 ms-since-last=14657
+[LGDC 2026-09-15T19:38:24.165Z] launch gambit hmF2 2026.09.12T15:00
+[LGDC 2026-09-15T19:38:24.173Z] result ok gambit hmF2 2026.09.12T15:00
+[Irtam] bucket hmF2 2026.09.12T15:00 OK (TOV 1789225200)
+[LGDC 2026-09-15T19:38:25.830Z] gate-consult deny gambit hmF2 2026.09.12T15:15 ms-since-last=5340
+[LGDC 2026-09-15T19:38:33.027Z] gate-consult deny gambit hmF2 2026.09.12T15:15 ms-since-last=12537
+[LGDC 2026-09-15T19:38:47.006Z] launch gambit hmF2 2026.09.12T15:15
+[LGDC 2026-09-15T19:38:47.011Z] result ok gambit hmF2 2026.09.12T15:15
+[Irtam] bucket hmF2 2026.09.12T15:15 OK (TOV 1789226100)
+[LGDC 2026-09-15T19:38:48.372Z] gate-consult deny gambit hmF2 2026.09.12T15:30 ms-since-last=8303
+[LGDC 2026-09-15T19:38:57.997Z] launch gambit hmF2 2026.09.12T15:30
+[LGDC 2026-09-15T19:38:58.008Z] result ok gambit hmF2 2026.09.12T15:30
+[Irtam] bucket hmF2 2026.09.12T15:30 OK (TOV 1789227000)
+[LGDC 2026-09-15T19:38:59.828Z] gate-consult deny gambit hmF2 2026.09.12T15:45 ms-since-last=4458
+[LGDC 2026-09-15T19:39:06.643Z] gate-consult deny gambit hmF2 2026.09.12T15:45 ms-since-last=11273
+[LGDC 2026-09-15T19:39:15.548Z] launch gambit hmF2 2026.09.12T15:45
+[LGDC 2026-09-15T19:39:15.554Z] result ok gambit hmF2 2026.09.12T15:45
+[Irtam] bucket hmF2 2026.09.12T15:45 OK (TOV 1789227900)
+[LGDC 2026-09-15T19:39:16.858Z] launch getbest EB040
+[LGDC 2026-09-15T19:39:16.941Z] gate-consult deny gambit hmF2 2026.09.12T16:00 ms-since-last=83
+[LGDC 2026-09-15T19:39:17.120Z] launch getbest SMK29
+[LGDC 2026-09-15T19:39:17.375Z] launch getbest BVJ03
+[Ebro] EB040_2026258193501.SAO: foF2=5.85 MUF=18.6 hmF2=276 foEs=nan
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 9 estaciones EU
+[LGDC 2026-09-15T19:39:17.629Z] launch getbest BC840
+[LGDC 2026-09-15T19:39:17.881Z] launch getbest CXM9B
+[LGDC 2026-09-15T19:39:18.134Z] launch getbest BLJ03
+[LGDC 2026-09-15T19:39:18.394Z] launch getbest LA42Q
+[LGDC 2026-09-15T19:39:18.647Z] launch getbest TNJ20
+[LGDC 2026-09-15T19:39:18.907Z] launch getbest CB53N
+[LGDC 2026-09-15T19:39:19.161Z] launch getbest IC437
+[LGDC 2026-09-15T19:39:19.414Z] launch getbest TO535
+[LGDC 2026-09-15T19:39:19.887Z] launch getbest DH224
+[LGDC 2026-09-15T19:39:20.269Z] launch getbest NI135
+[LGDC 2026-09-15T19:39:20.525Z] launch getbest TV51R
+[LGDC 2026-09-15T19:39:20.777Z] launch getbest XI434
+[LGDC 2026-09-15T19:39:21.028Z] launch getbest MA155
+[LGDC 2026-09-15T19:39:21.288Z] launch getbest MO155
+[LGDC 2026-09-15T19:39:21.539Z] launch getbest GR13L
+[LGDC 2026-09-15T19:39:21.792Z] launch getbest CS31K
+[LGDC 2026-09-15T19:39:22.044Z] launch getbest MU12K
+[LGDC 2026-09-15T19:39:22.306Z] launch getbest RM041
+[LGDC 2026-09-15T19:39:22.562Z] launch getbest NDA81
+[LGDC 2026-09-15T19:39:22.815Z] launch getbest TR0P2
+[LGDC 2026-09-15T19:39:23.079Z] launch getbest ML10L
+[GiroAdapter] getbest async: 7 estaciones actualizadas
+[LGDC 2026-09-15T19:39:24.525Z] gate-consult deny gambit hmF2 2026.09.12T16:00 ms-since-last=1446
+[LGDC 2026-09-15T19:39:32.712Z] gate-consult deny gambit hmF2 2026.09.12T16:00 ms-since-last=9633
+[LGDC 2026-09-15T19:39:46.575Z] launch gambit hmF2 2026.09.12T16:00
+[LGDC 2026-09-15T19:39:46.580Z] result ok gambit hmF2 2026.09.12T16:00
+[Irtam] bucket hmF2 2026.09.12T16:00 OK (TOV 1789228800)
+[LGDC 2026-09-15T19:39:47.854Z] gate-consult deny gambit hmF2 2026.09.12T16:15 ms-since-last=8139
+[LGDC 2026-09-15T19:39:56.983Z] launch gambit hmF2 2026.09.12T16:15
+[LGDC 2026-09-15T19:39:56.988Z] result ok gambit hmF2 2026.09.12T16:15
+[Irtam] bucket hmF2 2026.09.12T16:15 OK (TOV 1789229700)
+[LGDC 2026-09-15T19:39:58.320Z] gate-consult deny gambit hmF2 2026.09.12T16:30 ms-since-last=3467
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=1.55 max=66.78 TECU
+[SolarIndices] sunspots: 412 filas
+[SolarIndices] Kp=0.00 Dst=-38 F10.7=105 Ap=20 SSN=23 (5/5 real)
+[LGDC 2026-09-15T19:40:05.187Z] gate-consult deny gambit hmF2 2026.09.12T16:30 ms-since-last=10334
+[SolarWindAdapter] Viento solar real: speed=553 km/s density=0.8 cm^-3 Bz=-4.8 nT (hist 3937 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=60.0
+[RadioProp] MUF=15.9 FOT=13.5 LUF=6.3 S4=0.08 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 3.22e-07 W/m2 (B3.2)
+[LGDC 2026-09-15T19:40:14.191Z] launch gambit hmF2 2026.09.12T16:30
+[LGDC 2026-09-15T19:40:14.197Z] result ok gambit hmF2 2026.09.12T16:30
+[Irtam] bucket hmF2 2026.09.12T16:30 OK (TOV 1789230600)
+[LGDC 2026-09-15T19:40:15.999Z] gate-consult deny gambit hmF2 2026.09.12T16:45 ms-since-last=3858
+[LGDC 2026-09-15T19:40:24.287Z] gate-consult deny gambit hmF2 2026.09.12T16:45 ms-since-last=12146
+[LGDC 2026-09-15T19:40:34.156Z] launch gambit hmF2 2026.09.12T16:45
+[LGDC 2026-09-15T19:40:34.161Z] result ok gambit hmF2 2026.09.12T16:45
+[Irtam] bucket hmF2 2026.09.12T16:45 OK (TOV 1789231500)
+[LGDC 2026-09-15T19:40:35.604Z] gate-consult deny gambit hmF2 2026.09.12T17:00 ms-since-last=3837
+[LGDC 2026-09-15T19:40:42.579Z] gate-consult deny gambit hmF2 2026.09.12T17:00 ms-since-last=10812
+[LGDC 2026-09-15T19:40:52.240Z] launch gambit hmF2 2026.09.12T17:00
+[LGDC 2026-09-15T19:40:52.244Z] result ok gambit hmF2 2026.09.12T17:00
+[Irtam] bucket hmF2 2026.09.12T17:00 OK (TOV 1789232400)
+[LGDC 2026-09-15T19:40:53.847Z] gate-consult deny gambit hmF2 2026.09.12T17:15 ms-since-last=3682
+[LGDC 2026-09-15T19:41:00.856Z] gate-consult deny gambit hmF2 2026.09.12T17:15 ms-since-last=10691
+[LGDC 2026-09-15T19:41:10.016Z] launch gambit hmF2 2026.09.12T17:15
+[LGDC 2026-09-15T19:41:10.024Z] result ok gambit hmF2 2026.09.12T17:15
+[Irtam] bucket hmF2 2026.09.12T17:15 OK (TOV 1789233300)
+[LGDC 2026-09-15T19:41:11.252Z] gate-consult deny gambit hmF2 2026.09.12T17:30 ms-since-last=3671
+[LGDC 2026-09-15T19:41:17.938Z] gate-consult deny gambit hmF2 2026.09.12T17:30 ms-since-last=10357
+[LGDC 2026-09-15T19:41:26.476Z] launch gambit hmF2 2026.09.12T17:30
+[LGDC 2026-09-15T19:41:26.486Z] result ok gambit hmF2 2026.09.12T17:30
+[Irtam] bucket hmF2 2026.09.12T17:30 OK (TOV 1789234200)
+[LGDC 2026-09-15T19:41:27.652Z] gate-consult deny gambit hmF2 2026.09.12T17:45 ms-since-last=3229
+[LGDC 2026-09-15T19:41:34.390Z] gate-consult deny gambit hmF2 2026.09.12T17:45 ms-since-last=9967
+[LGDC 2026-09-15T19:41:43.237Z] launch gambit hmF2 2026.09.12T17:45
+[LGDC 2026-09-15T19:41:43.246Z] result ok gambit hmF2 2026.09.12T17:45
+[Irtam] bucket hmF2 2026.09.12T17:45 OK (TOV 1789235100)
+[LGDC 2026-09-15T19:41:44.420Z] gate-consult deny gambit hmF2 2026.09.12T18:00 ms-since-last=3275
+[LGDC 2026-09-15T19:41:51.198Z] gate-consult deny gambit hmF2 2026.09.12T18:00 ms-since-last=10053
+[LGDC 2026-09-15T19:42:01.042Z] launch gambit hmF2 2026.09.12T18:00
+[LGDC 2026-09-15T19:42:01.046Z] result ok gambit hmF2 2026.09.12T18:00
+[Irtam] bucket hmF2 2026.09.12T18:00 OK (TOV 1789236000)
+[LGDC 2026-09-15T19:42:02.345Z] gate-consult deny gambit hmF2 2026.09.12T18:15 ms-since-last=4381
+[LGDC 2026-09-15T19:42:09.117Z] gate-consult deny gambit hmF2 2026.09.12T18:15 ms-since-last=11153
+[LGDC 2026-09-15T19:42:17.877Z] launch gambit hmF2 2026.09.12T18:15
+[LGDC 2026-09-15T19:42:17.883Z] result ok gambit hmF2 2026.09.12T18:15
+[Irtam] bucket hmF2 2026.09.12T18:15 OK (TOV 1789236900)
+[LGDC 2026-09-15T19:42:19.185Z] gate-consult deny gambit hmF2 2026.09.12T18:30 ms-since-last=3335
+[LGDC 2026-09-15T19:42:25.958Z] gate-consult deny gambit hmF2 2026.09.12T18:30 ms-since-last=10108
+[LGDC 2026-09-15T19:42:35.527Z] launch gambit hmF2 2026.09.12T18:30
+[LGDC 2026-09-15T19:42:35.535Z] result ok gambit hmF2 2026.09.12T18:30
+[Irtam] bucket hmF2 2026.09.12T18:30 OK (TOV 1789237800)
+[LGDC 2026-09-15T19:42:36.804Z] gate-consult deny gambit hmF2 2026.09.12T18:45 ms-since-last=4071
+[LGDC 2026-09-15T19:42:43.536Z] gate-consult deny gambit hmF2 2026.09.12T18:45 ms-since-last=10803
+[LGDC 2026-09-15T19:42:52.049Z] launch gambit hmF2 2026.09.12T18:45
+[LGDC 2026-09-15T19:42:52.056Z] result ok gambit hmF2 2026.09.12T18:45
+[Irtam] bucket hmF2 2026.09.12T18:45 OK (TOV 1789238700)
+[LGDC 2026-09-15T19:42:52.917Z] gate-consult deny gambit hmF2 2026.09.12T19:00 ms-since-last=2920
+[LGDC 2026-09-15T19:42:59.427Z] gate-consult deny gambit hmF2 2026.09.12T19:00 ms-since-last=9430
+[LGDC 2026-09-15T19:43:08.920Z] launch gambit hmF2 2026.09.12T19:00
+[LGDC 2026-09-15T19:43:08.929Z] result ok gambit hmF2 2026.09.12T19:00
+[Irtam] bucket hmF2 2026.09.12T19:00 OK (TOV 1789239600)
+[LGDC 2026-09-15T19:43:09.795Z] gate-consult deny gambit hmF2 2026.09.12T19:15 ms-since-last=3914
+[LGDC 2026-09-15T19:43:16.255Z] gate-consult deny gambit hmF2 2026.09.12T19:15 ms-since-last=10374
+[LGDC 2026-09-15T19:43:24.813Z] launch gambit hmF2 2026.09.12T19:15
+[LGDC 2026-09-15T19:43:24.820Z] result ok gambit hmF2 2026.09.12T19:15
+[Irtam] bucket hmF2 2026.09.12T19:15 OK (TOV 1789240500)
+[LGDC 2026-09-15T19:43:25.698Z] gate-consult deny gambit hmF2 2026.09.12T19:30 ms-since-last=2972
+[LGDC 2026-09-15T19:43:32.148Z] gate-consult deny gambit hmF2 2026.09.12T19:30 ms-since-last=9422
+[LGDC 2026-09-15T19:43:40.865Z] launch gambit hmF2 2026.09.12T19:30
+[LGDC 2026-09-15T19:43:40.884Z] result ok gambit hmF2 2026.09.12T19:30
+[Irtam] bucket hmF2 2026.09.12T19:30 OK (TOV 1789241400)
+[LGDC 2026-09-15T19:43:41.808Z] gate-consult deny gambit B0 2026.09.11T19:45 ms-since-last=3166
+[LGDC 2026-09-15T19:43:48.271Z] gate-consult deny gambit B0 2026.09.11T19:45 ms-since-last=9629
+[LGDC 2026-09-15T19:43:57.208Z] launch gambit B0 2026.09.11T19:45
+[LGDC 2026-09-15T19:43:57.216Z] result ok gambit B0 2026.09.11T19:45
+[Irtam] bucket B0 2026.09.11T19:45 OK (TOV 1789155900)
+[LGDC 2026-09-15T19:43:58.116Z] gate-consult deny gambit B0 2026.09.11T20:00 ms-since-last=3412
+[LGDC 2026-09-15T19:44:04.596Z] gate-consult deny gambit B0 2026.09.11T20:00 ms-since-last=9892
+[LGDC 2026-09-15T19:44:13.655Z] launch gambit B0 2026.09.11T20:00
+[LGDC 2026-09-15T19:44:13.664Z] result ok gambit B0 2026.09.11T20:00
+[Irtam] bucket B0 2026.09.11T20:00 OK (TOV 1789156800)
+[LGDC 2026-09-15T19:44:14.599Z] gate-consult deny gambit B0 2026.09.11T20:15 ms-since-last=3488
+[LGDC 2026-09-15T19:44:16.869Z] launch getbest EA036
+[LGDC 2026-09-15T19:44:17.132Z] launch getbest GM037
+[LGDC 2026-09-15T19:44:17.385Z] launch getbest PQ052
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 9 estaciones EU
+[GiroAdapter] getbest async: 3 estaciones actualizadas
+[Ebro] EB040_2026258194001.SAO: foF2=5.80 MUF=18.1 hmF2=293 foEs=nan
+[LGDC 2026-09-15T19:44:21.071Z] gate-consult deny gambit B0 2026.09.11T20:15 ms-since-last=3686
+[LGDC 2026-09-15T19:44:27.533Z] gate-consult deny gambit B0 2026.09.11T20:15 ms-since-last=10148
+[LGDC 2026-09-15T19:44:36.006Z] launch gambit B0 2026.09.11T20:15
+[LGDC 2026-09-15T19:44:36.013Z] result ok gambit B0 2026.09.11T20:15
+[Irtam] bucket B0 2026.09.11T20:15 OK (TOV 1789157700)
+[LGDC 2026-09-15T19:44:36.904Z] gate-consult deny gambit B0 2026.09.11T20:30 ms-since-last=2922
+[LGDC 2026-09-15T19:44:43.393Z] gate-consult deny gambit B0 2026.09.11T20:30 ms-since-last=9411
+[LGDC 2026-09-15T19:44:51.981Z] launch gambit B0 2026.09.11T20:30
+[LGDC 2026-09-15T19:44:51.990Z] result ok gambit B0 2026.09.11T20:30
+[Irtam] bucket B0 2026.09.11T20:30 OK (TOV 1789158600)
+[LGDC 2026-09-15T19:44:52.913Z] gate-consult deny gambit B0 2026.09.11T20:45 ms-since-last=3079
+[LGDC 2026-09-15T19:44:59.389Z] gate-consult deny gambit B0 2026.09.11T20:45 ms-since-last=9555
+[LGDC 2026-09-15T19:45:07.973Z] launch gambit foF2 2026.09.12T19:45
+[LGDC 2026-09-15T19:45:07.980Z] result ok gambit foF2 2026.09.12T19:45
+[Irtam] bucket foF2 2026.09.12T19:45 OK (TOV 1789242300)
+[LGDC 2026-09-15T19:45:08.869Z] gate-consult deny gambit hmF2 2026.09.12T19:45 ms-since-last=3041
+[LGDC 2026-09-15T19:45:15.295Z] gate-consult deny gambit hmF2 2026.09.12T19:45 ms-since-last=9467
+[LGDC 2026-09-15T19:45:23.819Z] launch gambit hmF2 2026.09.12T19:45
+[LGDC 2026-09-15T19:45:23.824Z] result ok gambit hmF2 2026.09.12T19:45
+[Irtam] bucket hmF2 2026.09.12T19:45 OK (TOV 1789242300)
+[LGDC 2026-09-15T19:45:24.694Z] gate-consult deny gambit B0 2026.09.11T20:45 ms-since-last=2926
+[LGDC 2026-09-15T19:45:31.191Z] gate-consult deny gambit B0 2026.09.11T20:45 ms-since-last=9423
+[LGDC 2026-09-15T19:45:39.767Z] launch gambit B0 2026.09.11T20:45
+[LGDC 2026-09-15T19:45:39.775Z] result ok gambit B0 2026.09.11T20:45
+[Irtam] bucket B0 2026.09.11T20:45 OK (TOV 1789159500)
+[LGDC 2026-09-15T19:45:40.673Z] gate-consult deny gambit B0 2026.09.11T21:00 ms-since-last=3012
+[LGDC 2026-09-15T19:45:47.174Z] gate-consult deny gambit B0 2026.09.11T21:00 ms-since-last=9513
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=1.66 max=67.84 TECU
+[SolarIndices] Kp=0.00 Dst=-39 F10.7=105 Ap=20 SSN=23 (5/5 real)
+[LGDC 2026-09-15T19:45:55.893Z] launch gambit B0 2026.09.11T21:00
+[LGDC 2026-09-15T19:45:55.897Z] result ok gambit B0 2026.09.11T21:00
+[Irtam] bucket B0 2026.09.11T21:00 OK (TOV 1789160400)
+[LGDC 2026-09-15T19:45:56.822Z] gate-consult deny gambit B0 2026.09.11T21:15 ms-since-last=3216
+[SolarWindAdapter] Viento solar real: speed=548 km/s density=0.7 cm^-3 Bz=-10.6 nT (hist 3934 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=59.0
+[RadioProp] MUF=15.9 FOT=13.5 LUF=6.3 S4=0.08 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 3.04e-07 W/m2 (B3.0)
+[LGDC 2026-09-15T19:46:03.319Z] gate-consult deny gambit B0 2026.09.11T21:15 ms-since-last=9713
+[LGDC 2026-09-15T19:46:11.955Z] launch gambit B0 2026.09.11T21:15
+[LGDC 2026-09-15T19:46:11.967Z] result ok gambit B0 2026.09.11T21:15
+[Irtam] bucket B0 2026.09.11T21:15 OK (TOV 1789161300)
+[LGDC 2026-09-15T19:46:12.905Z] gate-consult deny gambit B0 2026.09.11T21:30 ms-since-last=3094
+[LGDC 2026-09-15T19:46:19.390Z] gate-consult deny gambit B0 2026.09.11T21:30 ms-since-last=9579
+[LGDC 2026-09-15T19:46:28.155Z] launch gambit B0 2026.09.11T21:30
+[LGDC 2026-09-15T19:46:28.159Z] result ok gambit B0 2026.09.11T21:30
+[Irtam] bucket B0 2026.09.11T21:30 OK (TOV 1789162200)
+[LGDC 2026-09-15T19:46:29.292Z] gate-consult deny gambit B0 2026.09.11T21:45 ms-since-last=3360
+[LGDC 2026-09-15T19:46:35.821Z] gate-consult deny gambit B0 2026.09.11T21:45 ms-since-last=9889
+[LGDC 2026-09-15T19:46:44.433Z] launch gambit B0 2026.09.11T21:45
+[LGDC 2026-09-15T19:46:44.440Z] result ok gambit B0 2026.09.11T21:45
+[Irtam] bucket B0 2026.09.11T21:45 OK (TOV 1789163100)
+[LGDC 2026-09-15T19:46:45.391Z] gate-consult deny gambit B0 2026.09.11T22:00 ms-since-last=3065
+[LGDC 2026-09-15T19:46:51.882Z] gate-consult deny gambit B0 2026.09.11T22:00 ms-since-last=9556
+[LGDC 2026-09-15T19:47:00.417Z] launch gambit B0 2026.09.11T22:00
+[LGDC 2026-09-15T19:47:00.422Z] result ok gambit B0 2026.09.11T22:00
+[Irtam] bucket B0 2026.09.11T22:00 OK (TOV 1789164000)
+[LGDC 2026-09-15T19:47:01.435Z] gate-consult deny gambit B0 2026.09.11T22:15 ms-since-last=3060
+[LGDC 2026-09-15T19:47:08.015Z] gate-consult deny gambit B0 2026.09.11T22:15 ms-since-last=9640
+[LGDC 2026-09-15T19:47:16.707Z] launch gambit B0 2026.09.11T22:15
+[LGDC 2026-09-15T19:47:16.820Z] result ok gambit B0 2026.09.11T22:15
+[Irtam] bucket B0 2026.09.11T22:15 OK (TOV 1789164900)
+[LGDC 2026-09-15T19:47:19.094Z] gate-consult deny gambit B0 2026.09.11T22:30 ms-since-last=4491
+[LGDC 2026-09-15T19:47:25.853Z] gate-consult deny gambit B0 2026.09.11T22:30 ms-since-last=11250
+[LGDC 2026-09-15T19:47:34.890Z] launch gambit B0 2026.09.11T22:30
+[LGDC 2026-09-15T19:47:34.898Z] result ok gambit B0 2026.09.11T22:30
+[Irtam] bucket B0 2026.09.11T22:30 OK (TOV 1789165800)
+[LGDC 2026-09-15T19:47:36.327Z] gate-consult deny gambit B0 2026.09.11T22:45 ms-since-last=3452
+[LGDC 2026-09-15T19:47:43.143Z] gate-consult deny gambit B0 2026.09.11T22:45 ms-since-last=10268
+[LGDC 2026-09-15T19:47:51.828Z] launch gambit B0 2026.09.11T22:45
+[LGDC 2026-09-15T19:47:51.840Z] result ok gambit B0 2026.09.11T22:45
+[Irtam] bucket B0 2026.09.11T22:45 OK (TOV 1789166700)
+[LGDC 2026-09-15T19:47:52.863Z] gate-consult deny gambit B0 2026.09.11T23:00 ms-since-last=3188
+[LGDC 2026-09-15T19:47:59.390Z] gate-consult deny gambit B0 2026.09.11T23:00 ms-since-last=9715
+[LGDC 2026-09-15T19:48:08.569Z] launch gambit B0 2026.09.11T23:00
+[LGDC 2026-09-15T19:48:08.573Z] result ok gambit B0 2026.09.11T23:00
+[Irtam] bucket B0 2026.09.11T23:00 OK (TOV 1789167600)
+[LGDC 2026-09-15T19:48:09.524Z] gate-consult deny gambit B0 2026.09.11T23:15 ms-since-last=3590
+[LGDC 2026-09-15T19:48:16.104Z] gate-consult deny gambit B0 2026.09.11T23:15 ms-since-last=10170
+[LGDC 2026-09-15T19:48:24.749Z] launch gambit B0 2026.09.11T23:15
+[LGDC 2026-09-15T19:48:24.754Z] result ok gambit B0 2026.09.11T23:15
+[Irtam] bucket B0 2026.09.11T23:15 OK (TOV 1789168500)
+[LGDC 2026-09-15T19:48:25.702Z] gate-consult deny gambit B0 2026.09.11T23:30 ms-since-last=3022
+[LGDC 2026-09-15T19:48:32.271Z] gate-consult deny gambit B0 2026.09.11T23:30 ms-since-last=9591
+[LGDC 2026-09-15T19:48:40.882Z] launch gambit B0 2026.09.11T23:30
+[LGDC 2026-09-15T19:48:40.890Z] result ok gambit B0 2026.09.11T23:30
+[Irtam] bucket B0 2026.09.11T23:30 OK (TOV 1789169400)
+[LGDC 2026-09-15T19:48:41.829Z] gate-consult deny gambit B0 2026.09.11T23:45 ms-since-last=2998
+[LGDC 2026-09-15T19:48:48.389Z] gate-consult deny gambit B0 2026.09.11T23:45 ms-since-last=9558
+[LGDC 2026-09-15T19:48:55.501Z] result fail gambit B0 2026.09.11T23:45 red/pre-gate
+[Irtam] fetch B0 2026.09.11T23:45: fallo red/pre-gate
+[LGDC 2026-09-15T19:49:02.069Z] gate-consult deny gambit B0 2026.09.11T23:45 ms-since-last=7118
+[LGDC 2026-09-15T19:49:08.600Z] gate-consult deny gambit B0 2026.09.11T23:45 ms-since-last=13649
+[LGDC 2026-09-15T19:49:16.916Z] launch getbest EB040
+[LGDC 2026-09-15T19:49:17.168Z] launch getbest JR055
+[LGDC 2026-09-15T19:49:17.200Z] launch gambit B0 2026.09.11T23:45
+[LGDC 2026-09-15T19:49:17.209Z] result ok gambit B0 2026.09.11T23:45
+[Irtam] bucket B0 2026.09.11T23:45 OK (TOV 1789170300)
+[LGDC 2026-09-15T19:49:17.420Z] launch getbest AT138
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 9 estaciones EU
+[Ebro] EB040_2026258194501.SAO: foF2=5.70 MUF=17.5 hmF2=290 foEs=nan
+[LGDC 2026-09-15T19:49:17.672Z] launch getbest VT139
+[LGDC 2026-09-15T19:49:17.922Z] launch getbest MZ152
+[LGDC 2026-09-15T19:49:18.172Z] launch getbest SO148
+[LGDC 2026-09-15T19:49:18.213Z] gate-consult deny gambit B0 2026.09.12T00:00 ms-since-last=41
+[LGDC 2026-09-15T19:49:18.424Z] launch getbest FF051
+[LGDC 2026-09-15T19:49:18.674Z] launch getbest TR169
+[LGDC 2026-09-15T19:49:18.926Z] launch getbest DB049
+[LGDC 2026-09-15T19:49:19.179Z] launch getbest EG931
+[LGDC 2026-09-15T19:49:19.432Z] launch getbest CAJ2M
+[LGDC 2026-09-15T19:49:19.684Z] launch getbest DW41K
+[LGDC 2026-09-15T19:49:19.943Z] launch getbest EI764
+[GiroAdapter] getbest async: 12 estaciones actualizadas
+[LGDC 2026-09-15T19:49:24.742Z] gate-consult deny gambit B0 2026.09.12T00:00 ms-since-last=4799
+[LGDC 2026-09-15T19:49:31.241Z] gate-consult deny gambit B0 2026.09.12T00:00 ms-since-last=11298
+[LGDC 2026-09-15T19:49:40.021Z] launch gambit B0 2026.09.12T00:00
+[LGDC 2026-09-15T19:49:40.028Z] result ok gambit B0 2026.09.12T00:00
+[Irtam] bucket B0 2026.09.12T00:00 OK (TOV 1789171200)
+[LGDC 2026-09-15T19:49:41.450Z] gate-consult deny gambit B0 2026.09.12T00:15 ms-since-last=3540
+[LGDC 2026-09-15T19:49:48.393Z] gate-consult deny gambit B0 2026.09.12T00:15 ms-since-last=10483
+[LGDC 2026-09-15T19:49:57.376Z] launch gambit B0 2026.09.12T00:15
+[LGDC 2026-09-15T19:49:57.387Z] result ok gambit B0 2026.09.12T00:15
+[Irtam] bucket B0 2026.09.12T00:15 OK (TOV 1789172100)
+[LGDC 2026-09-15T19:49:58.831Z] gate-consult deny gambit B0 2026.09.12T00:30 ms-since-last=3511
+[LGDC 2026-09-15T19:50:05.749Z] gate-consult deny gambit B0 2026.09.12T00:30 ms-since-last=10429
+[LGDC 2026-09-15T19:50:16.162Z] launch gambit B0 2026.09.12T00:30
+[LGDC 2026-09-15T19:50:16.167Z] result ok gambit B0 2026.09.12T00:30
+[Irtam] bucket B0 2026.09.12T00:30 OK (TOV 1789173000)
+[LGDC 2026-09-15T19:50:17.636Z] gate-consult deny gambit B0 2026.09.12T00:45 ms-since-last=5053
+[LGDC 2026-09-15T19:50:24.650Z] gate-consult deny gambit B0 2026.09.12T00:45 ms-since-last=12067
+[LGDC 2026-09-15T19:50:34.800Z] launch gambit B0 2026.09.12T00:45
+[LGDC 2026-09-15T19:50:34.804Z] result ok gambit B0 2026.09.12T00:45
+[Irtam] bucket B0 2026.09.12T00:45 OK (TOV 1789173900)
+[LGDC 2026-09-15T19:50:36.162Z] gate-consult deny gambit B0 2026.09.12T01:00 ms-since-last=4544
+[LGDC 2026-09-15T19:50:43.045Z] gate-consult deny gambit B0 2026.09.12T01:00 ms-since-last=11427
+[LGDC 2026-09-15T19:50:52.028Z] launch gambit B0 2026.09.12T01:00
+[LGDC 2026-09-15T19:50:52.034Z] result ok gambit B0 2026.09.12T01:00
+[Irtam] bucket B0 2026.09.12T01:00 OK (TOV 1789174800)
+[LGDC 2026-09-15T19:50:53.437Z] gate-consult deny gambit B0 2026.09.12T01:15 ms-since-last=3519
+[LGDC 2026-09-15T19:51:00.434Z] gate-consult deny gambit B0 2026.09.12T01:15 ms-since-last=10516
+[LGDC 2026-09-15T19:51:16.432Z] launch gambit B0 2026.09.12T01:15
+[LGDC 2026-09-15T19:51:16.436Z] result ok gambit B0 2026.09.12T01:15
+[Irtam] bucket B0 2026.09.12T01:15 OK (TOV 1789175700)
+[LGDC 2026-09-15T19:51:17.801Z] gate-consult deny gambit B0 2026.09.12T01:30 ms-since-last=10232
+[LGDC 2026-09-15T19:51:26.939Z] launch gambit B0 2026.09.12T01:30
+[LGDC 2026-09-15T19:51:26.945Z] result ok gambit B0 2026.09.12T01:30
+[Irtam] bucket B0 2026.09.12T01:30 OK (TOV 1789176600)
+[LGDC 2026-09-15T19:51:28.432Z] gate-consult deny gambit B0 2026.09.12T01:45 ms-since-last=3659
+[LGDC 2026-09-15T19:51:35.419Z] gate-consult deny gambit B0 2026.09.12T01:45 ms-since-last=10647
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=1.66 max=67.84 TECU
+[SolarIndices] Kp=0.00 Dst=-42 F10.7=105 Ap=20 SSN=23 (5/5 real)
+[SolarWindAdapter] No se pudo obtener mag JSON: curl: Timeout was reached
+[LGDC 2026-09-15T19:51:55.306Z] launch gambit B0 2026.09.12T01:45
+[LGDC 2026-09-15T19:51:55.312Z] result ok gambit B0 2026.09.12T01:45
+[Irtam] bucket B0 2026.09.12T01:45 OK (TOV 1789177500)
+[LGDC 2026-09-15T19:51:56.745Z] gate-consult deny gambit B0 2026.09.12T02:00 ms-since-last=14160
+[SolarWindAdapter] Viento solar real: speed=462 km/s density=0.8 cm^-3 Bz=0.0 nT (hist 0 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=58.0
+[RadioProp] MUF=15.3 FOT=13.0 LUF=6.1 S4=0.08 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 2.93e-07 W/m2 (B2.9)
+[LGDC 2026-09-15T19:52:05.851Z] launch gambit B0 2026.09.12T02:00
+[LGDC 2026-09-15T19:52:05.863Z] result ok gambit B0 2026.09.12T02:00
+[Irtam] bucket B0 2026.09.12T02:00 OK (TOV 1789178400)
+[LGDC 2026-09-15T19:52:08.241Z] gate-consult deny gambit B0 2026.09.12T02:15 ms-since-last=4467
+[LGDC 2026-09-15T19:52:15.389Z] gate-consult deny gambit B0 2026.09.12T02:15 ms-since-last=11615
+[LGDC 2026-09-15T19:52:25.214Z] launch gambit B0 2026.09.12T02:15
+[LGDC 2026-09-15T19:52:25.218Z] result ok gambit B0 2026.09.12T02:15
+[Irtam] bucket B0 2026.09.12T02:15 OK (TOV 1789179300)
+[LGDC 2026-09-15T19:52:26.683Z] gate-consult deny gambit B0 2026.09.12T02:30 ms-since-last=4305
+[LGDC 2026-09-15T19:52:33.853Z] gate-consult deny gambit B0 2026.09.12T02:30 ms-since-last=11475
+[LGDC 2026-09-15T19:52:42.809Z] launch gambit B0 2026.09.12T02:30
+[LGDC 2026-09-15T19:52:42.812Z] result ok gambit B0 2026.09.12T02:30
+[Irtam] bucket B0 2026.09.12T02:30 OK (TOV 1789180200)
+[LGDC 2026-09-15T19:52:44.298Z] gate-consult deny gambit B0 2026.09.12T02:45 ms-since-last=3562
+[LGDC 2026-09-15T19:52:51.271Z] gate-consult deny gambit B0 2026.09.12T02:45 ms-since-last=10535
+[LGDC 2026-09-15T19:53:00.252Z] launch gambit B0 2026.09.12T02:45
+[LGDC 2026-09-15T19:53:00.256Z] result ok gambit B0 2026.09.12T02:45
+[Irtam] bucket B0 2026.09.12T02:45 OK (TOV 1789181100)
+[LGDC 2026-09-15T19:53:01.560Z] gate-consult deny gambit B0 2026.09.12T03:00 ms-since-last=3356
+[LGDC 2026-09-15T19:53:08.601Z] gate-consult deny gambit B0 2026.09.12T03:00 ms-since-last=10397
+[LGDC 2026-09-15T19:53:17.751Z] launch gambit B0 2026.09.12T03:00
+[LGDC 2026-09-15T19:53:17.754Z] result ok gambit B0 2026.09.12T03:00
+[Irtam] bucket B0 2026.09.12T03:00 OK (TOV 1789182000)
+[LGDC 2026-09-15T19:53:19.278Z] gate-consult deny gambit B0 2026.09.12T03:15 ms-since-last=3623
+[LGDC 2026-09-15T19:53:26.300Z] gate-consult deny gambit B0 2026.09.12T03:15 ms-since-last=10645
+[LGDC 2026-09-15T19:53:35.430Z] launch gambit B0 2026.09.12T03:15
+[LGDC 2026-09-15T19:53:35.433Z] result ok gambit B0 2026.09.12T03:15
+[Irtam] bucket B0 2026.09.12T03:15 OK (TOV 1789182900)
+[LGDC 2026-09-15T19:53:36.786Z] gate-consult deny gambit B0 2026.09.12T03:30 ms-since-last=3391
+[LGDC 2026-09-15T19:53:43.598Z] gate-consult deny gambit B0 2026.09.12T03:30 ms-since-last=10203
+[LGDC 2026-09-15T19:53:52.760Z] launch gambit B0 2026.09.12T03:30
+[LGDC 2026-09-15T19:53:52.765Z] result ok gambit B0 2026.09.12T03:30
+[Irtam] bucket B0 2026.09.12T03:30 OK (TOV 1789183800)
+[LGDC 2026-09-15T19:53:54.415Z] gate-consult deny gambit B0 2026.09.12T03:45 ms-since-last=3700
+[LGDC 2026-09-15T19:54:01.303Z] gate-consult deny gambit B0 2026.09.12T03:45 ms-since-last=10588
+[LGDC 2026-09-15T19:54:10.496Z] launch gambit B0 2026.09.12T03:45
+[LGDC 2026-09-15T19:54:10.501Z] result ok gambit B0 2026.09.12T03:45
+[Irtam] bucket B0 2026.09.12T03:45 OK (TOV 1789184700)
+[LGDC 2026-09-15T19:54:12.063Z] gate-consult deny gambit B0 2026.09.12T04:00 ms-since-last=3687
+[LGDC 2026-09-15T19:54:16.919Z] launch getbest EA036
+[LGDC 2026-09-15T19:54:17.174Z] launch getbest CB53N
+[LGDC 2026-09-15T19:54:17.428Z] launch getbest TV51R
+[Ebro] EB040_2026258195001.SAO: foF2=5.70 MUF=17.3 hmF2=296 foEs=nan
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 9 estaciones EU
+[LGDC 2026-09-15T19:54:17.681Z] launch getbest GR13L
+[LGDC 2026-09-15T19:54:17.935Z] launch getbest NI135
+[LGDC 2026-09-15T19:54:18.187Z] launch getbest TR0P2
+[LGDC 2026-09-15T19:54:18.440Z] launch getbest RM041
+[LGDC 2026-09-15T19:54:18.995Z] gate-[consuGilt deny gambit roAdapter] getbestB asy0 nc2: 027 est6.0a9.12T04:00 ms-since-last=555
+ciones actualizadas
+[LGDC 2026-09-15T19:54:25.899Z] gate-consult deny gambit B0 2026.09.12T04:00 ms-since-last=7459
+[LGDC 2026-09-15T19:54:32.854Z] gate-consult deny gambit B0 2026.09.12T04:00 ms-since-last=14414
+[LGDC 2026-09-15T19:54:42.872Z] launch gambit B0 2026.09.12T04:00
+[LGDC 2026-09-15T19:54:42.877Z] result ok gambit B0 2026.09.12T04:00
+[Irtam] bucket B0 2026.09.12T04:00 OK (TOV 1789185600)
+[LGDC 2026-09-15T19:54:44.247Z] gate-consult deny gambit B0 2026.09.12T04:15 ms-since-last=4369
+[LGDC 2026-09-15T19:54:51.161Z] gate-consult deny gambit B0 2026.09.12T04:15 ms-since-last=11283
+[LGDC 2026-09-15T19:55:00.340Z] launch gambit B0 2026.09.12T04:15
+[LGDC 2026-09-15T19:55:00.346Z] result ok gambit B0 2026.09.12T04:15
+[Irtam] bucket B0 2026.09.12T04:15 OK (TOV 1789186500)
+[LGDC 2026-09-15T19:55:02.137Z] gate-consult deny gambit B0 2026.09.12T04:30 ms-since-last=4056
+[LGDC 2026-09-15T19:55:09.687Z] gate-consult deny gambit B0 2026.09.12T04:30 ms-since-last=11606
+[LGDC 2026-09-15T19:55:19.409Z] launch gambit B0 2026.09.12T04:30
+[LGDC 2026-09-15T19:55:19.415Z] result ok gambit B0 2026.09.12T04:30
+[Irtam] bucket B0 2026.09.12T04:30 OK (TOV 1789187400)
+[LGDC 2026-09-15T19:55:21.568Z] gate-consult deny gambit B0 2026.09.12T04:45 ms-since-last=4228
+[LGDC 2026-09-15T19:55:28.980Z] gate-consult deny gambit B0 2026.09.12T04:45 ms-since-last=11640
+[LGDC 2026-09-15T19:55:40.590Z] launch gambit B0 2026.09.12T04:45
+[LGDC 2026-09-15T19:55:40.595Z] result ok gambit B0 2026.09.12T04:45
+[Irtam] bucket B0 2026.09.12T04:45 OK (TOV 1789188300)
+[LGDC 2026-09-15T19:55:42.070Z] gate-consult deny gambit B0 2026.09.12T05:00 ms-since-last=6142
+[LGDC 2026-09-15T19:55:49.033Z] gate-consult deny gambit B0 2026.09.12T05:00 ms-since-last=13105
+[LGDC 2026-09-15T19:55:59.192Z] launch gambit B0 2026.09.12T05:00
+[LGDC 2026-09-15T19:55:59.197Z] result ok gambit B0 2026.09.12T05:00
+[Irtam] bucket B0 2026.09.12T05:00 OK (TOV 1789189200)
+[LGDC 2026-09-15T19:56:00.623Z] gate-consult deny gambit B0 2026.09.12T05:15 ms-since-last=4630
+[LGDC 2026-09-15T19:56:07.559Z] gate-consult deny gambit B0 2026.09.12T05:15 ms-since-last=11566
+[LGDC 2026-09-15T19:56:16.558Z] launch gambit B0 2026.09.12T05:15
+[LGDC 2026-09-15T19:56:16.563Z] result ok gambit B0 2026.09.12T05:15
+[Irtam] bucket B0 2026.09.12T05:15 OK (TOV 1789190100)
+[LGDC 2026-09-15T19:56:18.068Z] gate-consult deny gambit B0 2026.09.12T05:30 ms-since-last=3622
+[LGDC 2026-09-15T19:56:25.232Z] gate-consult deny gambit B0 2026.09.12T05:30 ms-since-last=10785
+[LGDC 2026-09-15T19:56:34.262Z] launch gambit B0 2026.09.12T05:30
+[LGDC 2026-09-15T19:56:34.266Z] result ok gambit B0 2026.09.12T05:30
+[Irtam] bucket B0 2026.09.12T05:30 OK (TOV 1789191000)
+[LGDC 2026-09-15T19:56:35.741Z] gate-consult deny gambit B0 2026.09.12T05:45 ms-since-last=3511
+[LGDC 2026-09-15T19:56:42.742Z] gate-consult deny gambit B0 2026.09.12T05:45 ms-since-last=10512
