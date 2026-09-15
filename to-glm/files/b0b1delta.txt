@@ -1,0 +1,605 @@
+From 141aa06273745bbe94337aa644b6fb5a1a1a20f2 Mon Sep 17 00:00:00 2001
+From: David Lopez Salvador <davidlopezsalvador@users.noreply.github.com>
+Date: Tue, 15 Sep 2026 18:38:43 +0200
+Subject: [PATCH] F2-B0B1-R1: par B0xB1 (kParams x4 + bundle aditivo + gate
+ parejas + selector 10/11 + oraculos)
+
+---
+ CMakeLists.txt                 |   2 +-
+ src/App.cpp                    | 118 +++++++++++++++++++++++++++++----
+ src/Data/IrtamCoeffAdapter.cpp |   6 +-
+ src/Data/IrtamCoeffAdapter.h   |  17 +++--
+ src/Data/IrtamCoeffCache.cpp   |  16 +++++
+ src/Data/IrtamCoeffCache.h     |   7 ++
+ src/Data/IrtamGridEval.cpp     |  26 ++++++++
+ src/Data/IrtamGridEval.h       |  12 ++++
+ tests/test_irtam_adapter.cpp   |  22 ++++--
+ tests/test_irtam_grid_eval.cpp |  98 ++++++++++++++++++++++++++-
+ tests/test_irtamc_cache.cpp    |  23 +++++++
+ 11 files changed, 318 insertions(+), 29 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 20769c3..18955c7 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -261,7 +261,7 @@ add_test(NAME irtam_adapter COMMAND test_irtam_adapter)
+ # M-IRTAM-F2 (P1b): evaluacion Jones-Gallet — llama a PRODUCCION
+ # (namespace irtameval en src/Data/IrtamGridEval), no replica.
+ add_executable(test_irtam_grid_eval tests/test_irtam_grid_eval.cpp src/Data/IrtamGridEval.cpp src/Data/IrtamCoeffParse.cpp)
+-target_include_directories(test_irtam_grid_eval PRIVATE src)
++target_include_directories(test_irtam_grid_eval PRIVATE src libs/glad/include)  # GridData via GridLayer.h (patron kc2g_parse)
+ add_test(NAME irtam_grid_eval COMMAND test_irtam_grid_eval)
+ # M-IRTAM-F2 (P5): estados honestos + replay — llama a PRODUCCION
+ # (namespace irtamstate en src/Data/IrtamState), no replica.
+diff --git a/src/App.cpp b/src/App.cpp
+index 229fce1..c105169 100644
+--- a/src/App.cpp
++++ b/src/App.cpp
+@@ -1226,6 +1226,47 @@ bool App::init(int width, int height, const char* title) {
+                     b->valid = true;
+                     b->error.clear();
+                 } while (false);
++                // F2-B0B1-R1 Q2 (gate por parejas, aditivo): par B0xB1 con el
++                // mismo shape. TOV-comun propio (tovB0 == tovB1); si falla o
++                // desincroniza, b0/b1 quedan ausentes y el bundle PUBLICA
++                // igual con el par F/H (valid/dataEpoch: solo F/H, Q1).
++                // El bloque F/H de arriba ni se toca.
++                do {
++                    const double tovBB = irtamccache::commonTovEpoch(
++                        irtamccache::loadCached("cache").buckets, "b0", "b1");
++                    if (tovBB <= 0.0) break;
++                    const irtamccache::ScanResult scB =
++                        irtamccache::loadCached("cache");
++                    const irtamccache::Bucket* b0 = nullptr;
++                    const irtamccache::Bucket* b1 = nullptr;
++                    for (const auto& bk : scB.buckets) {
++                        if (bk.param == "b0" && bk.tovEpoch == tovBB) b0 = &bk;
++                        if (bk.param == "b1" && bk.tovEpoch == tovBB) b1 = &bk;
++                    }
++                    if (!b0 || !b1) break;
++                    irtamcoeff::Message m0, m1;
++                    std::string errB;
++                    if (!irtamcoeff::parseMessage(
++                            std::string(b0->bytes.begin(), b0->bytes.end()),
++                            m0, errB) ||
++                        !irtamcoeff::parseMessage(
++                            std::string(b1->bytes.begin(), b1->bytes.end()),
++                            m1, errB))
++                        break;
++                    const double ryearB =
++                        irtameval::decimalYearForTov(tovBB);
++                    const long long dayB =
++                        (long long)std::floor(tovBB / 86400.0);
++                    const float tovHourB =
++                        (float)((tovBB - (double)dayB * 86400.0) / 3600.0);
++                    GridData g0, g1;
++                    // evalPairGrids exige basis standard + mismo TOV (Q2).
++                    if (!irtameval::evalPairGrids(m0, m1, ryearB, tovHourB,
++                                                 tovHourB, g0, g1))
++                        break;
++                    b->b0 = std::move(g0);
++                    b->b1 = std::move(g1);
++                } while (false);
+                 { std::lock_guard<std::mutex> lk(self->impl->bundleMutex); self->impl->irtam = b; }
+             };
+             auto sleepIntr = [&](int ms100) {
+@@ -1690,6 +1731,24 @@ void App::update(float dt) {
+         auto ib = impl->getIrtam();
+         if (ib && ib->valid)
+             updateMainGrid(impl->mapVariable == 8 ? ib->foF2 : ib->hmF2);
++    } else if (impl->mapVariable == 10 || impl->mapVariable == 11) {
++        // F2-B0B1-R1 Q3: streaming B0/B1 (misma honestidad; par ausente =
++        // ausente). B0 con clamp-color via copia display-only.
++        auto ib = impl->getIrtam();
++        if (ib && ib->valid) {
++            const GridData& src =
++                (impl->mapVariable == 10) ? ib->b0 : ib->b1;
++            if (!src.values.empty() && src.valid) {
++                if (impl->mapVariable == 10) {
++                    GridData g = src;
++                    for (float& v : g.values)
++                        if (v < 0.0f) v = 0.0f;
++                    updateMainGrid(g);
++                } else {
++                    updateMainGrid(src);
++                }
++            }
++        }
+     }
+ 
+     // M8 (plan 11.5): grids del circuito HF cacheados en impl + rebuild del
+@@ -1963,7 +2022,7 @@ void App::loadSettings() {
+         }
+         if (sscanf(line, "%63s %lf", key, &v) != 2) continue;
+         std::string k = key;
+-        if (k == "mapVariable") impl->mapVariable = glm::clamp((int)v, 0, 9);  // M-IRTAM-F2 (P4): 8-9 IRTAM
++        if (k == "mapVariable") impl->mapVariable = glm::clamp((int)v, 0, 11);  // M-IRTAM-F2 (P4: 8-9 IRTAM; B0B1: 10-11)
+         else if (k == "manualColormap") impl->manualColormap = glm::clamp((int)v, 0, 3);
+         else if (k == "colormapOverride") impl->colormapOverride = clB(v);
+         else if (k == "tecOpacity") impl->tecOpacity = glm::clamp((float)v, 0.0f, 2.0f);
+@@ -2539,7 +2598,7 @@ void App::drawSunPanel() {
+ void App::applyColorLayer() {    // 0 = TEC (GloTEC real). 1-4 = GIRO. 5-7 = derivados Radio. 8-9 = IRTAM retrospectivo (P4: sin dato no se dibuja).
+     // Si hay override manual se respeta; si no, automatico por variable.
+     static const char* CM_NAMES[4] = { "viridis", "inferno", "plasma", "turbo" };
+-    static const int VAR_AUTO_CM[10] = { 0, 2, 1, 3, 3, 2, 1, 3, 2, 3 };  // ... + IRTAM foF2=plasma, hmF2=turbo (espejo GIRO)
++    static const int VAR_AUTO_CM[12] = { 0, 2, 1, 3, 3, 2, 1, 3, 2, 3, 1, 2 };  // ... + IRTAM foF2=plasma, hmF2=turbo (espejo GIRO) + IRTAM B0=inferno, B1=plasma
+ 
+     // M4R-A: fuente viva por modo (kc2g-fallback -> fusion cacheada;
+     // misma cache/estampado que usa update() — lambda dentro del metodo
+@@ -2597,6 +2656,26 @@ void App::applyColorLayer() {    // 0 = TEC (GloTEC real). 1-4 = GIRO. 5-7 = der
+         impl->shellLayer.setDisplaceCentered(centered);
+         impl->tecLayer.clearRange();
+         updateMainGrid(impl->mapVariable == 8 ? b->foF2 : b->hmF2);
++    } else if (impl->mapVariable == 10 || impl->mapVariable == 11) {
++        // F2-B0B1-R1 Q3: capas B0/B1 (valid lo gobierna F/H (Q1); el par
++        // propio ausente = capa ausente, jamas ceros). B0: clamp a 0 SOLO
++        // en color (dato crudo intacto; negativos = fisica real nocturna).
++        auto b = impl->getIrtam();
++        if (!b || !b->valid) return;
++        const GridData& src =
++            (impl->mapVariable == 10) ? b->b0 : b->b1;
++        if (src.values.empty() || !src.valid) return;
++        impl->tecLayer.setDisplaceCentered(false);
++        impl->shellLayer.setDisplaceCentered(false);
++        impl->tecLayer.clearRange();
++        if (impl->mapVariable == 10) {
++            GridData g = src;  // copia display-only para el clamp
++            for (float& v : g.values)
++                if (v < 0.0f) v = 0.0f;
++            updateMainGrid(g);
++        } else {
++            updateMainGrid(src);  // B1 lineal, unidad "[]"
++        }
+     } else {
+         return;
+     }
+@@ -3008,25 +3087,36 @@ void App::render() {
+     ImGui::Separator();
+     ImGui::Text("Ionosphere");
+     HelpMarker("Color shell over the globe. Pick the variable (real TEC or GIRO/HF interpolations) and it is painted with its colormap.");
+-    // Variable de la capa de colores esferica (Seccion A + Fase 5 + M-IRTAM-F2 P4):
+-    // TEC / GIRO (foF2,MUF,hmF2,NmF2) / Radio (LUF,FOT,Spread-F) / IRTAM (foF2,hmF2 retrospectivos).
+-    const char* mapVars[] = { "TEC", "foF2", "MUF", "hmF2", "NmF2", "LUF", "FOT", "Spread-F", "IRTAM foF2", "IRTAM hmF2" };
+-    if (ImGui::Combo("Variable", &impl->mapVariable, mapVars, 10)) {
++    // Variable de la capa de colores esferica (Seccion A + Fase 5 + M-IRTAM-F2 P4 + B0B1):
++    // TEC / GIRO (foF2,MUF,hmF2,NmF2) / Radio (LUF,FOT,Spread-F) / IRTAM (foF2,hmF2,B0,B1 retrospectivos).
++    const char* mapVars[] = { "TEC", "foF2", "MUF", "hmF2", "NmF2", "LUF", "FOT", "Spread-F", "IRTAM foF2", "IRTAM hmF2", "IRTAM B0", "IRTAM B1" };
++    if (ImGui::Combo("Variable", &impl->mapVariable, mapVars, 12)) {
+         applyColorLayer();
+-    }
+-    if (ImGui::IsItemHovered()) ImGui::SetItemTooltip("TEC: electron content (TECU, NOAA GloTEC).\nfoF2: F2-layer critical frequency (MHz, GIRO).\nMUF: max usable at 3000 km (MHz, GIRO).\nhmF2: F2 peak height (km, GIRO).\nNmF2: F2 peak density (e/m3, from foF2).\nLUF: lowest usable (MHz, ITU-style derived).\nFOT: optimum working = 0.85*MUF (MHz).\nSpread-F: % spread-echo occurrence (diverging).\nIRTAM foF2/hmF2: retrospective IRTAM grids (MHz/km, gambit-coeffs, lag ~3 d).");
++    }
++    if (ImGui::IsItemHovered()) ImGui::SetItemTooltip("TEC: electron content (TECU, NOAA GloTEC).\nfoF2: F2-layer critical frequency (MHz, GIRO).\nMUF: max usable at 3000 km (MHz, GIRO).\nhmF2: F2 peak height (km, GIRO).\nNmF2: F2 peak density (e/m3, from foF2).\nLUF: lowest usable (MHz, ITU-style derived).\nFOT: optimum working = 0.85*MUF (MHz).\nSpread-F: % spread-echo occurrence (diverging).\nIRTAM foF2/hmF2: retrospective IRTAM grids (MHz/km, gambit-coeffs, lag ~3 d).\nIRTAM B0/B1: bottomside thickness/shape (km/[], gambit-coeffs, lag ~3 d).");
+     // M-IRTAM-F2 (P4 cond. 3 + P5): badge DATA-age desde el cache P2.
+     // Fuente = TOV del bucket (red line); visibilidad = solo con capa IRTAM.
+     // Edad andante: se calcula AL PINTAR con el reloj de lectura (E10).
+     // P5: estado textual honesto via irtamstate (motivo en linea, no solo
+     // tooltip) + nota frozen-declarada en replay (C9).
+-    if (impl->mapVariable == 8 || impl->mapVariable == 9) {
+-        const char* ipName = (impl->mapVariable == 8) ? "foF2" : "hmF2";
++    // F2-B0B1-R1 Q3: badge para 8-11; B0/B1 exigen ademas su grid presente
++    // (par ausente = ausente); DATA-age y valid los gobierna F/H (Q1).
++    if ((impl->mapVariable >= 8 && impl->mapVariable <= 9) ||
++        (impl->mapVariable >= 10 && impl->mapVariable <= 11)) {
++        const char* ipName = (impl->mapVariable == 8)    ? "foF2"
++                             : (impl->mapVariable == 9)  ? "hmF2"
++                             : (impl->mapVariable == 10) ? "B0"
++                                                         : "B1";
+         auto ib = impl->getIrtam();
+         const double nowUtc = (double)std::time(nullptr);
+         const double ageMin = (ib && ib->dataEpoch > 0.0)
+             ? (nowUtc - ib->dataEpoch) / 60.0 : -1.0;
+-        const bool bValid = (ib && ib->valid);
++        bool bValid = (ib && ib->valid);
++        if (ib && (impl->mapVariable == 10 || impl->mapVariable == 11)) {
++            const GridData& src =
++                (impl->mapVariable == 10) ? ib->b0 : ib->b1;
++            if (src.values.empty() || !src.valid) bValid = false;
++        }
+         const std::string bErr = ib ? ib->error : "";
+         const std::string line = irtamstate::badgeLine(
+             ipName, bValid, ib ? ib->dataEpoch : 0.0, bErr, ageMin,
+@@ -3885,9 +3975,9 @@ void App::render() {
+ 
+     // ---- Legend: active color scale of the spherical layer (units + range) ----
+     {
+-        static const char* LEG_NAMES[10] = { "TEC", "foF2", "MUF", "hmF2", "NmF2", "LUF", "FOT", "Spread-F", "IRTAM foF2", "IRTAM hmF2" };
+-        static const char* LEG_UNITS[10] = { "TECU", "MHz", "MHz", "km", "e/m3", "MHz", "MHz", "%", "MHz", "km" };
+-        int li = glm::clamp(impl->mapVariable, 0, 9);
++        static const char* LEG_NAMES[12] = { "TEC", "foF2", "MUF", "hmF2", "NmF2", "LUF", "FOT", "Spread-F", "IRTAM foF2", "IRTAM hmF2", "IRTAM B0", "IRTAM B1" };
++        static const char* LEG_UNITS[12] = { "TECU", "MHz", "MHz", "km", "e/m3", "MHz", "MHz", "%", "MHz", "km", "km", "[]" };
++        int li = glm::clamp(impl->mapVariable, 0, 11);
+         ImGui::SetNextWindowPos(ImVec2(10, (float)winH - 130), ImGuiCond_FirstUseEver);
+         ImGui::SetNextWindowSize(ImVec2(220, 110), ImGuiCond_FirstUseEver);
+         ImGui::Begin("Legend");
+diff --git a/src/Data/IrtamCoeffAdapter.cpp b/src/Data/IrtamCoeffAdapter.cpp
+index 080121e..ef1fa14 100644
+--- a/src/Data/IrtamCoeffAdapter.cpp
++++ b/src/Data/IrtamCoeffAdapter.cpp
+@@ -51,7 +51,7 @@ double dataAgeMin(double dataEpoch, double nowUtc) {
+ 
+ std::vector<FetchTarget> planMissing(const CacheHave& have, double windowEnd) {
+     std::vector<FetchTarget> out;
+-    for (int pi = 0; pi < 2; pi++) {
++    for (int pi = 0; pi < 4; pi++) {  // F2-B0B1-R1: 4 params param-major
+         const std::string param(kParams[pi]);
+         const std::vector<double>* present = nullptr;
+         const auto it = have.epochs.find(param);
+@@ -116,7 +116,9 @@ CacheHave IrtamCoeffAdapter::scan() {
+         std::string disp = b.param;
+         if (disp == "fof2") disp = "foF2";
+         else if (disp == "hmf2") disp = "hmF2";
+-        else continue;  // B0/B1 u otros: fuera del scope P4
++        else if (disp == "b0") disp = "B0";  // F2-B0B1-R1
++        else if (disp == "b1") disp = "B1";  // F2-B0B1-R1
++        else continue;  // otros: fuera de scope
+         have.epochs[disp].push_back(b.epoch);
+         if (b.tovEpoch > have.freshestTov) have.freshestTov = b.tovEpoch;
+     }
+diff --git a/src/Data/IrtamCoeffAdapter.h b/src/Data/IrtamCoeffAdapter.h
+index 9abc376..fe0b194 100644
+--- a/src/Data/IrtamCoeffAdapter.h
++++ b/src/Data/IrtamCoeffAdapter.h
+@@ -6,13 +6,15 @@
+ // IonosphereLive3D/1.0 + timeout 20 s + FOLLOWLOCATION. La URL gambit vive
+ // AQUI y solo aqui (UN sitio, G6: 3er endpoint lgdc sancionado).
+ //
+-// Reglas de trafico (C1 refinada, ruling F2-R2 cond. 3):
++// Reglas de trafico (C1 refinada, ruling F2-R2 cond. 3 + F2-B0B1-R1 Q5):
+ //   - CONSULTA el gate antes de lanzar (canLaunchGambit) y REGISTRA al lanzar
+ //     (recordLaunch). Cero primitivas de pacing nuevas: el choke point unico
+ //     sigue siendo lgdcpacing.
+-//   - Backfill incremental: solo faltantes de la ventana (96 slots x 2 params
+-//     = 192 req >= 15 s UNA vez, resumable via cache P2); steady: el hilo de
+-//     backfill rechequea cada 300 s (de forma natural <= 2: nace ~1 slot/ciclo).
++//   - Backfill incremental: solo faltantes de la ventana (96 slots x 4 params
++//     = 384 req >= 15 s UNA vez ~= 96 min, resumable via cache P2); steady:
++//     el hilo de backfill rechequea cada 300 s (de forma natural <= 4: nace
++//     ~1 slot/ciclo/param). G10: 1 req/15 s sostenido, justo E11.
++//   - Pares: foF2+hmF2 (primario) y B0+B1 (F2-B0B1-R1: TOV-comun por pareja).
+ //   - B0/B1 DIFERIDOS a backlog (scope tight: foF2 + hmF2).
+ //
+ // El contenido se valida con irtamcoeff::parseMessage (P1a) y persiste via
+@@ -41,7 +43,8 @@ namespace irtamfetch {
+ inline constexpr int kSlots = 96;               // 24 h a cadencia IRTAM 15 min
+ inline constexpr double kSlotSec = 900.0;       // 15 min
+ inline constexpr double kGambitLagSec = 259200.0;  // 3 d: ultimos 3 dias NO disponibles (E11)
+-inline constexpr const char* kParams[2] = {"foF2", "hmF2"};  // B0/B1 diferidos
++inline constexpr const char* kParams[4] = {"foF2", "hmF2", "B0",
++                                           "B1"};  // F2-B0B1-R1: par B0xB1
+ 
+ struct FetchTarget {
+     std::string param;  // "foF2" | "hmF2" (forma display; el fichero sanea a minusculas)
+@@ -73,9 +76,13 @@ std::vector<FetchTarget> planMissing(const CacheHave& have, double windowEnd);
+ 
+ // Bundle publicado al hilo principal (molde TecBundle/SdoBundle).
+ // P4: grids VACIOS (0x0, jamas 46x45 de ceros) + valid=false SIEMPRE.
++// F2-B0B1-R1 Q1: b0/b1 aditivos al final; valid/dataEpoch los gobierna SOLO
++// el par foF2+hmF2 (primario) — B0/B1 jamas degradan el estado existente.
+ struct IrtamBundle {
+     GridData foF2;  // P1b: malla 46x45 real + valid=true (flip aditivo)
+     GridData hmF2;
++    GridData b0;  // B0/B1: mallas 46x45 reales (par propio, Q2)
++    GridData b1;
+     double dataEpoch = 0.0;  // TOV fresca del cache P2 (fuente del badge DATA-age)
+     bool valid = false;
+     std::string error;
+diff --git a/src/Data/IrtamCoeffCache.cpp b/src/Data/IrtamCoeffCache.cpp
+index 46dad45..f603ebc 100644
+--- a/src/Data/IrtamCoeffCache.cpp
++++ b/src/Data/IrtamCoeffCache.cpp
+@@ -231,4 +231,20 @@ ScanResult loadCached(const std::string& dir) {
+     return r;
+ }
+ 
++double commonTovEpoch(const std::vector<Bucket>& buckets,
++                      const std::string& paramA, const std::string& paramB) {
++    double best = -1.0;
++    for (const Bucket& a : buckets) {
++        if (a.param != paramA || a.tovEpoch <= 0.0 || a.tovEpoch <= best)
++            continue;
++        for (const Bucket& b : buckets) {
++            if (b.param == paramB && b.tovEpoch == a.tovEpoch) {
++                best = a.tovEpoch;
++                break;
++            }
++        }
++    }
++    return best;
++}
++
+ }  // namespace irtamccache
+diff --git a/src/Data/IrtamCoeffCache.h b/src/Data/IrtamCoeffCache.h
+index 3266b23..b14d62e 100644
+--- a/src/Data/IrtamCoeffCache.h
++++ b/src/Data/IrtamCoeffCache.h
+@@ -63,6 +63,13 @@ struct ScanResult {
+     int dropped = 0;  // corruptos borrados (self-heal)
+ };
+ 
++// F2-B0B1-R1 Q2 (gate por parejas, aditivo; existente intacto): TOV comun
++// mas fresco presente en AMBOS params (comparacion exacta de tovEpoch,
++// misma convencion que el gate foF2xhmF2). -1 si no hay interseccion.
++// Puro (sin I/O): testeable en CI.
++double commonTovEpoch(const std::vector<Bucket>& buckets,
++                      const std::string& paramA, const std::string& paramB);
++
+ // Barrido completo: crea dir si falta, carga validos, borra corruptos, poda
+ // a cap por parametro. Solo toca irtamc_*.txt(.meta). Nunca lanza.
+ ScanResult loadCached(const std::string& dir);
+diff --git a/src/Data/IrtamGridEval.cpp b/src/Data/IrtamGridEval.cpp
+index bb5ad4e..4b37b3e 100644
+--- a/src/Data/IrtamGridEval.cpp
++++ b/src/Data/IrtamGridEval.cpp
+@@ -291,4 +291,30 @@ bool evalGrid(const std::vector<double>& coeffs1064, double decimalYear,
+     return true;
+ }
+ 
++bool evalPairGrids(const irtamcoeff::Message& m1, const irtamcoeff::Message& m2,
++                   double decimalYear, float hourUt, float tov, GridData& g1,
++                   GridData& g2) {
++    if (!m1.valid || !m2.valid) return false;
++    if (!irtamcoeff::isStandardBasis(m1.header) ||
++        !irtamcoeff::isStandardBasis(m2.header))
++        return false;
++    if (m1.header.tovEpoch <= 0.0 ||
++        m1.header.tovEpoch != m2.header.tovEpoch)
++        return false;
++    std::vector<float> v1, v2;
++    if (!evalGrid(m1.coeffs, decimalYear, hourUt, tov, v1)) return false;
++    if (!evalGrid(m2.coeffs, decimalYear, hourUt, tov, v2)) return false;
++    g1.width = kGridW;
++    g1.height = kGridH;
++    g1.values = std::move(v1);
++    g1.timestamp = m1.header.tovEpoch;
++    g1.valid = true;
++    g2.width = kGridW;
++    g2.height = kGridH;
++    g2.values = std::move(v2);
++    g2.timestamp = m2.header.tovEpoch;
++    g2.valid = true;
++    return true;
++}
++
+ }  // namespace irtameval
+diff --git a/src/Data/IrtamGridEval.h b/src/Data/IrtamGridEval.h
+index 7eb6b81..82fd57f 100644
+--- a/src/Data/IrtamGridEval.h
++++ b/src/Data/IrtamGridEval.h
+@@ -31,6 +31,9 @@
+ //   ano decimal del TOV; altura modip 300 km (ejemplo). Sin gfortran en este
+ //   lado (desviacion documentada): oraculo cruzado via replica float32.
+ // =============================================================================
++#include "Data/IrtamCoeffParse.h"  // Message (pares evaluados F2-B0B1-R1)
++#include "Ionosphere/GridLayer.h"  // GridData (mallas del bundle)
++
+ #include <string>
+ #include <vector>
+ 
+@@ -65,4 +68,13 @@ float fout1(float xmodip, float lat, float lon, float hourUt, float tov,
+ bool evalGrid(const std::vector<double>& coeffs1064, double decimalYear,
+               float hourUt, float tov, std::vector<float>& out2070);
+ 
++// F2-B0B1-R1 Q2 (gate por parejas): evalua un par coherente a mallas 46x45.
++// Exige mensajes validos, basis standard en ambos y MISMO TOV (coherencia
++// de instante del par). Rellena g1/g2 (GridData 45x46 + timestamp + valid)
++// o devuelve false sin tocar nada (fallo del par = capas ausentes, Q2).
++// Puro (sin I/O): testeable en CI. Lo usa App para B0xB1.
++bool evalPairGrids(const irtamcoeff::Message& m1, const irtamcoeff::Message& m2,
++                   double decimalYear, float hourUt, float tov, GridData& g1,
++                   GridData& g2);
++
+ }  // namespace irtameval
+diff --git a/tests/test_irtam_adapter.cpp b/tests/test_irtam_adapter.cpp
+index 2d3be18..9b83e08 100644
+--- a/tests/test_irtam_adapter.cpp
++++ b/tests/test_irtam_adapter.cpp
+@@ -52,30 +52,39 @@ int main() {
+     {
+         CacheHave vacio;
+         const std::vector<FetchTarget> p = planMissing(vacio, wend);
+-        check_bool("cache vacio: 192 targets (96 x 2)",
+-                   p.size() == 192);
+-        check_bool("orden: foF2 primero (param-major)",
+-                   p.front().param == "foF2" && p[96].param == "hmF2");
++        check_bool("cache vacio: 384 targets (96 x 4, F2-B0B1-R1)",
++                   p.size() == 384);
++        check_bool("orden param-major: foF2, hmF2, B0, B1",
++                   p.front().param == "foF2" && p[96].param == "hmF2" &&
++                       p[192].param == "B0" && p[288].param == "B1");
+         check_bool("oldest-first dentro de foF2",
+                    p[0].epoch == wend - 95.0 * 900.0 && p[95].epoch == wend);
++        check_bool("oldest-first dentro de B1",
++                   p[288].epoch == wend - 95.0 * 900.0 &&
++                       p[383].epoch == wend);
+     }
+     {
+-        // Lleno: 96 slots x 2 params -> 0 faltantes (steady: nada que hacer).
++        // Lleno: 96 slots x 4 params -> 0 faltantes (steady: nada que hacer).
+         CacheHave lleno;
+         for (int s = 0; s < 96; s++) {
+             lleno.epochs["foF2"].push_back(wend - (double)s * 900.0);
+             lleno.epochs["hmF2"].push_back(wend - (double)s * 900.0);
++            lleno.epochs["B0"].push_back(wend - (double)s * 900.0);
++            lleno.epochs["B1"].push_back(wend - (double)s * 900.0);
+         }
+         check_bool("cache lleno: 0 targets",
+                    planMissing(lleno, wend).empty());
+     }
+     {
+         // Parcial: solo faltan 3 (2 foF2 + 1 hmF2); el resto se respeta.
++        // (par B0xB1 lleno: no interfiere con F/H.)
+         CacheHave parcial;
+         for (int s = 0; s < 96; s++) {
+             const double slot = wend - (double)s * 900.0;
+             if (s != 3 && s != 40) parcial.epochs["foF2"].push_back(slot);
+             if (s != 90) parcial.epochs["hmF2"].push_back(slot);
++            parcial.epochs["B0"].push_back(slot);
++            parcial.epochs["B1"].push_back(slot);
+         }
+         const std::vector<FetchTarget> p = planMissing(parcial, wend);
+         check_bool("parcial: exactamente los 3 faltantes", p.size() == 3);
+@@ -93,6 +102,9 @@ int main() {
+                    b.foF2.values.empty() && b.foF2.width == 0);
+         check_bool("bundle P4: hmF2 vacio",
+                    b.hmF2.values.empty() && b.hmF2.width == 0);
++        check_bool("bundle B0B1: b0/b1 vacios (F2-B0B1-R1, aditivos)",
++                   b.b0.values.empty() && b.b0.width == 0 &&
++                       b.b1.values.empty() && b.b1.width == 0);
+         check_bool("bundle P4: sin epoca de dato", b.dataEpoch == 0.0);
+     }
+ 
+diff --git a/tests/test_irtam_grid_eval.cpp b/tests/test_irtam_grid_eval.cpp
+index ad7741d..e2a2325 100644
+--- a/tests/test_irtam_grid_eval.cpp
++++ b/tests/test_irtam_grid_eval.cpp
+@@ -42,9 +42,10 @@ static bool readFile(const char* path, std::string& out) {
+ int main(int argc, char** argv) {
+     using namespace irtameval;
+     // Directorio con los ASC 20160523_1200 (extra-repo, jamas en el repo):
+-    // argv[1] si se pasa (CI/sandbox GLM), si no la ruta local de auditoria.
++    // argv[1] si se pasa (CI/sandbox GLM), si no las rutas locales de
++    // auditoria (b0b1_audit vigente; p1b_audit historica si existe).
+     std::string ascDir =
+-        "C:\\Users\\unknown\\AppData\\Local\\Temp\\opencode\\p1b_audit\\"
++        "C:\\Users\\unknown\\AppData\\Local\\Temp\\opencode\\b0b1_audit\\"
+         "IrtamReader";
+     if (argc > 1) ascDir = argv[1];
+     // Carry-along P5 (veredicto 007 §6, test-only): join portable — '/' vale
+@@ -163,6 +164,99 @@ int main(int argc, char** argv) {
+         check_bool("skip oraculo sin fixture (no es fallo)", true);
+     }
+ 
++    std::printf("--- B0/B1: oraculos ASC cross-anchored (F2-B0B1-R1) ---\n");
++    const std::string pB0 = ascDir + "/IRTAM_B0in_COEFFS_20160523_1200.ASC";
++    const std::string pB1 = ascDir + "/IRTAM_B1in_COEFFS_20160523_1200.ASC";
++    std::string t0, t1;
++    if (readFile(pB0.c_str(), t0) && readFile(pB1.c_str(), t1)) {
++        irtamcoeff::Message m0, m1;
++        std::string err;
++        bool ok0 = irtamcoeff::parseMessage(t0, m0, err);
++        bool ok1 = irtamcoeff::parseMessage(t1, m1, err);
++        check_bool("parse B0 ASC standard",
++                   ok0 && irtamcoeff::isStandardBasis(m0.header) &&
++                       m0.coeffs.size() == 1064);
++        check_bool("parse B1 ASC standard",
++                   ok1 && irtamcoeff::isStandardBasis(m1.header) &&
++                       m1.coeffs.size() == 1064);
++        check_bool("TOV comun B0xB1",
++                   ok0 && ok1 &&
++                       m0.header.tovEpoch == m1.header.tovEpoch);
++        if (ok0 && ok1) {
++            // Ecos EXACTOS cross-anchored con replica GLM independiente
++            // (ruling 012 §1: B0=84.5733871 / B1=2.48623586 en el punto
++            // ejemplo a HOUR==TOV==12, ryear 2016.6).
++            double xm = 0;
++            igrfDip(-11.95, 283.13, 2016.6, 300.0, xm);
++            float b0 = fout1((float)xm, -11.95f, 283.13f, 12.0f, 12.0f,
++                             m0.coeffs.data());
++            float b1 = fout1((float)xm, -11.95f, 283.13f, 12.0f, 12.0f,
++                             m1.coeffs.data());
++            std::printf("    eco B0 = %.7f km / B1 = %.7f []\n", (double)b0,
++                        (double)b1);
++            check_bool("B0 exacto 84.5733871 (+-1e-5 rel)",
++                       std::fabs((double)b0 - 84.5733871) / 84.5733871 < 1e-5);
++            check_bool("B1 exacto 2.4862359 (+-1e-5 rel)",
++                       std::fabs((double)b1 - 2.4862359) / 2.4862359 < 1e-5);
++            // Tripwires anti-corrupcion (ruling Q4, poblaciones con signo).
++            check_bool("B0 tripwire [-100,+400]",
++                       b0 >= -100.0f && b0 <= 400.0f);
++            check_bool("B1 tripwire [-1,+8]", b1 >= -1.0f && b1 <= 8.0f);
++            // Mallas + bandas de la rebanada hour=12 del ruling §1.
++            std::vector<float> g0, g1;
++            bool okG0 = evalGrid(m0.coeffs, 2016.6, 12.0f, 12.0f, g0);
++            bool okG1 = evalGrid(m1.coeffs, 2016.6, 12.0f, 12.0f, g1);
++            check_bool("evalGrid B0/B1 2070",
++                       okG0 && okG1 && g0.size() == 2070 &&
++                           g1.size() == 2070);
++            if (okG0 && okG1) {
++                float mn0 = g0[0], mx0 = g0[0], mn1 = g1[0], mx1 = g1[0];
++                for (float v : g0) {
++                    if (v < mn0) mn0 = v;
++                    if (v > mx0) mx0 = v;
++                }
++                for (float v : g1) {
++                    if (v < mn1) mn1 = v;
++                    if (v > mx1) mx1 = v;
++                }
++                std::printf("    grid B0 [%.3f,%.3f] B1 [%.3f,%.3f]\n",
++                            (double)mn0, (double)mx0, (double)mn1,
++                            (double)mx1);
++                check_bool("grid B0 [43.249,199.194] (+-2%)",
++                           mn0 >= 43.249f * 0.98f && mx0 <= 199.194f * 1.02f &&
++                               mn0 > 0.0f);
++                check_bool("grid B1 [0.392,5.708] (+-2%)",
++                           mn1 >= 0.392f * 0.98f && mx1 <= 5.708f * 1.02f &&
++                               mn1 > 0.0f);
++            }
++            // evalPairGrids: exito + caminos de fallo (Q2 por test).
++            {
++                GridData e0, e1;
++                const double ry = decimalYearForTov(m0.header.tovEpoch);
++                check_bool("evalPairGrids exito",
++                           evalPairGrids(m0, m1, ry, 12.0f, 12.0f, e0, e1) &&
++                               e0.valid && e1.valid && e0.width == 45 &&
++                               e1.height == 46);
++                irtamcoeff::Message badTov = m1;
++                badTov.header.tovEpoch += 900.0;
++                GridData f0, f1;
++                check_bool("evalPairGrids rechaza TOV desigual",
++                           !evalPairGrids(m0, badTov, ry, 12.0f, 12.0f, f0,
++                                          f1) &&
++                               f0.values.empty() && f1.values.empty());
++                irtamcoeff::Message badBasis = m1;
++                badBasis.header.nTemporal = 13;
++                GridData h0, h1;
++                check_bool("evalPairGrids rechaza basis no-standard",
++                           !evalPairGrids(m0, badBasis, ry, 12.0f, 12.0f, h0,
++                                          h1));
++            }
++        }
++    } else {
++        std::printf("    (ASC B0/B1 extra-repo ausentes: skip, no es fallo)\n");
++        check_bool("skip B0/B1 sin fixture (no es fallo)", true);
++    }
++
+     std::printf("\n[test_irtam_grid_eval] %d OK, %d FAIL\n", g_ok, g_fail);
+     return g_fail == 0 ? 0 : 1;
+ }
+diff --git a/tests/test_irtamc_cache.cpp b/tests/test_irtamc_cache.cpp
+index ae40bdd..30ef4db 100644
+--- a/tests/test_irtamc_cache.cpp
++++ b/tests/test_irtamc_cache.cpp
+@@ -157,6 +157,29 @@ int main() {
+                    r.buckets.front().serverLastMod == "lm");
+     }
+ 
++    std::printf("--- F2-B0B1-R1 Q2: TOV comun por parejas ---\n");
++    {
++        // Buckets sinteticos (param en minusculas, como en disco).
++        auto mk = [](const char* p, double tov) {
++            Bucket b;
++            b.param = p;
++            b.tovEpoch = tov;
++            return b;
++        };
++        std::vector<Bucket> v = {mk("b0", 100.0), mk("b0", 200.0),
++                                 mk("b1", 200.0), mk("b1", 300.0)};
++        check_bool("comun mas fresco = 200",
++                   commonTovEpoch(v, "b0", "b1") == 200.0);
++        std::vector<Bucket> d = {mk("b0", 100.0), mk("b1", 200.0)};
++        check_bool("sin interseccion = -1",
++                   commonTovEpoch(d, "b0", "b1") == -1.0);
++        std::vector<Bucket> e;
++        check_bool("vacio = -1", commonTovEpoch(e, "b0", "b1") == -1.0);
++        std::vector<Bucket> f = {mk("fof2", 500.0), mk("hmf2", 500.0)};
++        check_bool("par F/H intacto = 500",
++                   commonTovEpoch(f, "fof2", "hmf2") == 500.0);
++    }
++
+     std::printf("\n[test_irtamc_cache] %d OK, %d FAIL\n", g_ok, g_fail);
+     return g_fail == 0 ? 0 : 1;
+ }
+-- 
+2.53.0.windows.3
+
