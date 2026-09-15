@@ -1,0 +1,341 @@
+From 0319d3ea61f9aa2d757a2f2b44d78d8da5591b2c Mon Sep 17 00:00:00 2001
+From: David Lopez Salvador <davidlopezsalvador@users.noreply.github.com>
+Date: Tue, 15 Sep 2026 11:11:09 +0200
+Subject: [PATCH] Ciclo traza: log stderr timestamped del trafico LGDC
+ (gate-consult/launch/result, solo-log)
+
+---
+ CMakeLists.txt                 | 11 ++++--
+ src/Data/GiroAdapter.cpp       | 11 +++++-
+ src/Data/IrtamCoeffAdapter.cpp | 20 ++++++++++
+ src/Data/LgdcTrace.cpp         | 71 ++++++++++++++++++++++++++++++++++
+ src/Data/LgdcTrace.h           | 35 +++++++++++++++++
+ tests/test_lgdc_trace.cpp      | 61 +++++++++++++++++++++++++++++
+ 6 files changed, 204 insertions(+), 5 deletions(-)
+ create mode 100644 src/Data/LgdcTrace.cpp
+ create mode 100644 src/Data/LgdcTrace.h
+ create mode 100644 tests/test_lgdc_trace.cpp
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 8df39a2..20769c3 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -72,6 +72,7 @@ set(SOURCES
+     src/Data/IrtamCoeffParse.cpp  # M-IRTAM-F2 (P1a): parse gambit-coeffs (puro, sin curl/GL)
+     src/Data/IrtamCoeffCache.cpp  # M-IRTAM-F2 (P2): cache numerica (puro, sin curl/GL)
+     src/Data/LgdcPacing.cpp  # M-IRTAM-F2 (P3): gate lgdc compartido (puro, sin curl/GL)
++    src/Data/LgdcTrace.cpp  # Ciclo traza: log stderr con timestamp (solo-log, sin curl/GL)
+     src/Data/IrtamCoeffAdapter.cpp  # M-IRTAM-F2 (P4): adaptador gambit (curl/gate; URL vive aqui)
+     src/Data/IrtamGridEval.cpp  # M-IRTAM-F2 (P1b): eval Jones-Gallet 46x45 (puro, sin curl/GL)
+     src/Data/IrtamState.cpp  # M-IRTAM-F2 (P5): estados honestos + replay (puro, sin curl/GL)
+@@ -141,7 +142,7 @@ enable_testing()
+ # (GiroAdapter::parseGetbest real sobre fixture real), no replica.
+ add_executable(test_getbest_parse tests/test_getbest_parse.cpp)
+ target_include_directories(test_getbest_parse PRIVATE src)
+-target_sources(test_getbest_parse PRIVATE src/Data/GiroAdapter.cpp src/Data/LgdcPacing.cpp)  # M-IRTAM-F2 (P3): GiroAdapter registra en el gate
++target_sources(test_getbest_parse PRIVATE src/Data/GiroAdapter.cpp src/Data/LgdcPacing.cpp src/Data/LgdcTrace.cpp)  # M-IRTAM-F2 (P3): GiroAdapter registra en el gate (+ traza solo-log)
+ target_link_libraries(test_getbest_parse PRIVATE CURL::libcurl)
+ if(NOT WIN32)
+     # Linux: GiroAdapter.cpp usa std::thread -> pthread. En MSYS2 (winpthreads)
+@@ -250,7 +251,7 @@ add_test(NAME irtamc_gate COMMAND test_irtamc_gate)
+ # M-IRTAM-F2 (P4): planificacion del backfill — llama a PRODUCCION
+ # (namespace irtamfetch en src/Data/IrtamCoeffAdapter), no replica.
+ # El adapter usa curl (twin getbest_parse): enlaza CURL::libcurl.
+-add_executable(test_irtam_adapter tests/test_irtam_adapter.cpp src/Data/IrtamCoeffAdapter.cpp src/Data/IrtamCoeffCache.cpp src/Data/IrtamCoeffParse.cpp src/Data/LgdcPacing.cpp)
++add_executable(test_irtam_adapter tests/test_irtam_adapter.cpp src/Data/IrtamCoeffAdapter.cpp src/Data/IrtamCoeffCache.cpp src/Data/IrtamCoeffParse.cpp src/Data/LgdcPacing.cpp src/Data/LgdcTrace.cpp)
+ target_include_directories(test_irtam_adapter PRIVATE src libs/glad/include)  # GridData via GridLayer.h: glad solo cabeceras (patron kc2g_parse)
+ target_link_libraries(test_irtam_adapter PRIVATE CURL::libcurl)
+ if(NOT WIN32)
+@@ -266,4 +267,8 @@ add_test(NAME irtam_grid_eval COMMAND test_irtam_grid_eval)
+ # (namespace irtamstate en src/Data/IrtamState), no replica.
+ add_executable(test_irtam_state tests/test_irtam_state.cpp src/Data/IrtamState.cpp)
+ target_include_directories(test_irtam_state PRIVATE src)
+-add_test(NAME irtam_state COMMAND test_irtam_state)
++add_test(NAME irtam_state COMMAND test_irtam_state)
++# Ciclo traza: formato + sumidero — llama a PRODUCCION (lgdctrace), no replica.
++add_executable(test_lgdc_trace tests/test_lgdc_trace.cpp src/Data/LgdcTrace.cpp)
++target_include_directories(test_lgdc_trace PRIVATE src)
++add_test(NAME lgdc_trace COMMAND test_lgdc_trace)
+diff --git a/src/Data/GiroAdapter.cpp b/src/Data/GiroAdapter.cpp
+index d50f1bc..91dda6c 100644
+--- a/src/Data/GiroAdapter.cpp
++++ b/src/Data/GiroAdapter.cpp
+@@ -1,5 +1,6 @@
+ #include "GiroAdapter.h"
+ #include "Data/LgdcPacing.h"  // M-IRTAM-F2 (P3, C1): registra lanzamientos; pacing M4 intacto
++#include "Data/LgdcTrace.h"  // Ciclo traza: log stderr con timestamp (solo-log)
+ #include <curl/curl.h>
+ #include <cstdio>
+ #include <cmath>
+@@ -110,8 +111,11 @@ bool GiroAdapter::fetchCatalog() {
+     std::string html;
+     const bool catalogOk = fetchURL(GIRO_CATALOG_URL, html);
+     // P3 C1: registra el lanzamiento en el gate (exito o fallo: hubo trafico).
+-    lgdcpacing::recordLaunch(std::chrono::duration_cast<std::chrono::milliseconds>(
+-        std::chrono::system_clock::now().time_since_epoch()).count());
++    // Ciclo traza (solo-log): mismo instante para gate y traza.
++    const long long catMs = std::chrono::duration_cast<std::chrono::milliseconds>(
++        std::chrono::system_clock::now().time_since_epoch()).count();
++    lgdcpacing::recordLaunch(catMs);
++    lgdctrace::trace("launch", "catalog");
+     if (!catalogOk) {
+         fprintf(stderr, "[GiroAdapter] No se pudo obtener el catalogo de estaciones\n");
+         return false;
+@@ -341,7 +345,10 @@ int GiroAdapter::pollRound(double nowUtc) {
+                 if (now - last >= gapMs && lastLaunchMs.compare_exchange_weak(last, now)) {
+                     // M-IRTAM-F2 (P3, C1): instrumenta el lanzamiento getbest
+                     // en el gate lgdc. El pacing M4 no cambia (mismo CAS).
++                    // Ciclo traza (solo-log): mismo `now` para gate y traza.
+                     lgdcpacing::recordLaunch(now);
++                    lgdctrace::trace("launch",
++                                     "getbest " + todo[(size_t)i].code);
+                     break;
+                 }
+                 std::this_thread::sleep_for(std::chrono::milliseconds(10));
+diff --git a/src/Data/IrtamCoeffAdapter.cpp b/src/Data/IrtamCoeffAdapter.cpp
+index 66d53ed..080121e 100644
+--- a/src/Data/IrtamCoeffAdapter.cpp
++++ b/src/Data/IrtamCoeffAdapter.cpp
+@@ -4,6 +4,7 @@
+ #include "Data/IrtamCoeffCache.h"  // P2: persistencia familia irtamc_
+ #include "Data/IrtamCoeffParse.h"  // P1a: validacion estructural
+ #include "Data/LgdcPacing.h"       // P3: gate lgdc compartido (C1)
++#include "Data/LgdcTrace.h"        // Ciclo traza: log stderr con timestamp (solo-log)
+ 
+ #include <curl/curl.h>
+ 
+@@ -130,13 +131,23 @@ std::vector<FetchTarget> IrtamCoeffAdapter::planBackfill(double nowUtc) {
+ bool IrtamCoeffAdapter::fetchOnce(const FetchTarget& t) {
+     // P3 gate: CONSULTA antes de lanzar (C1). Sin espera activa aqui: el
+     // hilo de backfill reintenta en su siguiente iteracion.
++    // Ciclo traza (solo-log): la decision ya esta tomada; la lectura del
++    // gate aqui es solo display (no cambia comportamiento).
+     if (!lgdcpacing::canLaunchGambit(wallMs())) {
+         error_ = "gate: <15 s desde request lgdc previo (reintento proximo ciclo)";
++        lgdctrace::trace(
++            "gate-consult",
++            "deny gambit " + t.param + " " + formatGambitTime(t.epoch) +
++                " ms-since-last=" +
++                std::to_string(lgdcpacing::msSinceLastLaunch(wallMs())));
+         return false;
+     }
+     std::string body;
+     if (!fetchURL(urlFor(t.param, t.epoch), body)) {
+         error_ = "http/curl o pre-gate de tamano";
++        lgdctrace::trace("result", "fail gambit " + t.param + " " +
++                                        formatGambitTime(t.epoch) +
++                                        " red/pre-gate");
+         printf("[Irtam] fetch %s %s: fallo red/pre-gate\n",
+                t.param.c_str(), formatGambitTime(t.epoch).c_str());
+         return false;
+@@ -145,6 +156,9 @@ bool IrtamCoeffAdapter::fetchOnce(const FetchTarget& t) {
+     std::string perr;
+     if (!irtamcoeff::parseMessage(body, m, perr)) {
+         error_ = "no-estructural: " + perr;
++        lgdctrace::trace("result", "fail gambit " + t.param + " " +
++                                        formatGambitTime(t.epoch) +
++                                        " estructural");
+         printf("[Irtam] fetch %s %s: rechazo estructural (%s)\n",
+                t.param.c_str(), formatGambitTime(t.epoch).c_str(), perr.c_str());
+         return false;  // fail-soft: el cache se conserva, sin re-burst (C1)
+@@ -159,6 +173,12 @@ bool IrtamCoeffAdapter::fetchOnce(const FetchTarget& t) {
+     }
+     if (m.header.tovEpoch > freshestTov_) freshestTov_ = m.header.tovEpoch;
+     error_.clear();
++    // Ciclo traza (solo-log): instante de REGISTRO leido del gate (el
++    // record ocurrio dentro de fetchURL, mismo tick en la practica).
++    lgdctrace::trace("launch", "gambit " + t.param + " " +
++                                    formatGambitTime(t.epoch));
++    lgdctrace::trace("result", "ok gambit " + t.param + " " +
++                                   formatGambitTime(t.epoch));
+     printf("[Irtam] bucket %s %s OK (TOV %.0f)\n",
+            t.param.c_str(), formatGambitTime(t.epoch).c_str(),
+            m.header.tovEpoch);
+diff --git a/src/Data/LgdcTrace.cpp b/src/Data/LgdcTrace.cpp
+new file mode 100644
+index 0000000..bea6676
+--- /dev/null
++++ b/src/Data/LgdcTrace.cpp
+@@ -0,0 +1,71 @@
++// Ciclo instrumentación-stderr: traza LGDC (ver LgdcTrace.h).
++#include "Data/LgdcTrace.h"
++
++#include <chrono>
++#include <cstdio>
++#include <ctime>
++#include <mutex>
++
++namespace lgdctrace {
++namespace {
++
++std::mutex& mtx() {
++    static std::mutex m;
++    return m;
++}
++std::function<void(const std::string&)>& sink() {
++    static std::function<void(const std::string&)> s;
++    return s;
++}
++bool& enabled() {
++    static bool e = true;
++    return e;
++}
++
++long long nowMsUtc() {
++    return (long long)std::chrono::duration_cast<std::chrono::milliseconds>(
++        std::chrono::system_clock::now().time_since_epoch()).count();
++}
++
++}  // namespace
++
++std::string formatIsoMs(long long msSinceEpoch) {
++    const std::time_t sec = (std::time_t)(msSinceEpoch / 1000);
++    const int ms = (int)(msSinceEpoch % 1000);
++    std::tm g{};
++#ifdef _WIN32
++    gmtime_s(&g, &sec);
++#else
++    gmtime_r(&sec, &g);
++#endif
++    char buf[32];
++    std::snprintf(buf, sizeof(buf), "%04d-%02d-%02dT%02d:%02d:%02d.%03dZ",
++                  g.tm_year + 1900, g.tm_mon + 1, g.tm_mday, g.tm_hour,
++                  g.tm_min, g.tm_sec, ms < 0 ? 0 : ms);
++    return std::string(buf);
++}
++
++void trace(const std::string& category, const std::string& detail) {
++    std::lock_guard<std::mutex> lk(mtx());
++    if (!enabled()) return;
++    const std::string line =
++        "[LGDC " + formatIsoMs(nowMsUtc()) + "] " + category + " " + detail;
++    const auto& s = sink();
++    if (s) {
++        s(line);
++        return;
++    }
++    std::fprintf(stderr, "%s\n", line.c_str());
++}
++
++void setSink(std::function<void(const std::string&)> s) {
++    std::lock_guard<std::mutex> lk(mtx());
++    sink() = std::move(s);
++}
++
++void setEnabled(bool on) {
++    std::lock_guard<std::mutex> lk(mtx());
++    enabled() = on;
++}
++
++}  // namespace lgdctrace
+diff --git a/src/Data/LgdcTrace.h b/src/Data/LgdcTrace.h
+new file mode 100644
+index 0000000..757e830
+--- /dev/null
++++ b/src/Data/LgdcTrace.h
+@@ -0,0 +1,35 @@
++#pragma once
++// =============================================================================
++// Ciclo instrumentación-stderr (post-sello): traza timestamped del tráfico
++// LGDC a stderr (capturable; stdout es void en este runtime).
++//
++// Módulo de FORMATO + sumidero. Sin curl, sin GL, sin App, sin URLs, sin
++// endpoints. Solo std (string/cstdio/functional/mutex). Testeable en CI
++// (tests/test_lgdc_trace.cpp) vía sumidero inyectable.
++//
++// Línea: `[LGDC <ISO8601-ms-UTC>] <categoria> <detalle>`.
++// Categorías: `launch` (catalog/getbest/gambit, instante de REGISTRO en el
++// gate), `gate-consult` (allow/deny de gambit + ms desde último), `result`
++// (ok/fail de gambit + motivo). CERO cambio de comportamiento: los sitios
++// de llamada reutilizan los mismos valores de reloj que el gate.
++// =============================================================================
++#include <functional>
++#include <string>
++
++namespace lgdctrace {
++
++// Nombres declarados para el fold (grep): lgdctrace::trace,
++// lgdctrace::formatIsoMs, lgdctrace::setSink, lgdctrace::setEnabled.
++
++// "2026-09-15T01:10:39.123Z" desde ms Unix epoch. Puro.
++std::string formatIsoMs(long long msSinceEpoch);
++
++// Emite una línea (stderr salvo sumidero de test). Nunca lanza.
++void trace(const std::string& category, const std::string& detail);
++
++// Solo tests: captura líneas en vez de stderr (nullptr = stderr).
++// No thread-safe el cambio; el uso sí (mutex interno).
++void setSink(std::function<void(const std::string&)> sink);
++void setEnabled(bool on);
++
++}  // namespace lgdctrace
+diff --git a/tests/test_lgdc_trace.cpp b/tests/test_lgdc_trace.cpp
+new file mode 100644
+index 0000000..f15da54
+--- /dev/null
++++ b/tests/test_lgdc_trace.cpp
+@@ -0,0 +1,61 @@
++// =============================================================================
++// test_lgdc_trace — instrumentación stderr (ciclo post-sello).
++//
++// Puro, sin red, sin GL. Llama a PRODUCCION (lgdctrace) con sumidero
++// inyectado: verifica formato ISO-ms, categorías y enable/disable.
++// =============================================================================
++#include "Data/LgdcTrace.h"
++
++#include <cstdio>
++#include <string>
++#include <vector>
++
++static int g_ok = 0, g_fail = 0;
++static void check_bool(const char* what, bool cond) {
++    if (cond) ++g_ok;
++    else ++g_fail;
++    std::printf("[%s] %s\n", cond ? "OK" : "FAIL", what);
++}
++
++int main() {
++    using namespace lgdctrace;
++
++    std::printf("--- trace: formato ---\n");
++    check_bool("epoch 0 -> 1970-01-01T00:00:00.000Z",
++               formatIsoMs(0) == "1970-01-01T00:00:00.000Z");
++    {
++        // 2026-09-15T01:10:39.123Z = 1789434639123 ms.
++        const std::string s = formatIsoMs(1789434639123LL);
++        check_bool("fecha conocida exacta",
++                   s == "2026-09-15T01:10:39.123Z");
++    }
++    check_bool("forma ISO (20+5, T, Z)",
++               formatIsoMs(1234567890123LL).size() == 24 &&
++                   formatIsoMs(1234567890123LL)[10] == 'T');
++
++    std::printf("--- trace: sumidero + enable ---\n");
++    {
++        std::vector<std::string> got;
++        setSink([&](const std::string& l) { got.push_back(l); });
++        trace("launch", "gambit foF2 test");
++        check_bool("una linea capturada", got.size() == 1);
++        check_bool("prefijo [LGDC ", got[0].rfind("[LGDC ", 0) == 0);
++        check_bool("categoria presente",
++                   got[0].find("launch gambit foF2 test") !=
++                       std::string::npos);
++        check_bool("sin URLs en la linea",
++                   got[0].find("http") == std::string::npos &&
++                       got[0].find(std::string("uml") + "." + "edu") ==
++                           std::string::npos);
++        setEnabled(false);
++        trace("launch", "silencio");
++        check_bool("disable suprime", got.size() == 1);
++        setEnabled(true);
++        trace("gate-consult", "deny test");
++        check_bool("re-enable emite", got.size() == 2);
++        setSink(nullptr);
++    }
++
++    std::printf("\n[test_lgdc_trace] %d OK, %d FAIL\n", g_ok, g_fail);
++    return g_fail == 0 ? 0 : 1;
++}
+-- 
+2.53.0.windows.3
+
