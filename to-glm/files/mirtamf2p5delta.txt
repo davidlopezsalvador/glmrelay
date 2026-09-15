@@ -1,0 +1,300 @@
+From b6ee8b3f89e4fe555d993b65c5f80683c1ab8f1e Mon Sep 17 00:00:00 2001
+From: David Lopez Salvador <davidlopezsalvador@users.noreply.github.com>
+Date: Tue, 15 Sep 2026 02:41:26 +0200
+Subject: [PATCH] M-IRTAM-F2 P5: estados honestos + replay frozen-declarado
+ C9/G9 + join portable test
+
+---
+ CMakeLists.txt                 |  8 +++-
+ src/App.cpp                    | 28 ++++++++-----
+ src/Data/IrtamState.cpp        | 40 ++++++++++++++++++
+ src/Data/IrtamState.h          | 37 +++++++++++++++++
+ tests/test_irtam_grid_eval.cpp |  6 ++-
+ tests/test_irtam_state.cpp     | 74 ++++++++++++++++++++++++++++++++++
+ 6 files changed, 181 insertions(+), 12 deletions(-)
+ create mode 100644 src/Data/IrtamState.cpp
+ create mode 100644 src/Data/IrtamState.h
+ create mode 100644 tests/test_irtam_state.cpp
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index f54af4c..8df39a2 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -74,6 +74,7 @@ set(SOURCES
+     src/Data/LgdcPacing.cpp  # M-IRTAM-F2 (P3): gate lgdc compartido (puro, sin curl/GL)
+     src/Data/IrtamCoeffAdapter.cpp  # M-IRTAM-F2 (P4): adaptador gambit (curl/gate; URL vive aqui)
+     src/Data/IrtamGridEval.cpp  # M-IRTAM-F2 (P1b): eval Jones-Gallet 46x45 (puro, sin curl/GL)
++    src/Data/IrtamState.cpp  # M-IRTAM-F2 (P5): estados honestos + replay (puro, sin curl/GL)
+     src/Data/SdoImageAdapter.cpp  # M11: imagenes SDO (stb decode en worker)
+     src/UI/SidePanel.cpp
+     src/UI/TimelineBar.cpp
+@@ -260,4 +261,9 @@ add_test(NAME irtam_adapter COMMAND test_irtam_adapter)
+ # (namespace irtameval en src/Data/IrtamGridEval), no replica.
+ add_executable(test_irtam_grid_eval tests/test_irtam_grid_eval.cpp src/Data/IrtamGridEval.cpp src/Data/IrtamCoeffParse.cpp)
+ target_include_directories(test_irtam_grid_eval PRIVATE src)
+-add_test(NAME irtam_grid_eval COMMAND test_irtam_grid_eval)
++add_test(NAME irtam_grid_eval COMMAND test_irtam_grid_eval)
++# M-IRTAM-F2 (P5): estados honestos + replay — llama a PRODUCCION
++# (namespace irtamstate en src/Data/IrtamState), no replica.
++add_executable(test_irtam_state tests/test_irtam_state.cpp src/Data/IrtamState.cpp)
++target_include_directories(test_irtam_state PRIVATE src)
++add_test(NAME irtam_state COMMAND test_irtam_state)
+diff --git a/src/App.cpp b/src/App.cpp
+index 9d33232..229fce1 100644
+--- a/src/App.cpp
++++ b/src/App.cpp
+@@ -53,7 +53,8 @@
+ #include "Data/IrtamCoeffAdapter.h"  // M-IRTAM-F2 (P4): backfill gambit + bundle
+ #include "Data/IrtamCoeffCache.h"  // M-IRTAM-F2 (P1b): flip aditivo (buckets)
+ #include "Data/IrtamCoeffParse.h"  // M-IRTAM-F2 (P1b): flip aditivo (parse)
+-#include "Data/IrtamGridEval.h"    // M-IRTAM-F2 (P1b): eval Jones-Gallet 46x45
++#include "Data/IrtamGridEval.h"    // M-IRTAM-F2 (P1b): eval Jones-Gallet 46x45
++#include "Data/IrtamState.h"       // M-IRTAM-F2 (P5): estados honestos + replay
+ #include "Ionosphere/FaradayLayer.h"
+ #include "Ionosphere/RefShells.h"
+ #include "Ionosphere/VolumeRenderer.h"
+@@ -1681,6 +1682,11 @@ void App::update(float dt) {
+             impl->mapVariable - 5, 72, 72, epoch, kpProxy, xrFlux));
+     } else if (impl->mapVariable == 8 || impl->mapVariable == 9) {
+         // M-IRTAM-F2 (P4, F2-R2): streaming honesto — sin valid no se dibuja.
++        // P5 (C9/G9): IRTAM NO participa del muestreo temporal del replay.
++        // Aritmetica: la ventana de replay es ~24 h (tecHist cap 72,
++        // tecCacheMaxAgeH 24.0) y el dato IRTAM disponible empieza en T-72 h
++        // (lag 3 dias, kGambitLagSec): CERO solape. Se muestra el bucket mas
++        // reciente tal cual (congelado DECLARADO con nota en el badge).
+         auto ib = impl->getIrtam();
+         if (ib && ib->valid)
+             updateMainGrid(impl->mapVariable == 8 ? ib->foF2 : ib->hmF2);
+@@ -3009,24 +3015,28 @@ void App::render() {
+         applyColorLayer();
+     }
+     if (ImGui::IsItemHovered()) ImGui::SetItemTooltip("TEC: electron content (TECU, NOAA GloTEC).\nfoF2: F2-layer critical frequency (MHz, GIRO).\nMUF: max usable at 3000 km (MHz, GIRO).\nhmF2: F2 peak height (km, GIRO).\nNmF2: F2 peak density (e/m3, from foF2).\nLUF: lowest usable (MHz, ITU-style derived).\nFOT: optimum working = 0.85*MUF (MHz).\nSpread-F: % spread-echo occurrence (diverging).\nIRTAM foF2/hmF2: retrospective IRTAM grids (MHz/km, gambit-coeffs, lag ~3 d).");
+-    // M-IRTAM-F2 (P4, F2-R2 cond. 3): badge DATA-age desde el cache P2.
++    // M-IRTAM-F2 (P4 cond. 3 + P5): badge DATA-age desde el cache P2.
+     // Fuente = TOV del bucket (red line); visibilidad = solo con capa IRTAM.
+     // Edad andante: se calcula AL PINTAR con el reloj de lectura (E10).
++    // P5: estado textual honesto via irtamstate (motivo en linea, no solo
++    // tooltip) + nota frozen-declarada en replay (C9).
+     if (impl->mapVariable == 8 || impl->mapVariable == 9) {
+         const char* ipName = (impl->mapVariable == 8) ? "foF2" : "hmF2";
+         auto ib = impl->getIrtam();
+         const double nowUtc = (double)std::time(nullptr);
+         const double ageMin = (ib && ib->dataEpoch > 0.0)
+             ? (nowUtc - ib->dataEpoch) / 60.0 : -1.0;
+-        if (ageMin < 0.0) {
+-            ImGui::TextDisabled("IRTAM %s: sin datos (backfill en curso)", ipName);
+-            if (ib && !ib->error.empty() && ImGui::IsItemHovered())
+-                ImGui::SetItemTooltip("IRTAM: %s", ib->error.c_str());
++        const bool bValid = (ib && ib->valid);
++        const std::string bErr = ib ? ib->error : "";
++        const std::string line = irtamstate::badgeLine(
++            ipName, bValid, ib ? ib->dataEpoch : 0.0, bErr, ageMin,
++            impl->replayMode);
++        if (!bValid || ageMin < 0.0) {
++            ImGui::TextDisabled("%s", line.c_str());
+         } else {
+-            ImGui::Text("IRTAM %s | retrospectivo (lag ~3d) | %.0f min",
+-                ipName, ageMin);
+-            if (ImGui::IsItemHovered()) ImGui::SetItemTooltip("DATA-age del bucket gambit-coeffs (TOV del mensaje, no del fetch). Malla pendiente de P1b: la capa no se dibuja hasta el flip.");
++            ImGui::Text("%s", line.c_str());
+         }
++        if (ImGui::IsItemHovered()) ImGui::SetItemTooltip("DATA-age del bucket gambit-coeffs (TOV del mensaje, no del fetch). Malla 46x45 evaluada en P1b.");
+     }
+     bool showTEC = impl->tecVisible;
+     if (ImGui::Checkbox("Color Layer", &showTEC)) {
+diff --git a/src/Data/IrtamState.cpp b/src/Data/IrtamState.cpp
+new file mode 100644
+index 0000000..bbdc9f1
+--- /dev/null
++++ b/src/Data/IrtamState.cpp
+@@ -0,0 +1,40 @@
++// M-IRTAM-F2 (P5): estados honestos (ver IrtamState.h).
++#include "Data/IrtamState.h"
++
++#include <cmath>
++#include <cstdio>
++
++namespace irtamstate {
++
++std::string badgeLine(const std::string& param, bool valid, double dataEpoch,
++                      const std::string& error, double ageMin, bool inReplay) {
++    char buf[256];
++    if (!valid || dataEpoch <= 0.0 || ageMin < 0.0) {
++        // Sin dato: texto honesto SIEMPRE; el motivo viaja en la linea
++        // (no solo en tooltip) — 429/504/parse-fail/ventana/TOV-no-comun.
++        if (!error.empty()) {
++            std::snprintf(buf, sizeof(buf),
++                          "IRTAM %s: sin datos (%s; reintento pasivo)",
++                          param.c_str(), error.c_str());
++        } else {
++            std::snprintf(buf, sizeof(buf),
++                          "IRTAM %s: sin datos (backfill en curso)",
++                          param.c_str());
++        }
++        return std::string(buf);
++    }
++    // Con dato: badge DATA-age (E10) + nota replay si aplica (C9).
++    if (inReplay) {
++        std::snprintf(buf, sizeof(buf),
++                      "IRTAM %s | retrospectivo (lag ~3d) | %.0f min "
++                      "(retrospectivo, fuera de ventana de replay)",
++                      param.c_str(), ageMin);
++    } else {
++        std::snprintf(buf, sizeof(buf),
++                      "IRTAM %s | retrospectivo (lag ~3d) | %.0f min",
++                      param.c_str(), ageMin);
++    }
++    return std::string(buf);
++}
++
++}  // namespace irtamstate
+diff --git a/src/Data/IrtamState.h b/src/Data/IrtamState.h
+new file mode 100644
+index 0000000..193d1a8
+--- /dev/null
++++ b/src/Data/IrtamState.h
+@@ -0,0 +1,37 @@
++#pragma once
++// =============================================================================
++// M-IRTAM-F2 (P5): estados honestos + replay frozen-declarado (C9/G9).
++//
++// Modulo PURO: solo std (string/cmath). Sin curl, sin GL, sin App.
++// Testeable en CI (tests/test_irtam_state.cpp).
++//
++// C9 (aritmetica G9, comentario exigido — ver update() en App.cpp):
++//   ventana de replay ~= 24 h (tecHist cap 72, tecCacheMaxAgeH 24.0) y el dato
++//   IRTAM disponible empieza en T-72 h (lag 3 dias, kGambitLagSec): CERO
++//   solape. IRTAM NO participa del muestreo temporal del replay: durante
++//   replay se muestra el bucket mas reciente con nota honesta
++//   "(retrospectivo, fuera de ventana de replay)" — congelado DECLARADO,
++//   no silencioso.
++//
++// Reglas P5: sin dato valido (429/504/parse-fail/ventana/TOV-no-comun) la
++// capa NO se dibuja (valid=false, precedente cartoon-out) + estado textual
++// honesto (jamas silencio, jamas defaults como dato); fail-soft conserva el
++// cache con backoff pasivo al siguiente ciclo (el gate C1 lo impone por
++// construccion — cero primitivas de pacing nuevas aqui).
++// =============================================================================
++#include <string>
++
++namespace irtamstate {
++
++// Nombres declarados para el fold (grep): irtamstate::badgeLine,
++// irtamstate::kReplayWindowSec, irtamstate::kGambitLagSec.
++
++inline constexpr double kReplayWindowSec = 86400.0;   // ~24 h (E4)
++inline constexpr double kGambitLagSec = 259200.0;     // 3 d (E11)
++
++// Linea de estado para el badge. ageMin < 0 = sin dato. inReplay anade la
++// nota frozen-declarada. Nunca devuelve vacio (P5: jamas silencio).
++std::string badgeLine(const std::string& param, bool valid, double dataEpoch,
++                      const std::string& error, double ageMin, bool inReplay);
++
++}  // namespace irtamstate
+diff --git a/tests/test_irtam_grid_eval.cpp b/tests/test_irtam_grid_eval.cpp
+index abca214..ad7741d 100644
+--- a/tests/test_irtam_grid_eval.cpp
++++ b/tests/test_irtam_grid_eval.cpp
+@@ -47,6 +47,8 @@ int main(int argc, char** argv) {
+         "C:\\Users\\unknown\\AppData\\Local\\Temp\\opencode\\p1b_audit\\"
+         "IrtamReader";
+     if (argc > 1) ascDir = argv[1];
++    // Carry-along P5 (veredicto 007 §6, test-only): join portable — '/' vale
++    // en Windows y POSIX (antes '\\' solo-Windows, GLM adapto con symlinks).
+ 
+     std::printf("--- P1b: malla oficial ---\n");
+     check_bool("lat(0)=-90 SUR", latForRow(0) == -90.0);
+@@ -80,8 +82,8 @@ int main(int argc, char** argv) {
+     }
+ 
+     std::printf("--- P1b: oraculos ASC (extra-repo) ---\n");
+-    const std::string pF = ascDir + "\\IRTAM_foF2_COEFFS_20160523_1200.ASC";
+-    const std::string pH = ascDir + "\\IRTAM_hmF2_COEFFS_20160523_1200.ASC";
++    const std::string pF = ascDir + "/IRTAM_foF2_COEFFS_20160523_1200.ASC";
++    const std::string pH = ascDir + "/IRTAM_hmF2_COEFFS_20160523_1200.ASC";
+     std::string tf, th;
+     if (readFile(pF.c_str(), tf) && readFile(pH.c_str(), th)) {
+         irtamcoeff::Message mf, mh;
+diff --git a/tests/test_irtam_state.cpp b/tests/test_irtam_state.cpp
+new file mode 100644
+index 0000000..f531abb
+--- /dev/null
++++ b/tests/test_irtam_state.cpp
+@@ -0,0 +1,74 @@
++// =============================================================================
++// test_irtam_state — estados honestos P5 + replay frozen-declarado (C9/G9).
++//
++// Puro, sin red, sin GL. Llama a PRODUCCION (irtamstate), no replica.
++// Cubre: sin-dato con/sin motivo, badge con edad, sufijo replay, nunca vacio.
++// =============================================================================
++#include "Data/IrtamState.h"
++
++#include <cstdio>
++#include <string>
++
++static int g_ok = 0, g_fail = 0;
++static void check_bool(const char* what, bool cond) {
++    if (cond) ++g_ok;
++    else ++g_fail;
++    std::printf("[%s] %s\n", cond ? "OK" : "FAIL", what);
++}
++
++int main() {
++    using namespace irtamstate;
++
++    std::printf("--- P5: estados honestos ---\n");
++    {
++        const std::string s = badgeLine("foF2", false, 0.0, "", -1.0, false);
++        check_bool("sin dato: menciona backfill",
++                   s.find("backfill en curso") != std::string::npos);
++        check_bool("sin dato: nunca vacio", !s.empty());
++    }
++    {
++        // 429/504/parse-fail viajan en la linea, no solo en tooltip (P5.1).
++        const std::string s =
++            badgeLine("hmF2", false, 0.0, "http 429", -1.0, false);
++        check_bool("error 429 visible en linea",
++                   s.find("429") != std::string::npos);
++        check_bool("error: reintento pasivo (sin re-burst)",
++                   s.find("reintento pasivo") != std::string::npos);
++    }
++    {
++        const std::string s =
++            badgeLine("foF2", true, 1000.0, "", 4320.0, false);
++        check_bool("con dato: edad andante",
++                   s.find("4320 min") != std::string::npos);
++        check_bool("con dato: sin nota replay en live",
++                   s.find("fuera de ventana") == std::string::npos);
++    }
++    std::printf("--- P5: replay frozen-declarado (C9) ---\n");
++    {
++        // Mismo bundle en live y replay: solo cambia el sufijo (C9: IRTAM
++        // NO participa del muestreo temporal; cero solape 24h vs 72h).
++        const std::string live =
++            badgeLine("foF2", true, 1000.0, "", 4320.0, false);
++        const std::string rep =
++            badgeLine("foF2", true, 1000.0, "", 4320.0, true);
++        check_bool("replay: nota frozen-declarada",
++                   rep.find("fuera de ventana de replay") !=
++                       std::string::npos);
++        check_bool("replay: conserva edad del dato",
++                   rep.find("4320 min") != std::string::npos);
++        check_bool("replay: determinista (mismo input, mismo output)",
++                   badgeLine("foF2", true, 1000.0, "", 4320.0, true) == rep);
++        check_bool("live != replay solo por el sufijo",
++                   rep.size() > live.size() &&
++                       rep.find(live) != std::string::npos);
++    }
++    {
++        // Sin dato en replay: sigue honesto, sin nota de congelado.
++        const std::string s = badgeLine("foF2", false, 0.0, "", -1.0, true);
++        check_bool("replay sin dato: honesto",
++                   s.find("sin datos") != std::string::npos);
++    }
++
++    std::printf("\n[test_irtam_state] %d OK, %d FAIL\n", g_ok, g_fail);
++    return g_fail == 0 ? 0 : 1;
++}
+-- 
+2.53.0.windows.3
+
