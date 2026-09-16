@@ -1,0 +1,208 @@
+From 7206b4fbc12b5bcf28ccbdd4378153c65b70e033 Mon Sep 17 00:00:00 2001
+From: David Lopez Salvador <davidlopezsalvador@users.noreply.github.com>
+Date: Wed, 16 Sep 2026 20:29:37 +0200
+Subject: [PATCH] M-irtam-replay-025: hora-dato por capa + stale (helper puro +
+ TimeBar)
+
+---
+ src/App.cpp                | 37 ++++++++++++++++++++++++++++
+ src/Data/IrtamState.cpp    | 47 ++++++++++++++++++++++++++++++++++++
+ src/Data/IrtamState.h      | 19 +++++++++++++++
+ tests/test_irtam_state.cpp | 49 ++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 152 insertions(+)
+
+diff --git a/src/App.cpp b/src/App.cpp
+index 1dc4895..838e83b 100644
+--- a/src/App.cpp
++++ b/src/App.cpp
+@@ -4573,6 +4573,43 @@ void App::render() {
+             ImGui::TextDisabled("Zone: %s", irtamstate::zoneName(rz));
+             if (ImGui::IsItemHovered())
+                 ImGui::SetItemTooltip("Union window zones — [T-96,T-72] IRTAM-only (sampled lerp) · [T-72,T-24] structural gap (edges clamp with note) · [T-24,T] TEC/GIRO-only.");
++            // M-irtam-replay-025 (ruling R2 RELOJ): hora-dato de la capa
++            // ACTIVA con rangos reales (TEC de tecHist, GIRO de histHours;
++            // IRTAM por zonas) + flag stale/clamp cuando difiera del epoch.
++            {
++                irtamstate::LayerRanges lr;
++                {
++                    std::lock_guard<std::mutex> tlk(impl->tecHistMutex);
++                    if (!impl->tecHist.empty()) {
++                        lr.tecOldest = impl->tecHist.front().timestamp;
++                        lr.tecNewest = impl->tecHist.back().timestamp;
++                    }
++                }
++                if (gs.histHours > 0.0) {
++                    lr.giroNewest = nowUtcR;
++                    lr.giroOldest = nowUtcR - gs.histHours * 3600.0;
++                }
++                const bool busy = impl->irtamSampleBusy.load();
++                const irtamstate::LayerDataTime ldt =
++                    irtamstate::layerDataTime(impl->mapVariable,
++                                             impl->replayEpoch, nowUtcR, lr,
++                                             busy);
++                if (ldt.dataEpoch > 0.0) {
++                    if (ldt.stale) {
++                        ImGui::TextDisabled(
++                            "DATA %s (stale)",
++                            irtamstate::formatTovShort(ldt.dataEpoch).c_str());
++                    } else {
++                        ImGui::Text(
++                            "DATA %s",
++                            irtamstate::formatTovShort(ldt.dataEpoch).c_str());
++                    }
++                    if (ImGui::IsItemHovered())
++                        ImGui::SetItemTooltip("Hora-dato real de la capa activa (stale = clampeada al borde de su historia o worker en curso).");
++                } else {
++                    ImGui::TextDisabled("DATA sin dato en capa");
++                }
++            }
+         }
+         // M4 (P5a): linea de estado GIRO en ambos modos — rango real de replay
+         // de estaciones y aviso de cortesia (rate-limit con reintento).
+diff --git a/src/Data/IrtamState.cpp b/src/Data/IrtamState.cpp
+index 41912c6..7796b8f 100644
+--- a/src/Data/IrtamState.cpp
++++ b/src/Data/IrtamState.cpp
+@@ -131,4 +131,51 @@ std::string badgeSampled(const std::string& param, double shownTov,
+     return std::string(buf);
+ }
+ 
++namespace {
++
++LayerDataTime clampToRange(double epoch, double oldest, double newest) {
++    LayerDataTime r;
++    if (oldest < 0.0 || newest < 0.0 || newest < oldest) {
++        r.dataEpoch = -1.0;
++        r.stale = true;
++        return r;
++    }
++    if (epoch <= oldest) {
++        r.dataEpoch = oldest;
++        r.stale = epoch < oldest;
++        r.clamped = epoch < oldest;
++        return r;
++    }
++    if (epoch >= newest) {
++        r.dataEpoch = newest;
++        r.stale = epoch > newest;
++        r.clamped = epoch > newest;
++        return r;
++    }
++    r.dataEpoch = epoch;
++    return r;
++}
++
++}  // namespace
++
++LayerDataTime layerDataTime(int mapVariable, double replayEpoch, double nowUtc,
++                            const LayerRanges& r, bool samplerBusy) {
++    if (mapVariable >= 8 && mapVariable <= 11) {
++        // IRTAM: ventana [now-96h, now-72h]; stale = clamp o worker ocupado.
++        LayerDataTime out =
++            clampToRange(replayEpoch, nowUtc - 345600.0, nowUtc - 259200.0);
++        if (samplerBusy) out.stale = true;
++        return out;
++    }
++    if (mapVariable >= 1 && mapVariable <= 7) {
++        return clampToRange(replayEpoch, r.giroOldest, r.giroNewest);
++    }
++    if (mapVariable == 0) {
++        return clampToRange(replayEpoch, r.tecOldest, r.tecNewest);
++    }
++    LayerDataTime none;
++    none.stale = true;
++    return none;
++}
++
+ }  // namespace irtamstate
+diff --git a/src/Data/IrtamState.h b/src/Data/IrtamState.h
+index 4fdc601..6d2e3e5 100644
+--- a/src/Data/IrtamState.h
++++ b/src/Data/IrtamState.h
+@@ -72,4 +72,23 @@ std::string formatTovShort(double tovEpoch);
+ std::string badgeSampled(const std::string& param, double shownTov,
+                          double nowUtc, bool clamped);
+ 
++// M-irtam-replay-025 (ruling R2 RELOJ): hora-dato por capa con rangos
++// REALES leidos en runtime (sin hardcodear 24 h/12 h). El llamador aporta
++// los rangos (TEC de tecHist bajo lock, GIRO de historyStats/histHours);
++// IRTAM usa las zonas R1. Puro, testeable en CI.
++struct LayerRanges {
++    double tecOldest = -1.0, tecNewest = -1.0;    // <0 = historial vacio
++    double giroOldest = -1.0, giroNewest = -1.0;  // <0 = historial vacio
++};
++struct LayerDataTime {
++    double dataEpoch = -1.0;  // hora-dato de la capa (<0 = sin dato)
++    bool stale = false;       // clampeada o worker ocupado (ver nota)
++    bool clamped = false;
++};
++// samplerBusy = worker IRTAM con peticion en curso (O2 del veredicto 024:
++// el flag solo-escritura ahora se lee): en IRTAM, ocupado => stale (la
++// muestra visible va por detras del cursor). En TEC/GIRO se ignora.
++LayerDataTime layerDataTime(int mapVariable, double replayEpoch, double nowUtc,
++                            const LayerRanges& r, bool samplerBusy);
++
+ }  // namespace irtamstate
+diff --git a/tests/test_irtam_state.cpp b/tests/test_irtam_state.cpp
+index 1c5cfe8..49e5871 100644
+--- a/tests/test_irtam_state.cpp
++++ b/tests/test_irtam_state.cpp
+@@ -152,6 +152,55 @@ int main() {
+         check_bool("sin TOV: honesto", n.find("sin datos") != std::string::npos);
+     }
+ 
++    std::printf("--- M-irtam-replay-025: hora-dato por capa (rangos runtime) ---\n");
++    {
++        LayerRanges r;
++        r.tecOldest = 1000.0;
++        r.tecNewest = 2000.0;
++        r.giroOldest = 1500.0;
++        r.giroNewest = 2500.0;
++        const double now = 100000.0;
++        LayerDataTime t = layerDataTime(0, 1500.0, now, r, false);
++        check_bool("TEC dentro: hora-dato = epoch, fresco",
++                   t.dataEpoch == 1500.0 && !t.stale && !t.clamped);
++        LayerDataTime tc = layerDataTime(0, 500.0, now, r, false);
++        check_bool("TEC bajo rango: clamp al borde + stale",
++                   tc.dataEpoch == 1000.0 && tc.stale && tc.clamped);
++        LayerDataTime tc2 = layerDataTime(0, 9999.0, now, r, false);
++        check_bool("TEC sobre rango: clamp al borde + stale",
++                   tc2.dataEpoch == 2000.0 && tc2.stale && tc2.clamped);
++        LayerDataTime g = layerDataTime(3, 2000.0, now, r, false);
++        check_bool("GIRO dentro: usa rango GIRO, no TEC",
++                   g.dataEpoch == 2000.0 && !g.stale);
++        LayerDataTime g2 = layerDataTime(6, 100.0, now, r, false);
++        check_bool("GIRO fuera: clamp GIRO",
++                   g2.dataEpoch == 1500.0 && g2.stale);
++        LayerRanges empty;
++        LayerDataTime e = layerDataTime(0, 1500.0, now, empty, false);
++        check_bool("TEC sin historia: sin dato + stale",
++                   e.dataEpoch < 0.0 && e.stale);
++        // IRTAM: ventana [now-96h, now-72h], sin hardcode en el llamador
++        // (now realista para epochs positivos).
++        const double nowR = 1789500000.0;
++        LayerDataTime i =
++            layerDataTime(8, nowR - 80.0 * 3600.0, nowR, r, false);
++        check_bool("IRTAM en zona: fresco",
++                   !i.stale && !i.clamped &&
++                       i.dataEpoch == nowR - 80.0 * 3600.0);
++        LayerDataTime ib =
++            layerDataTime(10, nowR - 10.0 * 3600.0, nowR, r, false);
++        check_bool("IRTAM en zona TEC: clamp al borde fresco + stale",
++                   ib.clamped && ib.stale &&
++                       ib.dataEpoch == nowR - 72.0 * 3600.0);
++        LayerDataTime iw =
++            layerDataTime(9, nowR - 80.0 * 3600.0, nowR, r, true);
++        check_bool("IRTAM worker ocupado: stale (O2 veredicto 024)",
++                   iw.stale);
++        LayerDataTime u = layerDataTime(99, 1500.0, now, r, false);
++        check_bool("variable desconocida: sin dato",
++                   u.dataEpoch < 0.0 && u.stale);
++    }
++
+     std::printf("\n[test_irtam_state] %d OK, %d FAIL\n", g_ok, g_fail);
+     return g_fail == 0 ? 0 : 1;
+ }
+-- 
+2.53.0.windows.3
+
