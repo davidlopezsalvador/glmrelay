@@ -1,0 +1,30 @@
+From c2e35027e294904d5df12507fefd6bebcc0a1dbf Mon Sep 17 00:00:00 2001
+From: David Lopez Salvador <davidlopezsalvador@users.noreply.github.com>
+Date: Wed, 16 Sep 2026 23:33:58 +0200
+Subject: [PATCH] M-irtam-replay-027: sol al cursor (opcion A veredicto 026)
+
+---
+ src/App.cpp | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/src/App.cpp b/src/App.cpp
+index 838e83b..681f4f1 100644
+--- a/src/App.cpp
++++ b/src/App.cpp
+@@ -1900,7 +1900,12 @@ void App::update(float dt) {
+     // frame y un ease dejaria el terminador incoherente con el grid durante la
+     // transicion (enmienda MUSE al sello del scope: coherencia > suavidad).
+     // El wrap del loop de replay tambien hace snap (el dato salta ahi igual).
+-    double effEpoch = (replayEpoch > 0.0) ? replayEpoch : (double)std::time(nullptr);
++    // M-irtam-replay-027 (opcion A del veredicto 026): el sol sigue al CURSOR
++    // (impl->replayEpoch), no al local TEC-clamped — si no, queda clavado en
++    // T-24h el 75% del bucle de 96 h. En live, wall-clock como siempre.
++    double effEpoch = (impl->replayMode && impl->replayEpoch > 0.0)
++                          ? impl->replayEpoch
++                          : (double)std::time(nullptr);
+     impl->updateSunDirection(effEpoch);
+     impl->terminator.update(impl->sunDirection);  // anillo dia/noche real (~1 KB/frame)
+ 
+-- 
+2.53.0.windows.3
+
