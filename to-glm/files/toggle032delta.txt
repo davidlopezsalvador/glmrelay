@@ -1,0 +1,282 @@
+From 0dd00198df777e62c402743c48a549149f5145a0 Mon Sep 17 00:00:00 2001
+From: David Lopez Salvador <davidlopezsalvador@users.noreply.github.com>
+Date: Fri, 18 Sep 2026 01:48:49 +0200
+Subject: [PATCH] M-irtam-replay-031: toggle union vs bucle por capa
+
+---
+ src/App.cpp                | 119 ++++++++++++++++++++++++++++---------
+ src/Data/IrtamState.cpp    |  24 ++++++++
+ src/Data/IrtamState.h      |  11 ++++
+ tests/test_irtam_state.cpp |  35 +++++++++++
+ 4 files changed, 161 insertions(+), 28 deletions(-)
+
+diff --git a/src/App.cpp b/src/App.cpp
+index 60855c1..3e6e55a 100644
+--- a/src/App.cpp
++++ b/src/App.cpp
+@@ -258,6 +258,9 @@ struct App::Impl {
+     // la ventana de union (96 h IRTAM + 24 h TEC). replayPos se deriva del
+     // epoch para el lerp TEC interno (inversion mecanica).
+     double replayEpoch = -1.0;   // epoch continuo UTC (s)
++    // M-irtam-replay-031 (ruling toggle): bucle por capa (false = union
++    // 96 h, defecto R2-023). NO se persiste en settings (lección partición).
++    bool replayLayerLoop = false;
+     // Muestra IRTAM = BRACKET entregado por el worker (M-irtam-replay-028):
+     // endpoints para lerp en render por cursor; pairKind 0 = F/H, 1 = B0B1.
+     struct IrtamReplaySample {
+@@ -1876,20 +1879,47 @@ void App::update(float dt) {
+             const double nowUtc = (double)std::time(nullptr);
+             const double winStart =
+                 nowUtc - irtamstate::kIrtamReplayWindowSec;
++            // M-irtam-replay-031 (toggle): un solo camino con bounds; en modo
++            // por capa los bounds son el rango con dato de la activa, con
++            // fallback declarado a la union (jamas cursor congelado).
++            double loBound = winStart;
++            double hiBound = nowUtc;
++            if (impl->replayLayerLoop) {
++                irtamstate::LayerRanges lr;
++                {
++                    std::lock_guard<std::mutex> tlk(impl->tecHistMutex);
++                    if (impl->tecHist.size() >= 2) {
++                        lr.tecOldest = impl->tecHist.front().timestamp;
++                        lr.tecNewest = impl->tecHist.back().timestamp;
++                    }
++                }
++                const double hh = impl->giro.getNetStatus().histHours;
++                if (hh > 0.0) {
++                    lr.giroNewest = nowUtc;
++                    lr.giroOldest = nowUtc - hh * 3600.0;
++                }
++                const irtamstate::LayerLoopRange llr =
++                    irtamstate::layerLoopRange(impl->mapVariable, nowUtc, lr);
++                if (llr.valid) {
++                    loBound = llr.oldest;
++                    hiBound = llr.newest;
++                }
++            }
+             if (impl->replayPlaying) {
+-                if (impl->replayEpoch <= 0.0) impl->replayEpoch = winStart;
+-                // 1x = 1 frame TEC equiv/s (1200 s); loop en ventana union.
++                if (impl->replayEpoch <= 0.0) impl->replayEpoch = loBound;
++                // 1x = 1 frame TEC equiv/s (1200 s); loop en [loBound,hiBound]:
++                // union 96 h por defecto, rango con dato en modo por capa.
+                 // M-irtam-replay-024 (ruling R2 PERF): dt acotado a <=100 ms
+                 // SOLO para este avance (rompe la amplificacion miss->dt
+                 // gigante->salto multi-slot->miss); el dt global intacto.
+                 const double advDt = dt > 0.1 ? 0.1 : (double)dt;
+                 impl->replayEpoch +=
+                     advDt * impl->replaySpeed * 1200.0;
+-                if (impl->replayEpoch > nowUtc) impl->replayEpoch = winStart;
++                if (impl->replayEpoch > hiBound) impl->replayEpoch = loBound;
+             }
+-            if (impl->replayEpoch <= 0.0) impl->replayEpoch = winStart;
+-            if (impl->replayEpoch < winStart) impl->replayEpoch = winStart;
+-            if (impl->replayEpoch > nowUtc) impl->replayEpoch = nowUtc;
++            if (impl->replayEpoch <= 0.0) impl->replayEpoch = loBound;
++            if (impl->replayEpoch < loBound) impl->replayEpoch = loBound;
++            if (impl->replayEpoch > hiBound) impl->replayEpoch = hiBound;
+             replayEpoch = impl->replayEpoch;
+             std::lock_guard<std::mutex> lk(impl->tecHistMutex);
+             if (impl->tecHist.size() >= 2) {
+@@ -4634,22 +4664,68 @@ void App::render() {
+             ImGui::SetNextItemWidth(90.0f);
+             ImGui::SliderFloat("speed", &impl->replaySpeed, 0.5f, 8.0f, "%.1f fps");
+             if (ImGui::IsItemHovered()) ImGui::SetItemTooltip("Replay speed in frames per second.");
+-            // M-irtam-replay-A (ruling R1 Q6): slider de TIEMPO sobre la
+-            // ventana de union (96 h); scrubbing-pauses y Play/speed se
+-            // conservan. Etiqueta = epoch UTC + zona declarada.
++            // M-irtam-replay-031 (toggle): checkbox de modo (marcado = union
++            // 96 h, defecto R2) + recogida UNICA de rangos que alimenta
++            // slider, etiqueta de modo y DATA (misma cuenta de locks).
++            bool fullWin = !impl->replayLayerLoop;
++            if (ImGui::Checkbox("Full 96 h window", &fullWin)) {
++                impl->replayLayerLoop = !fullWin;
++            }
++            if (ImGui::IsItemHovered())
++                ImGui::SetItemTooltip("Union 96 h loop (comparative scrub across zones) or per-layer loop (dense replay of the active layer only). Without layer history, always union.");
+             const double nowUtcR = (double)std::time(nullptr);
+-            const double winStartR =
+-                nowUtcR - irtamstate::kIrtamReplayWindowSec;
+-            if (impl->replayEpoch <= 0.0) impl->replayEpoch = winStartR;
++            irtamstate::LayerRanges lr;
++            {
++                std::lock_guard<std::mutex> tlk(impl->tecHistMutex);
++                if (!impl->tecHist.empty()) {
++                    lr.tecOldest = impl->tecHist.front().timestamp;
++                    lr.tecNewest = impl->tecHist.back().timestamp;
++                }
++            }
++            if (gs.histHours > 0.0) {
++                lr.giroNewest = nowUtcR;
++                lr.giroOldest = nowUtcR - gs.histHours * 3600.0;
++            }
++            // Bounds por modo (union por defecto; capa con fallback).
++            double sloB = nowUtcR - irtamstate::kIrtamReplayWindowSec;
++            double shiB = nowUtcR;
++            std::string modeLabel("Window: union 96 h");
++            if (impl->replayLayerLoop) {
++                const irtamstate::LayerLoopRange llr =
++                    irtamstate::layerLoopRange(impl->mapVariable, nowUtcR,
++                                              lr);
++                if (llr.valid) {
++                    sloB = llr.oldest;
++                    shiB = llr.newest;
++                    const char* fam = (impl->mapVariable == 0)    ? "TEC"
++                                      : (impl->mapVariable <= 7) ? "GIRO"
++                                                                 : "IRTAM";
++                    char mb[64];
++                    std::snprintf(mb, sizeof(mb), "Loop: %s %.1f h", fam,
++                                  (shiB - sloB) / 3600.0);
++                    modeLabel = mb;
++                } else {
++                    modeLabel = "Loop: capa sin historia (unión)";
++                }
++            }
++            ImGui::TextDisabled("%s", modeLabel.c_str());
++            if (ImGui::IsItemHovered())
++                ImGui::SetItemTooltip("Active loop mode and span (live family + hours).");
++            // M-irtam-replay-A (ruling R1 Q6): slider de TIEMPO con bounds
++            // dinamicos del modo (union [0,96]; capa [hMin,hMax] reales);
++            // scrubbing-pauses y Play/speed se conservan.
++            if (impl->replayEpoch <= 0.0) impl->replayEpoch = sloB;
+             float hoursBack =
+                 (float)((nowUtcR - impl->replayEpoch) / 3600.0);
+-            if (ImGui::SliderFloat("hours back", &hoursBack, 0.0f, 96.0f,
++            const float hMin = (float)((nowUtcR - shiB) / 3600.0);
++            const float hMax = (float)((nowUtcR - sloB) / 3600.0);
++            if (ImGui::SliderFloat("hours back", &hoursBack, hMin, hMax,
+                                    "%.1f h")) {
+                 impl->replayEpoch = nowUtcR - (double)hoursBack * 3600.0;
+                 impl->replayPlaying = false;  // scrubbing pauses
+             }
+             if (ImGui::IsItemHovered())
+-                ImGui::SetItemTooltip("Scrub time over the 96 h union window "
++                ImGui::SetItemTooltip("Scrub time over the active loop range "
+                                       "(pauses playback). TEC covers [T-24,T], "
+                                       "IRTAM [T-96,T-72]; [T-72,T-24] is a "
+                                       "structural gap (3-day lag physics).");
+@@ -4674,21 +4750,8 @@ void App::render() {
+             if (ImGui::IsItemHovered())
+                 ImGui::SetItemTooltip("Union window zones — [T-96,T-72] IRTAM-only (sampled lerp) · [T-72,T-24] structural gap (edges clamp with note) · [T-24,T] TEC/GIRO-only.");
+             // M-irtam-replay-025 (ruling R2 RELOJ): hora-dato de la capa
+-            // ACTIVA con rangos reales (TEC de tecHist, GIRO de histHours;
+-            // IRTAM por zonas) + flag stale/clamp cuando difiera del epoch.
++            // ACTIVA con rangos reales (reutiliza la recogida de arriba).
+             {
+-                irtamstate::LayerRanges lr;
+-                {
+-                    std::lock_guard<std::mutex> tlk(impl->tecHistMutex);
+-                    if (!impl->tecHist.empty()) {
+-                        lr.tecOldest = impl->tecHist.front().timestamp;
+-                        lr.tecNewest = impl->tecHist.back().timestamp;
+-                    }
+-                }
+-                if (gs.histHours > 0.0) {
+-                    lr.giroNewest = nowUtcR;
+-                    lr.giroOldest = nowUtcR - gs.histHours * 3600.0;
+-                }
+                 const bool busy = impl->irtamSampleBusy.load();
+                 const irtamstate::LayerDataTime ldt =
+                     irtamstate::layerDataTime(impl->mapVariable,
+diff --git a/src/Data/IrtamState.cpp b/src/Data/IrtamState.cpp
+index 8db98bb..66665be 100644
+--- a/src/Data/IrtamState.cpp
++++ b/src/Data/IrtamState.cpp
+@@ -211,4 +211,28 @@ PairBracket pairBracketTovs(const std::vector<TovEntry>& entries,
+     return r;
+ }
+ 
++LayerLoopRange layerLoopRange(int mapVariable, double nowUtc,
++                              const LayerRanges& r) {
++    LayerLoopRange out;
++    double oldest = -1.0, newest = -1.0;
++    if (mapVariable == 0) {
++        oldest = r.tecOldest;
++        newest = r.tecNewest;
++    } else if (mapVariable >= 1 && mapVariable <= 7) {
++        oldest = r.giroOldest;
++        newest = r.giroNewest;
++    } else if (mapVariable >= 8 && mapVariable <= 11) {
++        oldest = nowUtc - 345600.0;
++        newest = nowUtc - 259200.0;
++    } else {
++        return out;
++    }
++    if (oldest > 0.0 && newest > oldest) {
++        out.oldest = oldest;
++        out.newest = newest;
++        out.valid = true;
++    }
++    return out;
++}
++
+ }  // namespace irtamstate
+diff --git a/src/Data/IrtamState.h b/src/Data/IrtamState.h
+index 2857758..3396df9 100644
+--- a/src/Data/IrtamState.h
++++ b/src/Data/IrtamState.h
+@@ -109,4 +109,15 @@ PairBracket pairBracketTovs(const std::vector<TovEntry>& entries,
+                             const std::string& pA, const std::string& pB,
+                             double epoch);
+ 
++// M-irtam-replay-031 (ruling toggle, misma particion de variables que
++// layerDataTime): rango con dato de la capa para el bucle por capa.
++// var 0 -> TEC real; vars 1-7 -> GIRO histHours; vars 8-11 -> estructural
++// [nowUtc-345600, nowUtc-259200] (literales de layerDataTime); otra -> invalid.
++struct LayerLoopRange {
++    double oldest = -1.0, newest = -1.0;  // rango con dato de la capa
++    bool valid = false;                   // oldest > 0 && newest > oldest
++};
++LayerLoopRange layerLoopRange(int mapVariable, double nowUtc,
++                              const LayerRanges& r);
++
+ }  // namespace irtamstate
+diff --git a/tests/test_irtam_state.cpp b/tests/test_irtam_state.cpp
+index e6fdd1d..61a6ee7 100644
+--- a/tests/test_irtam_state.cpp
++++ b/tests/test_irtam_state.cpp
+@@ -231,6 +231,41 @@ int main() {
+                    pairBracketTovs(nov, "fof2", "hmf2", 1500.0).empty);
+     }
+ 
++    std::printf("--- M-irtam-replay-031: rango del bucle por capa ---\n");
++    {
++        LayerRanges r;
++        r.tecOldest = 1000.0;
++        r.tecNewest = 2000.0;
++        r.giroOldest = 1500.0;
++        r.giroNewest = 2500.0;
++        const double now = 100000.0;
++        LayerLoopRange t = layerLoopRange(0, now, r);
++        check_bool("TEC valida",
++                   t.valid && t.oldest == 1000.0 && t.newest == 2000.0);
++        LayerRanges e;
++        check_bool("TEC vacia: invalid",
++                   !layerLoopRange(0, now, e).valid);
++        LayerRanges one;
++        one.tecOldest = 1000.0;
++        one.tecNewest = 1000.0;
++        check_bool("TEC un frame (oldest==newest): invalid",
++                   !layerLoopRange(0, now, one).valid);
++        LayerLoopRange g = layerLoopRange(3, now, r);
++        check_bool("GIRO valida",
++                   g.valid && g.oldest == 1500.0 && g.newest == 2500.0);
++        LayerRanges g0;
++        g0.tecOldest = 1000.0;
++        g0.tecNewest = 2000.0;
++        check_bool("GIRO histHours=0: invalid",
++                   !layerLoopRange(3, now, g0).valid);
++        LayerLoopRange i = layerLoopRange(8, 1789500000.0, r);
++        check_bool("IRTAM estructural exacto [now-345600,now-259200]",
++                   i.valid && i.oldest == 1789500000.0 - 345600.0 &&
++                       i.newest == 1789500000.0 - 259200.0);
++        check_bool("var desconocida: invalid",
++                   !layerLoopRange(99, now, r).valid);
++    }
++
+     std::printf("\n[test_irtam_state] %d OK, %d FAIL\n", g_ok, g_fail);
+     return g_fail == 0 ? 0 : 1;
+ }
+-- 
+2.53.0.windows.3
+
