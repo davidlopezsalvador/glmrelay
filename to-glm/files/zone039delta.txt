@@ -1,0 +1,173 @@
+From ebcd297ca187d078165b22f04e4faec74a79b1ce Mon Sep 17 00:00:00 2001
+From: David Lopez Salvador <davidlopezsalvador@users.noreply.github.com>
+Date: Wed, 23 Sep 2026 22:21:04 +0200
+Subject: [PATCH] Zone por capa 038: perLayerZoneName + rama Zone + tooltips +
+ 8 tests
+
+---
+ src/App.cpp                | 34 ++++++++++++++++++++++-----
+ src/Data/IrtamState.cpp    | 18 +++++++++++++++
+ src/Data/IrtamState.h      |  8 +++++++
+ tests/test_irtam_state.cpp | 47 ++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 101 insertions(+), 6 deletions(-)
+
+diff --git a/src/App.cpp b/src/App.cpp
+index cd22970..9e257c0 100644
+--- a/src/App.cpp
++++ b/src/App.cpp
+@@ -4736,7 +4736,10 @@ void App::render() {
+             if (ImGui::IsItemHovered())
+                 ImGui::SetItemTooltip("Scrub time over the active loop range "
+                                       "(pauses playback). TEC covers [T-72,T], "
+-                                      "IRTAM [T-96,T-72]; overlap at T-72.");
++                                      "IRTAM [T-96,T-72]; overlap at T-72. In "
++                                      "per-layer mode bounds follow the layer "
++                                      "real data (per-layer bounds may exceed "
++                                      "72 h with inherited frames).");
+             ImGui::SameLine();
+             char tbuf[32] = "--:--";
+             {
+@@ -4752,11 +4755,30 @@ void App::render() {
+             ImGui::TextUnformatted(tbuf);
+             if (ImGui::IsItemHovered()) ImGui::SetItemTooltip("Replay epoch (UTC).");
+             // Zonas declaradas (ruling CORRECCION 2: el TimeBar lo declara).
+-            const irtamstate::ReplayZone rz = irtamstate::zoneForAge(
+-                nowUtcR - impl->replayEpoch);
+-            ImGui::TextDisabled("Zone: %s", irtamstate::zoneName(rz));
+-            if (ImGui::IsItemHovered())
+-                ImGui::SetItemTooltip("Union window zones ÔÇö [T-96,T-72] IRTAM-only (sampled lerp) ┬À [T-72,T] TEC (+ GIRO 6 h).");
++            // M-irtam-replay-038 (familia 022): en modo por capa la etiqueta
++            // Zone: deriva del mismo dato real (LayerRanges + banda IRTAM)
++            // que Loop/DATA; en union la via union queda byte-identica.
++            if (impl->replayLayerLoop) {
++                ImGui::TextDisabled(
++                    "Zone: %s",
++                    irtamstate::perLayerZoneName(impl->replayEpoch, nowUtcR,
++                                                lr));
++                if (ImGui::IsItemHovered())
++                    ImGui::SetItemTooltip("Zone per-layer: sources with real "
++                                          "data at the cursor (TEC/GIRO real "
++                                          "ranges; IRTAM structural band "
++                                          "[T-96,T-72]). The real span floats "
++                                          "with cadence ÔÇö 72 h is the nominal "
++                                          "download window; frames older "
++                                          "than T-72 h are inherited from "
++                                          "disk, not downloaded.");
++            } else {
++                const irtamstate::ReplayZone rz = irtamstate::zoneForAge(
++                    nowUtcR - impl->replayEpoch);
++                ImGui::TextDisabled("Zone: %s", irtamstate::zoneName(rz));
++                if (ImGui::IsItemHovered())
++                    ImGui::SetItemTooltip("Union window zones ÔÇö [T-96,T-72] IRTAM-only (sampled lerp) ┬À [T-72,T] TEC (+ GIRO 6 h).");
++            }
+             // M-irtam-replay-025 (ruling R2 RELOJ): hora-dato de la capa
+             // ACTIVA con rangos reales (reutiliza la recogida de arriba).
+             {
+diff --git a/src/Data/IrtamState.cpp b/src/Data/IrtamState.cpp
+index e871152..a61b7f2 100644
+--- a/src/Data/IrtamState.cpp
++++ b/src/Data/IrtamState.cpp
+@@ -51,6 +51,24 @@ const char* zoneName(ReplayZone z) {
+     }
+ }
+ 
++const char* perLayerZoneName(double replayEpoch, double nowUtc,
++                             const LayerRanges& r) {
++    const bool tec = (r.tecOldest > 0.0 && r.tecOldest <= replayEpoch &&
++                      replayEpoch <= r.tecNewest);
++    const bool giro = (r.giroOldest > 0.0 && r.giroOldest <= replayEpoch &&
++                       replayEpoch <= r.giroNewest);
++    const bool irtam = (nowUtc - 345600.0 <= replayEpoch &&
++                        replayEpoch <= nowUtc - 259200.0);
++    if (tec && giro && irtam) return "TEC+GIRO+IRTAM";
++    if (tec && giro) return "TEC+GIRO";
++    if (tec && irtam) return "TEC+IRTAM";
++    if (giro && irtam) return "GIRO+IRTAM";
++    if (tec) return "solo-TEC";
++    if (giro) return "solo-GIRO";
++    if (irtam) return "solo-IRTAM";
++    return "sin datos";
++}
++
+ TovBracket bracketTovs(const std::vector<double>& sortedTovs, double epoch) {
+     TovBracket r;
+     if (sortedTovs.empty()) return r;
+diff --git a/src/Data/IrtamState.h b/src/Data/IrtamState.h
+index 732f1d2..900c025 100644
+--- a/src/Data/IrtamState.h
++++ b/src/Data/IrtamState.h
+@@ -89,6 +89,14 @@ struct LayerDataTime {
+ LayerDataTime layerDataTime(int mapVariable, double replayEpoch, double nowUtc,
+                             const LayerRanges& r, bool samplerBusy);
+ 
++// M-irtam-replay-038 (ruling coherencia Zone/DATA, familia 022): conjunto de
++// fuentes con dato REAL en el epoch del cursor (no la familia activa).
++// Orden canonico TEC+GIRO+IRTAM, prefijo "solo-" en singleton. TEC/GIRO por
++// rangos reales; IRTAM por banda estructural [now-345600,now-259200] (mismos
++// literales e inclusividad que layerLoopRange vars 8-11 y la via union). Puro.
++const char* perLayerZoneName(double replayEpoch, double nowUtc,
++                             const LayerRanges& r);
++
+ // M-irtam-replay-028: bracket de un PAR sobre TOVs comunes (puro, testeable).
+ // entries = {(param minusculas, tovEpoch)} del indice (memo o scan); exige
+ // el TOV en AMBOS params (mate-check, misma convencion que commonTovEpoch).
+diff --git a/tests/test_irtam_state.cpp b/tests/test_irtam_state.cpp
+index dae1e63..8b9582d 100644
+--- a/tests/test_irtam_state.cpp
++++ b/tests/test_irtam_state.cpp
+@@ -200,6 +200,53 @@ int main() {
+                    u.dataEpoch < 0.0 && u.stale);
+     }
+ 
++    std::printf("--- M-irtam-replay-038: Zone por capa (perLayerZoneName) ---\n");
++    {
++        // Caso 037: TEC real [now-86.6h, now], cursor now-80h.
++        const double now = 1789500000.0;
++        LayerRanges r;
++        r.tecOldest = now - 86.6 * 3600.0;
++        r.tecNewest = now;
++        check_bool("1: TEC+IRTAM en cursor now-80h",
++                   std::string(perLayerZoneName(now - 80.0 * 3600.0, now,
++                                                r)) == "TEC+IRTAM");
++        check_bool("2: mismos rangos, cursor now-30h -> solo-TEC",
++                   std::string(perLayerZoneName(now - 30.0 * 3600.0, now,
++                                                r)) == "solo-TEC");
++        check_bool("3: cursor now-90h -> solo-IRTAM",
++                   std::string(perLayerZoneName(now - 90.0 * 3600.0, now,
++                                                r)) == "solo-IRTAM");
++        check_bool("4: borde T-72h inclusivo -> TEC+IRTAM",
++                   std::string(perLayerZoneName(now - 72.0 * 3600.0, now,
++                                                r)) == "TEC+IRTAM");
++        LayerRanges g;
++        g.giroOldest = now - 6.0 * 3600.0;
++        g.giroNewest = now;
++        check_bool("5: TEC vacio + GIRO -> solo-GIRO",
++                   std::string(perLayerZoneName(now - 3.0 * 3600.0, now,
++                                                g)) == "solo-GIRO");
++        LayerRanges tg;
++        tg.tecOldest = now - 24.0 * 3600.0;
++        tg.tecNewest = now;
++        tg.giroOldest = now - 6.0 * 3600.0;
++        tg.giroNewest = now;
++        check_bool("6: TEC+GIRO en now-3h",
++                   std::string(perLayerZoneName(now - 3.0 * 3600.0, now,
++                                                tg)) == "TEC+GIRO");
++        LayerRanges e;
++        check_bool("7: rangos vacios -> sin datos",
++                   std::string(perLayerZoneName(now - 3.0 * 3600.0, now,
++                                                e)) == "sin datos");
++        LayerRanges all;
++        all.tecOldest = now - 86.6 * 3600.0;
++        all.tecNewest = now;
++        all.giroOldest = now - 86.6 * 3600.0;
++        all.giroNewest = now;
++        check_bool("8: tres fuentes -> TEC+GIRO+IRTAM (orden canonico)",
++                   std::string(perLayerZoneName(now - 80.0 * 3600.0, now,
++                                                all)) == "TEC+GIRO+IRTAM");
++    }
++
+     std::printf("--- M-irtam-replay-028: bracket de par (testeable) ---\n");
+     {
+         // TOVs comunes foF2xhmF2 en {1000, 1900, 2800}; B0 huerfano en 1500.
+-- 
+2.53.0.windows.3
