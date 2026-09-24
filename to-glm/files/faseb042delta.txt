@@ -1,0 +1,41 @@
+From fcef9b4cdc71195f2fd368a42333f494515320b4 Mon Sep 17 00:00:00 2001
+From: David Lopez Salvador <davidlopezsalvador@users.noreply.github.com>
+Date: Thu, 24 Sep 2026 02:12:53 +0200
+Subject: [PATCH] Fase B 042: buf64 formatIsoMs + doc clamp slider
+
+---
+ src/App.cpp            | 4 +++-
+ src/Data/LgdcTrace.cpp | 2 +-
+ 2 files changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/src/App.cpp b/src/App.cpp
+index 9e257c0..15adf6b 100644
+--- a/src/App.cpp
++++ b/src/App.cpp
+@@ -4739,7 +4739,9 @@ void App::render() {
+                                       "IRTAM [T-96,T-72]; overlap at T-72. In "
+                                       "per-layer mode bounds follow the layer "
+                                       "real data (per-layer bounds may exceed "
+-                                      "72 h with inherited frames).");
++                                      "72 h with inherited frames). Switching "
++                                      "Variable re-clamps the cursor into the "
++                                      "new bounds when needed (never jumps to live).");
+             ImGui::SameLine();
+             char tbuf[32] = "--:--";
+             {
+diff --git a/src/Data/LgdcTrace.cpp b/src/Data/LgdcTrace.cpp
+index bea6676..703bdfa 100644
+--- a/src/Data/LgdcTrace.cpp
++++ b/src/Data/LgdcTrace.cpp
+@@ -38,7 +38,7 @@ std::string formatIsoMs(long long msSinceEpoch) {
+ #else
+     gmtime_r(&sec, &g);
+ #endif
+-    char buf[32];
++    char buf[64];
+     std::snprintf(buf, sizeof(buf), "%04d-%02d-%02dT%02d:%02d:%02d.%03dZ",
+                   g.tm_year + 1900, g.tm_mon + 1, g.tm_mday, g.tm_hour,
+                   g.tm_min, g.tm_sec, ms < 0 ? 0 : ms);
+-- 
+2.53.0.windows.3
+
