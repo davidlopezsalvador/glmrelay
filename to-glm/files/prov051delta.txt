@@ -1,0 +1,708 @@
+From 84d2522ed8d949d17aa76d14ada630a95e019ae6 Mon Sep 17 00:00:00 2001
+From: David Lopez Salvador <davidlopezsalvador@users.noreply.github.com>
+Date: Fri, 25 Sep 2026 23:00:29 +0200
+Subject: [PATCH] prov-matrix 051: re-cut sobre a06215cc (contenido R'
+ f82d69fe)
+
+---
+ CMakeLists.txt                 |   5 +
+ src/App.cpp                    | 182 ++++++++++++++++++++++++++++++++-
+ src/Data/ProviderStatus.cpp    | 134 ++++++++++++++++++++++++
+ src/Data/ProviderStatus.h      |  71 +++++++++++++
+ tests/test_provider_status.cpp | 161 +++++++++++++++++++++++++++++
+ 5 files changed, 552 insertions(+), 1 deletion(-)
+ create mode 100644 src/Data/ProviderStatus.cpp
+ create mode 100644 src/Data/ProviderStatus.h
+ create mode 100644 tests/test_provider_status.cpp
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 18955c7..370380d 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -73,6 +73,7 @@ set(SOURCES
+     src/Data/IrtamCoeffCache.cpp  # M-IRTAM-F2 (P2): cache numerica (puro, sin curl/GL)
+     src/Data/LgdcPacing.cpp  # M-IRTAM-F2 (P3): gate lgdc compartido (puro, sin curl/GL)
+     src/Data/LgdcTrace.cpp  # Ciclo traza: log stderr con timestamp (solo-log, sin curl/GL)
++    src/Data/ProviderStatus.cpp  # M-prov-matrix (048): estado por proveedor (puro, sin curl/GL)
+     src/Data/IrtamCoeffAdapter.cpp  # M-IRTAM-F2 (P4): adaptador gambit (curl/gate; URL vive aqui)
+     src/Data/IrtamGridEval.cpp  # M-IRTAM-F2 (P1b): eval Jones-Gallet 46x45 (puro, sin curl/GL)
+     src/Data/IrtamState.cpp  # M-IRTAM-F2 (P5): estados honestos + replay (puro, sin curl/GL)
+@@ -272,3 +273,7 @@ add_test(NAME irtam_state COMMAND test_irtam_state)
+ add_executable(test_lgdc_trace tests/test_lgdc_trace.cpp src/Data/LgdcTrace.cpp)
+ target_include_directories(test_lgdc_trace PRIVATE src)
+ add_test(NAME lgdc_trace COMMAND test_lgdc_trace)
++# M-prov-matrix (048): matriz de estado — llama a PRODUCCION (provstatus), no replica.
++add_executable(test_provider_status tests/test_provider_status.cpp src/Data/ProviderStatus.cpp)
++target_include_directories(test_provider_status PRIVATE src)
++add_test(NAME provider_status COMMAND test_provider_status)
+diff --git a/src/App.cpp b/src/App.cpp
+index ae83579..444e3d6 100644
+--- a/src/App.cpp
++++ b/src/App.cpp
+@@ -57,6 +57,7 @@
+ #include "Data/IrtamCoeffParse.h"  // M-IRTAM-F2 (P1b): flip aditivo (parse)
+ #include "Data/IrtamGridEval.h"    // M-IRTAM-F2 (P1b): eval Jones-Gallet 46x45
+ #include "Data/IrtamState.h"       // M-IRTAM-F2 (P5): estados honestos + replay
++#include "Data/ProviderStatus.h"  // M-prov-matrix (048): matriz de estado (puro)
+ #include "Ionosphere/FaradayLayer.h"
+ #include "Ionosphere/RefShells.h"
+ #include "Ionosphere/VolumeRenderer.h"
+@@ -102,6 +103,12 @@ struct App::Impl {
+     std::shared_ptr<const XrayBundle> xray;
+     std::shared_ptr<const SdoBundle> sdoB;  // M11
+     std::shared_ptr<const irtamfetch::IrtamBundle> irtam;  // M-IRTAM-F2 (P4)
++    // M-prov-matrix (048): snapshots de estado por proveedor (solo lectura
++    // del estado ya computado; se escriben junto a cada publicacion de
++    // bundle y se leen en el gather del panel). provCopy = copia para
++    // construir filas fuera del lock.
++    provstatus::Snapshot provBoard[provstatus::PROV_COUNT];
++    provstatus::Snapshot provCopy[provstatus::PROV_COUNT];
+     std::shared_ptr<const TecBundle> getTec() const { std::lock_guard<std::mutex> lk(bundleMutex); return tec; }
+     std::shared_ptr<const IndicesBundle> getIndices() const { std::lock_guard<std::mutex> lk(bundleMutex); return indices; }
+     std::shared_ptr<const WindBundle> getWind() const { std::lock_guard<std::mutex> lk(bundleMutex); return wind; }
+@@ -1503,6 +1510,14 @@ bool App::init(int width, int height, const char* title) {
+                     b->b1 = std::move(g1);
+                 } while (false);
+                 { std::lock_guard<std::mutex> lk(self->impl->bundleMutex); self->impl->irtam = b; }
++                // M-prov-matrix: fila IRTAM gambit (1 fila del hilo irtam).
++                provstatus::Snapshot sn;
++                sn.id = provstatus::PROV_IRTAM;
++                sn.hasData = b->valid;
++                sn.dataEpoch = b->dataEpoch;
++                sn.data = b->valid ? irtamstate::formatTovShort(b->dataEpoch) : "";
++                sn.error = b->error;
++                { std::lock_guard<std::mutex> lk(self->impl->bundleMutex); self->impl->provBoard[provstatus::PROV_IRTAM] = sn; }
+             };
+             auto sleepIntr = [&](int ms100) {
+                 for (int i = 0; i < ms100 && !self->impl->shutdownRequested.load(); i++)
+@@ -2540,6 +2555,14 @@ void App::fetchWorker() {
+                 rb->img = rim;
+                 { std::lock_guard<std::mutex> lk(impl->bundleMutex); impl->sdoB = rb; }
+             }
++                // M-prov-matrix: fila SDO (restore).
++                provstatus::Snapshot ss;
++                ss.id = provstatus::PROV_SDO;
++                ss.hasData = rim.valid;
++                ss.dataEpoch = rim.timeUtc;
++                ss.data = SdoImageAdapter::nameFor((SdoProduct)p);
++                ss.error = sdo.getErrorMessage();
++                { std::lock_guard<std::mutex> lk(impl->bundleMutex); impl->provBoard[provstatus::PROV_SDO] = ss; }
+         }
+     }
+     bool firstPass = true;
+@@ -2576,6 +2599,14 @@ void App::fetchWorker() {
+                     auto b = std::make_shared<Impl::SdoBundle>();
+                     b->img = im;
+                     { std::lock_guard<std::mutex> lk(impl->bundleMutex); impl->sdoB = b; }
++                    // M-prov-matrix: fila SDO (fetch).
++                    provstatus::Snapshot ss;
++                    ss.id = provstatus::PROV_SDO;
++                    ss.hasData = im.valid;
++                    ss.dataEpoch = im.timeUtc;
++                    ss.data = SdoImageAdapter::nameFor(seq[i]);
++                    ss.error = sdo.getErrorMessage();
++                    { std::lock_guard<std::mutex> lk(impl->bundleMutex); impl->provBoard[provstatus::PROV_SDO] = ss; }
+                 }
+             }
+         }
+@@ -2603,6 +2634,13 @@ void App::fetchWorker() {
+                     g.timestamp = epoch;
+                     g.valid = esa.getData().valid;
+                     sim = true;
++                    // M-prov-matrix: fila ESA (mock offline por diseno).
++                    provstatus::Snapshot se;
++                    se.id = provstatus::PROV_ESA;
++                    se.hasData = esa.getData().valid;
++                    se.dataEpoch = esa.getData().valid ? esa.getData().timestamp : 0.0;
++                    se.data = esa.getData().valid ? "disk cache" : "mock (offline)";
++                    { std::lock_guard<std::mutex> lk(impl->bundleMutex); impl->provBoard[provstatus::PROV_ESA] = se; }
+                 }
+                 if (g.valid) {
+                     auto b = std::make_shared<Impl::TecBundle>();
+@@ -2610,6 +2648,16 @@ void App::fetchWorker() {
+                     b->grid.timestamp = epoch;
+                     b->simulated = sim;
+                     { std::lock_guard<std::mutex> lk(impl->bundleMutex); impl->tec = b; }
++                    // M-prov-matrix: fila GloTEC (solo lectura del fetch ya hecho).
++                    provstatus::Snapshot st;
++                    st.id = provstatus::PROV_TEC;
++                    st.hasData = g.valid && !sim;
++                    st.dataEpoch = epoch;
++                    char sdb[32];
++                    std::snprintf(sdb, sizeof(sdb), "%dx%d", g.width, g.height);
++                    st.data = sdb;
++                    st.error = glo.getErrorMessage();
++                    { std::lock_guard<std::mutex> lk(impl->bundleMutex); impl->provBoard[provstatus::PROV_TEC] = st; }
+                     haveTec = true;
+                     if (!sim) impl->liveTecArrived.store(true);
+                 }
+@@ -2626,6 +2674,14 @@ void App::fetchWorker() {
+                 b->ssn = sidx.getSsnHistory();
+                 b->spots = sidx.getSunspots();  // M11: manchas viajan con los indices
+                 { std::lock_guard<std::mutex> lk(impl->bundleMutex); impl->indices = b; }
++                // M-prov-matrix: fila indices (Kp/Dst/F10.7/Ap/SSN).
++                provstatus::Snapshot si;
++                si.id = provstatus::PROV_INDICES;
++                si.hasData = b->snap.valid;
++                si.dataEpoch = b->snap.timeUtc;
++                si.data = b->snap.simulated ? ("mock: " + b->snap.error) : "5/5 real";
++                si.error = b->snap.error;
++                { std::lock_guard<std::mutex> lk(impl->bundleMutex); impl->provBoard[provstatus::PROV_INDICES] = si; }
+             }
+             noteDone();
+ 
+@@ -2637,6 +2693,14 @@ void App::fetchWorker() {
+                 b->simulated = sw.isSimulated();
+                 b->error = sw.getErrorMessage();
+                 { std::lock_guard<std::mutex> lk(impl->bundleMutex); impl->wind = b; }
++                // M-prov-matrix: fila viento solar.
++                provstatus::Snapshot sws;
++                sws.id = provstatus::PROV_WIND;
++                sws.hasData = b->latest.valid;
++                sws.dataEpoch = b->latest.timeUtc;
++                sws.data = b->simulated ? "simulated" : "live";
++                sws.error = b->error;
++                { std::lock_guard<std::mutex> lk(impl->bundleMutex); impl->provBoard[provstatus::PROV_WIND] = sws; }
+             }
+             noteDone();
+ 
+@@ -2654,6 +2718,18 @@ void App::fetchWorker() {
+                     b->grid = g;
+                     b->error = err;
+                     { std::lock_guard<std::mutex> lk(impl->bundleMutex); impl->auroraB = b; }
++                    // M-prov-matrix: fila aurora Ovation.
++                    provstatus::Snapshot sa;
++                    sa.id = provstatus::PROV_AURORA;
++                    sa.hasData = g.valid;
++                    sa.dataEpoch = g.valid ? g.timestamp : 0.0;
++                    if (g.valid) {
++                        char sab[32];
++                        std::snprintf(sab, sizeof(sab), "%dx%d", g.width, g.height);
++                        sa.data = sab;
++                    }
++                    sa.error = err;
++                    { std::lock_guard<std::mutex> lk(impl->bundleMutex); impl->provBoard[provstatus::PROV_AURORA] = sa; }
+                 }
+             }
+             noteDone();
+@@ -2680,6 +2756,14 @@ void App::fetchWorker() {
+                     b->usedGiro = rp.usedGiroReal();
+                     b->error = rp.getErrorMessage();
+                     { std::lock_guard<std::mutex> lk(impl->bundleMutex); impl->radio = b; }
++                    // M-prov-matrix: fila Kp/HF.
++                    provstatus::Snapshot sr;
++                    sr.id = provstatus::PROV_KPHF;
++                    sr.hasData = b->latest.valid;
++                    sr.dataEpoch = b->latest.timeUtc;
++                    sr.data = b->usedGiro ? "GIRO real" : "model";
++                    sr.error = b->error;
++                    { std::lock_guard<std::mutex> lk(impl->bundleMutex); impl->provBoard[provstatus::PROV_KPHF] = sr; }
+                 }
+             }
+             noteDone();
+@@ -2691,6 +2775,14 @@ void App::fetchWorker() {
+                     auto b = std::make_shared<Impl::XrayBundle>();
+                     b->latest = xr.getLatest();
+                     { std::lock_guard<std::mutex> lk(impl->bundleMutex); impl->xray = b; }
++                    // M-prov-matrix: fila GOES X-ray.
++                    provstatus::Snapshot sx;
++                    sx.id = provstatus::PROV_XRAY;
++                    sx.hasData = b->latest.valid;
++                    sx.dataEpoch = b->latest.timeUtc;
++                    sx.data = "GOES";
++                    sx.error = xr.getErrorMessage();
++                    { std::lock_guard<std::mutex> lk(impl->bundleMutex); impl->provBoard[provstatus::PROV_XRAY] = sx; }
+                     haveXray = true;
+                 }
+             }
+@@ -3478,6 +3570,89 @@ void App::render() {
+         ImGui::TextWrapped("Access policy: polite cadence and mirrors lower the risk; they don't remove it - we have measured 429/504 under load, which is why the kc2g failover exists.");
+         ImGui::TextWrapped("IRTAM/GAMBIT (UML): retrospective IRTAM coefficients via LGDC gambit-coeffs (same GIRO citation above; 1 req/15 s per client, last 3 days unavailable by design).");
+     }
++    // M-prov-matrix (048): seccion viva dentro de Data sources (thin glue).
++    if (ImGui::CollapsingHeader("Provider status (live)")) {
++        static double lastProvGate = -1.0;
++        const double nowUtcPS = (double)std::time(nullptr);
++        if (lastProvGate < 0.0 || nowUtcPS - lastProvGate >= 1.0) {
++            lastProvGate = nowUtcPS;
++            // 4 filas main-thread (accessors ya thread-safe) + copia.
++            GiroAdapter::GiroNetStatus gs = impl->giro.getNetStatus();
++            const int mode = impl->ionSourceMode.load();
++            provstatus::Snapshot s0;
++            s0.id = provstatus::PROV_GIRO;
++            s0.hasData = gs.withData > 0;
++            double latestT = 0.0;
++            for (const auto& sm : impl->giro.getSamples())
++                if (sm.valid && sm.timeUtc > latestT) latestT = sm.timeUtc;
++            s0.dataEpoch = latestT;
++            s0.fetching = impl->giro.isFetching();
++            s0.rateLimited = (mode == Impl::SRC_KC2G_FALLBACK) ||
++                             provstatus::hard429(gs.roundAttempts, gs.roundOk);
++            s0.retryInMin = gs.retryInMin;
++            s0.data = std::to_string(gs.withData) + "/" + std::to_string(gs.polled) + " st";
++            if (gs.histHours > 0.0) {
++                const int th = (int)(gs.histHours * 10.0);
++                char hb[32];
++                std::snprintf(hb, sizeof(hb), "%d.%d h", th / 10, th % 10);
++                s0.data += " · hist ";
++                s0.data += hb;
++            }
++            s0.error = gs.degraded > 0 ? ("backoff " + std::to_string(gs.degraded) + " st") : "";
++            Kc2gAdapter::Kc2gStatus ks = impl->kc2g.getStatus();
++            provstatus::Snapshot s1;
++            s1.id = provstatus::PROV_KC2G;
++            s1.hasData = ks.rows > 0;
++            s1.dataEpoch = ks.lastOkUtc;
++            s1.fetching = impl->kc2g.isFetching();
++            s1.data = std::to_string(ks.rows) + " rows";
++            const int nDias = impl->dias.getStationCount();
++            provstatus::Snapshot s2;
++            s2.id = provstatus::PROV_DIAS;
++            s2.hasData = nDias > 0;
++            s2.fetching = impl->dias.isFetching();
++            s2.data = std::to_string(nDias) + " st";
++            s2.error = impl->dias.getErrorMessage();
++            const EbroSample ebLatest = impl->ebro.getLatest();
++            provstatus::Snapshot s3;
++            s3.id = provstatus::PROV_EBRO;
++            s3.hasData = ebLatest.valid;
++            s3.dataEpoch = ebLatest.timeUtc;
++            s3.fetching = impl->ebro.isFetching();
++            s3.error = impl->ebro.getErrorMessage();
++            {
++                std::lock_guard<std::mutex> lk(impl->bundleMutex);
++                impl->provBoard[provstatus::PROV_GIRO] = s0;
++                impl->provBoard[provstatus::PROV_KC2G] = s1;
++                impl->provBoard[provstatus::PROV_DIAS] = s2;
++                impl->provBoard[provstatus::PROV_EBRO] = s3;
++                for (int i = 0; i < (int)provstatus::PROV_COUNT; i++)
++                    impl->provCopy[i] = impl->provBoard[i];
++            }
++        }
++        std::vector<provstatus::Row> prows = provstatus::buildRows(
++            impl->provCopy, (size_t)provstatus::PROV_COUNT, nowUtcPS);
++        if (ImGui::BeginTable("provstatus", 4,
++                              ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg)) {
++            ImGui::TableSetupColumn("Provider");
++            ImGui::TableSetupColumn("State");
++            ImGui::TableSetupColumn("Data");
++            ImGui::TableSetupColumn("Reason");
++            ImGui::TableHeadersRow();
++            for (size_t i = 0; i < prows.size(); i++) {
++                ImGui::TableNextRow();
++                ImGui::TableSetColumnIndex(0);
++                ImGui::TextUnformatted(prows[i].provider.c_str());
++                ImGui::TableSetColumnIndex(1);
++                ImGui::TextUnformatted(prows[i].stateText.c_str());
++                ImGui::TableSetColumnIndex(2);
++                ImGui::TextUnformatted(prows[i].data.c_str());
++                ImGui::TableSetColumnIndex(3);
++                ImGui::TextUnformatted(prows[i].reason.c_str());
++            }
++            ImGui::EndTable();
++        }
++    }
+     ImGui::End();
+ 
+     // Layer panel
+@@ -4777,7 +4952,12 @@ void App::render() {
+                                           "with cadence — 72 h is the nominal "
+                                           "download window; frames older "
+                                           "than T-72 h are inherited from "
+-                                          "disk, not downloaded.");
++                                          "disk, not downloaded. Titles "
++                                          "report data availability at the "
++                                          "cursor; HF route numbers (MUF/FOT/"
++                                          "LUF) are interpolated usability "
++                                          "(IDW + median floor + edge clamp), "
++                                          "so their edges may not match.");
+             } else {
+                 const irtamstate::ReplayZone rz = irtamstate::zoneForAge(
+                     nowUtcR - impl->replayEpoch);
+diff --git a/src/Data/ProviderStatus.cpp b/src/Data/ProviderStatus.cpp
+new file mode 100644
+index 0000000..c49ef29
+--- /dev/null
++++ b/src/Data/ProviderStatus.cpp
+@@ -0,0 +1,134 @@
++#include "Data/ProviderStatus.h"
++
++#include <cstdio>
++
++namespace provstatus {
++
++namespace {
++
++const char* kLabels[PROV_COUNT] = {
++    "GIRO", "kc2g", "IRTAM", "GloTEC", "Indices", "Solar wind", "Aurora",
++    "Kp/HF", "X-ray", "SDO", "DIAS", "Ebro", "ESA", "NOAA",
++};
++
++bool startsWithGate(const std::string& e) {
++    return e.size() >= 5 && e.compare(0, 5, "gate:") == 0;
++}
++
++std::string ageCompact(double ageSec) {
++    if (ageSec < 0.0) ageSec = 0.0;
++    char b[32];
++    if (ageSec < 120.0) {
++        std::snprintf(b, sizeof(b), "%ds", (int)ageSec);
++    } else if (ageSec < 7200.0) {
++        std::snprintf(b, sizeof(b), "%d min", (int)(ageSec / 60.0));
++    } else if (ageSec < 172800.0) {
++        const int t = (int)(ageSec / 360.0);  // decimas de hora (ints: sin %f)
++        std::snprintf(b, sizeof(b), "%d.%d h", t / 10, t % 10);
++    } else {
++        std::snprintf(b, sizeof(b), "%d d", (int)(ageSec / 86400.0));
++    }
++    return std::string(b);
++}
++
++}  // namespace
++
++const char* providerLabel(ProviderId id) {
++    const int i = (int)id;
++    if (i < 0 || i >= (int)PROV_COUNT) return "?";
++    return kLabels[i];
++}
++
++const double kStaleSec[PROV_COUNT] = {
++    900.0,    // GIRO: cadencia ~5-15 min
++    21600.0,  // kc2g: gridUsable 6 h
++    270000.0,  // IRTAM: lag 72 h estructural + margen (73 h ok, 76 h stale)
++    1200.0,   // TEC: cadencia 10 min
++    7200.0,   // indices
++    1800.0,   // viento
++    7200.0,   // aurora
++    1800.0,   // Kp-HF
++    1800.0,   // X-ray
++    1800.0,   // SDO: 15 min
++    7200.0,   // DIAS
++    7200.0,   // Ebro
++    0.0,      // ESA: n/a (mock/off por diseno)
++    0.0,      // NOAA stub: n/a (off permanente)
++};
++
++bool hard429(int roundAttempts, int roundOk) {
++    return roundAttempts >= 3 && roundOk == 0;
++}
++
++State classify(const Snapshot& s, double nowUtc) {
++    (void)nowUtc;
++    if (s.id == PROV_NOAA_STUB) return State::Off;
++    if (!s.hasData) {
++        if (s.error.empty()) return State::Off;
++        return State::Failed;
++    }
++    if (s.rateLimited) return State::RateLimited;
++    if (s.retryInMin > 0.0 || startsWithGate(s.error)) return State::Degraded;
++    const double ks = (s.id >= 0 && (int)s.id < (int)PROV_COUNT)
++                          ? kStaleSec[(int)s.id]
++                          : 0.0;
++    if (ks > 0.0 && s.dataEpoch > 0.0 && (nowUtc - s.dataEpoch) > ks)
++        return State::Stale;
++    return State::Ok;
++}
++
++std::string stateText(State st, const Snapshot& s) {
++    const char* w = "ok";
++    switch (st) {
++        case State::Off: w = "off"; break;
++        case State::Failed: w = "failed"; break;
++        case State::RateLimited: w = "rate-limited"; break;
++        case State::Degraded: w = "degraded"; break;
++        case State::Stale: w = "stale"; break;
++        case State::Ok: w = "ok"; break;
++    }
++    std::string t(w);
++    if (s.fetching) t += " (fetching)";
++    return t;
++}
++
++std::vector<Row> buildRows(const Snapshot* snaps, size_t n,
++                           double nowUtc) {
++    std::vector<Row> rows;
++    rows.reserve((size_t)PROV_COUNT);
++    for (int i = 0; i < (int)PROV_COUNT; i++) {
++        const Snapshot* f = nullptr;
++        for (size_t k = 0; k < n; k++) {
++            if (snaps[k].id == (ProviderId)i) {
++                f = &snaps[k];
++                break;
++            }
++        }
++        Row r;
++        r.id = (ProviderId)i;
++        r.provider = providerLabel(r.id);
++        if (f == nullptr) {
++            r.state = State::Off;
++            r.stateText = stateText(r.state, Snapshot());
++            rows.push_back(r);
++            continue;
++        }
++        r.state = classify(*f, nowUtc);
++        r.stateText = stateText(r.state, *f);
++        r.data = f->data;
++        if (f->hasData && f->dataEpoch > 0.0)
++            r.data += " · " + ageCompact(nowUtc - f->dataEpoch);
++        if (!f->error.empty())
++            r.reason = f->error;
++        else if (f->retryInMin > 0.0) {
++            char b[32];
++            std::snprintf(b, sizeof(b), "retry %d min",
++                          (int)(f->retryInMin + 0.5));
++            r.reason = b;
++        }
++        rows.push_back(r);
++    }
++    return rows;
++}
++
++}  // namespace provstatus
+diff --git a/src/Data/ProviderStatus.h b/src/Data/ProviderStatus.h
+new file mode 100644
+index 0000000..6fefb54
+--- /dev/null
++++ b/src/Data/ProviderStatus.h
+@@ -0,0 +1,71 @@
++// M-prov-matrix (048): estado por proveedor, MODULO PURO (sin curl/GL/ImGui).
++//
++// Contrato: una fila por proveedor con UN estado (precedencia
++// off > failed > rate-limited > degraded > stale > ok). "rate-limited" es
++// SOLO-declarado: la app ya lo dice en otro sitio (badge GIRO/fallback,
++// detector 429-duro) y la matriz lo repite, jamas lo inventa. El gate LGDC
++// (cortesia propia, no 429 del servidor) es degraded, no rate-limited.
++// Llama a PRODUCCION (provstatus), no replica.
++#pragma once
++
++#include <cstddef>
++#include <string>
++#include <vector>
++
++namespace provstatus {
++
++enum class State { Off, Failed, RateLimited, Degraded, Stale, Ok };
++
++enum ProviderId {
++    PROV_GIRO = 0,
++    PROV_KC2G,
++    PROV_IRTAM,
++    PROV_TEC,
++    PROV_INDICES,
++    PROV_WIND,
++    PROV_AURORA,
++    PROV_KPHF,
++    PROV_XRAY,
++    PROV_SDO,
++    PROV_DIAS,
++    PROV_EBRO,
++    PROV_ESA,
++    PROV_NOAA_STUB,
++    PROV_COUNT
++};
++
++struct Snapshot {
++    ProviderId id = PROV_NOAA_STUB;
++    bool hasData = false;
++    double dataEpoch = 0.0;
++    bool fetching = false;
++    bool rateLimited = false;
++    double retryInMin = 0.0;
++    std::string data;
++    std::string error;
++};
++
++struct Row {
++    ProviderId id = PROV_NOAA_STUB;
++    State state = State::Off;
++    std::string provider;
++    std::string stateText;
++    std::string data;
++    std::string reason;
++};
++
++const char* providerLabel(ProviderId id);
++
++// Umbrales stale = 2x cadencia nominal (fijo, testeado). IRTAM: lag 72 h
++// estructural + margen (73 h ok, 76 h stale); ESA/NOAA 0 = n/a.
++extern const double kStaleSec[PROV_COUNT];
++
++// Detector 429-duro (rondas con 0 ok): el escritor lo evalua y pone
++// Snapshot::rateLimited; aqui vive la regla pura y testeable.
++bool hard429(int roundAttempts, int roundOk);
++
++State classify(const Snapshot& s, double nowUtc);
++std::string stateText(State st, const Snapshot& s);
++std::vector<Row> buildRows(const Snapshot* snaps, size_t n, double nowUtc);
++
++}  // namespace provstatus
+diff --git a/tests/test_provider_status.cpp b/tests/test_provider_status.cpp
+new file mode 100644
+index 0000000..231b028
+--- /dev/null
++++ b/tests/test_provider_status.cpp
+@@ -0,0 +1,161 @@
++// =============================================================================
++// test_provider_status — matriz de estado por proveedor (048 prov-matrix).
++//
++// Puro, sin red, sin GL. Llama a PRODUCCION (provstatus), no replica.
++// Cubre: off/failed/rate-limited/degraded/stale/ok, precedencia, (fetching),
++// kStaleSec incl. lag IRTAM 72 h, edad andante, determinismo, board vacio,
++// labels unicos.
++// =============================================================================
++#include "Data/ProviderStatus.h"
++
++#include <cstdio>
++#include <string>
++
++static int g_ok = 0, g_fail = 0;
++static void check_bool(const char* what, bool cond) {
++    if (cond)
++        ++g_ok;
++    else
++        ++g_fail;
++    std::printf("[%s] %s\n", cond ? "OK" : "FAIL", what);
++}
++
++int main() {
++    using namespace provstatus;
++    const double now = 1789500000.0;
++
++    std::printf("--- prov-matrix: clasificacion ---\n");
++    {
++        // (1) off stub NOAA (siempre, con y sin datos).
++        Snapshot s;
++        s.id = PROV_NOAA_STUB;
++        s.hasData = true;
++        check_bool("1: stub NOAA -> off",
++                   classify(s, now) == State::Off);
++        // (2) failed: sin datos + error.
++        Snapshot f;
++        f.id = PROV_TEC;
++        f.error = "HTTP 500";
++        check_bool("2: sin datos + error -> failed",
++                   classify(f, now) == State::Failed);
++        // (3) rate-limited: fallback GIRO declarado.
++        Snapshot r;
++        r.id = PROV_GIRO;
++        r.hasData = true;
++        r.rateLimited = true;
++        check_bool("3: fallback -> rate-limited",
++                   classify(r, now) == State::RateLimited);
++        // (4) 429-duro: detector puro + clasificacion.
++        check_bool("4: hard429(3,0) true, hard429(2,0)/hard429(5,2) false",
++                   hard429(3, 0) && !hard429(2, 0) && !hard429(5, 2));
++        Snapshot h;
++        h.id = PROV_GIRO;
++        h.hasData = true;
++        h.rateLimited = hard429(4, 0);
++        h.error = "round 0/5 (429)";
++        check_bool("4b: 429-duro -> rate-limited",
++                   classify(h, now) == State::RateLimited);
++        // (5) degraded con retry.
++        Snapshot d;
++        d.id = PROV_GIRO;
++        d.hasData = true;
++        d.retryInMin = 5.0;
++        check_bool("5: retry 5 -> degraded",
++                   classify(d, now) == State::Degraded);
++        // (6) IRTAM gate-wait = degraded, NO rate-limited.
++        Snapshot g;
++        g.id = PROV_IRTAM;
++        g.hasData = true;
++        g.error = "gate: 15 s (courtesy)";
++        check_bool("6: gate: -> degraded",
++                   classify(g, now) == State::Degraded);
++        check_bool("6b: gate: no es rate-limited",
++                   classify(g, now) != State::RateLimited);
++        // (7) stale por kStaleSec.
++        Snapshot st;
++        st.id = PROV_TEC;
++        st.hasData = true;
++        st.dataEpoch = now - 1300.0;
++        check_bool("7: TEC 1300 s > 1200 -> stale",
++                   classify(st, now) == State::Stale);
++        // (8) lag IRTAM 72 h NO stale (73 h dentro del margen), 76 h SI.
++        Snapshot i1;
++        i1.id = PROV_IRTAM;
++        i1.hasData = true;
++        i1.dataEpoch = now - 73.0 * 3600.0;
++        check_bool("8: IRTAM 73 h no stale",
++                   classify(i1, now) != State::Stale);
++        Snapshot i2;
++        i2.id = PROV_IRTAM;
++        i2.hasData = true;
++        i2.dataEpoch = now - 76.0 * 3600.0;
++        check_bool("8b: IRTAM 76 h stale",
++                   classify(i2, now) == State::Stale);
++        // (9) ok con edad andante.
++        Snapshot o;
++        o.id = PROV_WIND;
++        o.hasData = true;
++        o.dataEpoch = now - 60.0;
++        o.data = "live";
++        check_bool("9: fresco -> ok", classify(o, now) == State::Ok);
++        
++        std::string d1 = buildRows(&o, 1, now)[(int)PROV_WIND].data;
++        std::string d2 =
++            buildRows(&o, 1, now + 3600.0)[(int)PROV_WIND].data;
++        check_bool("9b: edad andante (difiere en 1 h)", d1 != d2);
++        // (10) sufijo (fetching) ortogonal.
++        Snapshot fe;
++        fe.id = PROV_DIAS;
++        fe.hasData = true;
++        fe.dataEpoch = now - 10.0;
++        fe.fetching = true;
++        check_bool(
++            "10: fetching en stateText",
++            stateText(classify(fe, now), fe).find("(fetching)") !=
++                std::string::npos);
++        // (11) precedencia off>failed>rate-limited>degraded>stale>ok.
++        Snapshot p1;
++        p1.id = PROV_NOAA_STUB;
++        p1.error = "x";
++        p1.rateLimited = true;
++        check_bool("11: stub manda sobre failed/rate-limited",
++                   classify(p1, now) == State::Off);
++        Snapshot p2;
++        p2.id = PROV_SDO;
++        p2.rateLimited = true;
++        p2.retryInMin = 3.0;
++        p2.hasData = true;
++        p2.dataEpoch = now - 100000.0;
++        check_bool("11b: rate-limited manda sobre degraded/stale",
++                   classify(p2, now) == State::RateLimited);
++        // (12) determinismo x2.
++        Snapshot dx;
++        dx.id = PROV_AURORA;
++        dx.hasData = true;
++        dx.dataEpoch = now - 100.0;
++        
++        check_bool(
++            "12: buildRows determinista",
++            buildRows(&dx, 1, now)[(int)PROV_AURORA].stateText ==
++                buildRows(&dx, 1, now)[(int)PROV_AURORA].stateText);
++        // (13) board vacio -> 14 filas off.
++        std::vector<Row> e = buildRows(nullptr, 0, now);
++        bool allOff = e.size() == (size_t)PROV_COUNT;
++        for (const Row& r : e)
++            if (r.state != State::Off) allOff = false;
++        check_bool("13: vacio -> 14 off", allOff);
++        // (14) labels 14 unicos no vacios.
++        bool uniq = true;
++        for (int i = 0; i < (int)PROV_COUNT; i++) {
++            const char* l = providerLabel((ProviderId)i);
++            if (l == nullptr || l[0] == '\0') uniq = false;
++            for (int j = i + 1; j < (int)PROV_COUNT; j++)
++                if (std::string(l) == providerLabel((ProviderId)j))
++                    uniq = false;
++        }
++        check_bool("14: 14 labels unicos", uniq);
++    }
++
++    std::printf("[test_provider_status] %d OK, %d FAIL\n", g_ok, g_fail);
++    return g_fail == 0 ? 0 : 1;
++}
+-- 
+2.53.0.windows.3
+
