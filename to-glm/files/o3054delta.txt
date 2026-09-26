@@ -1,0 +1,193 @@
+From 96d5c20217f85690c06f051f21fd623dd57cc89d Mon Sep 17 00:00:00 2001
+From: David Lopez Salvador <davidlopezsalvador@users.noreply.github.com>
+Date: Sat, 26 Sep 2026 14:53:31 +0200
+Subject: [PATCH] O3 054: staleSuffix con magnitud + ev gitignore
+
+---
+ .gitignore                 |  3 +++
+ src/App.cpp                |  7 +++---
+ src/Data/IrtamState.cpp    | 31 ++++++++++++++++++++++++
+ src/Data/IrtamState.h      | 10 ++++++++
+ tests/test_irtam_state.cpp | 48 ++++++++++++++++++++++++++++++++++++++
+ 5 files changed, 96 insertions(+), 3 deletions(-)
+
+diff --git a/.gitignore b/.gitignore
+index af0ecd9..c337d2f 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -51,3 +51,6 @@ imgui.ini
+ /cache/
+ /data/
+ /settings.cfg
++# Logs de evidencia de sesiones (leccion 040): artefactos locales con timestamp.
++/ev*.log
++/ev*.png
+diff --git a/src/App.cpp b/src/App.cpp
+index 444e3d6..13094fd 100644
+--- a/src/App.cpp
++++ b/src/App.cpp
+@@ -4976,15 +4976,16 @@ void App::render() {
+                 if (ldt.dataEpoch > 0.0) {
+                     if (ldt.stale) {
+                         ImGui::TextDisabled(
+-                            "DATA %s (stale)",
+-                            irtamstate::formatTovShort(ldt.dataEpoch).c_str());
++                            "DATA %s%s",
++                            irtamstate::formatTovShort(ldt.dataEpoch).c_str(),
++                            irtamstate::staleSuffix(ldt, busy && impl->mapVariable >= 8 && impl->mapVariable <= 11).c_str());
+                     } else {
+                         ImGui::Text(
+                             "DATA %s",
+                             irtamstate::formatTovShort(ldt.dataEpoch).c_str());
+                     }
+                     if (ImGui::IsItemHovered())
+-                        ImGui::SetItemTooltip("Hora-dato real de la capa activa (stale = clampeada al borde de su historia o worker en curso).");
++                        ImGui::SetItemTooltip("Hora-dato real de la capa activa (stale = clampeada al borde de su historia o worker en curso). Muestra la distancia del cursor al dato; el aviso worker solo aplica a capas IRTAM.");
+                 } else {
+                     ImGui::TextDisabled("DATA sin dato en capa");
+                 }
+diff --git a/src/Data/IrtamState.cpp b/src/Data/IrtamState.cpp
+index a61b7f2..e5160f7 100644
+--- a/src/Data/IrtamState.cpp
++++ b/src/Data/IrtamState.cpp
+@@ -160,12 +160,14 @@ LayerDataTime clampToRange(double epoch, double oldest, double newest) {
+         r.dataEpoch = oldest;
+         r.stale = epoch < oldest;
+         r.clamped = epoch < oldest;
++        r.gapSec = 0.0;  // dato por delante del cursor: sin retraso
+         return r;
+     }
+     if (epoch >= newest) {
+         r.dataEpoch = newest;
+         r.stale = epoch > newest;
+         r.clamped = epoch > newest;
++        r.gapSec = r.stale ? (epoch - newest) : 0.0;
+         return r;
+     }
+     r.dataEpoch = epoch;
+@@ -174,6 +176,35 @@ LayerDataTime clampToRange(double epoch, double oldest, double newest) {
+ 
+ }  // namespace
+ 
++std::string staleGapText(double gapSec) {
++    if (gapSec <= 0.0) return "";
++    if (gapSec > 8640000.0) gapSec = 8640000.0;  // tope 100 d (anti-UB del cast)
++    if (gapSec >= 3600.0) {
++        const int t = (int)(gapSec / 360.0);  // decimas de hora (ints: sin %f)
++        char b[32];
++        std::snprintf(b, sizeof(b), "+%d.%d h", t / 10, t % 10);
++        return std::string(b);
++    }
++    int minutes = (int)(gapSec / 60.0);
++    if (minutes < 1) minutes = 1;
++    char b[32];
++    std::snprintf(b, sizeof(b), "+%d min", minutes);
++    return std::string(b);
++}
++
++std::string staleSuffix(const LayerDataTime& ldt, bool samplerBusy) {
++    if (!ldt.stale) return "";
++    std::string s = "(stale";
++    const std::string g = staleGapText(ldt.gapSec);
++    if (!g.empty()) {
++        s += ", ";
++        s += g;
++    }
++    if (samplerBusy) s += ", worker";
++    s += ")";
++    return s;
++}
++
+ LayerDataTime layerDataTime(int mapVariable, double replayEpoch, double nowUtc,
+                             const LayerRanges& r, bool samplerBusy) {
+     if (mapVariable >= 8 && mapVariable <= 11) {
+diff --git a/src/Data/IrtamState.h b/src/Data/IrtamState.h
+index 900c025..f90c382 100644
+--- a/src/Data/IrtamState.h
++++ b/src/Data/IrtamState.h
+@@ -82,6 +82,7 @@ struct LayerDataTime {
+     double dataEpoch = -1.0;  // hora-dato de la capa (<0 = sin dato)
+     bool stale = false;       // clampeada o worker ocupado (ver nota)
+     bool clamped = false;
++    double gapSec = 0.0;  // cursor - dataEpoch cuando stale (>=0; 0 si fresco)
+ };
+ // samplerBusy = worker IRTAM con peticion en curso (O2 del veredicto 024:
+ // el flag solo-escritura ahora se lee): en IRTAM, ocupado => stale (la
+@@ -89,6 +90,15 @@ struct LayerDataTime {
+ LayerDataTime layerDataTime(int mapVariable, double replayEpoch, double nowUtc,
+                             const LayerRanges& r, bool samplerBusy);
+ 
++// M-O3-053 (badge con magnitud): sufijo stale con la distancia cursor-dato.
++// staleGapText: gap>=3600 -> "+%.1f h"; 0<gap<3600 -> "+N min" (minimo 1,
++// sin wart 3599/3600); gap<=0 -> "". Separador coma (ASCII). Puro.
++std::string staleGapText(double gapSec);
++// staleSuffix: "" en fresco; "(stale)" / "(stale, +X)" / "(stale, worker)" /
++// "(stale, +X, worker)". El worker lo pasa el llamador ya acotado a capas
++// 8-11 (TEC/GIRO lo ignoran). Puro.
++std::string staleSuffix(const LayerDataTime& ldt, bool samplerBusy);
++
+ // M-irtam-replay-038 (ruling coherencia Zone/DATA, familia 022): conjunto de
+ // fuentes con dato REAL en el epoch del cursor (no la familia activa).
+ // Orden canonico TEC+GIRO+IRTAM, prefijo "solo-" en singleton. TEC/GIRO por
+diff --git a/tests/test_irtam_state.cpp b/tests/test_irtam_state.cpp
+index 8b9582d..1994371 100644
+--- a/tests/test_irtam_state.cpp
++++ b/tests/test_irtam_state.cpp
+@@ -312,6 +312,54 @@ int main() {
+                    !layerLoopRange(99, now, r).valid);
+     }
+ 
++    std::printf("--- M-O3-053: magnitud del retraso (staleSuffix) ---\n");
++    {
++        LayerDataTime fresh;
++        fresh.dataEpoch = 1789500000.0;
++        check_bool("1: fresco -> vacio",
++                   staleSuffix(fresh, false).empty());
++        LayerDataTime s0;
++        s0.dataEpoch = 1789500000.0;
++        s0.stale = true;
++        check_bool("2: stale sin gap -> (stale)",
++                   staleSuffix(s0, false) == "(stale)");
++        LayerDataTime s8;
++        s8.dataEpoch = 1789500000.0 - 8.0 * 3600.0;
++        s8.stale = true;
++        s8.gapSec = 8.0 * 3600.0;
++        check_bool("3: stale +8h",
++                   staleSuffix(s8, false) == "(stale, +8.0 h)");
++        LayerDataTime s90;
++        s90.dataEpoch = 1789500000.0 - 90.0 * 60.0;
++        s90.stale = true;
++        s90.gapSec = 90.0 * 60.0;
++        check_bool("4: stale 90 min -> +1.5 h (escala >=3600)",
++                   staleSuffix(s90, false) == "(stale, +1.5 h)");
++        LayerDataTime s45;
++        s45.dataEpoch = 1789500000.0 - 45.0 * 60.0;
++        s45.stale = true;
++        s45.gapSec = 45.0 * 60.0;
++        check_bool("4b: stale 45 min -> +45 min",
++                   staleSuffix(s45, false) == "(stale, +45 min)");
++        check_bool("5: stale + worker sin gap",
++                   staleSuffix(s0, true) == "(stale, worker)");
++        check_bool("6: stale 90 min + worker -> +1.5 h",
++                   staleSuffix(s90, true) == "(stale, +1.5 h, worker)");
++        check_bool("7: borde 3599 s -> +59 min",
++                   staleGapText(3599.0) == "+59 min");
++        check_bool("8: borde 3600 s -> +1.0 h",
++                   staleGapText(3600.0) == "+1.0 h");
++        check_bool("9: gap 0 -> vacio", staleGapText(0.0).empty());
++        LayerRanges rg;
++        rg.tecOldest = 1000.0;
++        rg.tecNewest = 2000.0;
++        LayerDataTime e2e = layerDataTime(0, 2000.0 + 8.0 * 3600.0, 99999.0,
++                                          rg, false);
++        check_bool("10: end-to-end TEC mas alla del borde -> gap 8h",
++                   e2e.stale && e2e.gapSec == 8.0 * 3600.0 &&
++                       staleSuffix(e2e, false) == "(stale, +8.0 h)");
++    }
++
+     std::printf("\n[test_irtam_state] %d OK, %d FAIL\n", g_ok, g_fail);
+     return g_fail == 0 ? 0 : 1;
+ }
+-- 
+2.53.0.windows.3
+
