@@ -1,0 +1,26 @@
+[LGDC 2026-09-26T17:23:24.225Z] sondeo Q2 start: 12 req foF2, depths {5,7,14,21,30,60}d x 2 TOVs, 1req/15s
+[LGDC 2026-09-26T17:23:24.226Z] launch gambit-fof2 depth=5d TOV=2026.09.21T17:15
+[LGDC 2026-09-26T17:23:25.511Z] result FAIL gambit-fof2 depth=5d TOV=2026.09.21T17:15 http=500 err=
+[LGDC 2026-09-26T17:23:39.356Z] launch gambit-fof2 depth=5d TOV=2026.09.21T17:00
+[LGDC 2026-09-26T17:23:39.957Z] result FAIL gambit-fof2 depth=5d TOV=2026.09.21T17:00 http=500 err=
+[LGDC 2026-09-26T17:23:54.407Z] launch gambit-fof2 depth=7d TOV=2026.09.19T17:15
+[LGDC 2026-09-26T17:23:55.339Z] result FAIL gambit-fof2 depth=7d TOV=2026.09.19T17:15 http=500 err=
+[LGDC 2026-09-26T17:24:09.382Z] launch gambit-fof2 depth=7d TOV=2026.09.19T17:00
+[LGDC 2026-09-26T17:24:10.059Z] result FAIL gambit-fof2 depth=7d TOV=2026.09.19T17:00 http=500 err=
+[LGDC 2026-09-26T17:24:24.314Z] launch gambit-fof2 depth=14d TOV=2026.09.12T17:15
+[LGDC 2026-09-26T17:24:25.188Z] result FAIL gambit-fof2 depth=14d TOV=2026.09.12T17:15 http=500 err=
+[LGDC 2026-09-26T17:24:39.231Z] launch gambit-fof2 depth=14d TOV=2026.09.12T17:00
+[LGDC 2026-09-26T17:24:39.971Z] result FAIL gambit-fof2 depth=14d TOV=2026.09.12T17:00 http=500 err=
+[LGDC 2026-09-26T17:24:54.426Z] launch gambit-fof2 depth=21d TOV=2026.09.05T17:15
+[LGDC 2026-09-26T17:24:55.196Z] result FAIL gambit-fof2 depth=21d TOV=2026.09.05T17:15 http=500 err=
+[LGDC 2026-09-26T17:25:09.236Z] launch gambit-fof2 depth=21d TOV=2026.09.05T17:00
+[LGDC 2026-09-26T17:25:09.840Z] result FAIL gambit-fof2 depth=21d TOV=2026.09.05T17:00 http=500 err=
+[LGDC 2026-09-26T17:25:24.287Z] launch gambit-fof2 depth=30d TOV=2026.08.27T17:15
+[LGDC 2026-09-26T17:25:25.061Z] result FAIL gambit-fof2 depth=30d TOV=2026.08.27T17:15 http=500 err=
+[LGDC 2026-09-26T17:25:39.307Z] launch gambit-fof2 depth=30d TOV=2026.08.27T17:00
+[LGDC 2026-09-26T17:25:39.970Z] result FAIL gambit-fof2 depth=30d TOV=2026.08.27T17:00 http=500 err=
+[LGDC 2026-09-26T17:25:54.412Z] launch gambit-fof2 depth=60d TOV=2026.07.28T17:15
+[LGDC 2026-09-26T17:25:55.019Z] result FAIL gambit-fof2 depth=60d TOV=2026.07.28T17:15 http=500 err=
+[LGDC 2026-09-26T17:26:09.260Z] launch gambit-fof2 depth=60d TOV=2026.07.28T17:00
+[LGDC 2026-09-26T17:26:09.825Z] result FAIL gambit-fof2 depth=60d TOV=2026.07.28T17:00 http=500 err=
+[LGDC 2026-09-26T17:26:09.826Z] sondeo Q2 done
