@@ -1,0 +1,359 @@
+From 4047a5fdbab0c247538c7fbb5ee917b50adafb54 Mon Sep 17 00:00:00 2001
+From: David Lopez Salvador <davidlopezsalvador@users.noreply.github.com>
+Date: Sun, 27 Sep 2026 04:36:11 +0200
+Subject: [PATCH] Opcion B FASE 2: ventana IRTAM 96h->168h atomica
+
+---
+ src/App.cpp                  | 37 +++++++++++++++++++-----------------
+ src/Data/IrtamCoeffAdapter.h |  2 +-
+ src/Data/IrtamCoeffCache.h   |  4 ++--
+ src/Data/IrtamState.cpp      | 10 +++++-----
+ src/Data/IrtamState.h        | 21 ++++++++++----------
+ tests/test_irtam_adapter.cpp | 20 +++++++++----------
+ tests/test_irtam_state.cpp   | 10 +++++++---
+ tests/test_irtamc_cache.cpp  |  8 ++++----
+ 8 files changed, 60 insertions(+), 52 deletions(-)
+
+diff --git a/src/App.cpp b/src/App.cpp
+index 13094fd..7a99a62 100644
+--- a/src/App.cpp
++++ b/src/App.cpp
+@@ -261,12 +261,14 @@ struct App::Impl {
+     bool replayPlaying = false;
+     float replaySpeed = 2.0f;    // frames por segundo
+     int preReplayVar = 0;
+-    // M-irtam-replay-A (ruling R1): cursor primario = epoch continuo sobre
+-    // la ventana de union (96 h IRTAM + 72 h TEC). replayPos se deriva del
+-    // epoch para el lerp TEC interno (inversion mecanica).
++    // M-irtam-replay-A (ruling R1) + Opcion B: cursor primario = epoch
++    // continuo sobre la ventana de union (168 h IRTAM + 72 h TEC).
++    // replayPos se deriva del epoch para el lerp TEC interno (inversion
++    // mecanica).
+     double replayEpoch = -1.0;   // epoch continuo UTC (s)
+-    // M-irtam-replay-031 (ruling toggle): bucle por capa (false = union
+-    // 96 h, defecto R2-023). NO se persiste en settings (lección partición).
++    // M-irtam-replay-031 (ruling toggle) + Opcion B: bucle por capa
++    // (false = union 168 h, defecto R2-023). NO se persiste en settings
++    // (lección partición).
+     bool replayLayerLoop = false;
+     // Muestra IRTAM = BRACKET entregado por el worker (M-irtam-replay-028):
+     // endpoints para lerp en render por cursor; pairKind 0 = F/H, 1 = B0B1.
+@@ -1892,7 +1894,7 @@ void App::update(float dt) {
+     // En replay, puntos, grids derivados (foF2/MUF/hmF2/NmF2/LUF/FOT/Spread-F)
+     // y panel de estacion siguen al tiempo de replay, no al directo.
+     // M-irtam-replay-A (ruling R1 Q5): el cursor primario es el EPOCH
+-    // continuo sobre la ventana de union (96 h); replayPos se DERIVA del
++    // continuo sobre la ventana de union (168 h); replayPos se DERIVA del
+     // epoch para el lerp TEC interno (inversion mecanica del bloque previo).
+     double replayEpoch = -1.0;
+     static bool kc2gReplayLogged = false;  // FASE B (P3): log una vez por entrada
+@@ -1934,7 +1936,7 @@ void App::update(float dt) {
+             if (impl->replayPlaying) {
+                 if (impl->replayEpoch <= 0.0) impl->replayEpoch = loBound;
+                 // 1x = 1 frame TEC equiv/s (1200 s); loop en [loBound,hiBound]:
+-                // union 96 h por defecto, rango con dato en modo por capa.
++                // union 168 h por defecto, rango con dato en modo por capa.
+                 // M-irtam-replay-024 (ruling R2 PERF): dt acotado a <=100 ms
+                 // SOLO para este avance (rompe la amplificacion miss->dt
+                 // gigante->salto multi-slot->miss); el dt global intacto.
+@@ -2030,7 +2032,7 @@ void App::update(float dt) {
+     // El wrap del loop de replay tambien hace snap (el dato salta ahi igual).
+     // M-irtam-replay-027 (opcion A del veredicto 026): el sol sigue al CURSOR
+     // (impl->replayEpoch), no al local TEC-clamped — si no, queda clavado en
+-    // T-24h el 75% del bucle de 96 h. En live, wall-clock como siempre.
++    // T-24h el 86% del bucle de 168 h. En live, wall-clock como siempre.
+     double effEpoch = (impl->replayMode && impl->replayEpoch > 0.0)
+                           ? impl->replayEpoch
+                           : (double)std::time(nullptr);
+@@ -2086,8 +2088,8 @@ void App::update(float dt) {
+             impl->mapVariable - 5, 72, 72, epoch, kpProxy, xrFlux));
+     } else if (impl->mapVariable == 8 || impl->mapVariable == 9) {
+         // M-IRTAM-F2 (P4, F2-R2): streaming honesto — sin valid no se dibuja.
+-        // M-irtam-replay-A + TEC-ext 034: ventana de union (96 h) =
+-        // [T-96,T-72] solo-IRTAM (muestreo lerp al epoch) · [T-72,T]
++        // M-irtam-replay-A + TEC-ext 034: ventana de union (168 h) =
++        // [T-168,T-72] solo-IRTAM (muestreo lerp al epoch) · [T-72,T]
+         // solo-TEC (TEC-ext 034: ventana 72 h con backfill de precarga) ·
+         // solape TEC-IRTAM = borde T-72. En live: bundle fresco.
+         // En replay: ultima muestra lista del worker (024: jamas en caliente).
+@@ -4824,7 +4826,7 @@ void App::render() {
+                     // M-irtam-replay-A: el cursor nace en el frame TEC mas
+                     // viejo (equivale al antiguo replayPos = 0).
+                     const double nowUtc0 = (double)std::time(nullptr);
+-                    impl->replayEpoch = nowUtc0 - 345600.0;
++                    impl->replayEpoch = nowUtc0 - 604800.0;
+                     {
+                         std::lock_guard<std::mutex> tlk(impl->tecHistMutex);
+                         if (!impl->tecHist.empty())
+@@ -4852,15 +4854,16 @@ void App::render() {
+             ImGui::SetNextItemWidth(90.0f);
+             ImGui::SliderFloat("speed", &impl->replaySpeed, 0.5f, 8.0f, "%.1f fps");
+             if (ImGui::IsItemHovered()) ImGui::SetItemTooltip("Replay speed in frames per second.");
+-            // M-irtam-replay-031 (toggle): checkbox de modo (marcado = union
+-            // 96 h, defecto R2) + recogida UNICA de rangos que alimenta
+-            // slider, etiqueta de modo y DATA (misma cuenta de locks).
++            // M-irtam-replay-031 (toggle) + Opcion B: checkbox de modo
++            // (marcado = union 168 h, defecto R2) + recogida UNICA de rangos
++            // que alimenta slider, etiqueta de modo y DATA (misma cuenta
++            // de locks).
+             bool fullWin = !impl->replayLayerLoop;
+-            if (ImGui::Checkbox("Full 96 h window", &fullWin)) {
++            if (ImGui::Checkbox("Full 168 h window", &fullWin)) {
+                 impl->replayLayerLoop = !fullWin;
+             }
+             if (ImGui::IsItemHovered())
+-                ImGui::SetItemTooltip("Union 96 h loop (comparative scrub across zones) or per-layer loop (dense replay of the active layer only). Without layer history, always union.");
++                ImGui::SetItemTooltip("Union 168 h loop (comparative scrub across zones) or per-layer loop (dense replay of the active layer only). Without layer history, always union.");
+             const double nowUtcR = (double)std::time(nullptr);
+             irtamstate::LayerRanges lr;
+             {
+@@ -4877,7 +4880,7 @@ void App::render() {
+             // Bounds por modo (union por defecto; capa con fallback).
+             double sloB = nowUtcR - irtamstate::kIrtamReplayWindowSec;
+             double shiB = nowUtcR;
+-            std::string modeLabel("Window: union 96 h");
++            std::string modeLabel("Window: union 168 h");
+             if (impl->replayLayerLoop) {
+                 const irtamstate::LayerLoopRange llr =
+                     irtamstate::layerLoopRange(impl->mapVariable, nowUtcR,
+diff --git a/src/Data/IrtamCoeffAdapter.h b/src/Data/IrtamCoeffAdapter.h
+index fe0b194..0f7b286 100644
+--- a/src/Data/IrtamCoeffAdapter.h
++++ b/src/Data/IrtamCoeffAdapter.h
+@@ -40,7 +40,7 @@ namespace irtamfetch {
+ // irtamfetch::kGambitLagSec, irtamfetch::IrtamCoeffAdapter::fetchOnce,
+ // irtamfetch::IrtamBundle.
+ 
+-inline constexpr int kSlots = 96;               // 24 h a cadencia IRTAM 15 min
++inline constexpr int kSlots = 384;              // 96 h a cadencia IRTAM 15 min
+ inline constexpr double kSlotSec = 900.0;       // 15 min
+ inline constexpr double kGambitLagSec = 259200.0;  // 3 d: ultimos 3 dias NO disponibles (E11)
+ inline constexpr const char* kParams[4] = {"foF2", "hmF2", "B0",
+diff --git a/src/Data/IrtamCoeffCache.h b/src/Data/IrtamCoeffCache.h
+index b14d62e..3f5db5e 100644
+--- a/src/Data/IrtamCoeffCache.h
++++ b/src/Data/IrtamCoeffCache.h
+@@ -9,7 +9,7 @@
+ //
+ // Familia DISTINTA de la GIF (C7): "cache/irtamc_<param>_<epoch>.txt" con los
+ // BYTES CRUDOS del endpoint + sidecar "<...>.txt.meta" (lastmod/fetch, patron
+-// F1). Cap kCapBuckets = 96 POR PARAMETRO (= 24 h a cadencia IRTAM 15 min).
++// F1). Cap kCapBuckets = 384 POR PARAMETRO (= 96 h a cadencia IRTAM 15 min).
+ // Tamaño ~KBs por bucket → disco irrelevante (R4 de F2 cerrado).
+ // =============================================================================
+ #include <cstddef>
+@@ -23,7 +23,7 @@ namespace irtamccache {
+ // irtamccache::saveBucket, irtamccache::loadBucket, irtamccache::loadCached,
+ // irtamccache::shouldCacheBucket, irtamccache::frameName.
+ 
+-inline constexpr int kCapBuckets = 96;  // por parametro (foF2, hmF2, ...)
++inline constexpr int kCapBuckets = 384;  // por parametro (foF2, hmF2, ...)
+ inline constexpr std::size_t kMinBucketBytes = 256u;
+ inline constexpr std::size_t kMaxBucketBytes = 1024u * 1024u;
+ 
+diff --git a/src/Data/IrtamState.cpp b/src/Data/IrtamState.cpp
+index e5160f7..9b9c175 100644
+--- a/src/Data/IrtamState.cpp
++++ b/src/Data/IrtamState.cpp
+@@ -40,13 +40,13 @@ std::string badgeLine(const std::string& param, bool valid, double dataEpoch,
+ }
+ 
+ ReplayZone zoneForAge(double ageSec) {
+-    if (ageSec >= 259200.0 && ageSec <= 345600.0) return ReplayZone::IrtamOnly;
++    if (ageSec >= 259200.0 && ageSec <= 604800.0) return ReplayZone::IrtamOnly;
+     return ReplayZone::TecOnly;
+ }
+ 
+ const char* zoneName(ReplayZone z) {
+     switch (z) {
+-        case ReplayZone::IrtamOnly: return "solo-IRTAM [T-96,T-72]";
++        case ReplayZone::IrtamOnly: return "solo-IRTAM [T-168,T-72]";
+         default: return "solo-TEC [T-72,T]";
+     }
+ }
+@@ -57,7 +57,7 @@ const char* perLayerZoneName(double replayEpoch, double nowUtc,
+                       replayEpoch <= r.tecNewest);
+     const bool giro = (r.giroOldest > 0.0 && r.giroOldest <= replayEpoch &&
+                        replayEpoch <= r.giroNewest);
+-    const bool irtam = (nowUtc - 345600.0 <= replayEpoch &&
++    const bool irtam = (nowUtc - 604800.0 <= replayEpoch &&
+                         replayEpoch <= nowUtc - 259200.0);
+     if (tec && giro && irtam) return "TEC+GIRO+IRTAM";
+     if (tec && giro) return "TEC+GIRO";
+@@ -210,7 +210,7 @@ LayerDataTime layerDataTime(int mapVariable, double replayEpoch, double nowUtc,
+     if (mapVariable >= 8 && mapVariable <= 11) {
+         // IRTAM: ventana [now-96h, now-72h]; stale = clamp o worker ocupado.
+         LayerDataTime out =
+-            clampToRange(replayEpoch, nowUtc - 345600.0, nowUtc - 259200.0);
++            clampToRange(replayEpoch, nowUtc - 604800.0, nowUtc - 259200.0);
+         if (samplerBusy) out.stale = true;
+         return out;
+     }
+@@ -268,7 +268,7 @@ LayerLoopRange layerLoopRange(int mapVariable, double nowUtc,
+         oldest = r.giroOldest;
+         newest = r.giroNewest;
+     } else if (mapVariable >= 8 && mapVariable <= 11) {
+-        oldest = nowUtc - 345600.0;
++        oldest = nowUtc - 604800.0;
+         newest = nowUtc - 259200.0;
+     } else {
+         return out;
+diff --git a/src/Data/IrtamState.h b/src/Data/IrtamState.h
+index f90c382..11f0e81 100644
+--- a/src/Data/IrtamState.h
++++ b/src/Data/IrtamState.h
+@@ -33,16 +33,17 @@ inline constexpr double kGambitLagSec = 259200.0;     // 3 d (E11)
+ std::string badgeLine(const std::string& param, bool valid, double dataEpoch,
+                       const std::string& error, double ageMin, bool inReplay);
+ 
+-// M-irtam-replay-A (ruling R1, CICLO A): ventana IRTAM 96 h sobre el cache
+-// cap-96 intacto ([72,96] h de edad, probado en vivo). kReplayWindowSec
+-// (86400, TEC) queda intacta.
+-inline constexpr double kIrtamReplayWindowSec = 345600.0;  // 96 h
+-
+-// Zonas de la ventana de union (TEC-ext 034): solo-IRTAM [T-96,T-72] ·
+-// solo-TEC [T-72,T] (el hueco estructural murio al extender TEC).
++// M-irtam-replay-A (ruling R1, CICLO A) + Opcion B (FASE 2): ventana IRTAM
++// 168 h sobre el cache cap-384 intacto ([72,168] h de edad, 4 ciclos
++// diurnos). kReplayWindowSec (86400, TEC) queda intacta.
++inline constexpr double kIrtamReplayWindowSec = 604800.0;  // 168 h
++
++// Zonas de la ventana de union (TEC-ext 034 + Opcion B): solo-IRTAM
++// [T-168,T-72] · solo-TEC [T-72,T] (el hueco estructural murio al
++// extender TEC).
+ enum class ReplayZone { IrtamOnly, TecOnly };
+ 
+-// Por edad del epoch (ageSec = now - epoch): [72h,96h] IrtamOnly;
++// Por edad del epoch (ageSec = now - epoch): [72h,168h] IrtamOnly;
+ // resto (incl. futuro) TecOnly. Puro.
+ ReplayZone zoneForAge(double ageSec);
+ const char* zoneName(ReplayZone z);
+@@ -102,7 +103,7 @@ std::string staleSuffix(const LayerDataTime& ldt, bool samplerBusy);
+ // M-irtam-replay-038 (ruling coherencia Zone/DATA, familia 022): conjunto de
+ // fuentes con dato REAL en el epoch del cursor (no la familia activa).
+ // Orden canonico TEC+GIRO+IRTAM, prefijo "solo-" en singleton. TEC/GIRO por
+-// rangos reales; IRTAM por banda estructural [now-345600,now-259200] (mismos
++// rangos reales; IRTAM por banda estructural [now-604800,now-259200] (mismos
+ // literales e inclusividad que layerLoopRange vars 8-11 y la via union). Puro.
+ const char* perLayerZoneName(double replayEpoch, double nowUtc,
+                              const LayerRanges& r);
+@@ -128,7 +129,7 @@ PairBracket pairBracketTovs(const std::vector<TovEntry>& entries,
+ // M-irtam-replay-031 (ruling toggle, misma particion de variables que
+ // layerDataTime): rango con dato de la capa para el bucle por capa.
+ // var 0 -> TEC real; vars 1-7 -> GIRO histHours; vars 8-11 -> estructural
+-// [nowUtc-345600, nowUtc-259200] (literales de layerDataTime); otra -> invalid.
++// [nowUtc-604800, nowUtc-259200] (literales de layerDataTime); otra -> invalid.
+ struct LayerLoopRange {
+     double oldest = -1.0, newest = -1.0;  // rango con dato de la capa
+     bool valid = false;                   // oldest > 0 && newest > oldest
+diff --git a/tests/test_irtam_adapter.cpp b/tests/test_irtam_adapter.cpp
+index 9b83e08..0fd04c1 100644
+--- a/tests/test_irtam_adapter.cpp
++++ b/tests/test_irtam_adapter.cpp
+@@ -52,21 +52,21 @@ int main() {
+     {
+         CacheHave vacio;
+         const std::vector<FetchTarget> p = planMissing(vacio, wend);
+-        check_bool("cache vacio: 384 targets (96 x 4, F2-B0B1-R1)",
+-                   p.size() == 384);
++        check_bool("cache vacio: 1536 targets (384 x 4, F2-B0B1-R1)",
++                   p.size() == 1536);
+         check_bool("orden param-major: foF2, hmF2, B0, B1",
+-                   p.front().param == "foF2" && p[96].param == "hmF2" &&
+-                       p[192].param == "B0" && p[288].param == "B1");
++                   p.front().param == "foF2" && p[384].param == "hmF2" &&
++                       p[768].param == "B0" && p[1152].param == "B1");
+         check_bool("oldest-first dentro de foF2",
+-                   p[0].epoch == wend - 95.0 * 900.0 && p[95].epoch == wend);
++                   p[0].epoch == wend - 383.0 * 900.0 && p[383].epoch == wend);
+         check_bool("oldest-first dentro de B1",
+-                   p[288].epoch == wend - 95.0 * 900.0 &&
+-                       p[383].epoch == wend);
++                   p[1152].epoch == wend - 383.0 * 900.0 &&
++                       p[1535].epoch == wend);
+     }
+     {
+-        // Lleno: 96 slots x 4 params -> 0 faltantes (steady: nada que hacer).
++        // Lleno: 384 slots x 4 params -> 0 faltantes (steady: nada que hacer).
+         CacheHave lleno;
+-        for (int s = 0; s < 96; s++) {
++        for (int s = 0; s < 384; s++) {
+             lleno.epochs["foF2"].push_back(wend - (double)s * 900.0);
+             lleno.epochs["hmF2"].push_back(wend - (double)s * 900.0);
+             lleno.epochs["B0"].push_back(wend - (double)s * 900.0);
+@@ -79,7 +79,7 @@ int main() {
+         // Parcial: solo faltan 3 (2 foF2 + 1 hmF2); el resto se respeta.
+         // (par B0xB1 lleno: no interfiere con F/H.)
+         CacheHave parcial;
+-        for (int s = 0; s < 96; s++) {
++        for (int s = 0; s < 384; s++) {
+             const double slot = wend - (double)s * 900.0;
+             if (s != 3 && s != 40) parcial.epochs["foF2"].push_back(slot);
+             if (s != 90) parcial.epochs["hmF2"].push_back(slot);
+diff --git a/tests/test_irtam_state.cpp b/tests/test_irtam_state.cpp
+index 1994371..20927cd 100644
+--- a/tests/test_irtam_state.cpp
++++ b/tests/test_irtam_state.cpp
+@@ -77,7 +77,11 @@ int main() {
+                    zoneForAge(259200.0) == ReplayZone::IrtamOnly);
+         check_bool("80h -> IrtamOnly",
+                    zoneForAge(288000.0) == ReplayZone::IrtamOnly);
+-        check_bool("96h borde -> IrtamOnly",
++        check_bool("168h borde -> IrtamOnly",
++                   zoneForAge(604800.0) == ReplayZone::IrtamOnly);
++        check_bool("168h+1s borde -> TecOnly",
++                   zoneForAge(604801.0) == ReplayZone::TecOnly);
++        check_bool("96h interior -> IrtamOnly (banda extendida)",
+                    zoneForAge(345600.0) == ReplayZone::IrtamOnly);
+         check_bool("48h -> TecOnly (hueco muerto TEC-ext 034)",
+                    zoneForAge(172800.0) == ReplayZone::TecOnly);
+@@ -305,8 +309,8 @@ int main() {
+         check_bool("GIRO histHours=0: invalid",
+                    !layerLoopRange(3, now, g0).valid);
+         LayerLoopRange i = layerLoopRange(8, 1789500000.0, r);
+-        check_bool("IRTAM estructural exacto [now-345600,now-259200]",
+-                   i.valid && i.oldest == 1789500000.0 - 345600.0 &&
++        check_bool("IRTAM estructural exacto [now-604800,now-259200]",
++                   i.valid && i.oldest == 1789500000.0 - 604800.0 &&
+                        i.newest == 1789500000.0 - 259200.0);
+         check_bool("var desconocida: invalid",
+                    !layerLoopRange(99, now, r).valid);
+diff --git a/tests/test_irtamc_cache.cpp b/tests/test_irtamc_cache.cpp
+index 30ef4db..0dd4715 100644
+--- a/tests/test_irtamc_cache.cpp
++++ b/tests/test_irtamc_cache.cpp
+@@ -6,7 +6,7 @@
+ // Valida contenido via P1a (parseMessage) — produccion real, no stub.
+ //
+ // Cubre F2 G4/G5: gate de escritura, round-trip bytes+sidecar, rechazo de
+-// contenido no-estructural, cap 96 POR PARAMETRO + self-heal + orden asc,
++// contenido no-estructural, cap 384 POR PARAMETRO + self-heal + orden asc,
+ // coexistencia con tec_/kc2g_/irtam_. Patron test_kc2g_cache / test_irtam_cache.
+ // =============================================================================
+ #include "Data/IrtamCoeffCache.h"
+@@ -107,11 +107,11 @@ int main() {
+                    !saveBucket(d, "foF2", 1789000003.0, g.data(), g.size(), big));
+     }
+ 
+-    std::printf("--- F2 P2: cap 96/param + heal + orden + coexistencia ---\n");
++    std::printf("--- F2 P2: cap 384/param + heal + orden + coexistencia ---\n");
+     {
+         std::string d = freshDir("cap");
+         std::vector<uint8_t> g = bytesOf(miniMsg());
+-        for (int i = 0; i < 98; i++)
++        for (int i = 0; i < 386; i++)
+             saveBucket(d, "foF2", 1000000.0 + i * 900.0, g.data(), g.size(),
+                        "lm");
+         for (int j = 0; j < 3; j++)
+@@ -134,7 +134,7 @@ int main() {
+         std::fputs("lastmod=x", fp);
+         std::fclose(fp);
+         ScanResult r = loadCached(d);
+-        check_bool("96+3 kept", (int)r.buckets.size() == 99);
++        check_bool("384+3 kept", (int)r.buckets.size() == 387);
+         check_bool("2 podados (fof2)", r.pruned == 2);
+         check_bool("1 corrupto dropeado", r.dropped == 1);
+         check_bool("corrupto borrado",
+-- 
+2.53.0.windows.3
+
