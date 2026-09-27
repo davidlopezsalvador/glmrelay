@@ -1,0 +1,8 @@
+[2026-09-26T23:26:12.747Z] probe_061T start — foF2 mayus-minus correcto a 5/7/60 d, espaciado 15 s
+[2026-09-26T23:26:12.748Z] T1_gambit_foF2_09.21T17.15 REQ https://lgdc.uml.edu/rix/gambit-coeffs?time=2026.09.21T17:15&charName=foF2
+[2026-09-26T23:26:15.361Z] T1_gambit_foF2_09.21T17.15 RESULT http=200 bytes=18100
+[2026-09-26T23:26:30.364Z] T2_gambit_foF2_09.19T17.15 REQ https://lgdc.uml.edu/rix/gambit-coeffs?time=2026.09.19T17:15&charName=foF2
+[2026-09-26T23:26:33.140Z] T2_gambit_foF2_09.19T17.15 RESULT http=200 bytes=18101
+[2026-09-26T23:26:48.143Z] T3_gambit_foF2_07.28T17.15 REQ https://lgdc.uml.edu/rix/gambit-coeffs?time=2026.07.28T17:15&charName=foF2
+[2026-09-26T23:26:50.962Z] T3_gambit_foF2_07.28T17.15 RESULT http=200 bytes=18089
+[2026-09-26T23:26:50.964Z] probe_061T done

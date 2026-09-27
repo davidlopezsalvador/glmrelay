@@ -1,0 +1,11 @@
+[2026-09-26T23:14:05.169Z] probe_061 start — set Q1-Q4, espaciado 15 s, UA proyecto, timeouts app
+[2026-09-26T23:14:05.169Z] DNS lgdc.uml.edu -> 129.63.134.26 
+[2026-09-26T23:14:05.174Z] Q1_getbest_EB040 REQ https://lgdc.uml.edu/fastchar/getbest?ursiCode=EB040&charName=foF2,foF1,foE,foEs,fxI,hmF2,B0,B1,fmin,MUF(D)
+[2026-09-26T23:14:06.369Z] Q1_getbest_EB040 RESULT http=200 bytes=36269
+[2026-09-26T23:14:21.373Z] Q2_gambit_T2026.09.23T15.26 REQ https://lgdc.uml.edu/rix/gambit-coeffs?time=2026.09.23T15:26&charName=fof2
+[2026-09-26T23:14:22.329Z] Q2_gambit_T2026.09.23T15.26 RESULT http=500 bytes=1361
+[2026-09-26T23:14:37.332Z] Q3_gambit_T2026.09.21T17:15 REQ https://lgdc.uml.edu/rix/gambit-coeffs?time=2026.09.21T17:15&charName=fof2
+[2026-09-26T23:14:38.850Z] Q3_gambit_T2026.09.21T17:15 RESULT http=500 bytes=1361
+[2026-09-26T23:14:53.853Z] Q4_gambit_T2026.09.19T17:15 REQ https://lgdc.uml.edu/rix/gambit-coeffs?time=2026.09.19T17:15&charName=fof2
+[2026-09-26T23:14:54.833Z] Q4_gambit_T2026.09.19T17:15 RESULT http=500 bytes=1361
+[2026-09-26T23:14:54.834Z] probe_061 done

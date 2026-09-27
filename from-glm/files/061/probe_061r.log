@@ -1,0 +1,10 @@
+[2026-09-26T23:16:31.753Z] probe_061R start — R0 minusculas control + R1-R3 FOF2 mayusculas, espaciado 15 s
+[2026-09-26T23:16:31.754Z] R0_gambit_fof2_lower_09.23T15.26 REQ https://lgdc.uml.edu/rix/gambit-coeffs?time=2026.09.23T15:26&charName=fof2
+[2026-09-26T23:16:32.653Z] R0_gambit_fof2_lower_09.23T15.26 RESULT http=500 bytes=1361
+[2026-09-26T23:16:47.657Z] R1_gambit_FOF2_upper_09.23T15.26 REQ https://lgdc.uml.edu/rix/gambit-coeffs?time=2026.09.23T15:26&charName=FOF2
+[2026-09-26T23:16:48.541Z] R1_gambit_FOF2_upper_09.23T15.26 RESULT http=500 bytes=1361
+[2026-09-26T23:17:03.544Z] R2_gambit_FOF2_upper_09.21T17.15 REQ https://lgdc.uml.edu/rix/gambit-coeffs?time=2026.09.21T17:15&charName=FOF2
+[2026-09-26T23:17:04.510Z] R2_gambit_FOF2_upper_09.21T17.15 RESULT http=500 bytes=1361
+[2026-09-26T23:17:19.513Z] R3_gambit_FOF2_upper_09.19T17.15 REQ https://lgdc.uml.edu/rix/gambit-coeffs?time=2026.09.19T17:15&charName=FOF2
+[2026-09-26T23:17:20.414Z] R3_gambit_FOF2_upper_09.19T17.15 RESULT http=500 bytes=1361
+[2026-09-26T23:17:20.415Z] probe_061R done
