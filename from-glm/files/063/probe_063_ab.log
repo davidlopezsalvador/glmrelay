@@ -1,0 +1,12 @@
+[2026-09-27T01:07:40.477Z] PROBES GLM 063 — confirmacion A/B drop 062 (3 reqs spot, UA proyecto, timeout 20, espaciado 15 s)
+[2026-09-27T01:07:40.482Z] host: lgdc.uml.edu (DNS: 129.63.134.26)
+[2026-09-27T01:07:40.483Z] V1 start: gambit foF2 TOV=2026.09.23T12:45 (esperado 062: 200/18095 B/sha16=8df1f9ee0c1814ab)
+[2026-09-27T01:07:43.022Z] V1 done: t0=2026-09-27T01:07:40.484Z t1=2026-09-27T01:07:43.015Z curl_rc=0 http=200 size=18095 time=2.520882s sha16=5f70afdf15cd7c1d
+[2026-09-27T01:07:43.023Z] V1 veredicto-local: size 18095 vs 18095 | sha16 5f70afdf15cd7c1d vs 8df1f9ee0c1814ab
+[2026-09-27T01:07:58.026Z] V2 start: gambit foF2 TOV=2026.09.22T00:45 (esperado 062: 200/18101 B/sha16=6c03ae614a0ac3d6)
+[2026-09-27T01:08:00.919Z] V2 done: t0=2026-09-27T01:07:58.027Z t1=2026-09-27T01:08:00.911Z curl_rc=0 http=200 size=18101 time=2.875103s sha16=15a616556ff46bb9
+[2026-09-27T01:08:00.920Z] V2 veredicto-local: size 18101 vs 18101 | sha16 15a616556ff46bb9 vs 6c03ae614a0ac3d6
+[2026-09-27T01:08:15.923Z] V3 start: gambit foF2 TOV=2026.07.29T00:30 (esperado 062: 200/18089 B/sha16=28a5ddd8ebf1d38e)
+[2026-09-27T01:08:18.518Z] V3 done: t0=2026-09-27T01:08:15.924Z t1=2026-09-27T01:08:18.509Z curl_rc=0 http=200 size=18089 time=2.576206s sha16=59cce298e27e7343
+[2026-09-27T01:08:18.519Z] V3 veredicto-local: size 18089 vs 18089 | sha16 59cce298e27e7343 vs 28a5ddd8ebf1d38e
+[2026-09-27T01:08:18.520Z] PROBES GLM 063 fin
