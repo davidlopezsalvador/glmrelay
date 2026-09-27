@@ -1,0 +1,1760 @@
+[OK] OpenGL 4.0.0 - Build 20.19.15.5171
+[OK] Renderer: Intel(R) HD Graphics 4600
+[Earth] textures/earth-night-hires.jpg: 13500x6750 (GL max 16384)
+[OK] GridLayer initialized
+[OK] DataManager initialized (cache: data/cache)
+[OK] GridLayer initialized
+[OK] GiroAdapter initialized
+[OK] IonosondeLayer initialized
+[OK] HFTraceLayer initialized
+[OK] DiasAdapter initialized (Ionostream EU)
+[OK] Kc2gAdapter initialized (failover-only)
+[OK] IrtamCoeffAdapter initialized
+[OK] SolarWindLayer initialized
+[OK] FaradayLayer initialized
+[OK] VolumeRenderer initialized
+[OK] GridLayer initialized
+[OK] GridLayer initialized
+[OK] SliceLayer initialized
+[OK] RefShells initialized (3888 verts)
+[OK] GridLayer initialized
+[OK] EbroAdapter initialized (FTP Ebre EB040)
+[OK] SdoImageAdapter initialized
+[Sdo] switch -> HMIIF (cache 4115 s) (stale, refrescando...)
+[App] settings.cfg loaded
+[App] TEC cache: 432 restored, newest 12:11 UTC (pruned 38, dropped 0)
+[OK] All initialized
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 10 estaciones EU
+[GiroAdapter] Catalogo cargado: 129 estaciones
+[Sdo] fetch HMIIF 512x512 (age 4115s)
+[Ebro] EB040_2026270121001.SAO: foF2=8.50 MUF=27.4 hmF2=251 foEs=nan
+[Sdo] fetch A304 512x512 (age 4115s)
+[SolarIndices] sunspots: 397 filas
+[SolarIndices] Kp=0.00 Dst=-19 F10.7=95 Ap=10 SSN=85 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=404 km/s density=1.8 cm^-3 Bz=-0.5 nT (hist 3627 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=23.0
+[RadioProp] MUF=27.6 FOT=23.5 LUF=7.7 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 4.34e-07 W/m2 (B4.3)
+[App] Initial fetch pass done
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 10 estaciones EU
+[Ebro] EB040_2026270121501.SAO: foF2=8.45 MUF=28.0 hmF2=245 foEs=nan
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=3.71 max=72.24 TECU
+[SolarIndices] Kp=0.00 Dst=-19 F10.7=95 Ap=10 SSN=85 (5/5 real)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=22.0
+[RadioProp] MUF=26.7 FOT=22.7 LUF=11.6 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 4.25e-07 W/m2 (B4.2)
+[Sdo] switch -> A304 (cache 340 s)
+[GiroAdapter] getbest async: 20 estaciones actualizadas
+[GiroAdapter] getbest async: 0 estaciones actualizadas
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 10 estaciones EU
+[Ebro] EB040_2026270122001.SAO: foF2=8.70 MUF=28.3 hmF2=260 foEs=nan
+[Irtam] bucket foF2 2026.09.22T00:15 OK (TOV 1790036100)
+[Irtam] bucket foF2 2026.09.22T00:30 OK (TOV 1790037000)
+[Irtam] bucket foF2 2026.09.22T00:45 OK (TOV 1790037900)
+[Irtam] bucket foF2 2026.09.22T01:00 OK (TOV 1790038800)
+[Irtam] bucket foF2 2026.09.22T01:15 OK (TOV 1790039700)
+[Irtam] bucket foF2 2026.09.22T01:30 OK (TOV 1790040600)
+[Irtam] bucket foF2 2026.09.22T01:45 OK (TOV 1790041500)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=3.38 max=72.56 TECU
+[SolarIndices] Kp=0.00 Dst=-19 F10.7=95 Ap=10 SSN=85 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=420 km/s density=0.4 cm^-3 Bz=-1.4 nT (hist 3615 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=22.0
+[RadioProp] MUF=27.6 FOT=23.5 LUF=11.9 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 4.14e-07 W/m2 (B4.1)
+[Irtam] bucket foF2 2026.09.22T02:00 OK (TOV 1790042400)
+[Irtam] bucket foF2 2026.09.22T02:15 OK (TOV 1790043300)
+[Irtam] bucket foF2 2026.09.22T02:30 OK (TOV 1790044200)
+[Irtam] bucket foF2 2026.09.22T02:45 OK (TOV 1790045100)
+[Irtam] bucket foF2 2026.09.22T03:00 OK (TOV 1790046000)
+[Irtam] fetch foF2 2026.09.22T03:15: fallo red/pre-gate
+[Irtam] bucket foF2 2026.09.22T03:15 OK (TOV 1790046900)
+[Irtam] bucket foF2 2026.09.22T03:30 OK (TOV 1790047800)
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 10 estaciones EU
+[Ebro] EB040_2026270122501.SAO: foF2=8.65 MUF=29.1 hmF2=249 foEs=nan
+[GiroAdapter] getbest async: 12 estaciones actualizadas
+[Irtam] bucket foF2 2026.09.22T03:45 OK (TOV 1790048700)
+[Irtam] bucket foF2 2026.09.22T04:00 OK (TOV 1790049600)
+[Irtam] fetch foF2 2026.09.22T04:15: fallo red/pre-gate
+[Irtam] bucket foF2 2026.09.22T04:15 OK (TOV 1790050500)
+[Irtam] bucket foF2 2026.09.22T04:30 OK (TOV 1790051400)
+[Irtam] bucket foF2 2026.09.22T04:45 OK (TOV 1790052300)
+[Irtam] bucket foF2 2026.09.22T05:00 OK (TOV 1790053200)
+[Irtam] bucket foF2 2026.09.22T05:15 OK (TOV 1790054100)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=3.38 max=72.56 TECU
+[SolarIndices] Kp=0.00 Dst=-19 F10.7=95 Ap=10 SSN=85 (5/5 real)
+[Irtam] bucket foF2 2026.09.22T05:30 OK (TOV 1790055000)
+[SolarWindAdapter] Viento solar real: speed=402 km/s density=1.8 cm^-3 Bz=-1.5 nT (hist 3611 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=22.0
+[RadioProp] MUF=27.9 FOT=23.7 LUF=12.0 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 4.11e-07 W/m2 (B4.1)
+[Irtam] bucket foF2 2026.09.22T05:45 OK (TOV 1790055900)
+[Irtam] bucket foF2 2026.09.22T06:00 OK (TOV 1790056800)
+[Irtam] bucket foF2 2026.09.22T06:15 OK (TOV 1790057700)
+[Irtam] bucket foF2 2026.09.22T06:30 OK (TOV 1790058600)
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 10 estaciones EU
+[Ebro] EB040_2026270123001.SAO: foF2=8.70 MUF=29.4 hmF2=246 foEs=2.65
+[GiroAdapter] getbest async: 8 estaciones actualizadas
+[Irtam] bucket foF2 2026.09.22T06:45 OK (TOV 1790059500)
+[Irtam] bucket foF2 2026.09.22T07:00 OK (TOV 1790060400)
+[Irtam] bucket foF2 2026.09.22T07:15 OK (TOV 1790061300)
+[Irtam] bucket foF2 2026.09.22T07:30 OK (TOV 1790062200)
+[Irtam] bucket foF2 2026.09.22T07:45 OK (TOV 1790063100)
+[Irtam] bucket foF2 2026.09.22T08:00 OK (TOV 1790064000)
+[Irtam] bucket foF2 2026.09.22T08:15 OK (TOV 1790064900)
+[Irtam] bucket foF2 2026.09.22T08:30 OK (TOV 1790065800)
+[Irtam] bucket foF2 2026.09.22T08:45 OK (TOV 1790066700)
+[Irtam] bucket foF2 2026.09.22T09:00 OK (TOV 1790067600)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=3.02 max=72.20 TECU
+[SolarIndices] Kp=0.00 Dst=-19 F10.7=95 Ap=10 SSN=85 (5/5 real)
+[Irtam] bucket foF2 2026.09.22T09:15 OK (TOV 1790068500)
+[SolarWindAdapter] Viento solar real: speed=425 km/s density=0.6 cm^-3 Bz=-1.3 nT (hist 3607 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=22.0
+[RadioProp] MUF=28.2 FOT=24.0 LUF=12.1 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 4.10e-07 W/m2 (B4.1)
+[Irtam] bucket foF2 2026.09.22T09:30 OK (TOV 1790069400)
+[Irtam] bucket foF2 2026.09.22T09:45 OK (TOV 1790070300)
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 10 estaciones EU
+[Ebro] EB040_2026270123501.SAO: foF2=8.70 MUF=29.7 hmF2=242 foEs=nan
+[Irtam] bucket foF2 2026.09.22T10:00 OK (TOV 1790071200)
+[GiroAdapter] getbest async: 3 estaciones actualizadas
+[Irtam] bucket foF2 2026.09.22T10:15 OK (TOV 1790072100)
+[Irtam] bucket foF2 2026.09.22T10:30 OK (TOV 1790073000)
+[Irtam] bucket foF2 2026.09.22T10:45 OK (TOV 1790073900)
+[Irtam] bucket foF2 2026.09.22T11:00 OK (TOV 1790074800)
+[Irtam] bucket foF2 2026.09.22T11:15 OK (TOV 1790075700)
+[Irtam] bucket foF2 2026.09.22T11:30 OK (TOV 1790076600)
+[Irtam] bucket foF2 2026.09.22T11:45 OK (TOV 1790077500)
+[Irtam] bucket foF2 2026.09.22T12:00 OK (TOV 1790078400)
+[Irtam] bucket foF2 2026.09.22T12:15 OK (TOV 1790079300)
+[Irtam] bucket foF2 2026.09.22T12:30 OK (TOV 1790080200)
+[Irtam] bucket foF2 2026.09.22T12:45 OK (TOV 1790081100)
+[Irtam] bucket foF2 2026.09.22T13:00 OK (TOV 1790082000)
+[Irtam] bucket foF2 2026.09.22T13:15 OK (TOV 1790082900)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=3.02 max=72.20 TECU
+[SolarIndices] Kp=0.00 Dst=-19 F10.7=95 Ap=10 SSN=85 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=400 km/s density=1.6 cm^-3 Bz=-1.5 nT (hist 3600 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=22.0
+[RadioProp] MUF=26.9 FOT=22.9 LUF=11.6 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 4.65e-07 W/m2 (B4.7)
+[Irtam] bucket foF2 2026.09.22T13:30 OK (TOV 1790083800)
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 10 estaciones EU
+[Ebro] EB040_2026270124001.SAO: foF2=8.70 MUF=29.5 hmF2=243 foEs=nan
+[GiroAdapter] getbest async: 13 estaciones actualizadas
+[Irtam] bucket foF2 2026.09.22T13:45 OK (TOV 1790084700)
+[Irtam] bucket foF2 2026.09.22T14:00 OK (TOV 1790085600)
+[Irtam] bucket foF2 2026.09.22T14:15 OK (TOV 1790086500)
+[Irtam] bucket foF2 2026.09.22T14:30 OK (TOV 1790087400)
+[Irtam] fetch foF2 2026.09.22T14:45: fallo red/pre-gate
+[Irtam] bucket foF2 2026.09.22T14:45 OK (TOV 1790088300)
+[Irtam] bucket foF2 2026.09.22T15:00 OK (TOV 1790089200)
+[Irtam] bucket foF2 2026.09.22T15:15 OK (TOV 1790090100)
+[Irtam] bucket foF2 2026.09.22T15:30 OK (TOV 1790091000)
+[Irtam] bucket foF2 2026.09.22T15:45 OK (TOV 1790091900)
+[Irtam] bucket foF2 2026.09.22T16:00 OK (TOV 1790092800)
+[Irtam] bucket foF2 2026.09.22T16:15 OK (TOV 1790093700)
+[Irtam] bucket foF2 2026.09.22T16:30 OK (TOV 1790094600)
+[Irtam] bucket foF2 2026.09.22T16:45 OK (TOV 1790095500)
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 10 estaciones EU
+[Ebro] EB040_2026270124501.SAO: foF2=8.60 MUF=28.5 hmF2=242 foEs=2.60
+[GiroAdapter] getbest async: 7 estaciones actualizadas
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=3.32 max=70.14 TECU
+[SolarIndices] Kp=0.00 Dst=-19 F10.7=95 Ap=10 SSN=85 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=402 km/s density=1.5 cm^-3 Bz=-2.1 nT (hist 3590 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=22.0
+[RadioProp] MUF=25.9 FOT=22.0 LUF=11.3 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 4.72e-07 W/m2 (B4.7)
+[Irtam] bucket foF2 2026.09.22T17:00 OK (TOV 1790096400)
+[Irtam] bucket foF2 2026.09.22T17:15 OK (TOV 1790097300)
+[Irtam] bucket foF2 2026.09.22T17:30 OK (TOV 1790098200)
+[Irtam] bucket foF2 2026.09.22T17:45 OK (TOV 1790099100)
+[Irtam] bucket foF2 2026.09.22T18:00 OK (TOV 1790100000)
+[Irtam] bucket foF2 2026.09.22T18:15 OK (TOV 1790100900)
+[Irtam] bucket foF2 2026.09.22T18:30 OK (TOV 1790101800)
+[Irtam] bucket foF2 2026.09.22T18:45 OK (TOV 1790102700)
+[Irtam] bucket foF2 2026.09.22T19:00 OK (TOV 1790103600)
+[Irtam] bucket foF2 2026.09.22T19:15 OK (TOV 1790104500)
+[Irtam] bucket foF2 2026.09.22T19:30 OK (TOV 1790105400)
+[Irtam] bucket foF2 2026.09.22T19:45 OK (TOV 1790106300)
+[Irtam] bucket foF2 2026.09.23T20:00 OK (TOV 1790193600)
+[Irtam] bucket foF2 2026.09.23T20:15 OK (TOV 1790194500)
+[Irtam] bucket foF2 2026.09.23T20:30 OK (TOV 1790195400)
+[Irtam] bucket foF2 2026.09.23T20:45 OK (TOV 1790196300)
+[Irtam] bucket foF2 2026.09.23T21:00 OK (TOV 1790197200)
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 10 estaciones EU
+[Ebro] EB040_2026270125001.SAO: foF2=8.60 MUF=28.0 hmF2=250 foEs=nan
+[GiroAdapter] getbest async: 4 estaciones actualizadas
+[Irtam] bucket foF2 2026.09.23T21:15 OK (TOV 1790198100)
+[Irtam] bucket foF2 2026.09.23T21:30 OK (TOV 1790199000)
+[Irtam] bucket foF2 2026.09.23T21:45 OK (TOV 1790199900)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=3.32 max=70.14 TECU
+[SolarIndices] Kp=0.00 Dst=-19 F10.7=95 Ap=10 SSN=85 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=401 km/s density=1.5 cm^-3 Bz=-1.7 nT (hist 3589 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=23.0
+[RadioProp] MUF=26.3 FOT=22.4 LUF=11.5 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 4.70e-07 W/m2 (B4.7)
+[Irtam] bucket foF2 2026.09.23T22:00 OK (TOV 1790200800)
+[Irtam] bucket foF2 2026.09.23T22:15 OK (TOV 1790201700)
+[Irtam] bucket foF2 2026.09.23T22:30 OK (TOV 1790202600)
+[Irtam] bucket foF2 2026.09.23T22:45 OK (TOV 1790203500)
+[Irtam] bucket foF2 2026.09.23T23:00 OK (TOV 1790204400)
+[Irtam] bucket foF2 2026.09.23T23:15 OK (TOV 1790205300)
+[Irtam] bucket foF2 2026.09.23T23:30 OK (TOV 1790206200)
+[Irtam] bucket foF2 2026.09.23T23:45 OK (TOV 1790207100)
+[Irtam] bucket foF2 2026.09.24T00:00 OK (TOV 1790208000)
+[Irtam] bucket foF2 2026.09.24T00:15 OK (TOV 1790208900)
+[Irtam] bucket foF2 2026.09.24T00:30 OK (TOV 1790209800)
+[Irtam] bucket foF2 2026.09.24T00:45 OK (TOV 1790210700)
+[Irtam] bucket foF2 2026.09.24T01:00 OK (TOV 1790211600)
+[Irtam] bucket foF2 2026.09.24T01:15 OK (TOV 1790212500)
+[Irtam] bucket foF2 2026.09.24T01:30 OK (TOV 1790213400)
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 10 estaciones EU
+[Ebro] EB040_2026270125501.SAO: foF2=8.70 MUF=28.7 hmF2=258 foEs=3.05
+[GiroAdapter] getbest async: 13 estaciones actualizadas
+[Irtam] bucket foF2 2026.09.24T01:45 OK (TOV 1790214300)
+[Irtam] bucket foF2 2026.09.24T02:00 OK (TOV 1790215200)
+[Irtam] bucket foF2 2026.09.24T02:15 OK (TOV 1790216100)
+[Irtam] bucket foF2 2026.09.24T02:30 OK (TOV 1790217000)
+[Irtam] bucket foF2 2026.09.24T02:45 OK (TOV 1790217900)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=3.35 max=68.41 TECU
+[SolarIndices] Kp=0.33 Dst=-20 F10.7=95 Ap=10 SSN=85 (5/5 real)
+[Irtam] bucket foF2 2026.09.24T03:00 OK (TOV 1790218800)
+[SolarWindAdapter] Viento solar real: speed=398 km/s density=1.6 cm^-3 Bz=-2.3 nT (hist 3584 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=23.0
+[RadioProp] MUF=26.3 FOT=22.4 LUF=11.4 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 4.62e-07 W/m2 (B4.6)
+[Irtam] bucket foF2 2026.09.24T03:15 OK (TOV 1790219700)
+[Irtam] bucket foF2 2026.09.24T03:30 OK (TOV 1790220600)
+[Irtam] bucket foF2 2026.09.24T03:45 OK (TOV 1790221500)
+[Irtam] bucket foF2 2026.09.24T04:00 OK (TOV 1790222400)
+[Irtam] bucket foF2 2026.09.24T04:15 OK (TOV 1790223300)
+[Irtam] bucket foF2 2026.09.24T04:30 OK (TOV 1790224200)
+[Irtam] bucket foF2 2026.09.24T04:45 OK (TOV 1790225100)
+[Irtam] bucket foF2 2026.09.24T05:00 OK (TOV 1790226000)
+[Irtam] bucket foF2 2026.09.24T05:15 OK (TOV 1790226900)
+[Irtam] bucket foF2 2026.09.24T05:30 OK (TOV 1790227800)
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 10 estaciones EU
+[Ebro] EB040_2026270130001.SAO: foF2=8.60 MUF=28.9 hmF2=242 foEs=2.80
+[GiroAdapter] getbest async: 7 estaciones actualizadas
+[Irtam] bucket foF2 2026.09.24T05:45 OK (TOV 1790228700)
+[Irtam] bucket foF2 2026.09.24T06:00 OK (TOV 1790229600)
+[Irtam] bucket foF2 2026.09.24T06:15 OK (TOV 1790230500)
+[Irtam] bucket foF2 2026.09.24T06:30 OK (TOV 1790231400)
+[Irtam] bucket foF2 2026.09.24T06:45 OK (TOV 1790232300)
+[Irtam] bucket foF2 2026.09.24T07:00 OK (TOV 1790233200)
+[Irtam] bucket foF2 2026.09.24T07:15 OK (TOV 1790234100)
+[Irtam] bucket foF2 2026.09.24T07:30 OK (TOV 1790235000)
+[Irtam] bucket foF2 2026.09.24T07:45 OK (TOV 1790235900)
+[Irtam] bucket foF2 2026.09.24T08:00 OK (TOV 1790236800)
+[Irtam] bucket foF2 2026.09.24T08:15 OK (TOV 1790237700)
+[SolarIndices] Kp=0.33 Dst=-20 F10.7=95 Ap=10 SSN=90 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=397 km/s density=1.3 cm^-3 Bz=-1.2 nT (hist 3575 pts)
+[Irtam] bucket foF2 2026.09.24T08:30 OK (TOV 1790238600)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=23.0
+[RadioProp] MUF=26.3 FOT=22.4 LUF=11.4 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 4.55e-07 W/m2 (B4.6)
+[Irtam] bucket foF2 2026.09.24T08:45 OK (TOV 1790239500)
+[Irtam] bucket foF2 2026.09.24T09:00 OK (TOV 1790240400)
+[Irtam] bucket foF2 2026.09.24T09:15 OK (TOV 1790241300)
+[Irtam] bucket foF2 2026.09.24T09:30 OK (TOV 1790242200)
+[Irtam] bucket foF2 2026.09.24T09:45 OK (TOV 1790243100)
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 10 estaciones EU
+[Irtam] bucket foF2 2026.09.24T10:00 OK (TOV 1790244000)
+[Ebro] EB040_2026270130501.SAO: foF2=8.65 MUF=29.0 hmF2=246 foEs=2.65
+[GiroAdapter] getbest async: 4 estaciones actualizadas
+[Irtam] bucket foF2 2026.09.24T10:15 OK (TOV 1790244900)
+[Irtam] bucket foF2 2026.09.24T10:30 OK (TOV 1790245800)
+[Irtam] bucket foF2 2026.09.24T10:45 OK (TOV 1790246700)
+[Irtam] bucket foF2 2026.09.24T11:00 OK (TOV 1790247600)
+[Irtam] bucket foF2 2026.09.24T11:15 OK (TOV 1790248500)
+[Irtam] bucket foF2 2026.09.24T11:30 OK (TOV 1790249400)
+[Irtam] bucket foF2 2026.09.24T11:45 OK (TOV 1790250300)
+[Irtam] bucket foF2 2026.09.24T12:00 OK (TOV 1790251200)
+[Irtam] bucket foF2 2026.09.24T12:15 OK (TOV 1790252100)
+[Irtam] bucket foF2 2026.09.24T12:30 OK (TOV 1790253000)
+[Irtam] bucket foF2 2026.09.24T12:45 OK (TOV 1790253900)
+[Irtam] bucket foF2 2026.09.24T13:00 OK (TOV 1790254800)
+[Irtam] bucket foF2 2026.09.24T13:15 OK (TOV 1790255700)
+[Irtam] bucket hmF2 2026.09.20T13:30 OK (TOV 1789911000)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=3.46 max=68.68 TECU
+[SolarIndices] Kp=0.00 Dst=-21 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=402 km/s density=0.3 cm^-3 Bz=-1.1 nT (hist 3570 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=23.0
+[RadioProp] MUF=26.4 FOT=22.5 LUF=11.4 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 4.55e-07 W/m2 (B4.6)
+[Irtam] bucket hmF2 2026.09.20T13:45 OK (TOV 1789911900)
+[Irtam] bucket hmF2 2026.09.20T14:00 OK (TOV 1789912800)
+[Irtam] bucket hmF2 2026.09.20T14:15 OK (TOV 1789913700)
+[Irtam] bucket hmF2 2026.09.20T14:30 OK (TOV 1789914600)
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 10 estaciones EU
+[Ebro] EB040_2026270131001.SAO: foF2=8.60 MUF=28.6 hmF2=247 foEs=nan
+[GiroAdapter] getbest async: 13 estaciones actualizadas
+[Irtam] bucket hmF2 2026.09.20T14:45 OK (TOV 1789915500)
+[Irtam] bucket hmF2 2026.09.20T15:00 OK (TOV 1789916400)
+[Irtam] bucket hmF2 2026.09.20T15:15 OK (TOV 1789917300)
+[Irtam] bucket hmF2 2026.09.20T15:30 OK (TOV 1789918200)
+[Irtam] bucket hmF2 2026.09.20T15:45 OK (TOV 1789919100)
+[Irtam] bucket hmF2 2026.09.20T16:00 OK (TOV 1789920000)
+[Irtam] bucket hmF2 2026.09.20T16:15 OK (TOV 1789920900)
+[Irtam] bucket hmF2 2026.09.20T16:30 OK (TOV 1789921800)
+[Irtam] bucket hmF2 2026.09.20T16:45 OK (TOV 1789922700)
+[Irtam] bucket hmF2 2026.09.20T17:00 OK (TOV 1789923600)
+[Irtam] bucket hmF2 2026.09.20T17:15 OK (TOV 1789924500)
+[Irtam] bucket hmF2 2026.09.20T17:30 OK (TOV 1789925400)
+[Irtam] bucket hmF2 2026.09.20T17:45 OK (TOV 1789926300)
+[Irtam] bucket hmF2 2026.09.20T18:00 OK (TOV 1789927200)
+[Irtam] bucket hmF2 2026.09.20T18:15 OK (TOV 1789928100)
+[Irtam] bucket hmF2 2026.09.20T18:30 OK (TOV 1789929000)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=3.46 max=68.68 TECU
+[SolarIndices] sunspots: 397 filas
+[SolarIndices] Kp=0.33 Dst=-22 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=397 km/s density=1.4 cm^-3 Bz=-2.2 nT (hist 3563 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=23.0
+[RadioProp] MUF=25.8 FOT=22.0 LUF=11.2 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 4.93e-07 W/m2 (B4.9)
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 10 estaciones EU
+[Irtam] bucket hmF2 2026.09.20T18:45 OK (TOV 1789929900)
+[Ebro] EB040_2026270131501.SAO: foF2=8.45 MUF=28.7 hmF2=240 foEs=nan
+[GiroAdapter] getbest async: 6 estaciones actualizadas
+[Irtam] bucket hmF2 2026.09.20T19:00 OK (TOV 1789930800)
+[Irtam] bucket hmF2 2026.09.20T19:15 OK (TOV 1789931700)
+[Irtam] bucket hmF2 2026.09.20T19:30 OK (TOV 1789932600)
+[Irtam] bucket hmF2 2026.09.20T19:45 OK (TOV 1789933500)
+[Irtam] bucket hmF2 2026.09.20T20:00 OK (TOV 1789934400)
+[Irtam] bucket hmF2 2026.09.20T20:15 OK (TOV 1789935300)
+[Irtam] bucket hmF2 2026.09.20T20:30 OK (TOV 1789936200)
+[Irtam] bucket hmF2 2026.09.20T20:45 OK (TOV 1789937100)
+[Irtam] bucket hmF2 2026.09.20T21:00 OK (TOV 1789938000)
+[Irtam] bucket hmF2 2026.09.20T21:15 OK (TOV 1789938900)
+[Irtam] bucket hmF2 2026.09.20T21:30 OK (TOV 1789939800)
+[Irtam] bucket hmF2 2026.09.20T21:45 OK (TOV 1789940700)
+[Irtam] bucket hmF2 2026.09.20T22:00 OK (TOV 1789941600)
+[Irtam] bucket hmF2 2026.09.20T22:15 OK (TOV 1789942500)
+[Irtam] bucket hmF2 2026.09.20T22:30 OK (TOV 1789943400)
+[Irtam] bucket hmF2 2026.09.20T22:45 OK (TOV 1789944300)
+[Irtam] bucket hmF2 2026.09.20T23:00 OK (TOV 1789945200)
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 10 estaciones EU
+[Ebro] EB040_2026270132001.SAO: foF2=8.45 MUF=29.4 hmF2=238 foEs=2.45
+[GiroAdapter] getbest async: 5 estaciones actualizadas
+[Irtam] bucket hmF2 2026.09.20T23:15 OK (TOV 1789946100)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=3.27 max=68.41 TECU
+[SolarIndices] Kp=0.33 Dst=-22 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=398 km/s density=0.2 cm^-3 Bz=-0.9 nT (hist 3558 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=23.0
+[RadioProp] MUF=25.4 FOT=21.6 LUF=11.1 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 5.08e-07 W/m2 (B5.1)
+[Irtam] bucket hmF2 2026.09.20T23:30 OK (TOV 1789947000)
+[Irtam] bucket hmF2 2026.09.20T23:45 OK (TOV 1789947900)
+[Irtam] bucket hmF2 2026.09.21T00:00 OK (TOV 1789948800)
+[Irtam] bucket hmF2 2026.09.21T00:15 OK (TOV 1789949700)
+[Irtam] bucket hmF2 2026.09.21T00:30 OK (TOV 1789950600)
+[Irtam] bucket hmF2 2026.09.21T00:45 OK (TOV 1789951500)
+[Irtam] bucket hmF2 2026.09.21T01:00 OK (TOV 1789952400)
+[Irtam] bucket hmF2 2026.09.21T01:15 OK (TOV 1789953300)
+[Irtam] bucket hmF2 2026.09.21T01:30 OK (TOV 1789954200)
+[Irtam] bucket hmF2 2026.09.21T01:45 OK (TOV 1789955100)
+[Irtam] bucket foF2 2026.09.24T13:30 OK (TOV 1790256600)
+[Irtam] bucket hmF2 2026.09.21T02:00 OK (TOV 1789956000)
+[Irtam] bucket hmF2 2026.09.21T02:15 OK (TOV 1789956900)
+[Irtam] bucket hmF2 2026.09.21T02:30 OK (TOV 1789957800)
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 9 estaciones EU
+[Ebro] EB040_2026270132501.SAO: foF2=8.45 MUF=28.9 hmF2=241 foEs=nan
+[GiroAdapter] getbest async: 13 estaciones actualizadas
+[Irtam] bucket hmF2 2026.09.21T02:45 OK (TOV 1789958700)
+[Irtam] bucket hmF2 2026.09.21T03:00 OK (TOV 1789959600)
+[Irtam] bucket hmF2 2026.09.21T03:15 OK (TOV 1789960500)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=3.27 max=68.41 TECU
+[SolarIndices] Kp=0.33 Dst=-21 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=394 km/s density=0.2 cm^-3 Bz=-1.2 nT (hist 3554 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=23.0
+[RadioProp] MUF=25.6 FOT=21.8 LUF=11.2 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 4.99e-07 W/m2 (B5.0)
+[Irtam] bucket hmF2 2026.09.21T03:30 OK (TOV 1789961400)
+[Irtam] bucket hmF2 2026.09.21T03:45 OK (TOV 1789962300)
+[Irtam] bucket hmF2 2026.09.21T04:00 OK (TOV 1789963200)
+[Irtam] bucket hmF2 2026.09.21T04:15 OK (TOV 1789964100)
+[Irtam] bucket hmF2 2026.09.21T04:30 OK (TOV 1789965000)
+[Irtam] bucket hmF2 2026.09.21T04:45 OK (TOV 1789965900)
+[Irtam] bucket hmF2 2026.09.21T05:00 OK (TOV 1789966800)
+[Irtam] bucket hmF2 2026.09.21T05:15 OK (TOV 1789967700)
+[Irtam] bucket hmF2 2026.09.21T05:30 OK (TOV 1789968600)
+[Irtam] bucket hmF2 2026.09.21T05:45 OK (TOV 1789969500)
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 9 estaciones EU
+[Ebro] EB040_2026270133001.SAO: foF2=8.35 MUF=29.3 hmF2=235 foEs=2.80
+[GiroAdapter] getbest async: 6 estaciones actualizadas
+[Irtam] bucket hmF2 2026.09.21T06:00 OK (TOV 1789970400)
+[Irtam] bucket hmF2 2026.09.21T06:15 OK (TOV 1789971300)
+[Irtam] bucket hmF2 2026.09.21T06:30 OK (TOV 1789972200)
+[Irtam] bucket hmF2 2026.09.21T06:45 OK (TOV 1789973100)
+[Irtam] bucket hmF2 2026.09.21T07:00 OK (TOV 1789974000)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=2.72 max=68.45 TECU
+[SolarIndices] Kp=0.33 Dst=-21 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=402 km/s density=1.7 cm^-3 Bz=-2.2 nT (hist 3546 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=24.0
+[RadioProp] MUF=25.6 FOT=21.8 LUF=11.1 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 5.32e-07 W/m2 (B5.3)
+[Irtam] bucket hmF2 2026.09.21T07:15 OK (TOV 1789974900)
+[Irtam] bucket hmF2 2026.09.21T07:30 OK (TOV 1789975800)
+[Irtam] bucket hmF2 2026.09.21T07:45 OK (TOV 1789976700)
+[Irtam] bucket hmF2 2026.09.21T08:00 OK (TOV 1789977600)
+[Irtam] bucket hmF2 2026.09.21T08:15 OK (TOV 1789978500)
+[Irtam] bucket hmF2 2026.09.21T08:30 OK (TOV 1789979400)
+[Irtam] bucket hmF2 2026.09.21T08:45 OK (TOV 1789980300)
+[Irtam] bucket hmF2 2026.09.21T09:00 OK (TOV 1789981200)
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 9 estaciones EU
+[Ebro] EB040_2026270133501.SAO: foF2=8.25 MUF=29.0 hmF2=233 foEs=nan
+[GiroAdapter] getbest async: 5 estaciones actualizadas
+[Irtam] bucket hmF2 2026.09.21T09:15 OK (TOV 1789982100)
+[Irtam] bucket hmF2 2026.09.21T09:30 OK (TOV 1789983000)
+[Irtam] bucket hmF2 2026.09.21T09:45 OK (TOV 1789983900)
+[Irtam] bucket hmF2 2026.09.21T10:00 OK (TOV 1789984800)
+[Irtam] bucket hmF2 2026.09.21T10:15 OK (TOV 1789985700)
+[Irtam] bucket hmF2 2026.09.21T10:30 OK (TOV 1789986600)
+[Irtam] bucket hmF2 2026.09.21T10:45 OK (TOV 1789987500)
+[SolarIndices] Kp=0.33 Dst=-21 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=405 km/s density=0.4 cm^-3 Bz=-2.0 nT (hist 3538 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=24.0
+[RadioProp] MUF=25.6 FOT=21.8 LUF=11.2 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 5.35e-07 W/m2 (B5.3)
+[Irtam] bucket hmF2 2026.09.21T11:00 OK (TOV 1789988400)
+[Irtam] bucket hmF2 2026.09.21T11:15 OK (TOV 1789989300)
+[Irtam] bucket foF2 2026.09.24T13:45 OK (TOV 1790257500)
+[Irtam] bucket hmF2 2026.09.21T11:30 OK (TOV 1789990200)
+[Irtam] bucket hmF2 2026.09.21T11:45 OK (TOV 1789991100)
+[Irtam] bucket hmF2 2026.09.21T12:00 OK (TOV 1789992000)
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 9 estaciones EU
+[Ebro] EB040_2026270134001.SAO: foF2=8.20 MUF=27.4 hmF2=244 foEs=nan
+[GiroAdapter] getbest async: 13 estaciones actualizadas
+[Irtam] bucket hmF2 2026.09.21T12:15 OK (TOV 1789992900)
+[Irtam] bucket hmF2 2026.09.21T12:30 OK (TOV 1789993800)
+[Irtam] bucket hmF2 2026.09.21T12:45 OK (TOV 1789994700)
+[Irtam] bucket hmF2 2026.09.21T13:00 OK (TOV 1789995600)
+[Irtam] bucket hmF2 2026.09.21T13:15 OK (TOV 1789996500)
+[Irtam] bucket hmF2 2026.09.21T13:30 OK (TOV 1789997400)
+[Irtam] bucket hmF2 2026.09.21T13:45 OK (TOV 1789998300)
+[Irtam] bucket hmF2 2026.09.21T14:00 OK (TOV 1789999200)
+[Irtam] bucket hmF2 2026.09.21T14:15 OK (TOV 1790000100)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=2.58 max=69.22 TECU
+[SolarIndices] Kp=0.33 Dst=-21 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=399 km/s density=0.2 cm^-3 Bz=-2.3 nT (hist 3532 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=24.0
+[RadioProp] MUF=25.8 FOT=22.0 LUF=11.2 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 4.89e-07 W/m2 (B4.9)
+[Irtam] bucket hmF2 2026.09.21T14:30 OK (TOV 1790001000)
+[Irtam] bucket hmF2 2026.09.21T14:45 OK (TOV 1790001900)
+[Irtam] bucket hmF2 2026.09.21T15:00 OK (TOV 1790002800)
+[Irtam] bucket hmF2 2026.09.21T15:15 OK (TOV 1790003700)
+[Irtam] bucket hmF2 2026.09.21T15:30 OK (TOV 1790004600)
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 9 estaciones EU
+[Ebro] EB040_2026270134501.SAO: foF2=8.10 MUF=26.3 hmF2=249 foEs=2.45
+[GiroAdapter] getbest async: 6 estaciones actualizadas
+[Irtam] bucket hmF2 2026.09.21T15:45 OK (TOV 1790005500)
+[Irtam] bucket hmF2 2026.09.21T16:00 OK (TOV 1790006400)
+[Irtam] bucket hmF2 2026.09.21T16:15 OK (TOV 1790007300)
+[Irtam] bucket hmF2 2026.09.21T16:30 OK (TOV 1790008200)
+[Irtam] bucket hmF2 2026.09.21T16:45 OK (TOV 1790009100)
+[Irtam] bucket hmF2 2026.09.21T17:00 OK (TOV 1790010000)
+[Irtam] bucket hmF2 2026.09.21T17:15 OK (TOV 1790010900)
+[Irtam] bucket hmF2 2026.09.21T17:30 OK (TOV 1790011800)
+[Irtam] bucket hmF2 2026.09.21T17:45 OK (TOV 1790012700)
+[Irtam] bucket hmF2 2026.09.21T18:00 OK (TOV 1790013600)
+[Irtam] bucket hmF2 2026.09.21T18:15 OK (TOV 1790014500)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=2.58 max=69.22 TECU
+[SolarIndices] Kp=0.33 Dst=-21 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=396 km/s density=1.3 cm^-3 Bz=-2.1 nT (hist 3527 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=24.0
+[RadioProp] MUF=25.8 FOT=22.0 LUF=11.2 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 4.96e-07 W/m2 (B5.0)
+[Irtam] bucket hmF2 2026.09.21T18:30 OK (TOV 1790015400)
+[Irtam] bucket hmF2 2026.09.21T18:45 OK (TOV 1790016300)
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 10 estaciones EU
+[Ebro] EB040_2026270135001.SAO: foF2=8.15 MUF=25.9 hmF2=266 foEs=2.55
+[GiroAdapter] getbest async: 5 estaciones actualizadas
+[Irtam] bucket hmF2 2026.09.21T19:00 OK (TOV 1790017200)
+[Irtam] bucket hmF2 2026.09.21T19:15 OK (TOV 1790018100)
+[Irtam] bucket hmF2 2026.09.21T19:30 OK (TOV 1790019000)
+[Irtam] bucket hmF2 2026.09.21T19:45 OK (TOV 1790019900)
+[Irtam] bucket hmF2 2026.09.21T20:00 OK (TOV 1790020800)
+[Irtam] bucket hmF2 2026.09.21T20:15 OK (TOV 1790021700)
+[Irtam] bucket hmF2 2026.09.21T20:30 OK (TOV 1790022600)
+[Irtam] bucket hmF2 2026.09.21T20:45 OK (TOV 1790023500)
+[Irtam] bucket hmF2 2026.09.21T21:00 OK (TOV 1790024400)
+[Irtam] bucket foF2 2026.09.24T14:00 OK (TOV 1790258400)
+[Irtam] bucket hmF2 2026.09.21T21:15 OK (TOV 1790025300)
+[Irtam] bucket hmF2 2026.09.21T21:30 OK (TOV 1790026200)
+[Irtam] bucket hmF2 2026.09.21T21:45 OK (TOV 1790027100)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=2.67 max=69.12 TECU
+[SolarIndices] Kp=0.33 Dst=-21 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=408 km/s density=0.6 cm^-3 Bz=-2.1 nT (hist 3522 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=24.0
+[RadioProp] MUF=25.8 FOT=22.0 LUF=11.2 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 10 estaciones EU
+[Xray] GOES long 6.29e-07 W/m2 (B6.3)
+[Ebro] EB040_2026270135501.SAO: foF2=8.25 MUF=26.8 hmF2=255 foEs=nan
+[GiroAdapter] getbest async: 13 estaciones actualizadas
+[Irtam] bucket hmF2 2026.09.21T22:00 OK (TOV 1790028000)
+[Irtam] bucket hmF2 2026.09.21T22:15 OK (TOV 1790028900)
+[Irtam] bucket hmF2 2026.09.21T22:30 OK (TOV 1790029800)
+[Irtam] bucket hmF2 2026.09.21T22:45 OK (TOV 1790030700)
+[Irtam] bucket hmF2 2026.09.21T23:00 OK (TOV 1790031600)
+[Irtam] bucket hmF2 2026.09.21T23:15 OK (TOV 1790032500)
+[Irtam] bucket hmF2 2026.09.21T23:30 OK (TOV 1790033400)
+[Irtam] bucket hmF2 2026.09.21T23:45 OK (TOV 1790034300)
+[Irtam] bucket hmF2 2026.09.22T00:00 OK (TOV 1790035200)
+[Irtam] bucket hmF2 2026.09.22T00:15 OK (TOV 1790036100)
+[Irtam] bucket hmF2 2026.09.22T00:30 OK (TOV 1790037000)
+[Irtam] bucket hmF2 2026.09.22T00:45 OK (TOV 1790037900)
+[Irtam] bucket hmF2 2026.09.22T01:00 OK (TOV 1790038800)
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 10 estaciones EU
+[Ebro] EB040_2026270140001.SAO: foF2=8.35 MUF=28.2 hmF2=246 foEs=2.95
+[GiroAdapter] getbest async: 6 estaciones actualizadas
+[Irtam] bucket hmF2 2026.09.22T01:15 OK (TOV 1790039700)
+[Irtam] bucket hmF2 2026.09.22T01:30 OK (TOV 1790040600)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=3.06 max=68.82 TECU
+[SolarIndices] Kp=0.33 Dst=-21 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=395 km/s density=1.3 cm^-3 Bz=-1.2 nT (hist 3515 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=24.0
+[RadioProp] MUF=25.8 FOT=22.0 LUF=11.3 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 5.54e-07 W/m2 (B5.5)
+[Irtam] bucket hmF2 2026.09.22T01:45 OK (TOV 1790041500)
+[Irtam] bucket hmF2 2026.09.22T02:00 OK (TOV 1790042400)
+[Irtam] bucket hmF2 2026.09.22T02:15 OK (TOV 1790043300)
+[Irtam] bucket hmF2 2026.09.22T02:30 OK (TOV 1790044200)
+[Irtam] fetch hmF2 2026.09.22T02:45: fallo red/pre-gate
+[Irtam] bucket hmF2 2026.09.22T02:45 OK (TOV 1790045100)
+[Irtam] bucket hmF2 2026.09.22T03:00 OK (TOV 1790046000)
+[Irtam] bucket hmF2 2026.09.22T03:15 OK (TOV 1790046900)
+[Irtam] bucket hmF2 2026.09.22T03:30 OK (TOV 1790047800)
+[Irtam] bucket hmF2 2026.09.22T03:45 OK (TOV 1790048700)
+[Irtam] bucket hmF2 2026.09.22T04:00 OK (TOV 1790049600)
+[Irtam] bucket hmF2 2026.09.22T04:15 OK (TOV 1790050500)
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 10 estaciones EU
+[Ebro] EB040_2026270140501.SAO: foF2=8.40 MUF=29.3 hmF2=239 foEs=nan
+[GiroAdapter] getbest async: 5 estaciones actualizadas
+[Irtam] bucket hmF2 2026.09.22T04:30 OK (TOV 1790051400)
+[Irtam] bucket hmF2 2026.09.22T04:45 OK (TOV 1790052300)
+[Irtam] bucket hmF2 2026.09.22T05:00 OK (TOV 1790053200)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=3.06 max=68.82 TECU
+[SolarIndices] Kp=0.33 Dst=-21 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=394 km/s density=1.4 cm^-3 Bz=-0.6 nT (hist 3505 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=24.0
+[RadioProp] MUF=25.9 FOT=22.0 LUF=11.2 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 5.16e-07 W/m2 (B5.2)
+[Irtam] bucket hmF2 2026.09.22T05:15 OK (TOV 1790054100)
+[Irtam] bucket hmF2 2026.09.22T05:30 OK (TOV 1790055000)
+[Irtam] bucket hmF2 2026.09.22T05:45 OK (TOV 1790055900)
+[Irtam] bucket hmF2 2026.09.22T06:00 OK (TOV 1790056800)
+[Irtam] bucket hmF2 2026.09.22T06:15 OK (TOV 1790057700)
+[Irtam] bucket hmF2 2026.09.22T06:30 OK (TOV 1790058600)
+[Irtam] bucket foF2 2026.09.24T14:15 OK (TOV 1790259300)
+[Irtam] bucket hmF2 2026.09.22T06:45 OK (TOV 1790059500)
+[Irtam] bucket hmF2 2026.09.22T07:00 OK (TOV 1790060400)
+[Irtam] bucket hmF2 2026.09.22T07:15 OK (TOV 1790061300)
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 10 estaciones EU
+[Ebro] EB040_2026270141001.SAO: foF2=8.40 MUF=29.2 hmF2=239 foEs=nan
+[GiroAdapter] getbest async: 13 estaciones actualizadas
+[Irtam] bucket hmF2 2026.09.22T07:30 OK (TOV 1790062200)
+[Irtam] bucket hmF2 2026.09.22T07:45 OK (TOV 1790063100)
+[Irtam] bucket hmF2 2026.09.22T08:00 OK (TOV 1790064000)
+[Irtam] bucket hmF2 2026.09.22T08:15 OK (TOV 1790064900)
+[Irtam] bucket hmF2 2026.09.22T08:30 OK (TOV 1790065800)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=3.22 max=69.52 TECU
+[SolarIndices] Kp=0.33 Dst=-21 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=404 km/s density=0.3 cm^-3 Bz=-0.7 nT (hist 3506 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=24.0
+[RadioProp] MUF=25.8 FOT=22.0 LUF=11.1 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 4.89e-07 W/m2 (B4.9)
+[Irtam] bucket hmF2 2026.09.22T08:45 OK (TOV 1790066700)
+[Irtam] bucket hmF2 2026.09.22T09:00 OK (TOV 1790067600)
+[Irtam] bucket hmF2 2026.09.22T09:15 OK (TOV 1790068500)
+[Irtam] bucket hmF2 2026.09.22T09:30 OK (TOV 1790069400)
+[Irtam] bucket hmF2 2026.09.22T09:45 OK (TOV 1790070300)
+[Irtam] bucket hmF2 2026.09.22T10:00 OK (TOV 1790071200)
+[Irtam] bucket hmF2 2026.09.22T10:15 OK (TOV 1790072100)
+[Irtam] bucket hmF2 2026.09.22T10:30 OK (TOV 1790073000)
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 10 estaciones EU
+[Ebro] EB040_2026270141501.SAO: foF2=8.20 MUF=29.1 hmF2=235 foEs=nan
+[GiroAdapter] getbest async: 6 estaciones actualizadas
+[Irtam] bucket hmF2 2026.09.22T10:45 OK (TOV 1790073900)
+[Irtam] bucket hmF2 2026.09.22T11:00 OK (TOV 1790074800)
+[Irtam] bucket hmF2 2026.09.22T11:15 OK (TOV 1790075700)
+[Irtam] bucket hmF2 2026.09.22T11:30 OK (TOV 1790076600)
+[Irtam] bucket hmF2 2026.09.22T11:45 OK (TOV 1790077500)
+[Irtam] bucket hmF2 2026.09.22T12:00 OK (TOV 1790078400)
+[Irtam] bucket hmF2 2026.09.22T12:15 OK (TOV 1790079300)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=3.22 max=69.52 TECU
+[SolarIndices] sunspots: 397 filas
+[SolarIndices] Kp=0.33 Dst=-21 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=400 km/s density=1.4 cm^-3 Bz=0.4 nT (hist 3498 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=24.0
+[RadioProp] MUF=25.8 FOT=22.0 LUF=11.1 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 4.87e-07 W/m2 (B4.9)
+[Irtam] bucket hmF2 2026.09.22T12:30 OK (TOV 1790080200)
+[Irtam] bucket hmF2 2026.09.22T12:45 OK (TOV 1790081100)
+[Irtam] bucket hmF2 2026.09.22T13:00 OK (TOV 1790082000)
+[Irtam] bucket hmF2 2026.09.22T13:15 OK (TOV 1790082900)
+[Irtam] bucket hmF2 2026.09.22T13:30 OK (TOV 1790083800)
+[Irtam] bucket hmF2 2026.09.22T13:45 OK (TOV 1790084700)
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 10 estaciones EU
+[Ebro] EB040_2026270142001.SAO: foF2=8.20 MUF=28.5 hmF2=238 foEs=nan
+[GiroAdapter] getbest async: 4 estaciones actualizadas
+[Irtam] bucket hmF2 2026.09.22T14:00 OK (TOV 1790085600)
+[Irtam] bucket hmF2 2026.09.22T14:15 OK (TOV 1790086500)
+[Irtam] bucket hmF2 2026.09.22T14:30 OK (TOV 1790087400)
+[Irtam] bucket hmF2 2026.09.22T14:45 OK (TOV 1790088300)
+[Irtam] bucket hmF2 2026.09.22T15:00 OK (TOV 1790089200)
+[Irtam] bucket hmF2 2026.09.22T15:15 OK (TOV 1790090100)
+[Irtam] bucket hmF2 2026.09.22T15:30 OK (TOV 1790091000)
+[Irtam] bucket hmF2 2026.09.22T15:45 OK (TOV 1790091900)
+[SolarIndices] Kp=0.33 Dst=-21 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[Irtam] bucket hmF2 2026.09.22T16:00 OK (TOV 1790092800)
+[SolarWindAdapter] Viento solar real: speed=402 km/s density=1.4 cm^-3 Bz=0.7 nT (hist 3497 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=24.0
+[RadioProp] MUF=25.8 FOT=22.0 LUF=11.0 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 4.75e-07 W/m2 (B4.7)
+[Irtam] bucket foF2 2026.09.24T14:30 OK (TOV 1790260200)
+[Irtam] bucket hmF2 2026.09.22T16:15 OK (TOV 1790093700)
+[Irtam] bucket hmF2 2026.09.22T16:30 OK (TOV 1790094600)
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 10 estaciones EU
+[Ebro] EB040_2026270142501.SAO: foF2=8.00 MUF=27.8 hmF2=233 foEs=nan
+[GiroAdapter] getbest async: 12 estaciones actualizadas
+[Irtam] bucket hmF2 2026.09.22T16:45 OK (TOV 1790095500)
+[Irtam] bucket hmF2 2026.09.22T17:00 OK (TOV 1790096400)
+[Irtam] bucket hmF2 2026.09.22T17:15 OK (TOV 1790097300)
+[Irtam] bucket hmF2 2026.09.22T17:30 OK (TOV 1790098200)
+[Irtam] bucket hmF2 2026.09.22T17:45 OK (TOV 1790099100)
+[Irtam] bucket hmF2 2026.09.22T18:00 OK (TOV 1790100000)
+[Irtam] bucket hmF2 2026.09.22T18:15 OK (TOV 1790100900)
+[Irtam] bucket hmF2 2026.09.22T18:30 OK (TOV 1790101800)
+[Irtam] bucket hmF2 2026.09.22T18:45 OK (TOV 1790102700)
+[Irtam] bucket hmF2 2026.09.22T19:00 OK (TOV 1790103600)
+[Irtam] bucket hmF2 2026.09.22T19:15 OK (TOV 1790104500)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=3.28 max=69.29 TECU
+[SolarIndices] Kp=0.33 Dst=-21 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=399 km/s density=0.3 cm^-3 Bz=-0.2 nT (hist 3494 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=23.0
+[RadioProp] MUF=25.8 FOT=22.0 LUF=11.0 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 4.71e-07 W/m2 (B4.7)
+[Irtam] bucket hmF2 2026.09.22T19:30 OK (TOV 1790105400)
+[Irtam] bucket hmF2 2026.09.22T19:45 OK (TOV 1790106300)
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 10 estaciones EU
+[Ebro] EB040_2026270143001.SAO: foF2=7.85 MUF=26.4 hmF2=235 foEs=nan
+[GiroAdapter] getbest async: 6 estaciones actualizadas
+[Irtam] bucket hmF2 2026.09.23T20:00 OK (TOV 1790193600)
+[Irtam] bucket hmF2 2026.09.23T20:15 OK (TOV 1790194500)
+[Irtam] bucket hmF2 2026.09.23T20:30 OK (TOV 1790195400)
+[Irtam] bucket hmF2 2026.09.23T20:45 OK (TOV 1790196300)
+[Irtam] bucket hmF2 2026.09.23T21:00 OK (TOV 1790197200)
+[Irtam] bucket hmF2 2026.09.23T21:15 OK (TOV 1790198100)
+[Irtam] bucket hmF2 2026.09.23T21:30 OK (TOV 1790199000)
+[Irtam] bucket hmF2 2026.09.23T21:45 OK (TOV 1790199900)
+[Irtam] bucket hmF2 2026.09.23T22:00 OK (TOV 1790200800)
+[Irtam] bucket hmF2 2026.09.23T22:15 OK (TOV 1790201700)
+[Irtam] bucket hmF2 2026.09.23T22:30 OK (TOV 1790202600)
+[Irtam] bucket hmF2 2026.09.23T22:45 OK (TOV 1790203500)
+[Irtam] bucket hmF2 2026.09.23T23:00 OK (TOV 1790204400)
+[SolarIndices] Kp=0.33 Dst=-21 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=406 km/s density=3.0 cm^-3 Bz=0.8 nT (hist 3494 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=23.0
+[RadioProp] MUF=26.0 FOT=22.1 LUF=11.0 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 4.72e-07 W/m2 (B4.7)
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 10 estaciones EU
+[GiroAdapter] getbest async: 4 estaciones actualizadas
+[Ebro] EB040_2026270143501.SAO: foF2=7.75 MUF=26.1 hmF2=242 foEs=nan
+[Irtam] bucket hmF2 2026.09.23T23:15 OK (TOV 1790205300)
+[Irtam] bucket hmF2 2026.09.23T23:30 OK (TOV 1790206200)
+[Irtam] bucket hmF2 2026.09.23T23:45 OK (TOV 1790207100)
+[Irtam] bucket hmF2 2026.09.24T00:00 OK (TOV 1790208000)
+[Irtam] bucket hmF2 2026.09.24T00:15 OK (TOV 1790208900)
+[Irtam] bucket hmF2 2026.09.24T00:30 OK (TOV 1790209800)
+[Irtam] bucket hmF2 2026.09.24T00:45 OK (TOV 1790210700)
+[Irtam] bucket hmF2 2026.09.24T01:00 OK (TOV 1790211600)
+[Irtam] bucket hmF2 2026.09.24T01:15 OK (TOV 1790212500)
+[Irtam] bucket foF2 2026.09.24T14:45 OK (TOV 1790261100)
+[Irtam] bucket hmF2 2026.09.24T01:30 OK (TOV 1790213400)
+[Irtam] bucket hmF2 2026.09.24T01:45 OK (TOV 1790214300)
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 10 estaciones EU
+[Ebro] EB040_2026270144001.SAO: foF2=7.80 MUF=27.1 hmF2=237 foEs=2.85
+[GiroAdapter] getbest async: 12 estaciones actualizadas
+[Irtam] bucket hmF2 2026.09.24T02:00 OK (TOV 1790215200)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=3.02 max=68.94 TECU
+[SolarIndices] Kp=0.33 Dst=-21 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=405 km/s density=3.1 cm^-3 Bz=0.8 nT (hist 3492 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=22.0
+[RadioProp] MUF=26.2 FOT=22.3 LUF=11.1 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 4.85e-07 W/m2 (B4.9)
+[Irtam] bucket hmF2 2026.09.24T02:15 OK (TOV 1790216100)
+[Irtam] bucket hmF2 2026.09.24T02:30 OK (TOV 1790217000)
+[Irtam] bucket hmF2 2026.09.24T02:45 OK (TOV 1790217900)
+[Irtam] bucket hmF2 2026.09.24T03:00 OK (TOV 1790218800)
+[Irtam] bucket hmF2 2026.09.24T03:15 OK (TOV 1790219700)
+[Irtam] bucket hmF2 2026.09.24T03:30 OK (TOV 1790220600)
+[Irtam] bucket hmF2 2026.09.24T03:45 OK (TOV 1790221500)
+[Irtam] bucket hmF2 2026.09.24T04:00 OK (TOV 1790222400)
+[Irtam] bucket hmF2 2026.09.24T04:15 OK (TOV 1790223300)
+[Irtam] bucket hmF2 2026.09.24T04:30 OK (TOV 1790224200)
+[Irtam] bucket hmF2 2026.09.24T04:45 OK (TOV 1790225100)
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 10 estaciones EU
+[Ebro] EB040_2026270144501.SAO: foF2=7.75 MUF=27.8 hmF2=229 foEs=nan
+[GiroAdapter] getbest async: 6 estaciones actualizadas
+[Irtam] bucket hmF2 2026.09.24T05:00 OK (TOV 1790226000)
+[Irtam] bucket hmF2 2026.09.24T05:15 OK (TOV 1790226900)
+[Irtam] bucket hmF2 2026.09.24T05:30 OK (TOV 1790227800)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=2.62 max=69.35 TECU
+[SolarIndices] Kp=0.33 Dst=-21 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=404 km/s density=3.2 cm^-3 Bz=1.0 nT (hist 3495 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=21.0
+[RadioProp] MUF=27.2 FOT=23.1 LUF=11.4 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 4.73e-07 W/m2 (B4.7)
+[Irtam] bucket hmF2 2026.09.24T05:45 OK (TOV 1790228700)
+[Irtam] bucket hmF2 2026.09.24T06:00 OK (TOV 1790229600)
+[Irtam] bucket hmF2 2026.09.24T06:15 OK (TOV 1790230500)
+[Irtam] bucket hmF2 2026.09.24T06:30 OK (TOV 1790231400)
+[Irtam] bucket hmF2 2026.09.24T06:45 OK (TOV 1790232300)
+[Irtam] bucket hmF2 2026.09.24T07:00 OK (TOV 1790233200)
+[Irtam] bucket hmF2 2026.09.24T07:15 OK (TOV 1790234100)
+[Irtam] bucket hmF2 2026.09.24T07:30 OK (TOV 1790235000)
+[Irtam] bucket hmF2 2026.09.24T07:45 OK (TOV 1790235900)
+[Irtam] bucket hmF2 2026.09.24T08:00 OK (TOV 1790236800)
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 10 estaciones EU
+[Ebro] EB040_2026270145001.SAO: foF2=7.50 MUF=27.1 hmF2=219 foEs=nan
+[GiroAdapter] getbest async: 5 estaciones actualizadas
+[Irtam] bucket hmF2 2026.09.24T08:15 OK (TOV 1790237700)
+[Irtam] bucket hmF2 2026.09.24T08:30 OK (TOV 1790238600)
+[Irtam] bucket hmF2 2026.09.24T08:45 OK (TOV 1790239500)
+[Irtam] bucket hmF2 2026.09.24T09:00 OK (TOV 1790240400)
+[Irtam] bucket hmF2 2026.09.24T09:15 OK (TOV 1790241300)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=2.62 max=69.35 TECU
+[SolarIndices] Kp=0.33 Dst=-21 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=403 km/s density=3.1 cm^-3 Bz=-0.8 nT (hist 3496 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=21.0
+[RadioProp] MUF=27.0 FOT=22.9 LUF=11.3 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 4.68e-07 W/m2 (B4.7)
+[Irtam] bucket hmF2 2026.09.24T09:30 OK (TOV 1790242200)
+[Irtam] bucket hmF2 2026.09.24T09:45 OK (TOV 1790243100)
+[Irtam] bucket hmF2 2026.09.24T10:00 OK (TOV 1790244000)
+[Irtam] bucket hmF2 2026.09.24T10:15 OK (TOV 1790244900)
+[Irtam] bucket foF2 2026.09.24T15:00 OK (TOV 1790262000)
+[Irtam] bucket hmF2 2026.09.24T10:30 OK (TOV 1790245800)
+[Irtam] bucket hmF2 2026.09.24T10:45 OK (TOV 1790246700)
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 9 estaciones EU
+[Irtam] bucket hmF2 2026.09.24T11:00 OK (TOV 1790247600)
+[Ebro] EB040_2026270145501.SAO: foF2=7.30 MUF=25.6 hmF2=223 foEs=nan
+[GiroAdapter] getbest async: 12 estaciones actualizadas
+[Irtam] bucket hmF2 2026.09.24T11:15 OK (TOV 1790248500)
+[Irtam] bucket hmF2 2026.09.24T11:30 OK (TOV 1790249400)
+[Irtam] bucket hmF2 2026.09.24T11:45 OK (TOV 1790250300)
+[Irtam] bucket hmF2 2026.09.24T12:00 OK (TOV 1790251200)
+[Irtam] bucket hmF2 2026.09.24T12:15 OK (TOV 1790252100)
+[Irtam] bucket hmF2 2026.09.24T12:30 OK (TOV 1790253000)
+[Irtam] bucket hmF2 2026.09.24T12:45 OK (TOV 1790253900)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=2.37 max=68.78 TECU
+[SolarIndices] Kp=0.33 Dst=-21 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=405 km/s density=3.3 cm^-3 Bz=-0.0 nT (hist 3493 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=21.0
+[RadioProp] MUF=25.8 FOT=21.9 LUF=10.8 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 4.60e-07 W/m2 (B4.6)
+[Irtam] bucket hmF2 2026.09.24T13:00 OK (TOV 1790254800)
+[Irtam] bucket hmF2 2026.09.24T13:15 OK (TOV 1790255700)
+[Irtam] bucket hmF2 2026.09.24T13:30 OK (TOV 1790256600)
+[Irtam] bucket hmF2 2026.09.24T13:45 OK (TOV 1790257500)
+[Irtam] bucket hmF2 2026.09.24T14:00 OK (TOV 1790258400)
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 9 estaciones EU
+[Ebro] EB040_2026270150001.SAO: foF2=7.20 MUF=24.4 hmF2=230 foEs=2.30
+[GiroAdapter] getbest async: 6 estaciones actualizadas
+[Irtam] bucket hmF2 2026.09.24T14:15 OK (TOV 1790259300)
+[Irtam] bucket hmF2 2026.09.24T14:30 OK (TOV 1790260200)
+[Irtam] bucket hmF2 2026.09.24T14:45 OK (TOV 1790261100)
+[Irtam] bucket hmF2 2026.09.24T15:00 OK (TOV 1790262000)
+[Irtam] bucket B0 2026.09.20T15:15 OK (TOV 1789917300)
+[Irtam] bucket B0 2026.09.20T15:30 OK (TOV 1789918200)
+[Irtam] bucket B0 2026.09.20T15:45 OK (TOV 1789919100)
+[Irtam] bucket B0 2026.09.20T16:00 OK (TOV 1789920000)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=2.37 max=68.78 TECU
+[SolarIndices] Kp=0.00 Dst=-21 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=405 km/s density=3.2 cm^-3 Bz=-0.5 nT (hist 3491 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=20.0
+[RadioProp] MUF=25.2 FOT=21.5 LUF=10.6 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 4.75e-07 W/m2 (B4.7)
+[Irtam] bucket B0 2026.09.20T16:15 OK (TOV 1789920900)
+[Irtam] bucket B0 2026.09.20T16:30 OK (TOV 1789921800)
+[Irtam] bucket B0 2026.09.20T16:45 OK (TOV 1789922700)
+[Irtam] bucket B0 2026.09.20T17:00 OK (TOV 1789923600)
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 10 estaciones EU
+[Ebro] EB040_2026270150501.SAO: foF2=7.00 MUF=24.0 hmF2=234 foEs=nan
+[GiroAdapter] getbest async: 5 estaciones actualizadas
+[Irtam] bucket B0 2026.09.20T17:15 OK (TOV 1789924500)
+[Irtam] bucket B0 2026.09.20T17:30 OK (TOV 1789925400)
+[Irtam] bucket B0 2026.09.20T17:45 OK (TOV 1789926300)
+[Irtam] bucket B0 2026.09.20T18:00 OK (TOV 1789927200)
+[Irtam] bucket B0 2026.09.20T18:15 OK (TOV 1789928100)
+[Irtam] bucket B0 2026.09.20T18:30 OK (TOV 1789929000)
+[Irtam] bucket B0 2026.09.20T18:45 OK (TOV 1789929900)
+[Irtam] bucket B0 2026.09.20T19:00 OK (TOV 1789930800)
+[Irtam] bucket B0 2026.09.20T19:15 OK (TOV 1789931700)
+[Irtam] bucket foF2 2026.09.24T15:15 OK (TOV 1790262900)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=2.36 max=69.74 TECU
+[SolarIndices] Kp=0.00 Dst=-20 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=402 km/s density=3.2 cm^-3 Bz=-0.9 nT (hist 3494 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=21.0
+[RadioProp] MUF=24.4 FOT=20.7 LUF=10.3 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 4.82e-07 W/m2 (B4.8)
+[Irtam] bucket hmF2 2026.09.24T15:15 OK (TOV 1790262900)
+[Irtam] bucket B0 2026.09.20T19:30 OK (TOV 1789932600)
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 10 estaciones EU
+[Ebro] EB040_2026270151001.SAO: foF2=6.80 MUF=23.8 hmF2=223 foEs=nan
+[GiroAdapter] getbest async: 12 estaciones actualizadas
+[Irtam] bucket B0 2026.09.20T19:45 OK (TOV 1789933500)
+[Irtam] bucket B0 2026.09.20T20:00 OK (TOV 1789934400)
+[Irtam] bucket B0 2026.09.20T20:15 OK (TOV 1789935300)
+[Irtam] bucket B0 2026.09.20T20:30 OK (TOV 1789936200)
+[Irtam] fetch B0 2026.09.20T20:45: fallo red/pre-gate
+[Irtam] bucket B0 2026.09.20T20:45 OK (TOV 1789937100)
+[Irtam] bucket B0 2026.09.20T21:00 OK (TOV 1789938000)
+[Irtam] bucket B0 2026.09.20T21:15 OK (TOV 1789938900)
+[Irtam] bucket B0 2026.09.20T21:30 OK (TOV 1789939800)
+[Irtam] fetch B0 2026.09.20T21:45: fallo red/pre-gate
+[Irtam] bucket B0 2026.09.20T21:45 OK (TOV 1789940700)
+[Irtam] bucket B0 2026.09.20T22:00 OK (TOV 1789941600)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=2.36 max=69.74 TECU
+[SolarIndices] Kp=0.00 Dst=-20 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 10 estaciones EU
+[GiroAdapter] getbest async: 6 estaciones actualizadas
+[Ebro] EB040_2026270151501.SAO: foF2=6.65 MUF=22.8 hmF2=228 foEs=2.90
+[SolarWindAdapter] Viento solar real: speed=400 km/s density=3.1 cm^-3 Bz=-0.9 nT (hist 3492 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=21.0
+[RadioProp] MUF=23.9 FOT=20.3 LUF=10.1 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 4.75e-07 W/m2 (B4.7)
+[Irtam] bucket B0 2026.09.20T22:15 OK (TOV 1789942500)
+[Irtam] bucket B0 2026.09.20T22:30 OK (TOV 1789943400)
+[Irtam] bucket B0 2026.09.20T22:45 OK (TOV 1789944300)
+[Irtam] bucket B0 2026.09.20T23:00 OK (TOV 1789945200)
+[Irtam] bucket B0 2026.09.20T23:15 OK (TOV 1789946100)
+[Irtam] bucket B0 2026.09.20T23:30 OK (TOV 1789947000)
+[Irtam] bucket B0 2026.09.20T23:45 OK (TOV 1789947900)
+[Irtam] bucket B0 2026.09.21T00:00 OK (TOV 1789948800)
+[Irtam] bucket B0 2026.09.21T00:15 OK (TOV 1789949700)
+[Irtam] bucket B0 2026.09.21T00:30 OK (TOV 1789950600)
+[Irtam] bucket B0 2026.09.21T00:45 OK (TOV 1789951500)
+[Irtam] bucket B0 2026.09.21T01:00 OK (TOV 1789952400)
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 10 estaciones EU
+[Ebro] EB040_2026270152001.SAO: foF2=6.60 MUF=22.0 hmF2=244 foEs=2.75
+[GiroAdapter] getbest async: 5 estaciones actualizadas
+[Irtam] bucket B0 2026.09.21T01:15 OK (TOV 1789953300)
+[Irtam] bucket B0 2026.09.21T01:30 OK (TOV 1789954200)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=2.42 max=69.78 TECU
+[SolarIndices] sunspots: 397 filas
+[SolarIndices] Kp=0.00 Dst=-20 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=403 km/s density=3.2 cm^-3 Bz=-0.7 nT (hist 3492 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=20.0
+[RadioProp] MUF=23.9 FOT=20.3 LUF=10.1 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 4.90e-07 W/m2 (B4.9)
+[Irtam] bucket B0 2026.09.21T01:45 OK (TOV 1789955100)
+[Irtam] bucket B0 2026.09.21T02:00 OK (TOV 1789956000)
+[Irtam] bucket B0 2026.09.21T02:15 OK (TOV 1789956900)
+[Irtam] bucket B0 2026.09.21T02:30 OK (TOV 1789957800)
+[Irtam] bucket B0 2026.09.21T02:45 OK (TOV 1789958700)
+[Irtam] bucket B0 2026.09.21T03:00 OK (TOV 1789959600)
+[Irtam] bucket B0 2026.09.21T03:15 OK (TOV 1789960500)
+[Irtam] bucket foF2 2026.09.24T15:30 OK (TOV 1790263800)
+[Irtam] bucket hmF2 2026.09.24T15:30 OK (TOV 1790263800)
+[Irtam] bucket B0 2026.09.21T03:30 OK (TOV 1789961400)
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 10 estaciones EU
+[Ebro] EB040_2026270152501.SAO: foF2=6.60 MUF=21.2 hmF2=247 foEs=2.85
+[GiroAdapter] getbest async: 12 estaciones actualizadas
+[Irtam] bucket B0 2026.09.21T03:45 OK (TOV 1789962300)
+[Irtam] bucket B0 2026.09.21T04:00 OK (TOV 1789963200)
+[Irtam] bucket B0 2026.09.21T04:15 OK (TOV 1789964100)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=2.42 max=69.78 TECU
+[SolarIndices] Kp=0.00 Dst=-20 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=402 km/s density=3.2 cm^-3 Bz=-0.4 nT (hist 3492 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=20.0
+[RadioProp] MUF=24.0 FOT=20.4 LUF=10.1 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 5.05e-07 W/m2 (B5.0)
+[Irtam] bucket B0 2026.09.21T04:30 OK (TOV 1789965000)
+[Irtam] bucket B0 2026.09.21T04:45 OK (TOV 1789965900)
+[Irtam] bucket B0 2026.09.21T05:00 OK (TOV 1789966800)
+[Irtam] bucket B0 2026.09.21T05:15 OK (TOV 1789967700)
+[Irtam] bucket B0 2026.09.21T05:30 OK (TOV 1789968600)
+[Irtam] bucket B0 2026.09.21T05:45 OK (TOV 1789969500)
+[Irtam] bucket B0 2026.09.21T06:00 OK (TOV 1789970400)
+[Irtam] bucket B0 2026.09.21T06:15 OK (TOV 1789971300)
+[Ebro] EB040_2026270153001.SAO: foF2=6.65 MUF=21.1 hmF2=251 foEs=2.80
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 10 estaciones EU
+[GiroAdapter] getbest async: 7 estaciones actualizadas
+[Irtam] bucket B0 2026.09.21T06:30 OK (TOV 1789972200)
+[Irtam] bucket B0 2026.09.21T06:45 OK (TOV 1789973100)
+[Irtam] bucket B0 2026.09.21T07:00 OK (TOV 1789974000)
+[Irtam] bucket B0 2026.09.21T07:15 OK (TOV 1789974900)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=2.67 max=70.58 TECU
+[SolarIndices] Kp=0.00 Dst=-20 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=402 km/s density=3.2 cm^-3 Bz=-0.8 nT (hist 3490 pts)
+[Irtam] bucket B0 2026.09.21T07:30 OK (TOV 1789975800)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=20.0
+[RadioProp] MUF=24.0 FOT=20.4 LUF=10.1 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 5.12e-07 W/m2 (B5.1)
+[Irtam] bucket B0 2026.09.21T07:45 OK (TOV 1789976700)
+[Irtam] bucket B0 2026.09.21T08:00 OK (TOV 1789977600)
+[Irtam] bucket B0 2026.09.21T08:15 OK (TOV 1789978500)
+[Irtam] bucket B0 2026.09.21T08:30 OK (TOV 1789979400)
+[Irtam] bucket B0 2026.09.21T08:45 OK (TOV 1789980300)
+[Irtam] bucket B0 2026.09.21T09:00 OK (TOV 1789981200)
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 10 estaciones EU
+[Ebro] EB040_2026270153501.SAO: foF2=6.65 MUF=22.0 hmF2=245 foEs=nan
+[GiroAdapter] getbest async: 5 estaciones actualizadas
+[Irtam] bucket B0 2026.09.21T09:15 OK (TOV 1789982100)
+[Irtam] bucket B0 2026.09.21T09:30 OK (TOV 1789983000)
+[Irtam] bucket B0 2026.09.21T09:45 OK (TOV 1789983900)
+[Irtam] bucket B0 2026.09.21T10:00 OK (TOV 1789984800)
+[Irtam] bucket B0 2026.09.21T10:15 OK (TOV 1789985700)
+[Irtam] bucket B0 2026.09.21T10:30 OK (TOV 1789986600)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=2.67 max=70.58 TECU
+[SolarIndices] Kp=0.00 Dst=-20 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=402 km/s density=3.2 cm^-3 Bz=-0.6 nT (hist 3489 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=20.0
+[RadioProp] MUF=25.1 FOT=21.3 LUF=10.4 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 5.06e-07 W/m2 (B5.1)
+[Irtam] bucket B0 2026.09.21T10:45 OK (TOV 1789987500)
+[Irtam] bucket B0 2026.09.21T11:00 OK (TOV 1789988400)
+[Irtam] bucket foF2 2026.09.24T15:45 OK (TOV 1790264700)
+[Irtam] bucket hmF2 2026.09.24T15:45 OK (TOV 1790264700)
+[Irtam] bucket B0 2026.09.21T11:15 OK (TOV 1789989300)
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 10 estaciones EU
+[Ebro] EB040_2026270154001.SAO: foF2=6.70 MUF=21.7 hmF2=251 foEs=2.75
+[GiroAdapter] getbest async: 12 estaciones actualizadas
+[Irtam] bucket B0 2026.09.21T11:30 OK (TOV 1789990200)
+[Irtam] bucket B0 2026.09.21T11:45 OK (TOV 1789991100)
+[Irtam] bucket B0 2026.09.21T12:00 OK (TOV 1789992000)
+[Irtam] bucket B0 2026.09.21T12:15 OK (TOV 1789992900)
+[Irtam] bucket B0 2026.09.21T12:30 OK (TOV 1789993800)
+[Irtam] bucket B0 2026.09.21T12:45 OK (TOV 1789994700)
+[Irtam] bucket B0 2026.09.21T13:00 OK (TOV 1789995600)
+[Irtam] bucket B0 2026.09.21T13:15 OK (TOV 1789996500)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=2.97 max=72.33 TECU
+[SolarIndices] Kp=0.00 Dst=-20 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=411 km/s density=3.3 cm^-3 Bz=-1.0 nT (hist 3490 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=20.0
+[RadioProp] MUF=23.9 FOT=20.3 LUF=10.0 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 5.21e-07 W/m2 (B5.2)
+[Irtam] bucket B0 2026.09.21T13:30 OK (TOV 1789997400)
+[Irtam] bucket B0 2026.09.21T13:45 OK (TOV 1789998300)
+[Irtam] bucket B0 2026.09.21T14:00 OK (TOV 1789999200)
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 10 estaciones EU
+[Ebro] EB040_2026270154501.SAO: foF2=6.65 MUF=21.7 hmF2=250 foEs=2.70
+[GiroAdapter] getbest async: 10 estaciones actualizadas
+[Irtam] bucket B0 2026.09.21T14:15 OK (TOV 1790000100)
+[Irtam] bucket B0 2026.09.21T14:30 OK (TOV 1790001000)
+[Irtam] bucket B0 2026.09.21T14:45 OK (TOV 1790001900)
+[Irtam] bucket B0 2026.09.21T15:00 OK (TOV 1790002800)
+[Irtam] bucket B0 2026.09.21T15:15 OK (TOV 1790003700)
+[Irtam] bucket B0 2026.09.21T15:30 OK (TOV 1790004600)
+[Irtam] bucket B0 2026.09.21T15:45 OK (TOV 1790005500)
+[Irtam] bucket B0 2026.09.21T16:00 OK (TOV 1790006400)
+[Irtam] bucket B0 2026.09.21T16:15 OK (TOV 1790007300)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=2.97 max=72.33 TECU
+[SolarIndices] Kp=0.00 Dst=-20 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[Irtam] bucket B0 2026.09.21T16:30 OK (TOV 1790008200)
+[SolarWindAdapter] Viento solar real: speed=406 km/s density=3.2 cm^-3 Bz=-0.6 nT (hist 3491 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=20.0
+[RadioProp] MUF=23.9 FOT=20.3 LUF=10.0 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 4.84e-07 W/m2 (B4.8)
+[Irtam] bucket B0 2026.09.21T16:45 OK (TOV 1790009100)
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 10 estaciones EU
+[GiroAdapter] getbest async: 4 estaciones actualizadas
+[Ebro] EB040_2026270155001.SAO: foF2=6.85 MUF=21.5 hmF2=257 foEs=2.85
+[Irtam] bucket B0 2026.09.21T17:00 OK (TOV 1790010000)
+[Irtam] bucket B0 2026.09.21T17:15 OK (TOV 1790010900)
+[Irtam] bucket B0 2026.09.21T17:30 OK (TOV 1790011800)
+[Irtam] bucket B0 2026.09.21T17:45 OK (TOV 1790012700)
+[Irtam] bucket B0 2026.09.21T18:00 OK (TOV 1790013600)
+[Irtam] bucket B0 2026.09.21T18:15 OK (TOV 1790014500)
+[Irtam] bucket B0 2026.09.21T18:30 OK (TOV 1790015400)
+[Irtam] bucket B0 2026.09.21T18:45 OK (TOV 1790016300)
+[Irtam] bucket foF2 2026.09.24T16:00 OK (TOV 1790265600)
+[Irtam] bucket hmF2 2026.09.24T16:00 OK (TOV 1790265600)
+[Irtam] bucket B0 2026.09.21T19:00 OK (TOV 1790017200)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=2.98 max=72.91 TECU
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 10 estaciones EU
+[Ebro] EB040_2026270155501.SAO: foF2=6.95 MUF=22.5 hmF2=250 foEs=2.80
+[SolarIndices] Kp=0.00 Dst=-20 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=405 km/s density=3.2 cm^-3 Bz=0.8 nT (hist 3491 pts)
+[GiroAdapter] getbest async: 12 estaciones actualizadas
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=19.0
+[RadioProp] MUF=23.7 FOT=20.2 LUF=9.9 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 5.81e-07 W/m2 (B5.8)
+[Irtam] bucket B0 2026.09.21T19:15 OK (TOV 1790018100)
+[Irtam] bucket B0 2026.09.21T19:30 OK (TOV 1790019000)
+[Irtam] bucket B0 2026.09.21T19:45 OK (TOV 1790019900)
+[Irtam] bucket B0 2026.09.21T20:00 OK (TOV 1790020800)
+[Irtam] bucket B0 2026.09.21T20:15 OK (TOV 1790021700)
+[Irtam] fetch B0 2026.09.21T20:30: fallo red/pre-gate
+[Irtam] bucket B0 2026.09.21T20:30 OK (TOV 1790022600)
+[Irtam] bucket B0 2026.09.21T20:45 OK (TOV 1790023500)
+[Irtam] bucket B0 2026.09.21T21:00 OK (TOV 1790024400)
+[Irtam] bucket B0 2026.09.21T21:15 OK (TOV 1790025300)
+[Irtam] bucket B0 2026.09.21T21:30 OK (TOV 1790026200)
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 10 estaciones EU
+[Ebro] EB040_2026270160001.SAO: foF2=7.10 MUF=23.0 hmF2=258 foEs=2.25
+[GiroAdapter] getbest async: 9 estaciones actualizadas
+[Irtam] bucket B0 2026.09.21T21:45 OK (TOV 1790027100)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=2.98 max=72.91 TECU
+[SolarIndices] Kp=0.00 Dst=-20 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=400 km/s density=3.2 cm^-3 Bz=1.0 nT (hist 3490 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=19.0
+[RadioProp] MUF=23.9 FOT=20.3 LUF=9.9 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 1.22e-06 W/m2 (C1.2)
+[Irtam] bucket B0 2026.09.21T22:00 OK (TOV 1790028000)
+[Irtam] bucket B0 2026.09.21T22:15 OK (TOV 1790028900)
+[Irtam] bucket B0 2026.09.21T22:30 OK (TOV 1790029800)
+[Irtam] bucket B0 2026.09.21T22:45 OK (TOV 1790030700)
+[Irtam] bucket B0 2026.09.21T23:00 OK (TOV 1790031600)
+[Irtam] bucket B0 2026.09.21T23:15 OK (TOV 1790032500)
+[Irtam] bucket B0 2026.09.21T23:30 OK (TOV 1790033400)
+[Irtam] bucket B0 2026.09.21T23:45 OK (TOV 1790034300)
+[Irtam] bucket B0 2026.09.22T00:00 OK (TOV 1790035200)
+[Irtam] bucket B0 2026.09.22T00:15 OK (TOV 1790036100)
+[Irtam] bucket B0 2026.09.22T00:30 OK (TOV 1790037000)
+[Irtam] bucket B0 2026.09.22T00:45 OK (TOV 1790037900)
+[Irtam] bucket B0 2026.09.22T01:00 OK (TOV 1790038800)
+[Irtam] bucket B0 2026.09.22T01:15 OK (TOV 1790039700)
+[Irtam] bucket B0 2026.09.22T01:30 OK (TOV 1790040600)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=3.18 max=71.79 TECU
+[Irtam] bucket B0 2026.09.22T01:45 OK (TOV 1790041500)
+[SolarIndices] Kp=0.00 Dst=-20 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=402 km/s density=3.3 cm^-3 Bz=0.3 nT (hist 3489 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=18.0
+[RadioProp] MUF=23.9 FOT=20.3 LUF=10.3 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 7.40e-07 W/m2 (B7.4)
+[Irtam] bucket B0 2026.09.22T02:00 OK (TOV 1790042400)
+[Irtam] bucket B0 2026.09.22T02:15 OK (TOV 1790043300)
+[Irtam] bucket B0 2026.09.22T02:30 OK (TOV 1790044200)
+[Irtam] bucket B0 2026.09.22T02:45 OK (TOV 1790045100)
+[Irtam] bucket B0 2026.09.22T03:00 OK (TOV 1790046000)
+[Irtam] bucket B0 2026.09.22T03:15 OK (TOV 1790046900)
+[Irtam] bucket foF2 2026.09.24T16:15 OK (TOV 1790266500)
+[Irtam] bucket hmF2 2026.09.24T16:15 OK (TOV 1790266500)
+[Irtam] bucket B0 2026.09.22T03:30 OK (TOV 1790047800)
+[Irtam] bucket B0 2026.09.22T03:45 OK (TOV 1790048700)
+[Irtam] bucket B0 2026.09.22T04:00 OK (TOV 1790049600)
+[Irtam] bucket B0 2026.09.22T04:15 OK (TOV 1790050500)
+[Irtam] bucket B0 2026.09.22T04:30 OK (TOV 1790051400)
+[Irtam] bucket B0 2026.09.22T04:45 OK (TOV 1790052300)
+[Irtam] bucket B0 2026.09.22T05:00 OK (TOV 1790053200)
+[Irtam] bucket B0 2026.09.22T05:15 OK (TOV 1790054100)
+[Irtam] bucket B0 2026.09.22T05:30 OK (TOV 1790055000)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=3.18 max=71.79 TECU
+[SolarIndices] Kp=0.33 Dst=-19 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=403 km/s density=3.2 cm^-3 Bz=0.7 nT (hist 3489 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=18.0
+[RadioProp] MUF=23.9 FOT=20.3 LUF=10.0 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 5.24e-07 W/m2 (B5.2)
+[Irtam] bucket B0 2026.09.22T05:45 OK (TOV 1790055900)
+[Irtam] bucket B0 2026.09.22T06:00 OK (TOV 1790056800)
+[Irtam] bucket B0 2026.09.22T06:15 OK (TOV 1790057700)
+[Irtam] bucket B0 2026.09.22T06:30 OK (TOV 1790058600)
+[Irtam] bucket B0 2026.09.22T06:45 OK (TOV 1790059500)
+[Irtam] bucket B0 2026.09.22T07:00 OK (TOV 1790060400)
+[Irtam] bucket B0 2026.09.22T07:15 OK (TOV 1790061300)
+[Irtam] bucket B0 2026.09.22T07:30 OK (TOV 1790062200)
+[Irtam] bucket B0 2026.09.22T07:45 OK (TOV 1790063100)
+[Irtam] bucket B0 2026.09.22T08:00 OK (TOV 1790064000)
+[Irtam] bucket B0 2026.09.22T08:15 OK (TOV 1790064900)
+[Irtam] bucket B0 2026.09.22T08:30 OK (TOV 1790065800)
+[Irtam] bucket B0 2026.09.22T08:45 OK (TOV 1790066700)
+[Irtam] bucket B0 2026.09.22T09:00 OK (TOV 1790067600)
+[Irtam] bucket B0 2026.09.22T09:15 OK (TOV 1790068500)
+[Irtam] bucket B0 2026.09.22T09:30 OK (TOV 1790069400)
+[Irtam] bucket B0 2026.09.22T09:45 OK (TOV 1790070300)
+[Irtam] bucket B0 2026.09.22T10:00 OK (TOV 1790071200)
+[Irtam] bucket B0 2026.09.22T10:15 OK (TOV 1790072100)
+[Irtam] bucket B0 2026.09.22T10:30 OK (TOV 1790073000)
+[Irtam] bucket B0 2026.09.22T10:45 OK (TOV 1790073900)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=2.92 max=71.61 TECU
+[SolarIndices] Kp=0.00 Dst=-18 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=409 km/s density=0.1 cm^-3 Bz=-0.6 nT (hist 3488 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=17.0
+[RadioProp] MUF=23.9 FOT=20.3 LUF=9.8 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 4.74e-07 W/m2 (B4.7)
+[Irtam] bucket B0 2026.09.22T11:00 OK (TOV 1790074800)
+[Irtam] bucket B0 2026.09.22T11:15 OK (TOV 1790075700)
+[Irtam] bucket B0 2026.09.22T11:30 OK (TOV 1790076600)
+[Irtam] bucket B0 2026.09.22T11:45 OK (TOV 1790077500)
+[Irtam] bucket B0 2026.09.22T12:00 OK (TOV 1790078400)
+[Irtam] bucket B0 2026.09.22T12:15 OK (TOV 1790079300)
+[Irtam] bucket B0 2026.09.22T12:30 OK (TOV 1790080200)
+[Irtam] bucket B0 2026.09.22T12:45 OK (TOV 1790081100)
+[Irtam] bucket B0 2026.09.22T13:00 OK (TOV 1790082000)
+[Irtam] bucket B0 2026.09.22T13:15 OK (TOV 1790082900)
+[Irtam] bucket B0 2026.09.22T13:30 OK (TOV 1790083800)
+[Irtam] bucket B0 2026.09.22T13:45 OK (TOV 1790084700)
+[Irtam] bucket B0 2026.09.22T14:00 OK (TOV 1790085600)
+[Irtam] bucket B0 2026.09.22T14:15 OK (TOV 1790086500)
+[Irtam] bucket B0 2026.09.22T14:30 OK (TOV 1790087400)
+[Irtam] bucket B0 2026.09.22T14:45 OK (TOV 1790088300)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=2.92 max=71.61 TECU
+[SolarIndices] sunspots: 392 filas
+[SolarIndices] Kp=0.00 Dst=-17 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=401 km/s density=3.2 cm^-3 Bz=0.8 nT (hist 3486 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=17.0
+[RadioProp] MUF=23.9 FOT=20.3 LUF=9.7 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 4.58e-07 W/m2 (B4.6)
+[Irtam] bucket foF2 2026.09.24T16:30 OK (TOV 1790267400)
+[Irtam] bucket hmF2 2026.09.24T16:30 OK (TOV 1790267400)
+[Irtam] bucket B0 2026.09.22T15:00 OK (TOV 1790089200)
+[Irtam] bucket B0 2026.09.22T15:15 OK (TOV 1790090100)
+[Irtam] bucket B0 2026.09.22T15:30 OK (TOV 1790091000)
+[Irtam] bucket B0 2026.09.22T15:45 OK (TOV 1790091900)
+[Irtam] bucket B0 2026.09.22T16:00 OK (TOV 1790092800)
+[Irtam] bucket B0 2026.09.22T16:15 OK (TOV 1790093700)
+[Irtam] bucket B0 2026.09.22T16:30 OK (TOV 1790094600)
+[Irtam] bucket B0 2026.09.22T16:45 OK (TOV 1790095500)
+[Irtam] bucket B0 2026.09.22T17:00 OK (TOV 1790096400)
+[Irtam] bucket B0 2026.09.22T17:15 OK (TOV 1790097300)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=2.94 max=70.65 TECU
+[SolarIndices] Kp=0.00 Dst=-17 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=402 km/s density=3.3 cm^-3 Bz=0.5 nT (hist 3489 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=17.0
+[RadioProp] MUF=23.9 FOT=20.3 LUF=9.7 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 4.48e-07 W/m2 (B4.5)
+[Irtam] bucket B0 2026.09.22T17:30 OK (TOV 1790098200)
+[Irtam] bucket B0 2026.09.22T17:45 OK (TOV 1790099100)
+[Irtam] bucket B0 2026.09.22T18:00 OK (TOV 1790100000)
+[Irtam] bucket B0 2026.09.22T18:15 OK (TOV 1790100900)
+[Irtam] bucket B0 2026.09.22T18:30 OK (TOV 1790101800)
+[Irtam] bucket B0 2026.09.22T18:45 OK (TOV 1790102700)
+[Irtam] bucket B0 2026.09.22T19:00 OK (TOV 1790103600)
+[Irtam] bucket B0 2026.09.22T19:15 OK (TOV 1790104500)
+[Irtam] bucket B0 2026.09.22T19:30 OK (TOV 1790105400)
+[Irtam] bucket B0 2026.09.22T19:45 OK (TOV 1790106300)
+[Irtam] bucket B0 2026.09.23T20:00 OK (TOV 1790193600)
+[Irtam] bucket B0 2026.09.23T20:15 OK (TOV 1790194500)
+[Irtam] bucket B0 2026.09.23T20:30 OK (TOV 1790195400)
+[Irtam] bucket B0 2026.09.23T20:45 OK (TOV 1790196300)
+[Irtam] bucket B0 2026.09.23T21:00 OK (TOV 1790197200)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=2.94 max=70.65 TECU
+[SolarIndices] Kp=0.00 Dst=-17 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=400 km/s density=3.3 cm^-3 Bz=0.1 nT (hist 3497 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=17.0
+[RadioProp] MUF=23.9 FOT=20.3 LUF=9.6 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 4.47e-07 W/m2 (B4.5)
+[Irtam] bucket B0 2026.09.23T21:15 OK (TOV 1790198100)
+[Irtam] bucket B0 2026.09.23T21:30 OK (TOV 1790199000)
+[Irtam] bucket B0 2026.09.23T21:45 OK (TOV 1790199900)
+[Irtam] bucket B0 2026.09.23T22:00 OK (TOV 1790200800)
+[Irtam] bucket B0 2026.09.23T22:15 OK (TOV 1790201700)
+[Irtam] bucket B0 2026.09.23T22:30 OK (TOV 1790202600)
+[Irtam] bucket B0 2026.09.23T22:45 OK (TOV 1790203500)
+[Irtam] bucket B0 2026.09.23T23:00 OK (TOV 1790204400)
+[Irtam] bucket B0 2026.09.23T23:15 OK (TOV 1790205300)
+[Irtam] bucket B0 2026.09.23T23:30 OK (TOV 1790206200)
+[Irtam] bucket foF2 2026.09.24T16:45 OK (TOV 1790268300)
+[Irtam] bucket hmF2 2026.09.24T16:45 OK (TOV 1790268300)
+[Irtam] bucket B0 2026.09.23T23:45 OK (TOV 1790207100)
+[Irtam] bucket B0 2026.09.24T00:00 OK (TOV 1790208000)
+[Irtam] bucket B0 2026.09.24T00:15 OK (TOV 1790208900)
+[Irtam] bucket B0 2026.09.24T00:30 OK (TOV 1790209800)
+[Irtam] bucket B0 2026.09.24T00:45 OK (TOV 1790210700)
+[Irtam] bucket B0 2026.09.24T01:00 OK (TOV 1790211600)
+[Irtam] bucket B0 2026.09.24T01:15 OK (TOV 1790212500)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=3.18 max=69.39 TECU
+[SolarIndices] Kp=0.00 Dst=-17 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=399 km/s density=3.2 cm^-3 Bz=0.2 nT (hist 3501 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=16.0
+[RadioProp] MUF=23.9 FOT=20.3 LUF=9.6 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 4.33e-07 W/m2 (B4.3)
+[Irtam] bucket B0 2026.09.24T01:30 OK (TOV 1790213400)
+[Irtam] bucket B0 2026.09.24T01:45 OK (TOV 1790214300)
+[Irtam] bucket B0 2026.09.24T02:00 OK (TOV 1790215200)
+[Irtam] bucket B0 2026.09.24T02:15 OK (TOV 1790216100)
+[Irtam] bucket B0 2026.09.24T02:30 OK (TOV 1790217000)
+[Irtam] bucket B0 2026.09.24T02:45 OK (TOV 1790217900)
+[Irtam] bucket B0 2026.09.24T03:00 OK (TOV 1790218800)
+[Irtam] bucket B0 2026.09.24T03:15 OK (TOV 1790219700)
+[Irtam] bucket B0 2026.09.24T03:30 OK (TOV 1790220600)
+[Irtam] bucket B0 2026.09.24T03:45 OK (TOV 1790221500)
+[Irtam] bucket B0 2026.09.24T04:00 OK (TOV 1790222400)
+[Irtam] bucket B0 2026.09.24T04:15 OK (TOV 1790223300)
+[Irtam] bucket B0 2026.09.24T04:30 OK (TOV 1790224200)
+[Irtam] bucket B0 2026.09.24T04:45 OK (TOV 1790225100)
+[Irtam] bucket B0 2026.09.24T05:00 OK (TOV 1790226000)
+[Irtam] bucket B0 2026.09.24T05:15 OK (TOV 1790226900)
+[Irtam] bucket B0 2026.09.24T05:30 OK (TOV 1790227800)
+[Irtam] bucket B0 2026.09.24T05:45 OK (TOV 1790228700)
+[Irtam] bucket B0 2026.09.24T06:00 OK (TOV 1790229600)
+[SolarIndices] Kp=0.00 Dst=-16 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=399 km/s density=3.2 cm^-3 Bz=0.5 nT (hist 3509 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=16.0
+[RadioProp] MUF=23.9 FOT=20.3 LUF=9.6 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 4.33e-07 W/m2 (B4.3)
+[Irtam] bucket B0 2026.09.24T06:15 OK (TOV 1790230500)
+[Irtam] bucket B0 2026.09.24T06:30 OK (TOV 1790231400)
+[Irtam] bucket B0 2026.09.24T06:45 OK (TOV 1790232300)
+[Irtam] bucket B0 2026.09.24T07:00 OK (TOV 1790233200)
+[Irtam] bucket B0 2026.09.24T07:15 OK (TOV 1790234100)
+[Irtam] bucket B0 2026.09.24T07:30 OK (TOV 1790235000)
+[Irtam] bucket B0 2026.09.24T07:45 OK (TOV 1790235900)
+[Irtam] bucket B0 2026.09.24T08:00 OK (TOV 1790236800)
+[Irtam] bucket B0 2026.09.24T08:15 OK (TOV 1790237700)
+[Irtam] bucket B0 2026.09.24T08:30 OK (TOV 1790238600)
+[Irtam] bucket B0 2026.09.24T08:45 OK (TOV 1790239500)
+[Irtam] bucket B0 2026.09.24T09:00 OK (TOV 1790240400)
+[Irtam] bucket B0 2026.09.24T09:15 OK (TOV 1790241300)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=2.95 max=70.81 TECU
+[SolarIndices] Kp=0.00 Dst=-16 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[Irtam] bucket B0 2026.09.24T09:30 OK (TOV 1790242200)
+[SolarWindAdapter] Viento solar real: speed=399 km/s density=3.3 cm^-3 Bz=0.5 nT (hist 3515 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=16.0
+[RadioProp] MUF=23.9 FOT=20.3 LUF=9.5 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 4.54e-07 W/m2 (B4.5)
+[Irtam] bucket B0 2026.09.24T09:45 OK (TOV 1790243100)
+[Irtam] bucket B0 2026.09.24T10:00 OK (TOV 1790244000)
+[Irtam] bucket foF2 2026.09.24T17:00 OK (TOV 1790269200)
+[Irtam] bucket hmF2 2026.09.24T17:00 OK (TOV 1790269200)
+[Irtam] bucket B0 2026.09.24T10:15 OK (TOV 1790244900)
+[Irtam] bucket B0 2026.09.24T10:30 OK (TOV 1790245800)
+[Irtam] bucket B0 2026.09.24T10:45 OK (TOV 1790246700)
+[Irtam] bucket B0 2026.09.24T11:00 OK (TOV 1790247600)
+[Irtam] bucket B0 2026.09.24T11:15 OK (TOV 1790248500)
+[Irtam] bucket B0 2026.09.24T11:30 OK (TOV 1790249400)
+[Irtam] bucket B0 2026.09.24T11:45 OK (TOV 1790250300)
+[Irtam] bucket B0 2026.09.24T12:00 OK (TOV 1790251200)
+[Irtam] fetch B0 2026.09.24T12:15: fallo red/pre-gate
+[Irtam] bucket B0 2026.09.24T12:15 OK (TOV 1790252100)
+[Irtam] bucket B0 2026.09.24T12:30 OK (TOV 1790253000)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=2.95 max=70.81 TECU
+[SolarIndices] Kp=0.33 Dst=-16 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=399 km/s density=3.2 cm^-3 Bz=0.7 nT (hist 3519 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=16.0
+[RadioProp] MUF=23.9 FOT=20.3 LUF=9.5 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 4.67e-07 W/m2 (B4.7)
+[Irtam] bucket B0 2026.09.24T12:45 OK (TOV 1790253900)
+[Irtam] bucket B0 2026.09.24T13:00 OK (TOV 1790254800)
+[Irtam] bucket B0 2026.09.24T13:15 OK (TOV 1790255700)
+[Irtam] bucket B0 2026.09.24T13:30 OK (TOV 1790256600)
+[Irtam] bucket B0 2026.09.24T13:45 OK (TOV 1790257500)
+[Irtam] bucket B0 2026.09.24T14:00 OK (TOV 1790258400)
+[Irtam] bucket B0 2026.09.24T14:15 OK (TOV 1790259300)
+[Irtam] bucket B0 2026.09.24T14:30 OK (TOV 1790260200)
+[Irtam] bucket B0 2026.09.24T14:45 OK (TOV 1790261100)
+[Irtam] bucket B0 2026.09.24T15:00 OK (TOV 1790262000)
+[Irtam] bucket B0 2026.09.24T15:15 OK (TOV 1790262900)
+[Irtam] bucket B0 2026.09.24T15:30 OK (TOV 1790263800)
+[Irtam] bucket B0 2026.09.24T15:45 OK (TOV 1790264700)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=2.99 max=70.95 TECU
+[SolarIndices] Kp=0.00 Dst=-15 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=410 km/s density=0.2 cm^-3 Bz=0.6 nT (hist 3517 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=15.0
+[RadioProp] MUF=23.9 FOT=20.3 LUF=9.5 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 4.63e-07 W/m2 (B4.6)
+[Irtam] bucket B0 2026.09.24T16:00 OK (TOV 1790265600)
+[Irtam] bucket B0 2026.09.24T16:15 OK (TOV 1790266500)
+[Irtam] bucket B0 2026.09.24T16:30 OK (TOV 1790267400)
+[Irtam] bucket B0 2026.09.24T16:45 OK (TOV 1790268300)
+[Irtam] bucket B0 2026.09.24T17:00 OK (TOV 1790269200)
+[Irtam] bucket B1 2026.09.20T17:15 OK (TOV 1789924500)
+[Irtam] bucket B1 2026.09.20T17:30 OK (TOV 1789925400)
+[Irtam] bucket B1 2026.09.20T17:45 OK (TOV 1789926300)
+[Irtam] bucket B1 2026.09.20T18:00 OK (TOV 1789927200)
+[Irtam] bucket B1 2026.09.20T18:15 OK (TOV 1789928100)
+[Irtam] bucket foF2 2026.09.24T17:15 OK (TOV 1790270100)
+[Irtam] bucket hmF2 2026.09.24T17:15 OK (TOV 1790270100)
+[Irtam] bucket B0 2026.09.24T17:15 OK (TOV 1790270100)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=2.73 max=70.43 TECU
+[SolarIndices] Kp=0.33 Dst=-14 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=398 km/s density=1.2 cm^-3 Bz=0.8 nT (hist 3516 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=15.0
+[RadioProp] MUF=23.9 FOT=20.3 LUF=9.4 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 4.76e-07 W/m2 (B4.8)
+[Irtam] bucket B1 2026.09.20T18:30 OK (TOV 1789929000)
+[Irtam] bucket B1 2026.09.20T18:45 OK (TOV 1789929900)
+[Irtam] bucket B1 2026.09.20T19:00 OK (TOV 1789930800)
+[Irtam] bucket B1 2026.09.20T19:15 OK (TOV 1789931700)
+[Irtam] bucket B1 2026.09.20T19:30 OK (TOV 1789932600)
+[Irtam] bucket B1 2026.09.20T19:45 OK (TOV 1789933500)
+[Irtam] bucket B1 2026.09.20T20:00 OK (TOV 1789934400)
+[Irtam] bucket B1 2026.09.20T20:15 OK (TOV 1789935300)
+[Irtam] bucket B1 2026.09.20T20:30 OK (TOV 1789936200)
+[Irtam] bucket B1 2026.09.20T20:45 OK (TOV 1789937100)
+[Irtam] bucket B1 2026.09.20T21:00 OK (TOV 1789938000)
+[Irtam] bucket B1 2026.09.20T21:15 OK (TOV 1789938900)
+[Irtam] bucket B1 2026.09.20T21:30 OK (TOV 1789939800)
+[Irtam] bucket B1 2026.09.20T21:45 OK (TOV 1789940700)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=2.73 max=70.43 TECU
+[SolarIndices] Kp=0.00 Dst=-14 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=399 km/s density=1.2 cm^-3 Bz=0.3 nT (hist 3519 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=14.0
+[RadioProp] MUF=23.9 FOT=20.3 LUF=9.4 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 4.65e-07 W/m2 (B4.6)
+[Irtam] bucket B1 2026.09.20T22:00 OK (TOV 1789941600)
+[Irtam] bucket B1 2026.09.20T22:15 OK (TOV 1789942500)
+[Irtam] bucket B1 2026.09.20T22:30 OK (TOV 1789943400)
+[Irtam] bucket B1 2026.09.20T22:45 OK (TOV 1789944300)
+[Irtam] bucket B1 2026.09.20T23:00 OK (TOV 1789945200)
+[Irtam] bucket B1 2026.09.20T23:15 OK (TOV 1789946100)
+[Irtam] bucket B1 2026.09.20T23:30 OK (TOV 1789947000)
+[Irtam] bucket B1 2026.09.20T23:45 OK (TOV 1789947900)
+[Irtam] bucket B1 2026.09.21T00:00 OK (TOV 1789948800)
+[Irtam] bucket B1 2026.09.21T00:15 OK (TOV 1789949700)
+[Irtam] bucket B1 2026.09.21T00:30 OK (TOV 1789950600)
+[Irtam] bucket B1 2026.09.21T00:45 OK (TOV 1789951500)
+[Irtam] bucket B1 2026.09.21T01:00 OK (TOV 1789952400)
+[Irtam] bucket B1 2026.09.21T01:15 OK (TOV 1789953300)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=2.67 max=70.46 TECU
+[SolarIndices] Kp=0.33 Dst=-13 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=400 km/s density=1.2 cm^-3 Bz=0.4 nT (hist 3515 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=14.0
+[RadioProp] MUF=23.9 FOT=20.3 LUF=9.4 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 4.57e-07 W/m2 (B4.6)
+[Irtam] bucket B1 2026.09.21T01:30 OK (TOV 1789954200)
+[Irtam] bucket B1 2026.09.21T01:45 OK (TOV 1789955100)
+[Irtam] bucket B1 2026.09.21T02:00 OK (TOV 1789956000)
+[Irtam] bucket B1 2026.09.21T02:15 OK (TOV 1789956900)
+[Irtam] bucket B1 2026.09.21T02:30 OK (TOV 1789957800)
+[Irtam] bucket B1 2026.09.21T02:45 OK (TOV 1789958700)
+[Irtam] bucket foF2 2026.09.24T17:30 OK (TOV 1790271000)
+[Irtam] bucket hmF2 2026.09.24T17:30 OK (TOV 1790271000)
+[Irtam] bucket B0 2026.09.24T17:30 OK (TOV 1790271000)
+[Irtam] bucket B1 2026.09.21T03:00 OK (TOV 1789959600)
+[Irtam] bucket B1 2026.09.21T03:15 OK (TOV 1789960500)
+[Irtam] bucket B1 2026.09.21T03:30 OK (TOV 1789961400)
+[Irtam] bucket B1 2026.09.21T03:45 OK (TOV 1789962300)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=2.67 max=70.46 TECU
+[SolarIndices] sunspots: 395 filas
+[SolarIndices] Kp=0.33 Dst=-13 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=399 km/s density=1.2 cm^-3 Bz=0.4 nT (hist 3518 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=14.0
+[RadioProp] MUF=23.9 FOT=20.3 LUF=9.3 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Irtam] bucket B1 2026.09.21T04:00 OK (TOV 1789963200)
+[Xray] GOES long 4.50e-07 W/m2 (B4.5)
+[Irtam] bucket B1 2026.09.21T04:15 OK (TOV 1789964100)
+[Irtam] bucket B1 2026.09.21T04:30 OK (TOV 1789965000)
+[Irtam] bucket B1 2026.09.21T04:45 OK (TOV 1789965900)
+[Irtam] bucket B1 2026.09.21T05:00 OK (TOV 1789966800)
+[Irtam] bucket B1 2026.09.21T05:15 OK (TOV 1789967700)
+[Irtam] bucket B1 2026.09.21T05:30 OK (TOV 1789968600)
+[Irtam] bucket B1 2026.09.21T05:45 OK (TOV 1789969500)
+[Irtam] bucket B1 2026.09.21T06:00 OK (TOV 1789970400)
+[Irtam] bucket B1 2026.09.21T06:15 OK (TOV 1789971300)
+[Irtam] bucket B1 2026.09.21T06:30 OK (TOV 1789972200)
+[Irtam] bucket B1 2026.09.21T06:45 OK (TOV 1789973100)
+[Irtam] bucket B1 2026.09.21T07:00 OK (TOV 1789974000)
+[Irtam] bucket B1 2026.09.21T07:15 OK (TOV 1789974900)
+[SolarIndices] Kp=0.33 Dst=-12 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=397 km/s density=1.2 cm^-3 Bz=0.6 nT (hist 3518 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=14.0
+[RadioProp] MUF=23.9 FOT=20.3 LUF=9.3 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 4.66e-07 W/m2 (B4.7)
+[Irtam] bucket B1 2026.09.21T07:30 OK (TOV 1789975800)
+[Irtam] bucket B1 2026.09.21T07:45 OK (TOV 1789976700)
+[Irtam] bucket B1 2026.09.21T08:00 OK (TOV 1789977600)
+[Irtam] bucket B1 2026.09.21T08:15 OK (TOV 1789978500)
+[Irtam] bucket B1 2026.09.21T08:30 OK (TOV 1789979400)
+[Irtam] bucket B1 2026.09.21T08:45 OK (TOV 1789980300)
+[Irtam] bucket B1 2026.09.21T09:00 OK (TOV 1789981200)
+[Irtam] bucket B1 2026.09.21T09:15 OK (TOV 1789982100)
+[Irtam] bucket B1 2026.09.21T09:30 OK (TOV 1789983000)
+[Irtam] bucket B1 2026.09.21T09:45 OK (TOV 1789983900)
+[Irtam] bucket B1 2026.09.21T10:00 OK (TOV 1789984800)
+[Irtam] bucket B1 2026.09.21T10:15 OK (TOV 1789985700)
+[Irtam] bucket B1 2026.09.21T10:30 OK (TOV 1789986600)
+[Irtam] bucket B1 2026.09.21T10:45 OK (TOV 1789987500)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=2.62 max=71.63 TECU
+[SolarIndices] Kp=0.33 Dst=-12 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=398 km/s density=1.2 cm^-3 Bz=0.8 nT (hist 3519 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=14.0
+[RadioProp] MUF=23.9 FOT=20.3 LUF=9.3 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 4.93e-07 W/m2 (B4.9)
+[Irtam] bucket B1 2026.09.21T11:00 OK (TOV 1789988400)
+[Irtam] bucket foF2 2026.09.24T17:45 OK (TOV 1790271900)
+[Irtam] bucket hmF2 2026.09.24T17:45 OK (TOV 1790271900)
+[Irtam] bucket B0 2026.09.24T17:45 OK (TOV 1790271900)
+[Irtam] bucket B1 2026.09.21T11:15 OK (TOV 1789989300)
+[Irtam] bucket B1 2026.09.21T11:30 OK (TOV 1789990200)
+[Irtam] bucket B1 2026.09.21T11:45 OK (TOV 1789991100)
+[Irtam] bucket B1 2026.09.21T12:00 OK (TOV 1789992000)
+[Irtam] bucket B1 2026.09.21T12:15 OK (TOV 1789992900)
+[Irtam] bucket B1 2026.09.21T12:30 OK (TOV 1789993800)
+[Irtam] bucket B1 2026.09.21T12:45 OK (TOV 1789994700)
+[Irtam] bucket B1 2026.09.21T13:00 OK (TOV 1789995600)
+[Irtam] bucket B1 2026.09.21T13:15 OK (TOV 1789996500)
+[Irtam] bucket B1 2026.09.21T13:30 OK (TOV 1789997400)
+[SolarIndices] Kp=0.00 Dst=-12 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=398 km/s density=1.2 cm^-3 Bz=0.5 nT (hist 3516 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=13.0
+[RadioProp] MUF=23.9 FOT=20.3 LUF=9.2 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 4.79e-07 W/m2 (B4.8)
+[Irtam] bucket B1 2026.09.21T13:45 OK (TOV 1789998300)
+[Irtam] bucket B1 2026.09.21T14:00 OK (TOV 1789999200)
+[Irtam] bucket B1 2026.09.21T14:15 OK (TOV 1790000100)
+[Irtam] bucket B1 2026.09.21T14:30 OK (TOV 1790001000)
+[Irtam] bucket B1 2026.09.21T14:45 OK (TOV 1790001900)
+[Irtam] bucket B1 2026.09.21T15:00 OK (TOV 1790002800)
+[Irtam] bucket B1 2026.09.21T15:15 OK (TOV 1790003700)
+[Irtam] bucket B1 2026.09.21T15:30 OK (TOV 1790004600)
+[Irtam] bucket B1 2026.09.21T15:45 OK (TOV 1790005500)
+[Irtam] bucket B1 2026.09.21T16:00 OK (TOV 1790006400)
+[Irtam] bucket B1 2026.09.21T16:15 OK (TOV 1790007300)
+[Irtam] bucket B1 2026.09.21T16:30 OK (TOV 1790008200)
+[Irtam] bucket B1 2026.09.21T16:45 OK (TOV 1790009100)
+[Irtam] bucket B1 2026.09.21T17:00 OK (TOV 1790010000)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=2.51 max=72.07 TECU
+[SolarIndices] Kp=0.00 Dst=-12 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=400 km/s density=1.2 cm^-3 Bz=1.0 nT (hist 3517 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=13.0
+[RadioProp] MUF=23.9 FOT=20.3 LUF=9.2 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 4.63e-07 W/m2 (B4.6)
+[Irtam] bucket B1 2026.09.21T17:15 OK (TOV 1790010900)
+[Irtam] bucket B1 2026.09.21T17:30 OK (TOV 1790011800)
+[Irtam] fetch B1 2026.09.21T17:45: fallo red/pre-gate
+[Irtam] bucket B1 2026.09.21T17:45 OK (TOV 1790012700)
+[Irtam] bucket B1 2026.09.21T18:00 OK (TOV 1790013600)
+[Irtam] fetch B1 2026.09.21T18:15: fallo red/pre-gate
+[Irtam] bucket B1 2026.09.21T18:15 OK (TOV 1790014500)
+[Irtam] bucket B1 2026.09.21T18:30 OK (TOV 1790015400)
+[Irtam] bucket B1 2026.09.21T18:45 OK (TOV 1790016300)
+[Irtam] bucket B1 2026.09.21T19:00 OK (TOV 1790017200)
+[Irtam] bucket B1 2026.09.21T19:15 OK (TOV 1790018100)
+[Irtam] bucket B1 2026.09.21T19:30 OK (TOV 1790019000)
+[Irtam] bucket B1 2026.09.21T19:45 OK (TOV 1790019900)
+[Irtam] bucket foF2 2026.09.24T18:00 OK (TOV 1790272800)
+[Irtam] bucket hmF2 2026.09.24T18:00 OK (TOV 1790272800)
+[Irtam] bucket B0 2026.09.24T18:00 OK (TOV 1790272800)
+[Irtam] bucket B1 2026.09.21T20:00 OK (TOV 1790020800)
+[Irtam] bucket B1 2026.09.21T20:15 OK (TOV 1790021700)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=2.32 max=72.51 TECU
+[Irtam] bucket B1 2026.09.21T20:30 OK (TOV 1790022600)
+[SolarIndices] Kp=0.00 Dst=-12 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=396 km/s density=1.1 cm^-3 Bz=1.0 nT (hist 3517 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=13.0
+[RadioProp] MUF=23.9 FOT=20.3 LUF=9.2 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 4.72e-07 W/m2 (B4.7)
+[Irtam] bucket B1 2026.09.21T20:45 OK (TOV 1790023500)
+[Irtam] bucket B1 2026.09.21T21:00 OK (TOV 1790024400)
+[Irtam] bucket B1 2026.09.21T21:15 OK (TOV 1790025300)
+[Irtam] bucket B1 2026.09.21T21:30 OK (TOV 1790026200)
+[Irtam] bucket B1 2026.09.21T21:45 OK (TOV 1790027100)
+[Irtam] bucket B1 2026.09.21T22:00 OK (TOV 1790028000)
+[Irtam] bucket B1 2026.09.21T22:15 OK (TOV 1790028900)
+[Irtam] bucket B1 2026.09.21T22:30 OK (TOV 1790029800)
+[Irtam] bucket B1 2026.09.21T22:45 OK (TOV 1790030700)
+[Irtam] bucket B1 2026.09.21T23:00 OK (TOV 1790031600)
+[Irtam] bucket B1 2026.09.21T23:15 OK (TOV 1790032500)
+[Irtam] bucket B1 2026.09.21T23:30 OK (TOV 1790033400)
+[Irtam] bucket B1 2026.09.21T23:45 OK (TOV 1790034300)
+[Irtam] bucket B1 2026.09.22T00:00 OK (TOV 1790035200)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=2.32 max=72.51 TECU
+[SolarIndices] Kp=0.00 Dst=-12 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=397 km/s density=1.2 cm^-3 Bz=1.0 nT (hist 3512 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=13.0
+[RadioProp] MUF=23.9 FOT=20.3 LUF=9.2 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 4.90e-07 W/m2 (B4.9)
+[Irtam] bucket B1 2026.09.22T00:15 OK (TOV 1790036100)
+[Irtam] bucket B1 2026.09.22T00:30 OK (TOV 1790037000)
+[Irtam] bucket B1 2026.09.22T00:45 OK (TOV 1790037900)
+[Irtam] bucket B1 2026.09.22T01:00 OK (TOV 1790038800)
+[Irtam] bucket B1 2026.09.22T01:15 OK (TOV 1790039700)
+[Irtam] bucket B1 2026.09.22T01:30 OK (TOV 1790040600)
+[Irtam] bucket B1 2026.09.22T01:45 OK (TOV 1790041500)
+[Irtam] bucket B1 2026.09.22T02:00 OK (TOV 1790042400)
+[Irtam] bucket B1 2026.09.22T02:15 OK (TOV 1790043300)
+[Irtam] bucket B1 2026.09.22T02:30 OK (TOV 1790044200)
+[Irtam] bucket B1 2026.09.22T02:45 OK (TOV 1790045100)
+[Irtam] bucket B1 2026.09.22T03:00 OK (TOV 1790046000)
+[Irtam] bucket B1 2026.09.22T03:15 OK (TOV 1790046900)
+[Irtam] bucket B1 2026.09.22T03:30 OK (TOV 1790047800)
+[Irtam] bucket B1 2026.09.22T03:45 OK (TOV 1790048700)
+[Irtam] bucket B1 2026.09.22T04:00 OK (TOV 1790049600)
+[Irtam] bucket B1 2026.09.22T04:15 OK (TOV 1790050500)
+[Irtam] bucket B1 2026.09.22T04:30 OK (TOV 1790051400)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=1.98 max=71.22 TECU
+[SolarIndices] Kp=0.00 Dst=-12 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=395 km/s density=1.4 cm^-3 Bz=0.6 nT (hist 3510 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=13.0
+[RadioProp] MUF=23.9 FOT=20.3 LUF=9.2 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 4.74e-07 W/m2 (B4.7)
+[Irtam] bucket B1 2026.09.22T04:45 OK (TOV 1790052300)
+[Irtam] bucket B1 2026.09.22T05:00 OK (TOV 1790053200)
+[Irtam] bucket B1 2026.09.22T05:15 OK (TOV 1790054100)
+[Irtam] bucket B1 2026.09.22T05:30 OK (TOV 1790055000)
+[Irtam] bucket B1 2026.09.22T05:45 OK (TOV 1790055900)
+[Irtam] bucket B1 2026.09.22T06:00 OK (TOV 1790056800)
+[Irtam] bucket B1 2026.09.22T06:15 OK (TOV 1790057700)
+[Irtam] bucket foF2 2026.09.24T18:15 OK (TOV 1790273700)
+[Irtam] bucket hmF2 2026.09.24T18:15 OK (TOV 1790273700)
+[Irtam] bucket B0 2026.09.24T18:15 OK (TOV 1790273700)
+[Irtam] bucket B1 2026.09.22T06:30 OK (TOV 1790058600)
+[Irtam] bucket B1 2026.09.22T06:45 OK (TOV 1790059500)
+[Irtam] bucket B1 2026.09.22T07:00 OK (TOV 1790060400)
+[Irtam] bucket B1 2026.09.22T07:15 OK (TOV 1790061300)
+[Irtam] bucket B1 2026.09.22T07:30 OK (TOV 1790062200)
+[Irtam] bucket B1 2026.09.22T07:45 OK (TOV 1790063100)
+[Irtam] bucket B1 2026.09.22T08:00 OK (TOV 1790064000)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=1.98 max=71.22 TECU
+[SolarIndices] Kp=0.00 Dst=-12 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=392 km/s density=1.5 cm^-3 Bz=1.0 nT (hist 3511 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=13.0
+[RadioProp] MUF=23.9 FOT=20.3 LUF=9.2 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 4.57e-07 W/m2 (B4.6)
+[Irtam] bucket B1 2026.09.22T08:15 OK (TOV 1790064900)
+[Irtam] bucket B1 2026.09.22T08:30 OK (TOV 1790065800)
+[Irtam] bucket B1 2026.09.22T08:45 OK (TOV 1790066700)
+[Irtam] bucket B1 2026.09.22T09:00 OK (TOV 1790067600)
+[Irtam] bucket B1 2026.09.22T09:15 OK (TOV 1790068500)
+[Irtam] bucket B1 2026.09.22T09:30 OK (TOV 1790069400)
+[Irtam] bucket B1 2026.09.22T09:45 OK (TOV 1790070300)
+[Irtam] bucket B1 2026.09.22T10:00 OK (TOV 1790071200)
+[Irtam] bucket B1 2026.09.22T10:15 OK (TOV 1790072100)
+[Irtam] bucket B1 2026.09.22T10:30 OK (TOV 1790073000)
+[Irtam] bucket B1 2026.09.22T10:45 OK (TOV 1790073900)
+[Irtam] bucket B1 2026.09.22T11:00 OK (TOV 1790074800)
+[Irtam] bucket B1 2026.09.22T11:15 OK (TOV 1790075700)
+[Irtam] bucket B1 2026.09.22T11:30 OK (TOV 1790076600)
+[Irtam] bucket B1 2026.09.22T11:45 OK (TOV 1790077500)
+[Irtam] bucket B1 2026.09.22T12:00 OK (TOV 1790078400)
+[Irtam] bucket B1 2026.09.22T12:15 OK (TOV 1790079300)
+[Irtam] bucket B1 2026.09.22T12:30 OK (TOV 1790080200)
+[Irtam] bucket B1 2026.09.22T12:45 OK (TOV 1790081100)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=1.49 max=69.63 TECU
+[SolarIndices] Kp=0.00 Dst=-12 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[Irtam] bucket B1 2026.09.22T13:00 OK (TOV 1790082000)
+[SolarWindAdapter] Viento solar real: speed=394 km/s density=1.4 cm^-3 Bz=0.8 nT (hist 3510 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=13.0
+[RadioProp] MUF=23.9 FOT=20.3 LUF=9.2 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 5.66e-07 W/m2 (B5.7)
+[Irtam] bucket B1 2026.09.22T13:15 OK (TOV 1790082900)
+[Irtam] bucket B1 2026.09.22T13:30 OK (TOV 1790083800)
+[Irtam] bucket B1 2026.09.22T13:45 OK (TOV 1790084700)
+[Irtam] bucket B1 2026.09.22T14:00 OK (TOV 1790085600)
+[Irtam] bucket B1 2026.09.22T14:15 OK (TOV 1790086500)
+[Irtam] bucket B1 2026.09.22T14:30 OK (TOV 1790087400)
+[Irtam] bucket B1 2026.09.22T14:45 OK (TOV 1790088300)
+[Irtam] bucket B1 2026.09.22T15:00 OK (TOV 1790089200)
+[Irtam] bucket B1 2026.09.22T15:15 OK (TOV 1790090100)
+[Irtam] bucket B1 2026.09.22T15:30 OK (TOV 1790091000)
+[Irtam] bucket B1 2026.09.22T15:45 OK (TOV 1790091900)
+[Irtam] fetch B1 2026.09.22T16:00: fallo red/pre-gate
+[Irtam] bucket B1 2026.09.22T16:00 OK (TOV 1790092800)
+[Irtam] bucket B1 2026.09.22T16:15 OK (TOV 1790093700)
+[Irtam] bucket B1 2026.09.22T16:30 OK (TOV 1790094600)
+[Irtam] bucket B1 2026.09.22T16:45 OK (TOV 1790095500)
+[Irtam] bucket B1 2026.09.22T17:00 OK (TOV 1790096400)
+[Irtam] bucket foF2 2026.09.24T18:30 OK (TOV 1790274600)
+[Irtam] bucket hmF2 2026.09.24T18:30 OK (TOV 1790274600)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=1.49 max=69.63 TECU
+[SolarIndices] Kp=0.00 Dst=-12 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=409 km/s density=0.2 cm^-3 Bz=0.5 nT (hist 3516 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=12.0
+[RadioProp] MUF=23.9 FOT=20.3 LUF=9.2 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 4.82e-07 W/m2 (B4.8)
+[Irtam] bucket B0 2026.09.24T18:30 OK (TOV 1790274600)
+[Irtam] bucket B1 2026.09.22T17:15 OK (TOV 1790097300)
+[Irtam] bucket B1 2026.09.22T17:30 OK (TOV 1790098200)
+[Irtam] bucket B1 2026.09.22T17:45 OK (TOV 1790099100)
+[Irtam] bucket B1 2026.09.22T18:00 OK (TOV 1790100000)
+[Irtam] bucket B1 2026.09.22T18:15 OK (TOV 1790100900)
+[Irtam] bucket B1 2026.09.22T18:30 OK (TOV 1790101800)
+[Irtam] bucket B1 2026.09.22T18:45 OK (TOV 1790102700)
+[Irtam] bucket B1 2026.09.22T19:00 OK (TOV 1790103600)
+[Irtam] bucket B1 2026.09.22T19:15 OK (TOV 1790104500)
+[Irtam] bucket B1 2026.09.22T19:30 OK (TOV 1790105400)
+[Irtam] bucket B1 2026.09.22T19:45 OK (TOV 1790106300)
+[Irtam] bucket B1 2026.09.23T20:00 OK (TOV 1790193600)
+[Irtam] bucket B1 2026.09.23T20:15 OK (TOV 1790194500)
+[Irtam] bucket B1 2026.09.23T20:30 OK (TOV 1790195400)
+[Irtam] bucket B1 2026.09.23T20:45 OK (TOV 1790196300)
+[Irtam] bucket B1 2026.09.23T21:00 OK (TOV 1790197200)
+[Irtam] bucket B1 2026.09.23T21:15 OK (TOV 1790198100)
+[Irtam] bucket B1 2026.09.23T21:30 OK (TOV 1790199000)
+[Irtam] bucket B1 2026.09.23T21:45 OK (TOV 1790199900)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=1.38 max=70.23 TECU
+[SolarIndices] sunspots: 395 filas
+[SolarIndices] Kp=0.00 Dst=-11 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=390 km/s density=1.6 cm^-3 Bz=0.4 nT (hist 3512 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=12.0
+[RadioProp] MUF=23.9 FOT=20.3 LUF=9.2 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 4.42e-07 W/m2 (B4.4)
+[Irtam] bucket B1 2026.09.23T22:00 OK (TOV 1790200800)
+[Irtam] bucket B1 2026.09.23T22:15 OK (TOV 1790201700)
+[Irtam] bucket B1 2026.09.23T22:30 OK (TOV 1790202600)
+[Irtam] bucket B1 2026.09.23T22:45 OK (TOV 1790203500)
+[Irtam] bucket B1 2026.09.23T23:00 OK (TOV 1790204400)
+[Irtam] bucket B1 2026.09.23T23:15 OK (TOV 1790205300)
+[Irtam] bucket B1 2026.09.23T23:30 OK (TOV 1790206200)
+[Irtam] bucket B1 2026.09.23T23:45 OK (TOV 1790207100)
+[Irtam] bucket B1 2026.09.24T00:00 OK (TOV 1790208000)
+[Irtam] bucket B1 2026.09.24T00:15 OK (TOV 1790208900)
+[Irtam] bucket B1 2026.09.24T00:30 OK (TOV 1790209800)
+[Irtam] bucket B1 2026.09.24T00:45 OK (TOV 1790210700)
+[Irtam] bucket B1 2026.09.24T01:00 OK (TOV 1790211600)
+[Irtam] bucket B1 2026.09.24T01:15 OK (TOV 1790212500)
+[Irtam] bucket B1 2026.09.24T01:30 OK (TOV 1790213400)
+[Irtam] bucket B1 2026.09.24T01:45 OK (TOV 1790214300)
+[Irtam] bucket B1 2026.09.24T02:00 OK (TOV 1790215200)
+[Irtam] bucket B1 2026.09.24T02:15 OK (TOV 1790216100)
+[Irtam] bucket B1 2026.09.24T02:30 OK (TOV 1790217000)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=1.38 max=70.23 TECU
+[SolarIndices] Kp=0.00 Dst=-11 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=389 km/s density=1.5 cm^-3 Bz=-0.2 nT (hist 3516 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=12.0
+[RadioProp] MUF=23.9 FOT=20.3 LUF=9.2 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 4.59e-07 W/m2 (B4.6)
+[Irtam] bucket B1 2026.09.24T02:45 OK (TOV 1790217900)
+[Irtam] bucket B1 2026.09.24T03:00 OK (TOV 1790218800)
+[Irtam] bucket B1 2026.09.24T03:15 OK (TOV 1790219700)
+[Irtam] bucket B1 2026.09.24T03:30 OK (TOV 1790220600)
+[Irtam] bucket B1 2026.09.24T03:45 OK (TOV 1790221500)
+[Irtam] bucket B1 2026.09.24T04:00 OK (TOV 1790222400)
+[Irtam] bucket B1 2026.09.24T04:15 OK (TOV 1790223300)
+[Irtam] bucket B1 2026.09.24T04:30 OK (TOV 1790224200)
+[Irtam] bucket B1 2026.09.24T04:45 OK (TOV 1790225100)
+[Irtam] bucket B1 2026.09.24T05:00 OK (TOV 1790226000)
+[Irtam] bucket B1 2026.09.24T05:15 OK (TOV 1790226900)
+[Irtam] bucket B1 2026.09.24T05:30 OK (TOV 1790227800)
+[Irtam] bucket foF2 2026.09.24T18:45 OK (TOV 1790275500)
+[Irtam] bucket hmF2 2026.09.24T18:45 OK (TOV 1790275500)
+[Irtam] bucket B0 2026.09.24T18:45 OK (TOV 1790275500)
+[Irtam] bucket B1 2026.09.24T05:45 OK (TOV 1790228700)
+[Irtam] bucket B1 2026.09.24T06:00 OK (TOV 1790229600)
+[Irtam] bucket B1 2026.09.24T06:15 OK (TOV 1790230500)
+[Irtam] bucket B1 2026.09.24T06:30 OK (TOV 1790231400)
+[Irtam] bucket B1 2026.09.24T06:45 OK (TOV 1790232300)
+[Irtam] bucket B1 2026.09.24T07:00 OK (TOV 1790233200)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=1.67 max=72.19 TECU
+[Irtam] bucket B1 2026.09.24T07:15 OK (TOV 1790234100)
+[SolarIndices] Kp=0.00 Dst=-11 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=389 km/s density=1.6 cm^-3 Bz=-0.2 nT (hist 3516 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=12.0
+[RadioProp] MUF=23.9 FOT=20.3 LUF=9.2 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 4.82e-07 W/m2 (B4.8)
+[Irtam] bucket B1 2026.09.24T07:30 OK (TOV 1790235000)
+[Irtam] bucket B1 2026.09.24T07:45 OK (TOV 1790235900)
+[Irtam] bucket B1 2026.09.24T08:00 OK (TOV 1790236800)
+[Irtam] bucket B1 2026.09.24T08:15 OK (TOV 1790237700)
+[Irtam] bucket B1 2026.09.24T08:30 OK (TOV 1790238600)
+[Irtam] bucket B1 2026.09.24T08:45 OK (TOV 1790239500)
+[Irtam] bucket B1 2026.09.24T09:00 OK (TOV 1790240400)
+[Irtam] bucket B1 2026.09.24T09:15 OK (TOV 1790241300)
+[Irtam] bucket B1 2026.09.24T09:30 OK (TOV 1790242200)
+[Irtam] bucket B1 2026.09.24T09:45 OK (TOV 1790243100)
+[Irtam] bucket B1 2026.09.24T10:00 OK (TOV 1790244000)
+[Irtam] bucket B1 2026.09.24T10:15 OK (TOV 1790244900)
+[Irtam] bucket B1 2026.09.24T10:30 OK (TOV 1790245800)
+[Irtam] bucket B1 2026.09.24T10:45 OK (TOV 1790246700)
+[Irtam] bucket B1 2026.09.24T11:00 OK (TOV 1790247600)
+[Irtam] bucket B1 2026.09.24T11:15 OK (TOV 1790248500)
+[Irtam] bucket B1 2026.09.24T11:30 OK (TOV 1790249400)
+[Irtam] bucket B1 2026.09.24T11:45 OK (TOV 1790250300)
+[Irtam] bucket B1 2026.09.24T12:00 OK (TOV 1790251200)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=1.67 max=72.19 TECU
+[SolarIndices] Kp=0.00 Dst=-10 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=390 km/s density=1.5 cm^-3 Bz=-0.3 nT (hist 3516 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=13.0
+[RadioProp] MUF=23.9 FOT=20.3 LUF=9.2 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 4.77e-07 W/m2 (B4.8)
+[Irtam] bucket B1 2026.09.24T12:15 OK (TOV 1790252100)
+[Irtam] bucket B1 2026.09.24T12:30 OK (TOV 1790253000)
+[Irtam] bucket B1 2026.09.24T12:45 OK (TOV 1790253900)
+[Irtam] bucket B1 2026.09.24T13:00 OK (TOV 1790254800)
+[Irtam] bucket B1 2026.09.24T13:15 OK (TOV 1790255700)
+[Irtam] bucket B1 2026.09.24T13:30 OK (TOV 1790256600)
+[Irtam] bucket B1 2026.09.24T13:45 OK (TOV 1790257500)
+[Irtam] bucket B1 2026.09.24T14:00 OK (TOV 1790258400)
+[Irtam] bucket B1 2026.09.24T14:15 OK (TOV 1790259300)
+[Irtam] bucket B1 2026.09.24T14:30 OK (TOV 1790260200)
+[Irtam] bucket B1 2026.09.24T14:45 OK (TOV 1790261100)
+[Irtam] bucket B1 2026.09.24T15:00 OK (TOV 1790262000)
+[Irtam] bucket B1 2026.09.24T15:15 OK (TOV 1790262900)
+[Irtam] bucket B1 2026.09.24T15:30 OK (TOV 1790263800)
+[Irtam] bucket B1 2026.09.24T15:45 OK (TOV 1790264700)
+[Irtam] bucket B1 2026.09.24T16:00 OK (TOV 1790265600)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=1.98 max=73.02 TECU
+[Irtam] bucket B1 2026.09.24T16:15 OK (TOV 1790266500)
+[SolarIndices] Kp=0.00 Dst=-10 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=391 km/s density=1.6 cm^-3 Bz=0.0 nT (hist 3515 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=13.0
+[RadioProp] MUF=23.9 FOT=20.3 LUF=9.2 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 4.46e-07 W/m2 (B4.5)
+[Irtam] bucket B1 2026.09.24T16:30 OK (TOV 1790267400)
+[Irtam] bucket foF2 2026.09.24T19:00 OK (TOV 1790276400)
+[Irtam] bucket hmF2 2026.09.24T19:00 OK (TOV 1790276400)
+[Irtam] bucket B0 2026.09.24T19:00 OK (TOV 1790276400)
+[Irtam] bucket B1 2026.09.24T16:45 OK (TOV 1790268300)
+[Irtam] bucket B1 2026.09.24T17:00 OK (TOV 1790269200)
+[Irtam] bucket B1 2026.09.24T17:15 OK (TOV 1790270100)
+[Irtam] bucket B1 2026.09.24T17:30 OK (TOV 1790271000)
+[Irtam] bucket B1 2026.09.24T17:45 OK (TOV 1790271900)
+[Irtam] bucket B1 2026.09.24T18:00 OK (TOV 1790272800)
+[Irtam] bucket B1 2026.09.24T18:15 OK (TOV 1790273700)
+[Irtam] bucket B1 2026.09.24T18:30 OK (TOV 1790274600)
+[Irtam] bucket B1 2026.09.24T18:45 OK (TOV 1790275500)
+[Irtam] bucket B1 2026.09.24T19:00 OK (TOV 1790276400)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=1.98 max=73.02 TECU
+[SolarIndices] Kp=0.00 Dst=-10 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=387 km/s density=1.5 cm^-3 Bz=-0.2 nT (hist 3512 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=13.0
+[RadioProp] MUF=23.9 FOT=20.3 LUF=9.2 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 4.47e-07 W/m2 (B4.5)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=2.03 max=73.29 TECU
+[SolarIndices] Kp=0.00 Dst=-10 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=386 km/s density=1.6 cm^-3 Bz=-0.2 nT (hist 3516 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=13.0
+[RadioProp] MUF=23.9 FOT=20.3 LUF=9.2 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 1.35e-06 W/m2 (C1.3)
+[Irtam] bucket foF2 2026.09.24T19:15 OK (TOV 1790277300)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=2.03 max=73.29 TECU
+[SolarIndices] Kp=0.00 Dst=-10 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=387 km/s density=1.6 cm^-3 Bz=-0.4 nT (hist 3514 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=13.0
+[RadioProp] MUF=23.9 FOT=20.3 LUF=9.4 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 5.91e-07 W/m2 (B5.9)
+[Irtam] bucket hmF2 2026.09.24T19:15 OK (TOV 1790277300)
+[Irtam] bucket B0 2026.09.24T19:15 OK (TOV 1790277300)
+[Irtam] bucket B1 2026.09.24T19:15 OK (TOV 1790277300)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=2.13 max=73.47 TECU
+[SolarIndices] Kp

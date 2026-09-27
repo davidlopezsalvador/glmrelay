@@ -1,0 +1,720 @@
+Framebuffer (MSAA 4x) incomplete
+Framebuffer: MSAA 4x no soportado, cayendo a 0x
+[LGDC 2026-09-27T11:07:50.290Z] launch catalog
+[LGDC 2026-09-27T11:07:50.624Z] launch getbest EB040
+[LGDC 2026-09-27T11:07:53.678Z] gate-consult deny gambit foF2 2026.09.20T11:15 ms-since-last=3054
+[LGDC 2026-09-27T11:08:02.523Z] gate-consult deny gambit foF2 2026.09.20T11:15 ms-since-last=11899
+[LGDC 2026-09-27T11:08:02.699Z] launch getbest PQ052
+[LGDC 2026-09-27T11:08:11.493Z] gate-consult deny gambit foF2 2026.09.20T11:15 ms-since-last=8855
+[LGDC 2026-09-27T11:08:14.638Z] launch getbest JR055
+[LGDC 2026-09-27T11:08:20.197Z] gate-consult deny gambit foF2 2026.09.20T11:15 ms-since-last=5559
+[LGDC 2026-09-27T11:08:26.644Z] launch getbest FF051
+[LGDC 2026-09-27T11:08:28.863Z] gate-consult deny gambit foF2 2026.09.20T11:15 ms-since-last=2219
+[LGDC 2026-09-27T11:08:38.217Z] gate-consult deny gambit foF2 2026.09.20T11:15 ms-since-last=11573
+[LGDC 2026-09-27T11:08:38.653Z] launch getbest KL154
+[LGDC 2026-09-27T11:08:47.393Z] gate-consult deny gambit foF2 2026.09.20T11:15 ms-since-last=8740
+[LGDC 2026-09-27T11:08:50.668Z] launch getbest GM037
+[LGDC 2026-09-27T11:08:55.735Z] gate-consult deny gambit foF2 2026.09.20T11:15 ms-since-last=5067
+[LGDC 2026-09-27T11:09:02.670Z] launch getbest KI167
+[LGDC 2026-09-27T11:09:04.260Z] gate-consult deny gambit foF2 2026.09.20T11:15 ms-since-last=1590
+[LGDC 2026-09-27T11:09:12.839Z] gate-consult deny gambit foF2 2026.09.20T11:15 ms-since-last=10169
+[LGDC 2026-09-27T11:09:14.674Z] launch getbest EA036
+[LGDC 2026-09-27T11:09:21.704Z] gate-consult deny gambit foF2 2026.09.20T11:15 ms-since-last=7030
+[LGDC 2026-09-27T11:09:26.675Z] launch getbest LD160
+[LGDC 2026-09-27T11:09:30.535Z] gate-consult deny gambit foF2 2026.09.20T11:15 ms-since-last=3860
+[LGDC 2026-09-27T11:09:38.686Z] launch getbest AT138
+[LGDC 2026-09-27T11:09:39.572Z] gate-consult deny gambit foF2 2026.09.20T11:15 ms-since-last=886
+[LGDC 2026-09-27T11:09:49.639Z] gate-consult deny gambit foF2 2026.09.20T11:15 ms-since-last=10953
+[LGDC 2026-09-27T11:09:50.691Z] launch getbest VT139
+[LGDC 2026-09-27T11:09:58.713Z] gate-consult deny gambit foF2 2026.09.20T11:15 ms-since-last=8022
+[LGDC 2026-09-27T11:10:02.693Z] launch getbest RV149
+[LGDC 2026-09-27T11:10:07.471Z] gate-consult deny gambit foF2 2026.09.20T11:15 ms-since-last=4778
+[LGDC 2026-09-27T11:10:14.701Z] launch getbest RL052
+[LGDC 2026-09-27T11:10:16.334Z] gate-consult deny gambit foF2 2026.09.20T11:15 ms-since-last=1633
+[LGDC 2026-09-27T11:10:25.023Z] gate-consult deny gambit foF2 2026.09.20T11:15 ms-since-last=10322
+[LGDC 2026-09-27T11:10:26.714Z] launch getbest TR170
+[LGDC 2026-09-27T11:10:33.877Z] gate-consult deny gambit foF2 2026.09.20T11:15 ms-since-last=7163
+[LGDC 2026-09-27T11:10:38.720Z] launch getbest TR169
+[LGDC 2026-09-27T11:10:42.895Z] gate-consult deny gambit foF2 2026.09.20T11:15 ms-since-last=4175
+[LGDC 2026-09-27T11:10:50.732Z] launch getbest SO148
+[LGDC 2026-09-27T11:10:52.493Z] gate-consult deny gambit foF2 2026.09.20T11:15 ms-since-last=1761
+[LGDC 2026-09-27T11:11:01.686Z] gate-consult deny gambit foF2 2026.09.20T11:15 ms-since-last=10954
+[LGDC 2026-09-27T11:11:02.745Z] launch getbest DB049
+[LGDC 2026-09-27T11:11:10.382Z] gate-consult deny gambit foF2 2026.09.20T11:15 ms-since-last=7637
+[LGDC 2026-09-27T11:11:14.751Z] launch getbest MZ152
+[LGDC 2026-09-27T11:11:18.918Z] gate-consult deny gambit foF2 2026.09.20T11:15 ms-since-last=4167
+[LGDC 2026-09-27T11:11:26.757Z] launch getbest EG931
+[LGDC 2026-09-27T11:11:27.802Z] gate-consult deny gambit foF2 2026.09.20T11:15 ms-since-last=1045
+[LGDC 2026-09-27T11:11:36.785Z] gate-consult deny gambit foF2 2026.09.20T11:15 ms-since-last=10028
+[LGDC 2026-09-27T11:11:38.769Z] launch getbest CS839
+[LGDC 2026-09-27T11:11:45.006Z] gate-consult deny gambit foF2 2026.09.20T11:15 ms-since-last=6237
+[LGDC 2026-09-27T11:11:50.780Z] launch getbest AC843
+[LGDC 2026-09-27T11:11:53.598Z] gate-consult deny gambit foF2 2026.09.20T11:15 ms-since-last=2818
+[LGDC 2026-09-27T11:12:02.621Z] gate-consult deny gambit foF2 2026.09.20T11:15 ms-since-last=11841
+[LGDC 2026-09-27T11:12:02.782Z] launch getbest OL246
+[LGDC 2026-09-27T11:12:11.724Z] gate-consult deny gambit foF2 2026.09.20T11:15 ms-since-last=8942
+[LGDC 2026-09-27T11:12:14.789Z] launch getbest EI764
+[LGDC 2026-09-27T11:12:21.179Z] gate-consult deny gambit foF2 2026.09.20T11:15 ms-since-last=6390
+[LGDC 2026-09-27T11:12:26.800Z] launch getbest PF765
+[LGDC 2026-09-27T11:12:30.111Z] gate-consult deny gambit foF2 2026.09.20T11:15 ms-since-last=3311
+[LGDC 2026-09-27T11:12:38.808Z] launch getbest BVJ03
+[LGDC 2026-09-27T11:12:38.983Z] gate-consult deny gambit foF2 2026.09.20T11:15 ms-since-last=175
+[LGDC 2026-09-27T11:12:47.728Z] gate-consult deny gambit foF2 2026.09.20T11:15 ms-since-last=8920
+[LGDC 2026-09-27T11:12:50.815Z] launch getbest AU930
+[LGDC 2026-09-27T11:12:56.331Z] gate-consult deny gambit foF2 2026.09.20T11:15 ms-since-last=5516
+[LGDC 2026-09-27T11:13:02.821Z] launch getbest SMK29
+[LGDC 2026-09-27T11:13:05.383Z] gate-consult deny gambit foF2 2026.09.20T11:15 ms-since-last=2562
+[LGDC 2026-09-27T11:13:14.306Z] gate-consult deny gambit foF2 2026.09.20T11:15 ms-since-last=11485
+[LGDC 2026-09-27T11:13:14.836Z] launch getbest TNJ20
+[LGDC 2026-09-27T11:13:23.253Z] gate-consult deny gambit foF2 2026.09.20T11:15 ms-since-last=8417
+[LGDC 2026-09-27T11:13:26.846Z] launch getbest CAJ2M
+[LGDC 2026-09-27T11:13:32.119Z] gate-consult deny gambit foF2 2026.09.20T11:15 ms-since-last=5273
+[LGDC 2026-09-27T11:13:38.856Z] launch getbest BC840
+[LGDC 2026-09-27T11:13:41.050Z] gate-consult deny gambit foF2 2026.09.20T11:15 ms-since-last=2194
+[LGDC 2026-09-27T11:13:49.918Z] gate-consult deny gambit foF2 2026.09.20T11:15 ms-since-last=11062
+[LGDC 2026-09-27T11:13:50.862Z] launch getbest LA42Q
+[LGDC 2026-09-27T11:13:58.864Z] gate-consult deny gambit foF2 2026.09.20T11:15 ms-since-last=8002
+[LGDC 2026-09-27T11:14:02.873Z] launch getbest BLJ03
+[LGDC 2026-09-27T11:14:08.020Z] gate-consult deny gambit foF2 2026.09.20T11:15 ms-since-last=5147
+[LGDC 2026-09-27T11:14:14.884Z] launch getbest DW41K
+[LGDC 2026-09-27T11:14:16.863Z] gate-consult deny gambit foF2 2026.09.20T11:15 ms-since-last=1979
+[LGDC 2026-09-27T11:14:25.456Z] gate-consult deny gambit foF2 2026.09.20T11:15 ms-since-last=10572
+[LGDC 2026-09-27T11:14:26.890Z] launch getbest TO535
+[LGDC 2026-09-27T11:14:34.026Z] gate-consult deny gambit foF2 2026.09.20T11:15 ms-since-last=7136
+[LGDC 2026-09-27T11:14:38.903Z] launch getbest IC437
+[LGDC 2026-09-27T11:14:42.865Z] gate-consult deny gambit foF2 2026.09.20T11:15 ms-since-last=3962
+[LGDC 2026-09-27T11:14:50.904Z] launch getbest CXM9B
+[LGDC 2026-09-27T11:14:51.685Z] gate-consult deny gambit foF2 2026.09.20T11:15 ms-since-last=781
+[LGDC 2026-09-27T11:15:00.849Z] gate-consult deny gambit foF2 2026.09.20T11:15 ms-since-last=9945
+[LGDC 2026-09-27T11:15:02.906Z] launch getbest CB53N
+[LGDC 2026-09-27T11:15:09.901Z] gate-consult deny gambit foF2 2026.09.20T11:30 ms-since-last=6995
+[LGDC 2026-09-27T11:15:14.920Z] launch getbest DH224
+[LGDC 2026-09-27T11:15:18.982Z] gate-consult deny gambit foF2 2026.09.20T11:30 ms-since-last=4062
+[LGDC 2026-09-27T11:15:26.935Z] launch getbest CS31K
+[LGDC 2026-09-27T11:15:27.746Z] gate-consult deny gambit foF2 2026.09.20T11:30 ms-since-last=811
+[LGDC 2026-09-27T11:15:36.790Z] gate-consult deny gambit foF2 2026.09.20T11:30 ms-since-last=9855
+[LGDC 2026-09-27T11:15:38.948Z] launch getbest NI135
+[LGDC 2026-09-27T11:15:46.086Z] gate-consult deny gambit foF2 2026.09.20T11:30 ms-since-last=7138
+[LGDC 2026-09-27T11:15:50.962Z] launch getbest XI434
+[LGDC 2026-09-27T11:15:55.314Z] gate-consult deny gambit foF2 2026.09.20T11:30 ms-since-last=4352
+[LGDC 2026-09-27T11:16:02.972Z] launch getbest MO155
+[LGDC 2026-09-27T11:16:06.828Z] gate-consult deny gambit foF2 2026.09.20T11:30 ms-since-last=3856
+[LGDC 2026-09-27T11:16:14.976Z] launch getbest TV51R
+[LGDC 2026-09-27T11:16:15.829Z] gate-consult deny gambit foF2 2026.09.20T11:30 ms-since-last=853
+[LGDC 2026-09-27T11:16:24.816Z] gate-consult deny gambit foF2 2026.09.20T11:30 ms-since-last=9840
+[LGDC 2026-09-27T11:16:26.992Z] launch getbest MU12K
+[LGDC 2026-09-27T11:16:34.555Z] gate-consult deny gambit foF2 2026.09.20T11:30 ms-since-last=7563
+[LGDC 2026-09-27T11:16:38.995Z] launch getbest RM041
+[LGDC 2026-09-27T11:16:45.710Z] gate-consult deny gambit foF2 2026.09.20T11:30 ms-since-last=6715
+[LGDC 2026-09-27T11:16:50.996Z] launch getbest MA155
+[LGDC 2026-09-27T11:16:55.972Z] gate-consult deny gambit foF2 2026.09.20T11:30 ms-since-last=4976
+[LGDC 2026-09-27T11:17:02.998Z] launch getbest NDA81
+[LGDC 2026-09-27T11:17:06.215Z] gate-consult deny gambit foF2 2026.09.20T11:30 ms-since-last=3217
+[LGDC 2026-09-27T11:17:15.010Z] launch getbest TR0P2
+[LGDC 2026-09-27T11:17:15.781Z] gate-consult deny gambit foF2 2026.09.20T11:30 ms-since-last=771
+[LGDC 2026-09-27T11:17:24.569Z] gate-consult deny gambit foF2 2026.09.20T11:30 ms-since-last=9559
+[LGDC 2026-09-27T11:17:27.025Z] launch getbest GR13L
+[LGDC 2026-09-27T11:17:34.161Z] gate-consult deny gambit foF2 2026.09.20T11:30 ms-since-last=7136
+[LGDC 2026-09-27T11:17:39.035Z] launch getbest ML10L
+[LGDC 2026-09-27T11:17:43.430Z] gate-consult deny gambit foF2 2026.09.20T11:30 ms-since-last=4395
+[LGDC 2026-09-27T11:17:52.962Z] gate-consult deny gambit foF2 2026.09.20T11:30 ms-since-last=13927
+[LGDC 2026-09-27T11:18:07.791Z] launch gambit foF2 2026.09.20T11:30
+[LGDC 2026-09-27T11:18:07.808Z] result ok gambit foF2 2026.09.20T11:30
+[LGDC 2026-09-27T11:18:11.549Z] gate-consult deny gambit foF2 2026.09.20T11:45 ms-since-last=9371
+[LGDC 2026-09-27T11:18:24.772Z] launch gambit foF2 2026.09.20T11:45
+[LGDC 2026-09-27T11:18:24.798Z] result ok gambit foF2 2026.09.20T11:45
+[LGDC 2026-09-27T11:18:29.296Z] gate-consult deny gambit foF2 2026.09.20T12:00 ms-since-last=8620
+[LGDC 2026-09-27T11:18:42.106Z] launch gambit foF2 2026.09.20T12:00
+[LGDC 2026-09-27T11:18:42.128Z] result ok gambit foF2 2026.09.20T12:00
+[LGDC 2026-09-27T11:18:46.446Z] gate-consult deny gambit foF2 2026.09.20T12:15 ms-since-last=6897
+[LGDC 2026-09-27T11:18:58.748Z] launch gambit foF2 2026.09.20T12:15
+[LGDC 2026-09-27T11:18:58.769Z] result ok gambit foF2 2026.09.20T12:15
+[LGDC 2026-09-27T11:19:01.557Z] gate-consult deny gambit foF2 2026.09.20T12:30 ms-since-last=5520
+[LGDC 2026-09-27T11:19:09.922Z] gate-consult deny gambit foF2 2026.09.20T12:30 ms-since-last=13885
+[LGDC 2026-09-27T11:19:20.447Z] launch gambit foF2 2026.09.20T12:30
+[LGDC 2026-09-27T11:19:20.467Z] result ok gambit foF2 2026.09.20T12:30
+[LGDC 2026-09-27T11:19:23.307Z] gate-consult deny gambit foF2 2026.09.20T12:45 ms-since-last=5110
+[LGDC 2026-09-27T11:19:31.997Z] gate-consult deny gambit foF2 2026.09.20T12:45 ms-since-last=13800
+[LGDC 2026-09-27T11:19:43.877Z] launch gambit foF2 2026.09.20T12:45
+[LGDC 2026-09-27T11:19:43.901Z] result ok gambit foF2 2026.09.20T12:45
+[LGDC 2026-09-27T11:19:46.905Z] gate-consult deny gambit foF2 2026.09.20T13:00 ms-since-last=5508
+[LGDC 2026-09-27T11:19:55.866Z] gate-consult deny gambit foF2 2026.09.20T13:00 ms-since-last=14469
+[LGDC 2026-09-27T11:20:06.846Z] launch gambit foF2 2026.09.20T13:00
+[LGDC 2026-09-27T11:20:06.866Z] result ok gambit foF2 2026.09.20T13:00
+[LGDC 2026-09-27T11:20:09.836Z] gate-consult deny gambit foF2 2026.09.20T13:15 ms-since-last=5447
+[LGDC 2026-09-27T11:20:18.307Z] gate-consult deny gambit foF2 2026.09.20T13:15 ms-since-last=13918
+[LGDC 2026-09-27T11:20:28.795Z] launch gambit foF2 2026.09.20T13:15
+[LGDC 2026-09-27T11:20:28.814Z] result ok gambit foF2 2026.09.20T13:15
+[LGDC 2026-09-27T11:20:31.547Z] gate-consult deny gambit foF2 2026.09.20T13:30 ms-since-last=4957
+[LGDC 2026-09-27T11:20:39.873Z] gate-consult deny gambit foF2 2026.09.20T13:30 ms-since-last=13283
+[LGDC 2026-09-27T11:20:50.355Z] launch gambit foF2 2026.09.20T13:30
+[LGDC 2026-09-27T11:20:50.374Z] result ok gambit foF2 2026.09.20T13:30
+[LGDC 2026-09-27T11:20:53.092Z] gate-consult deny gambit foF2 2026.09.20T13:45 ms-since-last=4913
+[LGDC 2026-09-27T11:21:01.342Z] gate-consult deny gambit foF2 2026.09.20T13:45 ms-since-last=13163
+[LGDC 2026-09-27T11:21:11.781Z] launch gambit foF2 2026.09.20T13:45
+[LGDC 2026-09-27T11:21:11.802Z] result ok gambit foF2 2026.09.20T13:45
+[LGDC 2026-09-27T11:21:14.533Z] gate-consult deny gambit foF2 2026.09.20T14:00 ms-since-last=4922
+[LGDC 2026-09-27T11:21:22.757Z] gate-consult deny gambit foF2 2026.09.20T14:00 ms-since-last=13146
+[LGDC 2026-09-27T11:21:33.287Z] launch gambit foF2 2026.09.20T14:00
+[LGDC 2026-09-27T11:21:33.307Z] result ok gambit foF2 2026.09.20T14:00
+[LGDC 2026-09-27T11:21:35.998Z] gate-consult deny gambit foF2 2026.09.20T14:15 ms-since-last=5024
+[LGDC 2026-09-27T11:21:44.243Z] gate-consult deny gambit foF2 2026.09.20T14:15 ms-since-last=13269
+[LGDC 2026-09-27T11:21:54.798Z] launch gambit foF2 2026.09.20T14:15
+[LGDC 2026-09-27T11:21:54.816Z] result ok gambit foF2 2026.09.20T14:15
+[LGDC 2026-09-27T11:21:57.541Z] gate-consult deny gambit foF2 2026.09.20T14:30 ms-since-last=5070
+[LGDC 2026-09-27T11:22:05.979Z] gate-consult deny gambit foF2 2026.09.20T14:30 ms-since-last=13508
+[LGDC 2026-09-27T11:22:16.650Z] launch gambit foF2 2026.09.20T14:30
+[LGDC 2026-09-27T11:22:16.668Z] result ok gambit foF2 2026.09.20T14:30
+[LGDC 2026-09-27T11:22:19.878Z] gate-consult deny gambit foF2 2026.09.20T14:45 ms-since-last=5644
+[LGDC 2026-09-27T11:22:28.417Z] gate-consult deny gambit foF2 2026.09.20T14:45 ms-since-last=14183
+[LGDC 2026-09-27T11:22:49.959Z] launch getbest EB040
+[LGDC 2026-09-27T11:22:50.212Z] launch getbest EA036
+[LGDC 2026-09-27T11:22:50.475Z] launch getbest JR055
+[LGDC 2026-09-27T11:22:50.729Z] launch getbest PQ052
+[LGDC 2026-09-27T11:22:50.982Z] launch getbest FF051
+[LGDC 2026-09-27T11:22:51.232Z] launch getbest AT138
+[LGDC 2026-09-27T11:22:51.483Z] launch getbest GM037
+[LGDC 2026-09-27T11:22:51.734Z] launch getbest VT139
+[LGDC 2026-09-27T11:22:51.985Z] launch getbest SO148
+[LGDC 2026-09-27T11:22:52.236Z] launch getbest MZ152
+[LGDC 2026-09-27T11:22:52.490Z] launch getbest TR169
+[LGDC 2026-09-27T11:22:52.741Z] launch getbest EG931
+[LGDC 2026-09-27T11:22:52.993Z] launch getbest DB049
+[LGDC 2026-09-27T11:22:53.245Z] launch getbest BVJ03
+[LGDC 2026-09-27T11:22:53.499Z] launch getbest EI764
+[LGDC 2026-09-27T11:22:57.120Z] result fail gambit foF2 2026.09.20T14:45 red/pre-gate
+[LGDC 2026-09-27T11:23:05.580Z] gate-consult deny gambit foF2 2026.09.20T14:45 ms-since-last=12081
+[LGDC 2026-09-27T11:23:17.249Z] launch gambit foF2 2026.09.20T14:45
+[LGDC 2026-09-27T11:23:17.275Z] result ok gambit foF2 2026.09.20T14:45
+[LGDC 2026-09-27T11:23:21.891Z] gate-consult deny gambit foF2 2026.09.20T15:00 ms-since-last=7234
+[LGDC 2026-09-27T11:23:33.206Z] launch gambit foF2 2026.09.20T15:00
+[LGDC 2026-09-27T11:23:33.226Z] result ok gambit foF2 2026.09.20T15:00
+[LGDC 2026-09-27T11:23:36.264Z] gate-consult deny gambit foF2 2026.09.20T15:15 ms-since-last=5297
+[LGDC 2026-09-27T11:23:45.065Z] gate-consult deny gambit foF2 2026.09.20T15:15 ms-since-last=14098
+[LGDC 2026-09-27T11:23:55.870Z] launch gambit foF2 2026.09.20T15:15
+[LGDC 2026-09-27T11:23:55.893Z] result ok gambit foF2 2026.09.20T15:15
+[LGDC 2026-09-27T11:23:59.985Z] gate-consult deny gambit foF2 2026.09.20T15:30 ms-since-last=6360
+[LGDC 2026-09-27T11:24:11.481Z] launch gambit foF2 2026.09.20T15:30
+[LGDC 2026-09-27T11:24:11.502Z] result ok gambit foF2 2026.09.20T15:30
+[LGDC 2026-09-27T11:24:14.883Z] gate-consult deny gambit foF2 2026.09.20T15:45 ms-since-last=5436
+[LGDC 2026-09-27T11:24:23.732Z] gate-consult deny gambit foF2 2026.09.20T15:45 ms-since-last=14285
+[LGDC 2026-09-27T11:24:34.445Z] launch gambit foF2 2026.09.20T15:45
+[LGDC 2026-09-27T11:24:34.465Z] result ok gambit foF2 2026.09.20T15:45
+[LGDC 2026-09-27T11:24:37.188Z] gate-consult deny gambit foF2 2026.09.20T16:00 ms-since-last=4909
+[LGDC 2026-09-27T11:24:45.466Z] gate-consult deny gambit foF2 2026.09.20T16:00 ms-since-last=13187
+[LGDC 2026-09-27T11:24:55.996Z] launch gambit foF2 2026.09.20T16:00
+[LGDC 2026-09-27T11:24:56.014Z] result ok gambit foF2 2026.09.20T16:00
+[LGDC 2026-09-27T11:24:58.758Z] gate-consult deny gambit foF2 2026.09.20T16:15 ms-since-last=5020
+[LGDC 2026-09-27T11:25:07.015Z] gate-consult deny gambit foF2 2026.09.20T16:15 ms-since-last=13277
+[LGDC 2026-09-27T11:25:17.807Z] launch gambit foF2 2026.09.20T16:15
+[LGDC 2026-09-27T11:25:17.828Z] result ok gambit foF2 2026.09.20T16:15
+[LGDC 2026-09-27T11:25:20.573Z] gate-consult deny gambit foF2 2026.09.20T16:30 ms-since-last=5251
+[LGDC 2026-09-27T11:25:28.928Z] gate-consult deny gambit foF2 2026.09.20T16:30 ms-since-last=13606
+[LGDC 2026-09-27T11:25:39.742Z] launch gambit foF2 2026.09.20T16:30
+[LGDC 2026-09-27T11:25:39.837Z] result ok gambit foF2 2026.09.20T16:30
+[LGDC 2026-09-27T11:25:43.770Z] gate-consult deny gambit foF2 2026.09.20T16:45 ms-since-last=6277
+[LGDC 2026-09-27T11:25:55.330Z] launch gambit foF2 2026.09.20T16:45
+[LGDC 2026-09-27T11:25:55.350Z] result ok gambit foF2 2026.09.20T16:45
+[LGDC 2026-09-27T11:25:58.676Z] gate-consult deny gambit foF2 2026.09.20T17:00 ms-since-last=5699
+[LGDC 2026-09-27T11:26:11.820Z] launch gambit foF2 2026.09.20T17:00
+[LGDC 2026-09-27T11:26:11.842Z] result ok gambit foF2 2026.09.20T17:00
+[LGDC 2026-09-27T11:26:17.007Z] gate-consult deny gambit foF2 2026.09.20T17:15 ms-since-last=7439
+[LGDC 2026-09-27T11:26:32.079Z] launch gambit foF2 2026.09.20T17:15
+[LGDC 2026-09-27T11:26:32.109Z] result ok gambit foF2 2026.09.20T17:15
+[LGDC 2026-09-27T11:26:44.181Z] gate-consult deny gambit foF2 2026.09.20T17:30 ms-since-last=14920
+[LGDC 2026-09-27T11:26:56.403Z] launch gambit foF2 2026.09.20T17:30
+[LGDC 2026-09-27T11:26:56.858Z] result ok gambit foF2 2026.09.20T17:30
+[LGDC 2026-09-27T11:27:04.257Z] gate-consult deny gambit foF2 2026.09.20T17:45 ms-since-last=10130
+[LGDC 2026-09-27T11:27:17.348Z] launch gambit foF2 2026.09.20T17:45
+[LGDC 2026-09-27T11:27:18.144Z] result ok gambit foF2 2026.09.20T17:45
+[LGDC 2026-09-27T11:27:21.276Z] gate-consult deny gambit foF2 2026.09.20T18:00 ms-since-last=6191
+[LGDC 2026-09-27T11:27:32.400Z] launch gambit foF2 2026.09.20T18:00
+[LGDC 2026-09-27T11:27:32.726Z] result ok gambit foF2 2026.09.20T18:00
+[LGDC 2026-09-27T11:27:38.878Z] gate-consult deny gambit foF2 2026.09.20T18:15 ms-since-last=8646
+[LGDC 2026-09-27T11:27:49.973Z] launch getbest CAJ2M
+[LGDC 2026-09-27T11:27:50.226Z] launch getbest CB53N
+[LGDC 2026-09-27T11:27:50.477Z] launch getbest DW41K
+[LGDC 2026-09-27T11:27:50.727Z] launch getbest NI135
+[LGDC 2026-09-27T11:27:51.086Z] launch getbest TV51R
+[LGDC 2026-09-27T11:27:51.445Z] launch getbest GR13L
+[LGDC 2026-09-27T11:27:51.704Z] launch getbest RM041
+[LGDC 2026-09-27T11:27:51.962Z] launch getbest TR0P2
+[LGDC 2026-09-27T11:27:54.559Z] gate-consult deny gambit foF2 2026.09.20T18:15 ms-since-last=2597
+[LGDC 2026-09-27T11:28:14.143Z] launch gambit foF2 2026.09.20T18:15
+[LGDC 2026-09-27T11:28:14.164Z] result ok gambit foF2 2026.09.20T18:15
+[LGDC 2026-09-27T11:28:23.077Z] gate-consult deny gambit foF2 2026.09.20T18:30 ms-since-last=11489
+[LGDC 2026-09-27T11:28:41.821Z] launch gambit foF2 2026.09.20T18:30
+[LGDC 2026-09-27T11:28:41.837Z] result ok gambit foF2 2026.09.20T18:30
+[LGDC 2026-09-27T11:28:49.672Z] gate-consult deny gambit foF2 2026.09.20T18:45 ms-since-last=10718
+[LGDC 2026-09-27T11:29:05.036Z] launch gambit foF2 2026.09.20T18:45
+[LGDC 2026-09-27T11:29:05.064Z] result ok gambit foF2 2026.09.20T18:45
+[LGDC 2026-09-27T11:29:14.287Z] gate-consult deny gambit foF2 2026.09.20T19:00 ms-since-last=11475
+[LGDC 2026-09-27T11:29:32.595Z] launch gambit foF2 2026.09.20T19:00
+[LGDC 2026-09-27T11:29:32.620Z] result ok gambit foF2 2026.09.20T19:00
+[LGDC 2026-09-27T11:29:40.701Z] gate-consult deny gambit foF2 2026.09.20T19:15 ms-since-last=10411
+[LGDC 2026-09-27T11:29:56.657Z] launch gambit foF2 2026.09.20T19:15
+[LGDC 2026-09-27T11:29:56.680Z] result ok gambit foF2 2026.09.20T19:15
+[LGDC 2026-09-27T11:30:06.216Z] gate-consult deny gambit foF2 2026.09.20T19:30 ms-since-last=12036
+[LGDC 2026-09-27T11:30:25.638Z] launch gambit foF2 2026.09.20T19:30
+[LGDC 2026-09-27T11:30:25.669Z] result ok gambit foF2 2026.09.20T19:30
+[LGDC 2026-09-27T11:30:36.323Z] gate-consult deny gambit foF2 2026.09.20T19:45 ms-since-last=13320
+[LGDC 2026-09-27T11:30:53.680Z] launch gambit foF2 2026.09.20T19:45
+[LGDC 2026-09-27T11:30:53.708Z] result ok gambit foF2 2026.09.20T19:45
+[LGDC 2026-09-27T11:31:04.652Z] gate-consult deny gambit foF2 2026.09.20T20:00 ms-since-last=13578
+[LGDC 2026-09-27T11:31:21.172Z] launch gambit foF2 2026.09.20T20:00
+[LGDC 2026-09-27T11:31:21.191Z] result ok gambit foF2 2026.09.20T20:00
+[LGDC 2026-09-27T11:31:29.705Z] gate-consult deny gambit foF2 2026.09.20T20:15 ms-since-last=10750
+[LGDC 2026-09-27T11:31:46.435Z] launch gambit foF2 2026.09.20T20:15
+[LGDC 2026-09-27T11:31:46.485Z] result ok gambit foF2 2026.09.20T20:15
+[LGDC 2026-09-27T11:31:56.081Z] gate-consult deny gambit foF2 2026.09.20T20:30 ms-since-last=12445
+[LGDC 2026-09-27T11:32:07.912Z] launch gambit foF2 2026.09.20T20:30
+[LGDC 2026-09-27T11:32:07.934Z] result ok gambit foF2 2026.09.20T20:30
+[LGDC 2026-09-27T11:32:10.906Z] gate-consult deny gambit foF2 2026.09.20T20:45 ms-since-last=5254
+[LGDC 2026-09-27T11:32:19.854Z] gate-consult deny gambit foF2 2026.09.20T20:45 ms-since-last=14202
+[LGDC 2026-09-27T11:32:32.479Z] launch gambit foF2 2026.09.20T20:45
+[LGDC 2026-09-27T11:32:32.509Z] result ok gambit foF2 2026.09.20T20:45
+[LGDC 2026-09-27T11:32:40.294Z] gate-consult deny gambit foF2 2026.09.20T21:00 ms-since-last=10294
+[LGDC 2026-09-27T11:32:49.969Z] launch getbest EB040
+[LGDC 2026-09-27T11:32:50.281Z] launch getbest KL154
+[LGDC 2026-09-27T11:32:50.485Z] launch getbest KI167
+[LGDC 2026-09-27T11:32:50.737Z] launch getbest OL246
+[LGDC 2026-09-27T11:32:50.988Z] launch getbest LD160
+[LGDC 2026-09-27T11:32:51.253Z] launch getbest TR170
+[LGDC 2026-09-27T11:32:51.508Z] launch getbest RL052
+[LGDC 2026-09-27T11:32:51.758Z] launch getbest CS839
+[LGDC 2026-09-27T11:32:52.021Z] launch getbest RV149
+[LGDC 2026-09-27T11:32:52.291Z] launch getbest AC843
+[LGDC 2026-09-27T11:32:54.328Z] launch getbest PF765
+[LGDC 2026-09-27T11:32:54.527Z] gate-consult deny gambit foF2 2026.09.20T21:00 ms-since-last=199
+[LGDC 2026-09-27T11:33:12.016Z] launch gambit foF2 2026.09.20T21:00
+[LGDC 2026-09-27T11:33:12.054Z] result ok gambit foF2 2026.09.20T21:00
+[LGDC 2026-09-27T11:33:20.509Z] gate-consult deny gambit foF2 2026.09.20T21:15 ms-since-last=10703
+[LGDC 2026-09-27T11:33:36.877Z] launch gambit foF2 2026.09.20T21:15
+[LGDC 2026-09-27T11:33:37.351Z] result ok gambit foF2 2026.09.20T21:15
+[LGDC 2026-09-27T11:33:48.338Z] gate-consult deny gambit foF2 2026.09.20T21:30 ms-since-last=13962
+[LGDC 2026-09-27T11:34:05.746Z] launch gambit foF2 2026.09.20T21:30
+[LGDC 2026-09-27T11:34:05.805Z] result ok gambit foF2 2026.09.20T21:30
+[LGDC 2026-09-27T11:34:13.448Z] gate-consult deny gambit foF2 2026.09.20T21:45 ms-since-last=10271
+[LGDC 2026-09-27T11:34:28.679Z] launch gambit foF2 2026.09.20T21:45
+[LGDC 2026-09-27T11:34:28.698Z] result ok gambit foF2 2026.09.20T21:45
+[LGDC 2026-09-27T11:34:36.107Z] gate-consult deny gambit foF2 2026.09.20T22:00 ms-since-last=9612
+[LGDC 2026-09-27T11:34:52.011Z] launch gambit foF2 2026.09.20T22:00
+[LGDC 2026-09-27T11:34:52.036Z] result ok gambit foF2 2026.09.20T22:00
+[LGDC 2026-09-27T11:35:00.440Z] gate-consult deny gambit foF2 2026.09.20T22:15 ms-since-last=10789
+[LGDC 2026-09-27T11:35:16.507Z] launch gambit foF2 2026.09.20T22:15
+[LGDC 2026-09-27T11:35:16.528Z] result ok gambit foF2 2026.09.20T22:15
+[LGDC 2026-09-27T11:35:24.552Z] gate-consult deny gambit foF2 2026.09.20T22:30 ms-since-last=10531
+[LGDC 2026-09-27T11:35:40.982Z] launch gambit foF2 2026.09.20T22:30
+[LGDC 2026-09-27T11:35:41.007Z] result ok gambit foF2 2026.09.20T22:30
+[LGDC 2026-09-27T11:35:49.893Z] gate-consult deny gambit foF2 2026.09.20T22:45 ms-since-last=11407
+[LGDC 2026-09-27T11:36:03.425Z] launch gambit foF2 2026.09.20T22:45
+[LGDC 2026-09-27T11:36:03.447Z] result ok gambit foF2 2026.09.20T22:45
+[LGDC 2026-09-27T11:36:07.341Z] gate-consult deny gambit foF2 2026.09.20T23:00 ms-since-last=6342
+[LGDC 2026-09-27T11:36:20.862Z] launch gambit foF2 2026.09.20T23:00
+[LGDC 2026-09-27T11:36:20.881Z] result ok gambit foF2 2026.09.20T23:00
+[LGDC 2026-09-27T11:36:24.073Z] gate-consult deny gambit foF2 2026.09.20T23:15 ms-since-last=6895
+[LGDC 2026-09-27T11:36:35.044Z] launch gambit foF2 2026.09.20T23:15
+[LGDC 2026-09-27T11:36:35.065Z] result ok gambit foF2 2026.09.20T23:15
+[LGDC 2026-09-27T11:36:38.281Z] gate-consult deny gambit foF2 2026.09.20T23:30 ms-since-last=5411
+[LGDC 2026-09-27T11:36:47.401Z] gate-consult deny gambit foF2 2026.09.20T23:30 ms-since-last=14531
+[LGDC 2026-09-27T11:37:00.267Z] launch gambit foF2 2026.09.20T23:30
+[LGDC 2026-09-27T11:37:00.289Z] result ok gambit foF2 2026.09.20T23:30
+[LGDC 2026-09-27T11:37:04.136Z] gate-consult deny gambit foF2 2026.09.20T23:45 ms-since-last=6687
+[LGDC 2026-09-27T11:37:17.779Z] launch gambit foF2 2026.09.20T23:45
+[LGDC 2026-09-27T11:37:17.800Z] result ok gambit foF2 2026.09.20T23:45
+[LGDC 2026-09-27T11:37:21.831Z] gate-consult deny gambit foF2 2026.09.21T00:00 ms-since-last=6792
+[LGDC 2026-09-27T11:37:33.818Z] launch gambit foF2 2026.09.21T00:00
+[LGDC 2026-09-27T11:37:33.837Z] result ok gambit foF2 2026.09.21T00:00
+[LGDC 2026-09-27T11:37:39.635Z] gate-consult deny gambit foF2 2026.09.21T00:15 ms-since-last=8022
+[LGDC 2026-09-27T11:37:49.975Z] launch getbest EA036
+[LGDC 2026-09-27T11:37:50.241Z] launch getbest FF051
+[LGDC 2026-09-27T11:37:50.496Z] launch getbest JR055
+[LGDC 2026-09-27T11:37:50.744Z] gate-consult deny gambit foF2 2026.09.21T00:15 ms-since-last=248
+[LGDC 2026-09-27T11:37:50.778Z] launch getbest PQ052
+[LGDC 2026-09-27T11:37:51.012Z] launch getbest GM037
+[LGDC 2026-09-27T11:37:51.265Z] launch getbest AT138
+[LGDC 2026-09-27T11:37:51.517Z] launch getbest VT139
+[LGDC 2026-09-27T11:37:51.767Z] launch getbest MZ152
+[LGDC 2026-09-27T11:37:52.023Z] launch getbest SO148
+[LGDC 2026-09-27T11:37:52.326Z] launch getbest TR169
+[LGDC 2026-09-27T11:37:52.832Z] launch getbest DB049
+[LGDC 2026-09-27T11:37:53.093Z] launch getbest EG931
+[LGDC 2026-09-27T11:37:54.050Z] launch getbest BC840
+[LGDC 2026-09-27T11:37:54.495Z] launch getbest EI764
+[LGDC 2026-09-27T11:37:55.022Z] launch getbest AU930
+[LGDC 2026-09-27T11:37:55.273Z] launch getbest BVJ03
+[LGDC 2026-09-27T11:37:56.258Z] launch getbest SMK29
+[LGDC 2026-09-27T11:37:56.577Z] launch getbest TNJ20
+[LGDC 2026-09-27T11:37:57.069Z] launch getbest CAJ2M
+[LGDC 2026-09-27T11:37:57.328Z] launch getbest CXM9B
+[LGDC 2026-09-27T11:37:58.079Z] launch getbest BLJ03
+[LGDC 2026-09-27T11:37:58.454Z] launch getbest LA42Q
+[LGDC 2026-09-27T11:37:59.405Z] launch getbest TO535
+[LGDC 2026-09-27T11:37:59.660Z] launch getbest IC437
+[LGDC 2026-09-27T11:38:00.104Z] launch getbest DH224
+[LGDC 2026-09-27T11:38:00.656Z] launch getbest XI434
+[LGDC 2026-09-27T11:38:00.988Z] launch getbest CS31K
+[LGDC 2026-09-27T11:38:01.407Z] launch getbest MA155
+[LGDC 2026-09-27T11:38:01.558Z] gate-consult deny gambit foF2 2026.09.21T00:15 ms-since-last=151
+[LGDC 2026-09-27T11:38:01.779Z] launch getbest MO155
+[LGDC 2026-09-27T11:38:02.622Z] launch getbest ML10L
+[LGDC 2026-09-27T11:38:03.355Z] launch getbest MU12K
+[LGDC 2026-09-27T11:38:03.616Z] launch getbest NDA81
+[LGDC 2026-09-27T11:38:11.194Z] gate-consult deny gambit foF2 2026.09.21T00:15 ms-since-last=7578
+[LGDC 2026-09-27T11:38:23.753Z] launch gambit foF2 2026.09.21T00:15
+[LGDC 2026-09-27T11:38:23.775Z] result ok gambit foF2 2026.09.21T00:15
+[LGDC 2026-09-27T11:38:27.106Z] gate-consult deny gambit foF2 2026.09.21T00:30 ms-since-last=6759
+[LGDC 2026-09-27T11:38:42.440Z] launch gambit foF2 2026.09.21T00:30
+[LGDC 2026-09-27T11:38:42.461Z] result ok gambit foF2 2026.09.21T00:30
+[LGDC 2026-09-27T11:38:47.817Z] gate-consult deny gambit foF2 2026.09.21T00:45 ms-since-last=11385
+[LGDC 2026-09-27T11:39:00.339Z] launch gambit foF2 2026.09.21T00:45
+[LGDC 2026-09-27T11:39:00.355Z] result ok gambit foF2 2026.09.21T00:45
+[LGDC 2026-09-27T11:39:05.367Z] gate-consult deny gambit foF2 2026.09.21T01:00 ms-since-last=7665
+[LGDC 2026-09-27T11:39:17.967Z] launch gambit foF2 2026.09.21T01:00
+[LGDC 2026-09-27T11:39:17.990Z] result ok gambit foF2 2026.09.21T01:00
+[LGDC 2026-09-27T11:39:22.409Z] gate-consult deny gambit foF2 2026.09.21T01:15 ms-since-last=7078
+[LGDC 2026-09-27T11:39:36.144Z] launch gambit foF2 2026.09.21T01:15
+[LGDC 2026-09-27T11:39:36.167Z] result ok gambit foF2 2026.09.21T01:15
+[LGDC 2026-09-27T11:39:39.497Z] gate-consult deny gambit foF2 2026.09.21T01:30 ms-since-last=7808
+[LGDC 2026-09-27T11:39:54.443Z] launch gambit foF2 2026.09.21T01:30
+[LGDC 2026-09-27T11:39:54.462Z] result ok gambit foF2 2026.09.21T01:30
+[LGDC 2026-09-27T11:39:58.783Z] gate-consult deny gambit foF2 2026.09.21T01:45 ms-since-last=10155
+[LGDC 2026-09-27T11:40:27.923Z] result fail gambit foF2 2026.09.21T01:45 red/pre-gate
+[LGDC 2026-09-27T11:40:39.472Z] launch gambit foF2 2026.09.21T01:45
+[LGDC 2026-09-27T11:40:39.491Z] result ok gambit foF2 2026.09.21T01:45
+[LGDC 2026-09-27T11:40:42.842Z] gate-consult deny gambit foF2 2026.09.21T02:00 ms-since-last=6094
+[LGDC 2026-09-27T11:40:55.974Z] launch gambit foF2 2026.09.21T02:00
+[LGDC 2026-09-27T11:40:55.992Z] result ok gambit foF2 2026.09.21T02:00
+[LGDC 2026-09-27T11:41:00.218Z] gate-consult deny gambit foF2 2026.09.21T02:15 ms-since-last=6644
+[LGDC 2026-09-27T11:41:20.064Z] launch gambit foF2 2026.09.21T02:15
+[LGDC 2026-09-27T11:41:20.085Z] result ok gambit foF2 2026.09.21T02:15
+[LGDC 2026-09-27T11:41:23.494Z] gate-consult deny gambit foF2 2026.09.21T02:30 ms-since-last=12558
+[LGDC 2026-09-27T11:41:36.729Z] launch gambit foF2 2026.09.21T02:30
+[LGDC 2026-09-27T11:41:36.744Z] result ok gambit foF2 2026.09.21T02:30
+[LGDC 2026-09-27T11:41:41.081Z] gate-consult deny gambit foF2 2026.09.21T02:45 ms-since-last=8532
+[LGDC 2026-09-27T11:41:58.505Z] launch gambit foF2 2026.09.21T02:45
+[LGDC 2026-09-27T11:41:58.522Z] result ok gambit foF2 2026.09.21T02:45
+[LGDC 2026-09-27T11:42:05.008Z] gate-consult deny gambit foF2 2026.09.21T03:00 ms-since-last=14001
+[LGDC 2026-09-27T11:42:17.771Z] launch gambit foF2 2026.09.21T03:00
+[LGDC 2026-09-27T11:42:17.786Z] result ok gambit foF2 2026.09.21T03:00
+[LGDC 2026-09-27T11:42:23.891Z] gate-consult deny gambit foF2 2026.09.21T03:15 ms-since-last=8326
+[LGDC 2026-09-27T11:42:42.308Z] launch gambit foF2 2026.09.21T03:15
+[LGDC 2026-09-27T11:42:42.331Z] result ok gambit foF2 2026.09.21T03:15
+[LGDC 2026-09-27T11:42:47.502Z] gate-consult deny gambit foF2 2026.09.21T03:30 ms-since-last=11416
+[LGDC 2026-09-27T11:42:49.984Z] launch getbest DW41K
+[LGDC 2026-09-27T11:42:50.239Z] launch getbest TV51R
+[LGDC 2026-09-27T11:42:50.493Z] launch getbest NI135
+[LGDC 2026-09-27T11:42:50.758Z] launch getbest CB53N
+[LGDC 2026-09-27T11:42:51.140Z] launch getbest GR13L
+[LGDC 2026-09-27T11:42:51.400Z] launch getbest TR0P2
+[LGDC 2026-09-27T11:42:51.650Z] launch getbest RM041
+[LGDC 2026-09-27T11:42:57.940Z] gate-consult deny gambit foF2 2026.09.21T03:30 ms-since-last=6290
+[LGDC 2026-09-27T11:43:22.610Z] launch gambit foF2 2026.09.21T03:30
+[LGDC 2026-09-27T11:43:22.639Z] result ok gambit foF2 2026.09.21T03:30
+[LGDC 2026-09-27T11:43:46.342Z] launch gambit foF2 2026.09.21T03:45
+[LGDC 2026-09-27T11:43:46.367Z] result ok gambit foF2 2026.09.21T03:45
+[LGDC 2026-09-27T11:43:53.539Z] launch gambit foF2 2026.09.21T04:00
+[LGDC 2026-09-27T11:43:53.557Z] result ok gambit foF2 2026.09.21T04:00
+[LGDC 2026-09-27T11:43:57.485Z] gate-consult deny gambit foF2 2026.09.21T04:15 ms-since-last=7191
+[LGDC 2026-09-27T11:44:10.455Z] launch gambit foF2 2026.09.21T04:15
+[LGDC 2026-09-27T11:44:10.475Z] result ok gambit foF2 2026.09.21T04:15
+[LGDC 2026-09-27T11:44:15.456Z] gate-consult deny gambit foF2 2026.09.21T04:30 ms-since-last=7624
+[LGDC 2026-09-27T11:44:28.561Z] launch gambit foF2 2026.09.21T04:30
+[LGDC 2026-09-27T11:44:28.646Z] result ok gambit foF2 2026.09.21T04:30
+[LGDC 2026-09-27T11:44:40.483Z] gate-consult deny gambit foF2 2026.09.21T04:45 ms-since-last=14123
+[LGDC 2026-09-27T11:45:07.597Z] launch gambit foF2 2026.09.21T04:45
+[LGDC 2026-09-27T11:45:07.617Z] result ok gambit foF2 2026.09.21T04:45
+[LGDC 2026-09-27T11:45:16.130Z] gate-consult deny gambit foF2 2026.09.21T05:00 ms-since-last=11375
+[LGDC 2026-09-27T11:45:35.253Z] launch gambit foF2 2026.09.21T05:00
+[LGDC 2026-09-27T11:45:35.281Z] result ok gambit foF2 2026.09.21T05:00
+[LGDC 2026-09-27T11:45:44.255Z] gate-consult deny gambit foF2 2026.09.21T05:15 ms-since-last=11535
+[LGDC 2026-09-27T11:46:00.861Z] launch gambit foF2 2026.09.21T05:15
+[LGDC 2026-09-27T11:46:01.027Z] result ok gambit foF2 2026.09.21T05:15
+[LGDC 2026-09-27T11:46:14.456Z] launch gambit foF2 2026.09.21T05:30
+[LGDC 2026-09-27T11:46:14.487Z] result ok gambit foF2 2026.09.21T05:30
+[LGDC 2026-09-27T11:46:24.886Z] gate-consult deny gambit foF2 2026.09.21T05:45 ms-since-last=14277
+[LGDC 2026-09-27T11:46:38.842Z] launch gambit foF2 2026.09.21T05:45
+[LGDC 2026-09-27T11:46:39.043Z] result ok gambit foF2 2026.09.21T05:45
+[LGDC 2026-09-27T11:46:50.396Z] gate-consult deny gambit foF2 2026.09.21T06:00 ms-since-last=13934
+[LGDC 2026-09-27T11:47:02.708Z] result fail gambit foF2 2026.09.21T06:00 red/pre-gate
+[LGDC 2026-09-27T11:47:23.991Z] launch gambit foF2 2026.09.21T06:00
+[LGDC 2026-09-27T11:47:24.008Z] result ok gambit foF2 2026.09.21T06:00
+[LGDC 2026-09-27T11:47:28.012Z] gate-consult deny gambit foF2 2026.09.21T06:15 ms-since-last=8551
+[LGDC 2026-09-27T11:47:45.995Z] launch gambit foF2 2026.09.21T06:15
+[LGDC 2026-09-27T11:47:46.016Z] result ok gambit foF2 2026.09.21T06:15
+[LGDC 2026-09-27T11:47:50.002Z] launch getbest EB040
+[LGDC 2026-09-27T11:47:50.263Z] launch getbest EA036
+[LGDC 2026-09-27T11:47:56.832Z] gate-consult deny gambit foF2 2026.09.21T06:30 ms-since-last=6569
+[LGDC 2026-09-27T11:48:16.911Z] launch gambit foF2 2026.09.21T06:30
+[LGDC 2026-09-27T11:48:16.931Z] result ok gambit foF2 2026.09.21T06:30
+[LGDC 2026-09-27T11:48:29.057Z] gate-consult deny gambit foF2 2026.09.21T06:45 ms-since-last=14484
+[LGDC 2026-09-27T11:48:49.120Z] launch gambit foF2 2026.09.21T06:45
+[LGDC 2026-09-27T11:48:49.147Z] result ok gambit foF2 2026.09.21T06:45
+[LGDC 2026-09-27T11:49:02.464Z] result fail gambit foF2 2026.09.21T07:00 red/pre-gate
+[LGDC 2026-09-27T11:49:12.027Z] gate-consult deny gambit foF2 2026.09.21T07:00 ms-since-last=10087
+[LGDC 2026-09-27T11:49:23.273Z] launch gambit foF2 2026.09.21T07:00
+[LGDC 2026-09-27T11:49:23.292Z] result ok gambit foF2 2026.09.21T07:00
+[LGDC 2026-09-27T11:49:26.957Z] gate-consult deny gambit foF2 2026.09.21T07:15 ms-since-last=5872
+[LGDC 2026-09-27T11:49:40.417Z] launch gambit foF2 2026.09.21T07:15
+[LGDC 2026-09-27T11:49:40.440Z] result ok gambit foF2 2026.09.21T07:15
+[LGDC 2026-09-27T11:49:45.118Z] gate-consult deny gambit foF2 2026.09.21T07:30 ms-since-last=7044
+[LGDC 2026-09-27T11:49:57.065Z] launch gambit foF2 2026.09.21T07:30
+[LGDC 2026-09-27T11:49:57.091Z] result ok gambit foF2 2026.09.21T07:30
+[LGDC 2026-09-27T11:50:02.384Z] gate-consult deny gambit foF2 2026.09.21T07:45 ms-since-last=7636
+[LGDC 2026-09-27T11:50:16.363Z] launch gambit foF2 2026.09.21T07:45
+[LGDC 2026-09-27T11:50:16.389Z] result ok gambit foF2 2026.09.21T07:45
+[LGDC 2026-09-27T11:50:21.547Z] gate-consult deny gambit foF2 2026.09.21T08:00 ms-since-last=7474
+[LGDC 2026-09-27T11:50:38.976Z] launch gambit foF2 2026.09.21T08:00
+[LGDC 2026-09-27T11:50:38.998Z] result ok gambit foF2 2026.09.21T08:00
+[LGDC 2026-09-27T11:50:44.105Z] gate-consult deny gambit foF2 2026.09.21T08:15 ms-since-last=9880
+[LGDC 2026-09-27T11:50:58.496Z] launch gambit foF2 2026.09.21T08:15
+[LGDC 2026-09-27T11:50:58.520Z] result ok gambit foF2 2026.09.21T08:15
+[LGDC 2026-09-27T11:51:04.601Z] gate-consult deny gambit foF2 2026.09.21T08:30 ms-since-last=9326
+[LGDC 2026-09-27T11:51:18.295Z] launch gambit foF2 2026.09.21T08:30
+[LGDC 2026-09-27T11:51:18.317Z] result ok gambit foF2 2026.09.21T08:30
+[LGDC 2026-09-27T11:51:21.599Z] gate-consult deny gambit foF2 2026.09.21T08:45 ms-since-last=5683
+[LGDC 2026-09-27T11:51:30.553Z] gate-consult deny gambit foF2 2026.09.21T08:45 ms-since-last=14637
+[LGDC 2026-09-27T11:51:41.674Z] launch gambit foF2 2026.09.21T08:45
+[LGDC 2026-09-27T11:51:41.691Z] result ok gambit foF2 2026.09.21T08:45
+[LGDC 2026-09-27T11:51:46.170Z] gate-consult deny gambit foF2 2026.09.21T09:00 ms-since-last=6813
+[LGDC 2026-09-27T11:51:58.307Z] launch gambit foF2 2026.09.21T09:00
+[LGDC 2026-09-27T11:51:58.330Z] result ok gambit foF2 2026.09.21T09:00
+[LGDC 2026-09-27T11:52:01.774Z] gate-consult deny gambit foF2 2026.09.21T09:15 ms-since-last=5813
+[LGDC 2026-09-27T11:52:13.762Z] launch gambit foF2 2026.09.21T09:15
+[LGDC 2026-09-27T11:52:13.783Z] result ok gambit foF2 2026.09.21T09:15
+[LGDC 2026-09-27T11:52:18.060Z] gate-consult deny gambit foF2 2026.09.21T09:30 ms-since-last=7060
+[LGDC 2026-09-27T11:52:32.789Z] launch gambit foF2 2026.09.21T09:30
+[LGDC 2026-09-27T11:52:32.808Z] result ok gambit foF2 2026.09.21T09:30
+[LGDC 2026-09-27T11:52:39.371Z] gate-consult deny gambit foF2 2026.09.21T09:45 ms-since-last=8928
+[LGDC 2026-09-27T11:52:49.993Z] launch getbest PQ052
+[LGDC 2026-09-27T11:52:50.249Z] launch getbest JR055
+[LGDC 2026-09-27T11:52:50.500Z] launch getbest FF051
+[LGDC 2026-09-27T11:52:50.751Z] launch getbest GM037
+[LGDC 2026-09-27T11:52:50.848Z] gate-consult deny gambit foF2 2026.09.21T09:45 ms-since-last=97
+[LGDC 2026-09-27T11:52:51.004Z] launch getbest AT138
+[LGDC 2026-09-27T11:52:51.256Z] launch getbest VT139
+[LGDC 2026-09-27T11:52:51.507Z] launch getbest MZ152
+[LGDC 2026-09-27T11:52:51.759Z] launch getbest SO148
+[LGDC 2026-09-27T11:52:52.015Z] launch getbest TR169
+[LGDC 2026-09-27T11:52:52.278Z] launch getbest DB049
+[LGDC 2026-09-27T11:52:52.531Z] launch getbest EG931
+[LGDC 2026-09-27T11:52:52.783Z] launch getbest BVJ03
+[LGDC 2026-09-27T11:52:53.035Z] launch getbest EI764
+[LGDC 2026-09-27T11:52:53.286Z] launch getbest CAJ2M
+[LGDC 2026-09-27T11:53:02.110Z] gate-consult deny gambit foF2 2026.09.21T09:45 ms-since-last=8824
+[LGDC 2026-09-27T11:53:14.424Z] launch gambit foF2 2026.09.21T09:45
+[LGDC 2026-09-27T11:53:14.440Z] result ok gambit foF2 2026.09.21T09:45
+[LGDC 2026-09-27T11:53:18.975Z] gate-consult deny gambit foF2 2026.09.21T10:00 ms-since-last=6637
+[LGDC 2026-09-27T11:53:31.804Z] launch gambit foF2 2026.09.21T10:00
+[LGDC 2026-09-27T11:53:31.820Z] result ok gambit foF2 2026.09.21T10:00
+[LGDC 2026-09-27T11:53:36.444Z] gate-consult deny gambit foF2 2026.09.21T10:15 ms-since-last=7180
+[LGDC 2026-09-27T11:53:49.016Z] launch gambit foF2 2026.09.21T10:15
+[LGDC 2026-09-27T11:53:49.031Z] result ok gambit foF2 2026.09.21T10:15
+[LGDC 2026-09-27T11:53:53.908Z] gate-consult deny gambit foF2 2026.09.21T10:30 ms-since-last=7324
+[LGDC 2026-09-27T11:54:06.335Z] launch gambit foF2 2026.09.21T10:30
+[LGDC 2026-09-27T11:54:06.350Z] result ok gambit foF2 2026.09.21T10:30
+[LGDC 2026-09-27T11:54:11.046Z] gate-consult deny gambit foF2 2026.09.21T10:45 ms-since-last=7005
+[LGDC 2026-09-27T11:54:24.451Z] launch gambit foF2 2026.09.21T10:45
+[LGDC 2026-09-27T11:54:24.470Z] result ok gambit foF2 2026.09.21T10:45
+[LGDC 2026-09-27T11:54:29.812Z] gate-consult deny gambit foF2 2026.09.21T11:00 ms-since-last=8800
+[LGDC 2026-09-27T11:54:42.577Z] launch gambit foF2 2026.09.21T11:00
+[LGDC 2026-09-27T11:54:42.593Z] result ok gambit foF2 2026.09.21T11:00
+[LGDC 2026-09-27T11:54:47.554Z] gate-consult deny gambit foF2 2026.09.21T11:15 ms-since-last=7304
+[LGDC 2026-09-27T11:55:00.115Z] launch gambit foF2 2026.09.21T11:15
+[LGDC 2026-09-27T11:55:00.132Z] result ok gambit foF2 2026.09.21T11:15
+[LGDC 2026-09-27T11:55:04.884Z] gate-consult deny gambit foF2 2026.09.21T11:30 ms-since-last=7148
+[LGDC 2026-09-27T11:55:17.231Z] launch gambit foF2 2026.09.21T11:30
+[LGDC 2026-09-27T11:55:17.245Z] result ok gambit foF2 2026.09.21T11:30
+[LGDC 2026-09-27T11:55:22.049Z] gate-consult deny gambit foF2 2026.09.21T11:45 ms-since-last=7061
+[LGDC 2026-09-27T11:55:34.453Z] launch gambit foF2 2026.09.21T11:45
+[LGDC 2026-09-27T11:55:34.468Z] result ok gambit foF2 2026.09.21T11:45
+[LGDC 2026-09-27T11:55:39.153Z] gate-consult deny gambit foF2 2026.09.21T12:00 ms-since-last=7012
+[LGDC 2026-09-27T11:55:51.574Z] launch gambit foF2 2026.09.21T12:00
+[LGDC 2026-09-27T11:55:51.591Z] result ok gambit foF2 2026.09.21T12:00
+[LGDC 2026-09-27T11:55:56.100Z] gate-consult deny gambit foF2 2026.09.21T12:15 ms-since-last=6925
+[LGDC 2026-09-27T11:56:08.277Z] launch gambit foF2 2026.09.21T12:15
+[LGDC 2026-09-27T11:56:08.294Z] result ok gambit foF2 2026.09.21T12:15
+[LGDC 2026-09-27T11:56:12.754Z] gate-consult deny gambit foF2 2026.09.21T12:30 ms-since-last=6696
+[LGDC 2026-09-27T11:56:25.292Z] launch gambit foF2 2026.09.21T12:30
+[LGDC 2026-09-27T11:56:25.309Z] result ok gambit foF2 2026.09.21T12:30
+[LGDC 2026-09-27T11:56:29.886Z] gate-consult deny gambit foF2 2026.09.21T12:45 ms-since-last=7066
+[LGDC 2026-09-27T11:56:42.235Z] launch gambit foF2 2026.09.21T12:45
+[LGDC 2026-09-27T11:56:42.251Z] result ok gambit foF2 2026.09.21T12:45
+[LGDC 2026-09-27T11:56:47.532Z] gate-consult deny gambit foF2 2026.09.21T13:00 ms-since-last=7552
+[LGDC 2026-09-27T11:57:00.498Z] launch gambit foF2 2026.09.21T13:00
+[LGDC 2026-09-27T11:57:00.514Z] result ok gambit foF2 2026.09.21T13:00
+[LGDC 2026-09-27T11:57:05.479Z] gate-consult deny gambit foF2 2026.09.21T13:15 ms-since-last=7216
+[LGDC 2026-09-27T11:57:18.206Z] launch gambit foF2 2026.09.21T13:15
+[LGDC 2026-09-27T11:57:18.222Z] result ok gambit foF2 2026.09.21T13:15
+[LGDC 2026-09-27T11:57:22.967Z] gate-consult deny gambit foF2 2026.09.21T13:30 ms-since-last=7172
+[LGDC 2026-09-27T11:57:35.702Z] launch gambit foF2 2026.09.21T13:30
+[LGDC 2026-09-27T11:57:35.719Z] result ok gambit foF2 2026.09.21T13:30
+[LGDC 2026-09-27T11:57:40.766Z] gate-consult deny gambit foF2 2026.09.21T13:45 ms-since-last=7307
+[LGDC 2026-09-27T11:57:49.997Z] launch getbest DW41K
+[LGDC 2026-09-27T11:57:50.254Z] launch getbest NI135
+[LGDC 2026-09-27T11:57:50.504Z] launch getbest CB53N
+[LGDC 2026-09-27T11:57:50.754Z] launch getbest TV51R
+[LGDC 2026-09-27T11:57:51.004Z] launch getbest RM041
+[LGDC 2026-09-27T11:57:51.043Z] gate-consult deny gambit foF2 2026.09.21T13:45 ms-since-last=39
+[LGDC 2026-09-27T11:57:51.259Z] launch getbest GR13L
+[LGDC 2026-09-27T11:57:51.512Z] launch getbest TR0P2
+[LGDC 2026-09-27T11:58:01.209Z] gate-consult deny gambit foF2 2026.09.21T13:45 ms-since-last=9697
+[LGDC 2026-09-27T11:58:14.234Z] launch gambit foF2 2026.09.21T13:45
+[LGDC 2026-09-27T11:58:14.249Z] result ok gambit foF2 2026.09.21T13:45
+[LGDC 2026-09-27T11:58:19.060Z] gate-consult deny gambit foF2 2026.09.21T14:00 ms-since-last=6985
+[LGDC 2026-09-27T11:58:31.912Z] launch gambit foF2 2026.09.21T14:00
+[LGDC 2026-09-27T11:58:31.933Z] result ok gambit foF2 2026.09.21T14:00
+[LGDC 2026-09-27T11:58:36.633Z] gate-consult deny gambit foF2 2026.09.21T14:15 ms-since-last=7042
+[LGDC 2026-09-27T11:58:49.031Z] launch gambit foF2 2026.09.21T14:15
+[LGDC 2026-09-27T11:58:49.048Z] result ok gambit foF2 2026.09.21T14:15
+[LGDC 2026-09-27T11:58:54.038Z] gate-consult deny gambit foF2 2026.09.21T14:30 ms-since-last=7231
+[LGDC 2026-09-27T11:59:06.556Z] launch gambit foF2 2026.09.21T14:30
+[LGDC 2026-09-27T11:59:06.572Z] result ok gambit foF2 2026.09.21T14:30
+[LGDC 2026-09-27T11:59:11.168Z] gate-consult deny gambit foF2 2026.09.21T14:45 ms-since-last=6821
+[LGDC 2026-09-27T11:59:23.462Z] launch gambit foF2 2026.09.21T14:45
+[LGDC 2026-09-27T11:59:23.478Z] result ok gambit foF2 2026.09.21T14:45
+[LGDC 2026-09-27T11:59:28.090Z] gate-consult deny gambit foF2 2026.09.21T15:00 ms-since-last=6805
+[LGDC 2026-09-27T11:59:40.383Z] launch gambit foF2 2026.09.21T15:00
+[LGDC 2026-09-27T11:59:40.399Z] result ok gambit foF2 2026.09.21T15:00
+[LGDC 2026-09-27T11:59:45.010Z] gate-consult deny gambit foF2 2026.09.21T15:15 ms-since-last=6797
+[LGDC 2026-09-27T11:59:57.369Z] launch gambit foF2 2026.09.21T15:15
+[LGDC 2026-09-27T11:59:57.386Z] result ok gambit foF2 2026.09.21T15:15
+[LGDC 2026-09-27T12:00:01.974Z] gate-consult deny gambit foF2 2026.09.21T15:30 ms-since-last=6897
+[LGDC 2026-09-27T12:00:14.931Z] launch gambit foF2 2026.09.21T15:30
+[LGDC 2026-09-27T12:00:15.236Z] result ok gambit foF2 2026.09.21T15:30
+[LGDC 2026-09-27T12:00:19.794Z] gate-consult deny gambit foF2 2026.09.21T15:45 ms-since-last=7134
+[LGDC 2026-09-27T12:00:32.185Z] launch gambit foF2 2026.09.21T15:45
+[LGDC 2026-09-27T12:00:32.200Z] result ok gambit foF2 2026.09.21T15:45
+[LGDC 2026-09-27T12:00:36.790Z] gate-consult deny gambit foF2 2026.09.21T16:00 ms-since-last=6934
+[LGDC 2026-09-27T12:00:49.463Z] launch gambit foF2 2026.09.21T16:00
+[LGDC 2026-09-27T12:00:49.478Z] result ok gambit foF2 2026.09.21T16:00
+[LGDC 2026-09-27T12:00:54.105Z] gate-consult deny gambit foF2 2026.09.21T16:15 ms-since-last=7241
+[LGDC 2026-09-27T12:01:06.641Z] launch gambit foF2 2026.09.21T16:15
+[LGDC 2026-09-27T12:01:06.658Z] result ok gambit foF2 2026.09.21T16:15
+[LGDC 2026-09-27T12:01:11.289Z] gate-consult deny gambit foF2 2026.09.21T16:30 ms-since-last=6825
+[LGDC 2026-09-27T12:01:23.609Z] launch gambit foF2 2026.09.21T16:30
+[LGDC 2026-09-27T12:01:23.626Z] result ok gambit foF2 2026.09.21T16:30
+[LGDC 2026-09-27T12:01:28.211Z] gate-consult deny gambit foF2 2026.09.21T16:45 ms-since-last=6789
+[LGDC 2026-09-27T12:01:38.962Z] result fail gambit foF2 2026.09.21T16:45 red/pre-gate
+[LGDC 2026-09-27T12:01:49.153Z] gate-consult deny gambit foF2 2026.09.21T16:45 ms-since-last=10782
+[LGDC 2026-09-27T12:02:02.244Z] launch gambit foF2 2026.09.21T16:45
+[LGDC 2026-09-27T12:02:02.259Z] result ok gambit foF2 2026.09.21T16:45
+[LGDC 2026-09-27T12:02:07.902Z] gate-consult deny gambit foF2 2026.09.21T17:00 ms-since-last=8550
+[LGDC 2026-09-27T12:02:20.663Z] launch gambit foF2 2026.09.21T17:00
+[LGDC 2026-09-27T12:02:20.677Z] result ok gambit foF2 2026.09.21T17:00
+[LGDC 2026-09-27T12:02:25.432Z] gate-consult deny gambit foF2 2026.09.21T17:15 ms-since-last=7087
+[LGDC 2026-09-27T12:02:38.285Z] launch gambit foF2 2026.09.21T17:15
+[LGDC 2026-09-27T12:02:38.303Z] result ok gambit foF2 2026.09.21T17:15
+[LGDC 2026-09-27T12:02:44.415Z] gate-consult deny gambit foF2 2026.09.21T17:30 ms-since-last=8643
+[LGDC 2026-09-27T12:02:49.993Z] launch getbest EB040
+[LGDC 2026-09-27T12:02:50.256Z] launch getbest EA036
+[LGDC 2026-09-27T12:02:56.360Z] gate-consult deny gambit foF2 2026.09.21T17:30 ms-since-last=6104
+[LGDC 2026-09-27T12:03:09.142Z] launch gambit foF2 2026.09.21T17:30
+[LGDC 2026-09-27T12:03:09.159Z] result ok gambit foF2 2026.09.21T17:30
+[LGDC 2026-09-27T12:03:15.531Z] gate-consult deny gambit foF2 2026.09.21T17:45 ms-since-last=8843
+[LGDC 2026-09-27T12:03:29.784Z] launch gambit foF2 2026.09.21T17:45
+[LGDC 2026-09-27T12:03:29.800Z] result ok gambit foF2 2026.09.21T17:45
+[LGDC 2026-09-27T12:03:34.659Z] gate-consult deny gambit foF2 2026.09.21T18:00 ms-since-last=7595
+[LGDC 2026-09-27T12:03:47.311Z] launch gambit foF2 2026.09.21T18:00
+[LGDC 2026-09-27T12:03:47.327Z] result ok gambit foF2 2026.09.21T18:00
+[LGDC 2026-09-27T12:03:52.129Z] gate-consult deny gambit foF2 2026.09.21T18:15 ms-since-last=7166
+[LGDC 2026-09-27T12:04:04.984Z] launch gambit foF2 2026.09.21T18:15
+[LGDC 2026-09-27T12:04:04.999Z] result ok gambit foF2 2026.09.21T18:15
+[LGDC 2026-09-27T12:04:09.856Z] gate-consult deny gambit foF2 2026.09.21T18:30 ms-since-last=7336
+[LGDC 2026-09-27T12:04:22.825Z] launch gambit foF2 2026.09.21T18:30
+[LGDC 2026-09-27T12:04:22.842Z] result ok gambit foF2 2026.09.21T18:30
+[LGDC 2026-09-27T12:04:27.617Z] gate-consult deny gambit foF2 2026.09.21T18:45 ms-since-last=7439
+[LGDC 2026-09-27T12:04:40.215Z] launch gambit foF2 2026.09.21T18:45
+[LGDC 2026-09-27T12:04:40.231Z] result ok gambit foF2 2026.09.21T18:45
+[LGDC 2026-09-27T12:04:45.020Z] gate-consult deny gambit foF2 2026.09.21T19:00 ms-since-last=7078
+[LGDC 2026-09-27T12:04:57.956Z] launch gambit foF2 2026.09.21T19:00
+[LGDC 2026-09-27T12:04:57.971Z] result ok gambit foF2 2026.09.21T19:00
+[LGDC 2026-09-27T12:05:01.533Z] gate-consult deny gambit foF2 2026.09.21T19:15 ms-since-last=5912
+[LGDC 2026-09-27T12:05:13.400Z] launch gambit foF2 2026.09.21T19:15
+[LGDC 2026-09-27T12:05:13.421Z] result ok gambit foF2 2026.09.21T19:15
+[LGDC 2026-09-27T12:05:19.033Z] gate-consult deny gambit foF2 2026.09.21T19:30 ms-since-last=7802
+[LGDC 2026-09-27T12:05:33.004Z] launch gambit foF2 2026.09.21T19:30
+[LGDC 2026-09-27T12:05:33.021Z] result ok gambit foF2 2026.09.21T19:30
+[LGDC 2026-09-27T12:05:36.318Z] gate-consult deny gambit foF2 2026.09.21T19:45 ms-since-last=6658
+[LGDC 2026-09-27T12:05:48.148Z] launch gambit foF2 2026.09.21T19:45
+[LGDC 2026-09-27T12:05:48.169Z] result ok gambit foF2 2026.09.21T19:45
+[LGDC 2026-09-27T12:05:51.990Z] gate-consult deny gambit foF2 2026.09.21T20:00 ms-since-last=6136
+[LGDC 2026-09-27T12:06:03.487Z] launch gambit foF2 2026.09.21T20:00
+[LGDC 2026-09-27T12:06:03.504Z] result ok gambit foF2 2026.09.21T20:00
+[LGDC 2026-09-27T12:06:10.368Z] gate-consult deny gambit foF2 2026.09.21T20:15 ms-since-last=8999
+[LGDC 2026-09-27T12:06:26.689Z] launch gambit foF2 2026.09.21T20:15
+[LGDC 2026-09-27T12:06:26.707Z] result ok gambit foF2 2026.09.21T20:15
+[LGDC 2026-09-27T12:06:33.076Z] gate-consult deny gambit foF2 2026.09.21T20:30 ms-since-last=12152
+[LGDC 2026-09-27T12:06:47.286Z] launch gambit foF2 2026.09.21T20:30
+[LGDC 2026-09-27T12:06:47.304Z] result ok gambit foF2 2026.09.21T20:30
+[LGDC 2026-09-27T12:06:52.903Z] gate-consult deny gambit foF2 2026.09.21T20:45 ms-since-last=7941
+[LGDC 2026-09-27T12:07:06.766Z] launch gambit foF2 2026.09.21T20:45
+[LGDC 2026-09-27T12:07:06.791Z] result ok gambit foF2 2026.09.21T20:45
+[LGDC 2026-09-27T12:07:13.444Z] gate-consult deny gambit foF2 2026.09.21T21:00 ms-since-last=8997
+[LGDC 2026-09-27T12:07:27.643Z] launch gambit foF2 2026.09.21T21:00
+[LGDC 2026-09-27T12:07:27.660Z] result ok gambit foF2 2026.09.21T21:00
+[LGDC 2026-09-27T12:07:33.204Z] gate-consult deny gambit foF2 2026.09.21T21:15 ms-since-last=7770
+[LGDC 2026-09-27T12:07:46.572Z] launch gambit foF2 2026.09.21T21:15
+[LGDC 2026-09-27T12:07:46.589Z] result ok gambit foF2 2026.09.21T21:15
+[LGDC 2026-09-27T12:07:49.977Z] launch getbest PQ052
+[LGDC 2026-09-27T12:07:50.236Z] launch getbest JR055
+[LGDC 2026-09-27T12:07:50.490Z] launch getbest KL154
+[LGDC 2026-09-27T12:07:50.742Z] launch getbest KI167
+[LGDC 2026-09-27T12:07:50.992Z] launch getbest FF051
+[LGDC 2026-09-27T12:07:51.245Z] launch getbest GM037
+[LGDC 2026-09-27T12:07:51.497Z] launch getbest AT138
+[LGDC 2026-09-27T12:07:51.747Z] launch getbest OL246
+[LGDC 2026-09-27T12:07:51.997Z] launch getbest VT139
+[LGDC 2026-09-27T12:07:52.181Z] gate-consult deny gambit foF2 2026.09.21T21:30 ms-since-last=184
+[LGDC 2026-09-27T12:07:52.249Z] launch getbest MZ152
+[LGDC 2026-09-27T12:07:52.502Z] launch getbest LD160
+[LGDC 2026-09-27T12:07:52.753Z] launch getbest RV149
+[LGDC 2026-09-27T12:07:53.007Z] launch getbest TR170
+[LGDC 2026-09-27T12:07:53.287Z] launch getbest SO148
+[LGDC 2026-09-27T12:07:53.551Z] launch getbest DB049
+[LGDC 2026-09-27T12:07:53.805Z] launch getbest RL052
+[LGDC 2026-09-27T12:07:54.056Z] launch getbest TR169
+[LGDC 2026-09-27T12:07:54.308Z] launch getbest CS839
+[LGDC 2026-09-27T12:07:54.561Z] launch getbest AC843
+[LGDC 2026-09-27T12:07:54.812Z] launch getbest EG931
+[LGDC 2026-09-27T12:07:55.065Z] launch getbest PF765
+[LGDC 2026-09-27T12:07:55.334Z] launch getbest BVJ03
+[LGDC 2026-09-27T12:07:55.588Z] launch getbest CAJ2M
+[LGDC 2026-09-27T12:08:03.237Z] gate-consult deny gambit foF2 2026.09.21T21:30 ms-since-last=7649
+[LGDC 2026-09-27T12:08:16.194Z] launch gambit foF2 2026.09.21T21:30
+[LGDC 2026-09-27T12:08:16.210Z] result ok gambit foF2 2026.09.21T21:30
+[LGDC 2026-09-27T12:08:19.934Z] gate-consult deny gambit foF2 2026.09.21T21:45 ms-since-last=6048
+[LGDC 2026-09-27T12:08:28.867Z] gate-consult deny gambit foF2 2026.09.21T21:45 ms-since-last=14981
+[LGDC 2026-09-27T12:08:40.647Z] launch gambit foF2 2026.09.21T21:45
+[LGDC 2026-09-27T12:08:40.664Z] result ok gambit foF2 2026.09.21T21:45
+[LGDC 2026-09-27T12:08:44.210Z] gate-consult deny gambit foF2 2026.09.21T22:00 ms-since-last=5944
+[LGDC 2026-09-27T12:08:55.640Z] launch gambit foF2 2026.09.21T22:00
+[LGDC 2026-09-27T12:08:55.659Z] result ok gambit foF2 2026.09.21T22:00
+[LGDC 2026-09-27T12:08:59.286Z] gate-consult deny gambit foF2 2026.09.21T22:15 ms-since-last=5860
+[LGDC 2026-09-27T12:09:10.842Z] launch gambit foF2 2026.09.21T22:15
+[LGDC 2026-09-27T12:09:10.861Z] result ok gambit foF2 2026.09.21T22:15
+[LGDC 2026-09-27T12:09:14.381Z] gate-consult deny gambit foF2 2026.09.21T22:30 ms-since-last=5673
+[LGDC 2026-09-27T12:09:23.641Z] gate-consult deny gambit foF2 2026.09.21T22:30 ms-since-last=14933
+[LGDC 2026-09-27T12:09:34.943Z] launch gambit foF2 2026.09.21T22:30
+[LGDC 2026-09-27T12:09:34.962Z] result ok gambit foF2 2026.09.21T22:30
+[LGDC 2026-09-27T12:09:38.553Z] gate-consult deny gambit foF2 2026.09.21T22:45 ms-since-last=5825
+[LGDC 2026-09-27T12:09:50.015Z] launch gambit foF2 2026.09.21T22:45
+[LGDC 2026-09-27T12:09:50.034Z] result ok gambit foF2 2026.09.21T22:45
+[LGDC 2026-09-27T12:09:53.416Z] gate-consult deny gambit foF2 2026.09.21T23:00 ms-since-last=5651
+[LGDC 2026-09-27T12:10:02.496Z] gate-consult deny gambit foF2 2026.09.21T23:00 ms-since-last=14731
+[LGDC 2026-09-27T12:10:13.630Z] launch gambit foF2 2026.09.21T23:00
+[LGDC 2026-09-27T12:10:13.648Z] result ok gambit foF2 2026.09.21T23:00
+[LGDC 2026-09-27T12:10:17.037Z] gate-consult deny gambit foF2 2026.09.21T23:15 ms-since-last=5637
+[LGDC 2026-09-27T12:10:28.686Z] launch gambit foF2 2026.09.21T23:15
+[LGDC 2026-09-27T12:10:28.704Z] result ok gambit foF2 2026.09.21T23:15
+[LGDC 2026-09-27T12:10:32.945Z] gate-consult deny gambit foF2 2026.09.21T23:30 ms-since-last=6485
+[LGDC 2026-09-27T12:10:45.434Z] launch gambit foF2 2026.09.21T23:30
+[LGDC 2026-09-27T12:10:45.449Z] result ok gambit foF2 2026.09.21T23:30
+[LGDC 2026-09-27T12:10:50.217Z] gate-consult deny gambit foF2 2026.09.21T23:45 ms-since-last=6981
+[LGDC 2026-09-27T12:11:02.398Z] launch gambit foF2 2026.09.21T23:45
+[LGDC 2026-09-27T12:11:02.418Z] result ok gambit foF2 2026.09.21T23:45
+[LGDC 2026-09-27T12:11:05.740Z] gate-consult deny gambit foF2 2026.09.22T00:00 ms-since-last=5539
+[LGDC 2026-09-27T12:11:14.854Z] gate-consult deny gambit foF2 2026.09.22T00:00 ms-since-last=14653
+[LGDC 2026-09-27T12:11:26.012Z] launch gambit foF2 2026.09.22T00:00
+[LGDC 2026-09-27T12:11:26.031Z] result ok gambit foF2 2026.09.22T00:00
+[LGDC 2026-09-27T12:11:29.846Z] gate-consult deny gambit foF2 2026.09.22T00:15 ms-since-last=6073

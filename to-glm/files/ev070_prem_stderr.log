@@ -1,0 +1,176 @@
+Framebuffer (MSAA 4x) incomplete
+Framebuffer: MSAA 4x no soportado, cayendo a 0x
+[LGDC 2026-09-27T20:00:36.667Z] launch catalog
+[LGDC 2026-09-27T20:00:36.770Z] launch getbest EB040
+[LGDC 2026-09-27T20:00:48.779Z] launch getbest KL154
+[LGDC 2026-09-27T20:00:49.901Z] gate-consult deny gambit foF2 2026.09.24T20:00 ms-since-last=1122
+[LGDC 2026-09-27T20:01:00.783Z] launch getbest EA036
+[LGDC 2026-09-27T20:01:10.410Z] gate-consult deny gambit foF2 2026.09.24T20:00 ms-since-last=9627
+[LGDC 2026-09-27T20:01:12.794Z] launch getbest KI167
+[LGDC 2026-09-27T20:01:24.794Z] launch getbest PQ052
+[LGDC 2026-09-27T20:01:31.131Z] gate-consult deny gambit foF2 2026.09.24T20:00 ms-since-last=6337
+[LGDC 2026-09-27T20:01:36.798Z] launch getbest AT138
+[LGDC 2026-09-27T20:01:48.805Z] launch getbest GM037
+[LGDC 2026-09-27T20:01:50.860Z] gate-consult deny gambit foF2 2026.09.24T20:00 ms-since-last=2055
+[LGDC 2026-09-27T20:02:00.809Z] launch getbest JR055
+[LGDC 2026-09-27T20:02:11.432Z] gate-consult deny gambit foF2 2026.09.24T20:00 ms-since-last=10623
+[LGDC 2026-09-27T20:02:12.815Z] launch getbest OL246
+[LGDC 2026-09-27T20:02:24.818Z] launch getbest MZ152
+[LGDC 2026-09-27T20:02:31.097Z] gate-consult deny gambit foF2 2026.09.24T20:00 ms-since-last=6279
+[LGDC 2026-09-27T20:02:36.825Z] launch getbest VT139
+[LGDC 2026-09-27T20:02:48.831Z] launch getbest FF051
+[LGDC 2026-09-27T20:02:51.471Z] gate-consult deny gambit foF2 2026.09.24T20:00 ms-since-last=2640
+[LGDC 2026-09-27T20:03:00.831Z] launch getbest RV149
+[LGDC 2026-09-27T20:03:11.067Z] gate-consult deny gambit foF2 2026.09.24T20:00 ms-since-last=10236
+[LGDC 2026-09-27T20:03:12.834Z] launch getbest RL052
+[LGDC 2026-09-27T20:03:24.848Z] launch getbest LD160
+[LGDC 2026-09-27T20:03:30.225Z] gate-consult deny gambit foF2 2026.09.24T20:00 ms-since-last=5377
+[LGDC 2026-09-27T20:03:36.851Z] launch getbest TR169
+[LGDC 2026-09-27T20:03:48.853Z] gate-consult deny gambit foF2 2026.09.24T20:00 ms-since-last=12002
+[LGDC 2026-09-27T20:03:48.878Z] launch getbest TR170
+[LGDC 2026-09-27T20:04:00.872Z] launch getbest EG931
+[LGDC 2026-09-27T20:04:07.816Z] gate-consult deny gambit foF2 2026.09.24T20:00 ms-since-last=6944
+[LGDC 2026-09-27T20:04:12.887Z] launch getbest SO148
+[LGDC 2026-09-27T20:04:24.889Z] launch getbest DB049
+[LGDC 2026-09-27T20:04:26.998Z] gate-consult deny gambit foF2 2026.09.24T20:00 ms-since-last=2109
+[LGDC 2026-09-27T20:04:36.903Z] launch getbest AC843
+[LGDC 2026-09-27T20:04:46.876Z] gate-consult deny gambit foF2 2026.09.24T20:00 ms-since-last=9973
+[LGDC 2026-09-27T20:04:48.918Z] launch getbest PF765
+[LGDC 2026-09-27T20:05:00.932Z] launch getbest BC840
+[LGDC 2026-09-27T20:05:12.790Z] gate-consult deny gambit foF2 2026.09.24T20:00 ms-since-last=11858
+[LGDC 2026-09-27T20:05:12.948Z] launch getbest BVJ03
+[LGDC 2026-09-27T20:05:24.964Z] launch getbest EI764
+[LGDC 2026-09-27T20:05:32.572Z] gate-consult deny gambit foF2 2026.09.24T20:00 ms-since-last=7608
+[LGDC 2026-09-27T20:05:36.974Z] launch getbest TNJ20
+[LGDC 2026-09-27T20:05:48.981Z] launch getbest CS839
+[LGDC 2026-09-27T20:05:51.786Z] gate-consult deny gambit foF2 2026.09.24T20:00 ms-since-last=2805
+[LGDC 2026-09-27T20:06:00.992Z] launch getbest CAJ2M
+[LGDC 2026-09-27T20:06:11.601Z] gate-consult deny gambit foF2 2026.09.24T20:00 ms-since-last=10609
+[LGDC 2026-09-27T20:06:12.993Z] launch getbest SMK29
+[LGDC 2026-09-27T20:06:25.002Z] launch getbest LA42Q
+[LGDC 2026-09-27T20:06:31.668Z] gate-consult deny gambit foF2 2026.09.24T20:00 ms-since-last=6666
+[LGDC 2026-09-27T20:06:37.002Z] launch getbest DW41K
+[LGDC 2026-09-27T20:06:49.006Z] launch getbest AU930
+[LGDC 2026-09-27T20:06:50.880Z] gate-consult deny gambit foF2 2026.09.24T20:00 ms-since-last=1874
+[LGDC 2026-09-27T20:07:01.016Z] launch getbest CB53N
+[LGDC 2026-09-27T20:07:10.410Z] gate-consult deny gambit foF2 2026.09.24T20:00 ms-since-last=9394
+[LGDC 2026-09-27T20:07:13.018Z] launch getbest BLJ03
+[LGDC 2026-09-27T20:07:25.034Z] launch getbest DH224
+[LGDC 2026-09-27T20:07:33.670Z] gate-consult deny gambit foF2 2026.09.24T20:00 ms-since-last=8636
+[LGDC 2026-09-27T20:07:37.039Z] launch getbest NI135
+[LGDC 2026-09-27T20:07:49.039Z] launch getbest IC437
+[LGDC 2026-09-27T20:07:53.313Z] gate-consult deny gambit foF2 2026.09.24T20:00 ms-since-last=4274
+[LGDC 2026-09-27T20:08:01.046Z] launch getbest TO535
+[LGDC 2026-09-27T20:08:13.053Z] launch getbest TV51R
+[LGDC 2026-09-27T20:08:13.257Z] gate-consult deny gambit foF2 2026.09.24T20:00 ms-since-last=204
+[LGDC 2026-09-27T20:08:25.064Z] launch getbest CXM9B
+[LGDC 2026-09-27T20:08:33.743Z] gate-consult deny gambit foF2 2026.09.24T20:00 ms-since-last=8679
+[LGDC 2026-09-27T20:08:37.068Z] launch getbest MO155
+[LGDC 2026-09-27T20:08:49.079Z] launch getbest XI434
+[LGDC 2026-09-27T20:08:52.439Z] gate-consult deny gambit foF2 2026.09.24T20:00 ms-since-last=3360
+[LGDC 2026-09-27T20:09:01.089Z] launch getbest ML10L
+[LGDC 2026-09-27T20:09:09.195Z] gate-consult deny gambit foF2 2026.09.24T20:00 ms-since-last=8106
+[LGDC 2026-09-27T20:09:13.103Z] launch getbest MA155
+[LGDC 2026-09-27T20:09:25.116Z] launch getbest RM041
+[LGDC 2026-09-27T20:09:26.150Z] gate-consult deny gambit foF2 2026.09.24T20:00 ms-since-last=1034
+[LGDC 2026-09-27T20:09:37.131Z] launch getbest NDA81
+[LGDC 2026-09-27T20:09:43.119Z] gate-consult deny gambit foF2 2026.09.24T20:00 ms-since-last=5988
+[LGDC 2026-09-27T20:09:49.139Z] launch getbest TR0P2
+[LGDC 2026-09-27T20:09:59.851Z] gate-consult deny gambit foF2 2026.09.24T20:00 ms-since-last=10712
+[LGDC 2026-09-27T20:10:01.139Z] launch getbest MU12K
+[LGDC 2026-09-27T20:10:13.152Z] launch getbest GR13L
+[LGDC 2026-09-27T20:10:16.537Z] gate-consult deny gambit foF2 2026.09.24T20:00 ms-since-last=3385
+[LGDC 2026-09-27T20:10:25.166Z] launch getbest CS31K
+[LGDC 2026-09-27T20:10:33.052Z] gate-consult deny gambit foF2 2026.09.24T20:00 ms-since-last=7886
+[LGDC 2026-09-27T20:10:36.463Z] launch getbest EB040
+[LGDC 2026-09-27T20:10:50.776Z] gate-consult deny gambit foF2 2026.09.24T20:00 ms-since-last=14313
+[LGDC 2026-09-27T20:11:09.810Z] launch gambit foF2 2026.09.24T20:00
+[LGDC 2026-09-27T20:11:09.827Z] result ok gambit foF2 2026.09.24T20:00
+[LGDC 2026-09-27T20:11:21.869Z] gate-consult deny gambit hmF2 2026.09.24T20:00 ms-since-last=14221
+[LGDC 2026-09-27T20:11:40.754Z] launch gambit hmF2 2026.09.24T20:00
+[LGDC 2026-09-27T20:11:40.780Z] result ok gambit hmF2 2026.09.24T20:00
+[LGDC 2026-09-27T20:11:51.831Z] gate-consult deny gambit B0 2026.09.24T20:00 ms-since-last=13379
+[LGDC 2026-09-27T20:12:10.977Z] launch gambit B0 2026.09.24T20:00
+[LGDC 2026-09-27T20:12:10.997Z] result ok gambit B0 2026.09.24T20:00
+[LGDC 2026-09-27T20:12:26.236Z] launch gambit B1 2026.09.24T20:00
+[LGDC 2026-09-27T20:12:26.252Z] result ok gambit B1 2026.09.24T20:00
+[LGDC 2026-09-27T20:15:36.456Z] launch getbest EA036
+[LGDC 2026-09-27T20:15:36.721Z] launch getbest FF051
+[LGDC 2026-09-27T20:15:36.983Z] launch getbest JR055
+[LGDC 2026-09-27T20:15:37.246Z] launch getbest GM037
+[LGDC 2026-09-27T20:15:37.496Z] launch getbest PQ052
+[LGDC 2026-09-27T20:15:37.746Z] launch getbest AT138
+[LGDC 2026-09-27T20:15:38.009Z] launch getbest MZ152
+[LGDC 2026-09-27T20:15:38.272Z] launch getbest SO148
+[LGDC 2026-09-27T20:15:38.533Z] launch getbest TR169
+[LGDC 2026-09-27T20:15:38.783Z] launch getbest VT139
+[LGDC 2026-09-27T20:15:39.044Z] launch getbest DB049
+[LGDC 2026-09-27T20:15:39.308Z] launch getbest PF765
+[LGDC 2026-09-27T20:15:39.559Z] launch getbest EI764
+[LGDC 2026-09-27T20:15:39.823Z] launch getbest BVJ03
+[LGDC 2026-09-27T20:18:11.276Z] launch gambit foF2 2026.09.24T20:15
+[LGDC 2026-09-27T20:18:11.295Z] result ok gambit foF2 2026.09.24T20:15
+[LGDC 2026-09-27T20:18:28.488Z] launch gambit hmF2 2026.09.24T20:15
+[LGDC 2026-09-27T20:18:28.507Z] result ok gambit hmF2 2026.09.24T20:15
+[LGDC 2026-09-27T20:18:42.063Z] launch gambit B0 2026.09.24T20:15
+[LGDC 2026-09-27T20:18:42.081Z] result ok gambit B0 2026.09.24T20:15
+[LGDC 2026-09-27T20:18:54.280Z] gate-consult deny gambit B1 2026.09.24T20:15 ms-since-last=14469
+[LGDC 2026-09-27T20:19:13.533Z] launch gambit B1 2026.09.24T20:15
+[LGDC 2026-09-27T20:19:13.553Z] result ok gambit B1 2026.09.24T20:15
+[LGDC 2026-09-27T20:20:36.470Z] launch getbest EB040
+[LGDC 2026-09-27T20:20:36.726Z] launch getbest CB53N
+[LGDC 2026-09-27T20:20:36.976Z] launch getbest DW41K
+[LGDC 2026-09-27T20:20:37.226Z] launch getbest CAJ2M
+[LGDC 2026-09-27T20:20:37.487Z] launch getbest TV51R
+[LGDC 2026-09-27T20:20:37.739Z] launch getbest GR13L
+[LGDC 2026-09-27T20:20:37.989Z] launch getbest NI135
+[LGDC 2026-09-27T20:20:38.240Z] launch getbest TR0P2
+[LGDC 2026-09-27T20:20:38.490Z] launch getbest RM041
+[LGDC 2026-09-27T20:25:36.495Z] launch getbest EA036
+[LGDC 2026-09-27T20:25:36.751Z] launch getbest KI167
+[LGDC 2026-09-27T20:25:37.014Z] launch getbest FF051
+[LGDC 2026-09-27T20:25:37.277Z] launch getbest OL246
+[LGDC 2026-09-27T20:25:37.528Z] launch getbest LD160
+[LGDC 2026-09-27T20:25:37.805Z] launch getbest RV149
+[LGDC 2026-09-27T20:25:38.070Z] launch getbest KL154
+[LGDC 2026-09-27T20:25:38.334Z] launch getbest RL052
+[LGDC 2026-09-27T20:25:38.584Z] launch getbest TR170
+[LGDC 2026-09-27T20:25:38.847Z] launch getbest EG931
+[LGDC 2026-09-27T20:25:39.109Z] launch getbest AC843
+[LGDC 2026-09-27T20:25:39.372Z] launch getbest BC840
+[LGDC 2026-09-27T20:25:39.634Z] launch getbest TNJ20
+[LGDC 2026-09-27T20:30:36.534Z] launch getbest EB040
+[LGDC 2026-09-27T20:30:36.798Z] launch getbest GM037
+[LGDC 2026-09-27T20:30:37.063Z] launch getbest PQ052
+[LGDC 2026-09-27T20:30:37.326Z] launch getbest JR055
+[LGDC 2026-09-27T20:30:37.522Z] gate-consult deny gambit foF2 2026.09.24T20:30 ms-since-last=196
+[LGDC 2026-09-27T20:30:37.772Z] launch getbest AT138
+[LGDC 2026-09-27T20:30:38.026Z] launch getbest VT139
+[LGDC 2026-09-27T20:30:38.289Z] launch getbest MZ152
+[LGDC 2026-09-27T20:30:38.708Z] launch getbest SO148
+[LGDC 2026-09-27T20:30:39.052Z] launch getbest TR169
+[LGDC 2026-09-27T20:30:39.315Z] launch getbest DB049
+[LGDC 2026-09-27T20:30:39.876Z] launch getbest CS839
+[LGDC 2026-09-27T20:30:40.527Z] launch getbest EI764
+[LGDC 2026-09-27T20:30:40.935Z] launch getbest PF765
+[LGDC 2026-09-27T20:30:41.197Z] launch getbest AU930
+[LGDC 2026-09-27T20:30:41.462Z] launch getbest BVJ03
+[LGDC 2026-09-27T20:30:42.106Z] launch getbest SMK29
+[LGDC 2026-09-27T20:30:42.642Z] launch getbest CXM9B
+[LGDC 2026-09-27T20:30:43.103Z] launch getbest BLJ03
+[LGDC 2026-09-27T20:30:43.360Z] launch getbest LA42Q
+[LGDC 2026-09-27T20:30:44.106Z] launch getbest DW41K
+[LGDC 2026-09-27T20:30:46.110Z] launch getbest CB53N
+[LGDC 2026-09-27T20:30:47.108Z] launch getbest TO535
+[LGDC 2026-09-27T20:30:47.363Z] launch getbest IC437
+[LGDC 2026-09-27T20:30:48.095Z] launch getbest DH224
+[LGDC 2026-09-27T20:30:48.395Z] launch getbest XI434
+[LGDC 2026-09-27T20:30:49.113Z] launch getbest CS31K
+[LGDC 2026-09-27T20:30:49.368Z] launch getbest MA155
+[LGDC 2026-09-27T20:30:49.711Z] launch getbest MO155
+[LGDC 2026-09-27T20:30:50.104Z] launch getbest ML10L
+[LGDC 2026-09-27T20:30:50.569Z] launch getbest MU12K
+[LGDC 2026-09-27T20:30:50.831Z] launch getbest NDA81
+[LGDC 2026-09-27T20:30:53.789Z] gate-consult deny gambit foF2 2026.09.24T20:30 ms-since-last=2958
+[LGDC 2026-09-27T20:31:24.972Z] launch gambit foF2 2026.09.24T20:30
+[LGDC 2026-09-27T20:31:24.993Z] result ok gambit foF2 2026.09.24T20:30

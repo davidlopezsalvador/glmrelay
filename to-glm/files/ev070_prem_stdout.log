@@ -1,0 +1,81 @@
+[OK] OpenGL 4.0.0 - Build 20.19.15.5171
+[OK] Renderer: Intel(R) HD Graphics 4600
+[Earth] textures/earth-night-hires.jpg: 13500x6750 (GL max 16384)
+[OK] GridLayer initialized
+[OK] DataManager initialized (cache: data/cache)
+[OK] GridLayer initialized
+[OK] GiroAdapter initialized
+[OK] IonosondeLayer initialized
+[OK] HFTraceLayer initialized
+[OK] DiasAdapter initialized (Ionostream EU)
+[OK] Kc2gAdapter initialized (failover-only)
+[OK] IrtamCoeffAdapter initialized
+[OK] SolarWindLayer initialized
+[OK] FaradayLayer initialized
+[OK] VolumeRenderer initialized
+[OK] GridLayer initialized
+[OK] GridLayer initialized
+[OK] SliceLayer initialized
+[OK] RefShells initialized (3888 verts)
+[OK] GridLayer initialized
+[OK] EbroAdapter initialized (FTP Ebre EB040)
+[OK] SdoImageAdapter initialized
+[Sdo] switch -> HMIIF (cache 27851 s) (stale, refrescando...)
+[App] settings.cfg loaded
+[App] TEC cache: 432 restored, newest 16:07 UTC (pruned 36, dropped 0)
+[OK] All initialized
+[Sdo] fetch HMIIF 512x512 (age 27851s)
+[GiroAdapter] Catalogo cargado: 129 estaciones
+[Ebro] EB040_2026270195501.SAO: foF2=4.75 MUF=15.5 hmF2=285 foEs=2.45
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 10 estaciones EU
+[Sdo] fetch A304 512x512 (age 27851s)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=2.22 max=73.67 TECU
+[GloTecAdapter] Index OK: 4465 frames
+[SolarIndices] sunspots: 395 filas
+[SolarIndices] Kp=0.00 Dst=-10 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=393 km/s density=0.3 cm^-3 Bz=0.1 nT (hist 3514 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=13.0
+[RadioProp] MUF=15.6 FOT=13.2 LUF=4.3 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 4.28e-07 W/m2 (B4.3)
+[App] Initial fetch pass done
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 10 estaciones EU
+[Ebro] EB040_2026270200001.SAO: foF2=4.70 MUF=15.3 hmF2=279 foEs=2.40
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=2.16 max=74.07 TECU
+[SolarIndices] Kp=0.00 Dst=-10 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=381 km/s density=1.3 cm^-3 Bz=-1.1 nT (hist 3514 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=14.0
+[RadioProp] MUF=15.1 FOT=12.9 LUF=6.1 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 4.50e-07 W/m2 (B4.5)
+[Sdo] switch -> A304 (cache 342 s)
+[App] History preload: 432 cached + 181 fetched
+[GiroAdapter] getbest async: 23 estaciones actualizadas
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 10 estaciones EU
+[GiroAdapter] getbest async: 1 estaciones actualizadas
+[Ebro] EB040_2026270200501.SAO: foF2=4.60 MUF=14.9 hmF2=281 foEs=2.30
+[Irtam] bucket foF2 2026.09.24T20:00 OK (TOV 1790280000)
+[Irtam] bucket hmF2 2026.09.24T20:00 OK (TOV 1790280000)
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=2.16 max=74.07 TECU
+[SolarIndices] Kp=0.00 Dst=-10 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=385 km/s density=1.4 cm^-3 Bz=-0.3 nT (hist 3513 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=14.0
+[RadioProp] MUF=14.5 FOT=12.4 LUF=5.9 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 4.30e-07 W/m2 (B4.3)
+[Irtam] bucket B0 2026.09.24T20:00 OK (TOV 1790280000)
+[Irtam] bucket B1 2026.09.24T20:00 OK (TOV 1790280000)
+[Dias] EB040 flowing via Ionostream!
+[DiasAdapter] OK: 10 estaciones EU
+[Ebro] EB040_2026270201001.SAO: foF2=4.50 MUF=14.3 hmF2=281 foEs=2.10
+[GiroAdapter] getbest async: 14 estaciones actualizadas
+[GloTecAdapter] TEC real GloTEC OK (72x72): min=2.39 max=74.91 TECU
+[SolarIndices] Kp=0.00 Dst=-10 F10.7=95 Ap=10 SSN=67 (5/5 real)
+[SolarWindAdapter] Viento solar real: speed=384 km/s density=1.4 cm^-3 Bz=-0.1 nT (hist 3512 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=14.0
+[RadioProp] MUF=14.4 FOT=12.2 LUF=5.8 S4=0.03 AE=40 TAI=0.3 FR=33deg SpF=8% (GIRO real) (Kp NOAA)
+[Xray] GOES long 4.40e-07 W/m2 (B4.4)
+[Irtam] bucket foF2 2026.09.24T20:15 OK (TOV 1790280900)
+[Irtam] bucket hmF2 2026.09.24T20:15 OK (TOV 1790280900)
+[Irtam] bucket B0 2026.09.24T20:15 OK (TOV 1790280900)
+[Irtam] bucket 
