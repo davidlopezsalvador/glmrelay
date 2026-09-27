@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ionosphere Live 3D — Reorganización UI · A / B / C</title>
+<style>
+  :root{
+    --bg:#05070c; --panel:#0d1520; --panel2:#111b28; --border:#1e2a3a;
+    --txt:#9fb3c8; --dim:#5d7285; --amber:#f0a030; --cyan:#37c8d8;
+    --green:#40c060; --red:#e04040; --mono:Consolas,"Lucida Console","Courier New",monospace;
+    --sans:-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    --accent:#f0a030;
+  }
+  body[data-view="B"]{ --accent:#37c8d8; }
+  body[data-view="C"]{ --accent:#40c060; }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html,body{ height:100%; }
+  body{ background:var(--bg); color:var(--txt); font-family:var(--sans); overflow:hidden; display:flex; flex-direction:column; }
+
+  /* ============ CHROME (maqueta, español) ============ */
+  .chrome{ background:#080d14; border-bottom:1px solid var(--border); padding:8px 14px 0; z-index:50; }
+  .chrome-row{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+  .chrome h1{ font-size:14px; font-weight:700; color:#d7e3ef; letter-spacing:.2px; }
+  .chrome h1 span{ color:var(--accent); }
+  .switcher{ display:flex; gap:6px; margin-left:6px; }
+  .sw-btn{ font-family:var(--sans); font-size:13px; font-weight:700; color:var(--txt);
+    background:#0d1520; border:1px solid var(--border); border-radius:6px; padding:7px 16px; cursor:pointer; }
+  .sw-btn small{ font-weight:400; font-size:11px; color:var(--dim); display:block; }
+  .sw-btn:hover{ border-color:var(--accent); color:#fff; }
+  .sw-btn.active{ color:#04070b; background:var(--accent); border-color:var(--accent); }
+  .sw-btn.active small{ color:rgba(0,0,0,.65); }
+  .globe-meter{ display:flex; align-items:center; gap:8px; font-size:12px; color:var(--dim); margin-left:auto; }
+  .globe-meter b{ font-size:20px; color:var(--accent); font-variant-numeric:tabular-nums; }
+  .meter-bar{ width:110px; height:6px; background:#131e2e; border-radius:3px; overflow:hidden; }
+  .meter-bar i{ display:block; height:100%; width:48%; background:var(--accent); border-radius:3px; transition:width .35s ease, background .35s ease; }
+  .hints{ display:flex; gap:8px; margin-top:8px; padding-bottom:8px; flex-wrap:wrap; }
+  .hint{ font-size:11.5px; color:var(--dim); border:1px solid var(--border); border-radius:20px; padding:3px 11px; }
+  .hint b{ color:var(--txt); }
+  .hint.on{ color:#d7e3ef; border-color:var(--accent); }
+  .hint.on b{ color:var(--accent); }
+  kbd{ font-family:var(--sans); font-size:10px; border:1px solid var(--border); border-radius:4px; padding:0 5px; color:var(--dim); }
+
+  /* ============ STAGE ============ */
+  #stage{ position:relative; flex:1; overflow:hidden;
+    background:radial-gradient(1200px 700px at 50% 42%, #0a1220 0%, #05070c 62%); }
+  .stars{ position:absolute; inset:0; pointer-events:none; }
+  .stars i{ position:absolute; width:2px; height:2px; background:#cfe6f5; border-radius:50%; opacity:.8; }
+  .view-tag{ position:absolute; top:12px; left:50%; transform:translateX(-50%); z-index:30;
+    font-family:var(--sans); font-size:12.5px; font-weight:600; color:#04070b;
+    background:var(--accent); border-radius:20px; padding:5px 16px; white-space:nowrap;
+    box-shadow:0 2px 18px rgba(0,0,0,.6); transition:background .3s; }
+  .view-tag small{ font-weight:400; opacity:.75; }
+
+  /* ============ GLOBE ============ */
+  .globe-zone{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; pointer-events:none; }
+  .globe-wrap{ position:relative; width:min(58vmin,520px); height:min(58vmin,520px); transition:transform .4s ease; }
+  body[data-view="B"] .globe-wrap{ transform:translateX(9%); }
+  body[data-view="C"] .globe-wrap{ transform:scale(1.12); }
+  .halo{ position:absolute; inset:-9%; border-radius:50%;
+    background:radial-gradient(circle, transparent 58%, rgba(55,200,216,.14) 68%, rgba(55,200,216,.03) 78%, transparent 82%); }
+  .ring{ position:absolute; border:1px solid rgba(55,200,216,.22); border-radius:50%; }
+  .ring.r1{ inset:-4%; transform:rotateX(72deg); }
+  .ring.r2{ inset:-9%; transform:rotateX(72deg) rotateZ(28deg); border-color:rgba(240,160,48,.16); }
+  .globe{ position:absolute; inset:0; border-radius:50%; overflow:hidden;
+    background:
+      radial-gradient(circle at 33% 28%, rgba(150,235,220,.85) 0%, rgba(90,190,170,.5) 9%, transparent 26%),
+      radial-gradient(circle at 38% 44%, #2e8a72 0%, #1d5a78 30%, #0d2748 52%, #050b18 72%, #020409 100%);
+    box-shadow:inset -28px -22px 70px rgba(0,0,0,.85), inset 12px 10px 50px rgba(120,220,255,.18),
+      0 0 55px rgba(55,200,216,.22), 0 0 130px rgba(30,110,180,.18); }
+  .globe .land{ position:absolute; inset:0; border-radius:50%; opacity:.85;
+    background:
+      radial-gradient(60px 34px at 38% 38%, rgba(64,150,110,.9), transparent 70%),
+      radial-gradient(46px 60px at 30% 55%, rgba(52,130,95,.85), transparent 70%),
+      radial-gradient(70px 30px at 46% 62%, rgba(70,150,105,.8), transparent 70%),
+      radial-gradient(36px 26px at 55% 34%, rgba(80,160,115,.75), transparent 70%),
+      radial-gradient(30px 44px at 60% 52%, rgba(50,125,95,.7), transparent 70%);
+    filter:blur(.4px); }
+  .globe .grid{ position:absolute; inset:0; border-radius:50%; opacity:.5;
+    background:
+      repeating-linear-gradient(0deg, transparent 0 27px, rgba(120,220,255,.16) 27px 28px),
+      repeating-linear-gradient(90deg, transparent 0 27px, rgba(120,220,255,.16) 27px 28px); }
+  .globe .night{ position:absolute; inset:0; border-radius:50%;
+    background:linear-gradient(103deg, transparent 40%, rgba(240,160,48,.20) 47.5%, rgba(2,4,9,.55) 54%, rgba(1,2,6,.88) 68%); }
+  .globe .cities{ position:absolute; inset:0; border-radius:50%; opacity:.9;
+    background:
+      radial-gradient(1.6px 1.6px at 62% 40%, #ffd88a, transparent 70%),
+      radial-gradient(1.3px 1.3px at 66% 46%, #ffd88a, transparent 70%),
+      radial-gradient(1.5px 1.5px at 70% 55%, #ffce7a, transparent 70%),
+      radial-gradient(1.2px 1.2px at 74% 48%, #ffe2a8, transparent 70%),
+      radial-gradient(1.4px 1.4px at 68% 62%, #ffd88a, transparent 70%),
+      radial-gradient(1.2px 1.2px at 76% 60%, #ffce7a, transparent 70%),
+      radial-gradient(1.3px 1.3px at 60% 58%, #ffd88a, transparent 70%),
+      radial-gradient(1.1px 1.1px at 72% 38%, #ffe2a8, transparent 70%),
+      radial-gradient(1.2px 1.2px at 78% 52%, #ffd88a, transparent 70%),
+      radial-gradient(1.4px 1.4px at 64% 68%, #ffce7a, transparent 70%),
+      radial-gradient(1.2px 1.2px at 58% 66%, #ffd88a, transparent 70%),
+      radial-gradient(1.1px 1.1px at 80% 64%, #ffe2a8, transparent 70%);
+    -webkit-mask-image:linear-gradient(103deg, transparent 52%, #000 60%);
+            mask-image:linear-gradient(103deg, transparent 52%, #000 60%); }
+  .globe .tec{ position:absolute; inset:0; border-radius:50%; opacity:.55; mix-blend-mode:screen;
+    background:
+      radial-gradient(120px 46px at 44% 46%, rgba(240,160,48,.55), rgba(224,64,64,.28) 55%, transparent 75%),
+      radial-gradient(90px 60px at 52% 56%, rgba(55,200,216,.35), transparent 70%);
+    animation:tecPulse 5s ease-in-out infinite; }
+  @keyframes tecPulse{ 0%,100%{opacity:.45} 50%{opacity:.68} }
+  .globe .spin{ position:absolute; inset:0; border-radius:50%; opacity:.35;
+    background:repeating-linear-gradient(100deg, transparent 0 46px, rgba(160,230,255,.10) 46px 47px);
+    animation:drift 40s linear infinite; }
+  @keyframes drift{ to{ transform:translateX(-46px); } }
+  .globe-cross{ position:absolute; inset:-16px; pointer-events:none; }
+  .globe-cross::before,.globe-cross::after{ content:""; position:absolute; background:rgba(55,200,216,.28); }
+  .globe-cross::before{ left:50%; top:-8px; bottom:-8px; width:1px; }
+  .globe-cross::after{ top:50%; left:-8px; right:-8px; height:1px; }
+
+  /* ============ PANEL BASE (inglés, mono) ============ */
+  .p{ font-family:var(--mono); font-size:11px; line-height:1.5; background:rgba(13,21,32,.96);
+    border:1px solid var(--border); border-radius:8px; color:var(--txt); }
+  .p-h{ display:flex; align-items:center; justify-content:space-between; padding:6px 10px;
+    border-bottom:1px solid var(--border); background:rgba(17,27,40,.9); border-radius:8px 8px 0 0;
+    font-size:10.5px; letter-spacing:1.2px; color:#d7e3ef; font-weight:bold; }
+  .p-h .dot{ width:7px; height:7px; border-radius:50%; background:var(--green); box-shadow:0 0 6px var(--green); }
+  .p-h .dot.amber{ background:var(--amber); box-shadow:0 0 6px var(--amber); }
+  .p-h .x{ color:var(--dim); cursor:default; }
+  .p-b{ padding:8px 10px; }
+  .row{ display:flex; align-items:center; justify-content:space-between; gap:8px; padding:2.5px 0; }
+  .row label{ color:var(--txt); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .val{ color:var(--amber); font-size:10.5px; font-variant-numeric:tabular-nums; }
+  .val.c{ color:var(--cyan); } .val.g{ color:var(--green); } .val.r{ color:var(--red); }
+  .sec{ margin-top:7px; padding-top:6px; border-top:1px dashed #223349; font-size:10px; letter-spacing:1px; color:var(--dim); }
+  input[type=range]{ -webkit-appearance:none; appearance:none; width:110px; height:3px; background:#274a6b; border-radius:2px; outline:none; }
+  input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none; width:11px; height:11px; border-radius:50%;
+    background:#4aa3ff; border:1px solid #bcdcff; box-shadow:0 0 6px rgba(74,163,255,.8); cursor:pointer; }
+  input[type=range]::-moz-range-thumb{ width:11px; height:11px; border-radius:50%; background:#4aa3ff; border:1px solid #bcdcff; }
+  input[type=range]:focus{ box-shadow:0 0 0 2px rgba(74,163,255,.4); }
+  .chk{ color:var(--cyan); } .chk.off{ color:#3c4f63; }
+  .sw{ display:inline-block; min-width:26px; text-align:center; border:1px solid var(--border); border-radius:4px;
+    padding:0 6px; font-size:10px; color:var(--cyan); background:#0a1220; }
+  .sw.on{ color:#04070b; background:var(--green); border-color:var(--green); font-weight:bold; }
+  .sw.live{ color:#04070b; background:var(--cyan); border-color:var(--cyan); font-weight:bold; }
+  select,.sel{ background:#0a1220; border:1px solid var(--border); color:var(--amber); font-family:var(--mono);
+    font-size:10.5px; border-radius:4px; padding:1px 6px; }
+  .band{ display:inline-block; font-size:10px; border:1px solid var(--border); border-radius:4px; padding:0 7px; margin:1px 2px 1px 0; }
+  .band.g{ color:var(--green); border-color:#1f4d2e; background:rgba(64,192,96,.08); }
+  .band.r{ color:var(--red); border-color:#5a2323; background:rgba(224,64,64,.08); }
+  .btn{ font-family:var(--mono); font-size:10px; border:1px solid var(--border); background:#0a1220; color:var(--txt);
+    border-radius:4px; padding:2px 9px; cursor:pointer; }
+  .btn:hover{ border-color:var(--cyan); color:#fff; }
+  .btn:focus-visible,.sw-btn:focus-visible,.rail-btn:focus-visible,.menu-it:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+  .btn.warn{ color:var(--amber); border-color:#5a4517; }
+
+  /* ============ VIEW A ============ */
+  .view{ position:absolute; inset:0; display:none; }
+  body[data-view="A"] #viewA{ display:block; }
+  body[data-view="B"] #viewB{ display:block; }
+  body[data-view="C"] #viewC{ display:block; }
+  #viewA .layers{ position:absolute; top:52px; left:12px; bottom:70px; width:266px; display:flex; flex-direction:column; overflow:hidden; }
+  #viewA .layers .p-b{ overflow-y:auto; scrollbar-width:thin; scrollbar-color:#274a6b transparent; }
+  #viewA .layers .p-b::-webkit-scrollbar{ width:8px; } #viewA .layers .p-b::-webkit-scrollbar-thumb{ background:#274a6b; border-radius:4px; }
+  #viewA .rstack{ position:absolute; top:52px; right:12px; width:250px; display:flex; flex-direction:column; gap:10px;
+    max-height:calc(100% - 130px); overflow-y:auto; scrollbar-width:thin; }
+  #viewA .timeline{ position:absolute; left:12px; right:12px; bottom:10px; height:48px;
+    display:flex; align-items:center; gap:10px; padding:6px 12px; }
+  #viewA .timeline input[type=range]{ flex:1; width:auto; }
+  #viewA .legend{ position:absolute; bottom:70px; left:50%; transform:translateX(-50%); z-index:20;
+    display:flex; align-items:center; gap:10px; padding:5px 12px; font-size:10px; }
+  .lg{ display:flex; align-items:center; gap:5px; } .lg i{ width:22px; height:8px; border-radius:2px; display:inline-block; }
+  .tl-btns{ display:flex; gap:5px; align-items:center; white-space:nowrap; }
+
+  /* ============ VIEW B ============ */
+  #viewB .rail{ position:absolute; left:0; top:0; bottom:0; width:56px; z-index:25;
+    background:rgba(8,13,20,.97); border-right:1px solid var(--border);
+    display:flex; flex-direction:column; align-items:center; gap:4px; padding:56px 0 10px; }
+  .rail-btn{ width:46px; padding:7px 0 5px; background:transparent; border:1px solid transparent; border-radius:8px;
+    color:var(--dim); cursor:pointer; font-family:var(--mono); font-size:8.5px; letter-spacing:.4px; text-align:center; }
+  .rail-btn svg{ display:block; margin:0 auto 3px; }
+  .rail-btn:hover{ color:#fff; border-color:var(--border); }
+  .rail-btn.active{ color:var(--cyan); border-color:#234a5a; background:rgba(55,200,216,.08); }
+  #viewB .bpanel{ position:absolute; left:56px; top:52px; bottom:12px; width:288px; z-index:24;
+    display:flex; flex-direction:column; overflow:hidden; }
+  #viewB .bpanel .p-b{ overflow-y:auto; }
+  .btab{ display:none; } .btab.active{ display:block; }
+  #viewB .fps{ position:absolute; right:12px; bottom:12px; z-index:20; font-size:10px; padding:4px 10px; }
+
+  /* ============ VIEW C ============ */
+  #viewC .menubar{ position:absolute; top:44px; left:0; right:0; height:34px; z-index:25;
+    background:rgba(8,13,20,.97); border-top:1px solid var(--border); border-bottom:1px solid var(--border);
+    display:flex; align-items:center; gap:2px; padding:0 14px; font-family:var(--mono); font-size:11.5px; }
+  .menu-it{ background:none; border:none; color:var(--txt); font-family:var(--mono); font-size:11.5px;
+    padding:6px 12px; border-radius:5px; cursor:pointer; }
+  .menu-it:hover{ background:#16233a; color:#fff; }
+  .menu-it.active{ background:rgba(55,200,216,.14); color:var(--cyan); }
+  #viewC .dlg{ position:absolute; top:110px; right:8%; width:300px; z-index:24; box-shadow:0 12px 50px rgba(0,0,0,.7); }
+  #viewC .legend-mini{ position:absolute; right:12px; bottom:12px; z-index:20; font-size:10px; padding:4px 10px; }
+
+  .ann{ font-size:10px; color:var(--dim); border-top:1px dashed #223349; margin-top:7px; padding-top:6px; }
+  .ann b{ color:var(--green); }
+  .scrollhint{ font-size:9.5px; color:var(--amber); }
+
+  @media (max-width:980px){
+    #viewA .layers{ width:216px; } #viewA .rstack{ width:200px; }
+    #viewB .bpanel{ width:240px; } #viewC .dlg{ right:12px; }
+    .globe-wrap{ width:min(74vmin,420px); height:min(74vmin,420px); }
+    .globe-meter .hide-m{ display:none; }
+  }
+</style>
+</head>
+<body data-view="B">
+
+<header class="chrome">
+  <div class="chrome-row">
+    <h1>Ionosphere Live 3D — reorganización de paneles <span id="crumb">· B</span></h1>
+    <nav class="switcher" aria-label="Conmutador de vistas A B C">
+      <button class="sw-btn" data-go="A" aria-pressed="false">A · Fijado<small>coste ~0</small></button>
+      <button class="sw-btn active" data-go="B" aria-pressed="true">B · Lateral<small>recomendada</small></button>
+      <button class="sw-btn" data-go="C" aria-pressed="false">C · Menú sup.<small>máx. globo</small></button>
+    </nav>
+    <div class="globe-meter" title="Estimación honesta: % aproximado del disco del globo sin paneles encima">
+      <span class="hide-m">globo visible</span><b id="pct">81%</b>
+      <span class="meter-bar"><i id="meterFill"></i></span>
+    </div>
+  </div>
+  <div class="hints">
+    <span class="hint" data-hint="A"><b>A</b> → ¿se solapa algo? · ¿cabe el Timeline? · ¿scroll en Layers?</span>
+    <span class="hint on" data-hint="B"><b>B</b> → 1 columna, 0 solapes · ¿clics por ajuste? · ¿respira el globo?</span>
+    <span class="hint" data-hint="C"><b>C</b> → máx. globo · ¿molestan 2 clics por ajuste? · diálogos sueltos</span>
+    <span class="hint"><kbd>A</kbd><kbd>B</kbd><kbd>C</kbd> conmutan · en B, <kbd>1</kbd>–<kbd>5</kbd> cambian pestaña</span>
+  </div>
+</header>
+
+<main id="stage">
+  <div class="stars" id="stars"></div>
+
+  <div class="globe-zone" aria-hidden="true">
+    <div class="globe-wrap">
+      <div class="halo"></div>
+      <div class="ring r1"></div><div class="ring r2"></div>
+      <div class="globe">
+        <div class="land"></div><div class="grid"></div><div class="tec"></div>
+        <div class="spin"></div><div class="night"></div><div class="cities"></div>
+      </div>
+      <div class="globe-cross"></div>
+    </div>
+  </div>
+
+  <div class="view-tag" id="viewTag">B · recomendada, cero solapes <small>— 81% globo visible</small></div>
+
+  <!-- ================= VISTA A ================= -->
+  <section class="view" id="viewA" aria-label="Vista A layout fijado">
+    <aside class="p layers">
+      <div class="p-h"><span>● LAYERS</span><span class="x">— ▢ ✕</span></div>
+      <div class="p-b">
+        <div class="row"><label><span class="chk">☑</span> Earth surface</label><span class="sw on">ON</span></div>
+        <div class="row"><label><span class="chk">☑</span> Atmosphere glow</label><span class="val">0.65</span></div>
+        <div class="row"><label><span class="chk">☑</span> Stars</label><span class="sw on">ON</span></div>
+        <div class="row"><label><span class="chk">☑</span> Sun + Terminator</label><span class="val c">live</span></div>
+        <div class="sec">IONOSPHERE VARIABLE</div>
+        <div class="row"><label>Variable</label><span class="sel">TEC ▾</span></div>
+        <div class="row"><label>Colormap</label><span class="sel">turbo ▾</span></div>
+        <div class="row"><label>Opacity</label><input type="range" value="78"></div>
+        <div class="row"><label>3D relief</label><span class="sw on">ON</span></div>
+        <div class="row"><label>Shells</label><span class="val">3 × 150km</span></div>
+        <div class="row"><label>F2 peak marker</label><span class="chk">☑</span></div>
+        <div class="row"><label>Model TEC overlay</label><span class="chk off">☐</span></div>
+        <div class="sec">VOLUMETRIC / LIMB</div>
+        <div class="row"><label>Volumetric</label><span class="chk">☑</span></div>
+        <div class="row"><label>Limb zoom</label><span class="val">×2.0</span></div>
+        <div class="row"><label>Density scale</label><input type="range" value="55"></div>
+        <div class="row"><label>Iso bands</label><span class="val">5</span></div>
+        <div class="sec">OVERLAYS</div>
+        <div class="row"><label>Labels</label><span class="chk">☑</span></div>
+        <div class="row"><label>Explode view</label><input type="range" value="20"></div>
+        <div class="row"><label>Graticule</label><span class="chk off">☐</span></div>
+        <div class="ann">✔ canonical pos · internal scroll — <b>ya no tapa al Circuit</b></div>
+      </div>
+    </aside>
+
+    <div class="rstack">
+      <div class="p">
+        <div class="p-h"><span>◇ CIRCUIT · HF MULTI-HOP</span><span class="dot"></span></div>
+        <div class="p-b">
+          <div class="row"><label>TX → RX</label><span class="val">EA8 ↔ EA1</span></div>
+          <div class="row"><label>MUF / LUF</label><span class="val">24.9 / 7.1 MHz</span></div>
+          <div style="margin-top:4px">
+            <span class="band g">17m open</span><span class="band g">15m open</span><span class="band g">12m open</span><span class="band r">10m closed</span>
+          </div>
+          <div class="row"><label>Hops</label><span class="val c">2F2 · 3100km</span></div>
+        </div>
+      </div>
+      <div class="p">
+        <div class="p-h"><span>◉ BLOOM / HUD</span><span class="dot amber"></span></div>
+        <div class="p-b">
+          <div class="row"><label>Threshold</label><input type="range" value="62"></div>
+          <div class="row"><label>Intensity</label><input type="range" value="40"></div>
+          <div class="row"><label>Strength</label><span class="val">0.85</span></div>
+          <div class="row"><label>Exposure</label><span class="val">1.10</span></div>
+          <div class="row"><label>MSAA</label><span class="sel">×4 ▾</span></div>
+        </div>
+      </div>
+      <div class="p">
+        <div class="p-h"><span>☉ SUN · ALT · LIMB</span><span class="x">—</span></div>
+        <div class="p-b">
+          <div class="row"><label>Sun decl.</label><span class="val">−2.4°</span></div>
+          <div class="row"><label>Altitude</label><span class="val">350 km</span></div>
+          <div class="row"><label>Limb ×3</label><span class="val c">×1 / ×2 / ×4</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="p legend">
+      <span class="lg"><i style="background:linear-gradient(90deg,#0d2748,#37c8d8,#f0a030,#e04040)"></i>TEC 0–120</span>
+      <span class="lg" style="color:var(--amber)">▲ F2 320km</span>
+      <span class="lg" style="color:var(--cyan)">● live</span>
+    </div>
+
+    <div class="p timeline">
+      <div class="tl-btns">
+        <span class="sw live">● LIVE</span>
+        <button class="btn">Replay session</button>
+        <button class="btn">◀ −1h</button>
+      </div>
+      <input type="range" value="88" aria-label="hours back">
+      <div class="tl-btns">
+        <span class="val" style="white-space:nowrap">T−00:24 · 6h back</span>
+        <button class="btn">Loop</button><button class="btn">DATA</button><button class="btn">Zone</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= VISTA B ================= -->
+  <section class="view" id="viewB" aria-label="Vista B barra lateral por pestañas">
+    <nav class="rail" aria-label="Pestañas">
+      <button class="rail-btn active" data-tab="vista" aria-pressed="true">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="9" cy="9" r="6.5"/><ellipse cx="9" cy="9" rx="3" ry="6.5"/></svg>VISTA</button>
+      <button class="rail-btn" data-tab="datos" aria-pressed="false">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2 14l4-6 3 3 4-7 3 4"/></svg>DATOS</button>
+      <button class="rail-btn" data-tab="tiempo" aria-pressed="false">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="9" cy="9" r="6.5"/><path d="M9 5v4l3 2"/></svg>TIEMPO</button>
+      <button class="rail-btn" data-tab="radio" aria-pressed="false">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M9 12a2 2 0 100-4 2 2 0 000 4z"/><path d="M5.5 12.5a5 5 0 010-7M12.5 5.5a5 5 0 010 7"/></svg>RADIO</button>
+      <button class="rail-btn" data-tab="sistema" aria-pressed="false">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="9" cy="9" r="2.4"/><path d="M9 1.5v3M9 13.5v3M1.5 9h3M13.5 9h3M3.9 3.9l2.1 2.1M12 12l2.1 2.1M14.1 3.9L12 6M6 12l-2.1 2.1"/></svg>SIST.</button>
+    </nav>
+
+    <aside class="p bpanel">
+      <div class="p-h"><span id="bTitle">◉ VIEW</span><span class="val g">0 overlaps</span></div>
+      <div class="p-b">
+        <div class="btab active" data-pane="vista">
+          <div class="row"><label><span class="chk">☑</span> Earth surface</label><span class="sw on">ON</span></div>
+          <div class="row"><label><span class="chk">☑</span> Atmosphere glow</label><span class="val">0.65</span></div>
+          <div class="row"><label><span class="chk">☑</span> Terminator</label><span class="sw on">ON</span></div>
+          <div class="row"><label><span class="chk">☑</span> Sun position</label><span class="val c">live</span></div>
+          <div class="row"><label><span class="chk">☑</span> Stars</label><span class="sw on">ON</span></div>
+          <div class="row"><label>Exposure</label><input type="range" value="45"></div>
+          <div class="ann">Solo <b>Vista</b> visible — el resto espera en el rail.</div>
+        </div>
+        <div class="btab" data-pane="datos">
+          <div class="row"><label>Variable</label><span class="sel">TEC ▾</span></div>
+          <div class="row"><label>Colormap</label><span class="sel">turbo ▾</span></div>
+          <div class="row"><label>Altitude</label><span class="val">350 km</span></div>
+          <div class="row"><label>Opacity</label><input type="range" value="78"></div>
+          <div class="row"><label>3D relief</label><span class="sw on">ON</span></div>
+          <div class="row"><label>Density scale</label><input type="range" value="55"></div>
+          <div class="row"><label>Iso bands</label><span class="val">5</span></div>
+          <div class="ann">Datos ionosféricos juntos: <b>1 clic</b> desde cualquier pestaña.</div>
+        </div>
+        <div class="btab" data-pane="tiempo">
+          <div class="row"><label>Mode</label><span><span class="sw live">● LIVE</span> <span class="sw">Replay</span></span></div>
+          <div class="row"><label>Session</label><button class="btn">load…</button></div>
+          <div class="row"><label>Hours back</label><input type="range" value="70"></div>
+          <div class="row"><label></label><span class="val">T−00:24 · 6h window</span></div>
+          <div class="row"><label><span class="chk">☑</span> Loop</label><span class="chk">☑ DATA</span></div>
+          <div class="row"><label>Zone</label><span class="sel">EA8 ▾</span></div>
+          <div class="ann">El Timeline cabe <b>entero</b> — nunca se corta tras la taskbar.</div>
+        </div>
+        <div class="btab" data-pane="radio">
+          <div class="row"><label>TX → RX</label><span class="val">EA8 ↔ EA1</span></div>
+          <div class="row"><label>MUF / LUF</label><span class="val">24.9 / 7.1 MHz</span></div>
+          <div class="row"><label>Path</label><span class="val c">2F2 · 3100km</span></div>
+          <div class="sec">HF BANDS</div>
+          <div><span class="band g">17m open</span><span class="band g">15m open</span><span class="band g">12m open</span><span class="band r">10m closed</span></div>
+          <div class="row"><label>Multi-hop trace</label><span class="sw on">ON</span></div>
+          <div class="ann">Circuit completo en <b>una</b> pestaña, sin flotantes encima.</div>
+        </div>
+        <div class="btab" data-pane="sistema">
+          <div class="row"><label>Bloom threshold</label><input type="range" value="62"></div>
+          <div class="row"><label>Bloom intensity</label><input type="range" value="40"></div>
+          <div class="row"><label>Bloom strength</label><span class="val">0.85</span></div>
+          <div class="row"><label>Tone map</label><span class="sel">ACES ▾</span></div>
+          <div class="row"><label>Exposure</label><span class="val">1.10</span></div>
+          <div class="row"><label>MSAA</label><span class="sel">×4 ▾</span></div>
+          <div class="row"><label>FPS</label><span class="val g">60 · vsync</span></div>
+          <div class="ann">Ajustes raros (Bloom/MSAA) <b>apartados</b> del uso diario.</div>
+        </div>
+      </div>
+    </aside>
+    <div class="p fps"><span class="val g">● 60 fps</span> · TEC 0–120 · <span style="color:var(--amber)">▲ F2 320km</span></div>
+  </section>
+
+  <!-- ================= VISTA C ================= -->
+  <section class="view" id="viewC" aria-label="Vista C menu superior">
+    <nav class="menubar" aria-label="Barra de menú">
+      <button class="menu-it" data-menu="vista">Vista</button>
+      <button class="menu-it" data-menu="capas">Capas</button>
+      <button class="menu-it active" data-menu="datos">Datos</button>
+      <button class="menu-it" data-menu="radio">Radio</button>
+      <button class="menu-it" data-menu="ayuda">Ayuda</button>
+      <span style="margin-left:auto" class="val c">● LIVE · T−00:24</span>
+    </nav>
+    <div class="p dlg" id="dlg">
+      <div class="p-h"><span id="dlgTitle">▦ DATA · TEC</span><span class="x">✕</span></div>
+      <div class="p-b" id="dlgBody">
+        <div class="row"><label>Variable</label><span class="sel">TEC ▾</span></div>
+        <div class="row"><label>Colormap</label><span class="sel">turbo ▾</span></div>
+        <div class="row"><label>Altitude</label><span class="val">350 km</span></div>
+        <div class="row"><label>Opacity</label><input type="range" value="78"></div>
+        <div class="row"><label>3D relief</label><span class="sw on">ON</span></div>
+        <div class="ann">Un solo diálogo abierto · <b>2 clics por ajuste</b> (menú → opción).</div>
+      </div>
+    </div>
+    <div class="p legend-mini">TEC 0–120 · <span style="color:var(--amber)">▲ F2</span> · <span class="val c">● live</span></div>
+  </section>
+</main>
+
+<script>
+(function(){
+  var PCT = { A:{v:48,tag:'A · coste ~0, posiciones por defecto',sub:'— 48% globo visible'},
+              B:{v:81,tag:'B · recomendada, cero solapes',sub:'— 81% globo visible'},
+              C:{v:94,tag:'C · máximo globo, 2 clics por ajuste',sub:'— 94% globo visible'} };
+  var body=document.body, tag=document.getElementById('viewTag'),
+      pct=document.getElementById('pct'), fill=document.getElementById('meterFill'),
+      crumb=document.getElementById('crumb');
+
+  function setView(v){
+    body.dataset.view=v;
+    document.querySelectorAll('.sw-btn').forEach(function(b){
+      var on=b.dataset.go===v; b.classList.toggle('active',on); b.setAttribute('aria-pressed',on);
+    });
+    document.querySelectorAll('.hint[data-hint]').forEach(function(h){ h.classList.toggle('on',h.dataset.hint===v); });
+    tag.innerHTML=PCT[v].tag+' <small>'+PCT[v].sub+'</small>';
+    pct.textContent=PCT[v].v+'%'; fill.style.width=PCT[v].v+'%'; crumb.textContent='· '+v;
+  }
+  document.querySelectorAll('.sw-btn').forEach(function(b){ b.addEventListener('click',function(){ setView(b.dataset.go); }); });
+
+  // B tabs
+  var titles={vista:'◉ VIEW',datos:'▦ DATA',tiempo:'◷ TIME',radio:'◇ RADIO',sistema:'⚙ SYSTEM'};
+  var rail=document.querySelectorAll('.rail-btn');
+  function setTab(t){
+    rail.forEach(function(b){ var on=b.dataset.tab===t; b.classList.toggle('active',on); b.setAttribute('aria-pressed',on); });
+    document.querySelectorAll('.btab').forEach(function(p){ p.classList.toggle('active',p.dataset.pane===t); });
+    document.getElementById('bTitle').textContent=titles[t]||'◉ VIEW';
+    if(body.dataset.view!=='B') setView('B');
+  }
+  rail.forEach(function(b){ b.addEventListener('click',function(){ setTab(b.dataset.tab); }); });
+
+  // C menus (resaltan + cambian el diálogo de ejemplo)
+  var dlgBodies={
+    vista:'<div class="row"><label><span class="chk">☑</span> Terminator</label><span class="sw on">ON</span></div><div class="row"><label><span class="chk">☑</span> Atmosphere</label><span class="val">0.65</span></div><div class="row"><label>Exposure</label><input type="range" value="45"></div><div class="ann">Vista: terminador, atmósfera y estrellas.</div>',
+    capas:'<div class="row"><label>Shells</label><span class="val">3 × 150km</span></div><div class="row"><label>Iso bands</label><span class="val">5</span></div><div class="row"><label>Labels</label><span class="chk">☑</span></div><div class="row"><label>Explode</label><input type="range" value="20"></div><div class="ann">Capas: shells, iso-bandas y etiquetas.</div>',
+    datos:null, // se conserva el HTML original
+    radio:'<div class="row"><label>TX → RX</label><span class="val">EA8 ↔ EA1</span></div><div class="row"><label>MUF / LUF</label><span class="val">24.9 / 7.1 MHz</span></div><div><span class="band g">17m open</span><span class="band g">15m open</span><span class="band r">10m closed</span></div><div class="ann">Radio: circuito HF multi-hop.</div>',
+    ayuda:'<div class="row"><label>Atajos</label><span class="val c">A/B/C · 1–5</span></div><div class="row"><label>Manual</label><button class="btn">open…</button></div><div class="ann">Ayuda: esta maqueta no necesita manual.</div>'
+  };
+  var dlgTitles={vista:'◉ VIEW',capas:'● LAYERS',datos:'▦ DATA · TEC',radio:'◇ RADIO · HF',ayuda:'? AYUDA'};
+  var origDatos=document.getElementById('dlgBody').innerHTML;
+  document.querySelectorAll('.menu-it').forEach(function(m){
+    m.addEventListener('click',function(){
+      document.querySelectorAll('.menu-it').forEach(function(x){ x.classList.remove('active'); });
+      m.classList.add('active');
+      document.getElementById('dlgTitle').textContent=dlgTitles[m.dataset.menu];
+      document.getElementById('dlgBody').innerHTML = m.dataset.menu==='datos' ? origDatos : dlgBodies[m.dataset.menu];
+      if(body.dataset.view!=='C') setView('C');
+    });
+  });
+
+  // Keyboard
+  document.addEventListener('keydown',function(e){
+    if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT') return;
+    var k=e.key.toUpperCase();
+    if(k==='A'||k==='B'||k==='C') setView(k);
+    var map={'1':'vista','2':'datos','3':'tiempo','4':'radio','5':'sistema'};
+    if(map[e.key]) setTab(map[e.key]);
+  });
+
+  // Stars (box-shadow-free: puntitos posicionados, deterministas)
+  var s=document.getElementById('stars'), pts=[[4,12],[11,64],[18,30],[23,82],[31,8],[37,55],[44,22],[49,74],[57,5],[63,40],[69,88],[74,16],[80,60],[86,28],[91,76],[95,44],[8,44],[27,48],[52,92],[66,70],[14,90],[40,86],[78,6],[88,10],[60,12],[35,72],[20,58],[55,30],[72,52],[83,84]];
+  pts.forEach(function(p,i){ var el=document.createElement('i'); el.style.left=p[0]+'%'; el.style.top=p[1]+'%';
+    el.style.opacity=(.35+(i%5)*.13).toFixed(2); if(i%7===0){el.style.width='3px';el.style.height='3px';} s.appendChild(el); });
+
+  setView('B');
+})();
+</script>
+</body>
+</html>
