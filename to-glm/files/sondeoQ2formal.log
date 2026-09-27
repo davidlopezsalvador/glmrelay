@@ -1,0 +1,29 @@
+[LGDC 2026-09-27T00:46:29.330Z] pre-flight Q2formal: 1 req foF2 banda [72,96]h
+[LGDC 2026-09-27T00:46:29.338Z] launch gambit-foF2 depth=3.5d TOV=2026.09.23T12:45
+[LGDC 2026-09-27T00:46:31.476Z] result ok gambit-foF2 depth=3.5d TOV=2026.09.23T12:45 size=18095 sha=8df1f9ee0c1814ab
+[LGDC 2026-09-27T00:47:06.859Z] sondeo Q2formal start: 12 req foF2, depths {5,7,14,21,30,60}d x 2 TOVs, 1req/15s
+[LGDC 2026-09-27T00:47:06.859Z] launch gambit-foF2 depth=5d TOV=2026.09.22T00:45
+[LGDC 2026-09-27T00:47:09.204Z] result ok gambit-foF2 depth=5d TOV=2026.09.22T00:45 size=18101 sha=6c03ae614a0ac3d6
+[LGDC 2026-09-27T00:47:22.043Z] launch gambit-foF2 depth=5d TOV=2026.09.22T00:30
+[LGDC 2026-09-27T00:47:24.385Z] result ok gambit-foF2 depth=5d TOV=2026.09.22T00:30 size=18101 sha=192c82354018f5d8
+[LGDC 2026-09-27T00:47:37.030Z] launch gambit-foF2 depth=7d TOV=2026.09.20T00:45
+[LGDC 2026-09-27T00:47:39.387Z] result ok gambit-foF2 depth=7d TOV=2026.09.20T00:45 size=18101 sha=43b3af80b876a66c
+[LGDC 2026-09-27T00:47:52.031Z] launch gambit-foF2 depth=7d TOV=2026.09.20T00:30
+[LGDC 2026-09-27T00:47:54.371Z] result ok gambit-foF2 depth=7d TOV=2026.09.20T00:30 size=18101 sha=7d39942c522c2cff
+[LGDC 2026-09-27T00:48:07.016Z] launch gambit-foF2 depth=14d TOV=2026.09.13T00:45
+[LGDC 2026-09-27T00:48:09.257Z] result ok gambit-foF2 depth=14d TOV=2026.09.13T00:45 size=18083 sha=f6b71d34d7e32e94
+[LGDC 2026-09-27T00:48:21.938Z] launch gambit-foF2 depth=14d TOV=2026.09.13T00:30
+[LGDC 2026-09-27T00:48:24.328Z] result ok gambit-foF2 depth=14d TOV=2026.09.13T00:30 size=18083 sha=68b49236acbf75a5
+[LGDC 2026-09-27T00:48:36.966Z] launch gambit-foF2 depth=21d TOV=2026.09.06T00:45
+[LGDC 2026-09-27T00:48:39.284Z] result ok gambit-foF2 depth=21d TOV=2026.09.06T00:45 size=18089 sha=8590436fe72825aa
+[LGDC 2026-09-27T00:48:51.938Z] launch gambit-foF2 depth=21d TOV=2026.09.06T00:30
+[LGDC 2026-09-27T00:48:54.156Z] result ok gambit-foF2 depth=21d TOV=2026.09.06T00:30 size=18089 sha=90a9fac806ec7f42
+[LGDC 2026-09-27T00:49:06.989Z] launch gambit-foF2 depth=30d TOV=2026.08.28T00:45
+[LGDC 2026-09-27T00:49:09.318Z] result ok gambit-foF2 depth=30d TOV=2026.08.28T00:45 size=18089 sha=9c171c61111d451e
+[LGDC 2026-09-27T00:49:21.957Z] launch gambit-foF2 depth=30d TOV=2026.08.28T00:30
+[LGDC 2026-09-27T00:49:24.201Z] result ok gambit-foF2 depth=30d TOV=2026.08.28T00:30 size=18089 sha=559e4bb680e51f37
+[LGDC 2026-09-27T00:49:37.047Z] launch gambit-foF2 depth=60d TOV=2026.07.29T00:45
+[LGDC 2026-09-27T00:49:40.560Z] result ok gambit-foF2 depth=60d TOV=2026.07.29T00:45 size=18089 sha=1d7f8721dd61bdb0
+[LGDC 2026-09-27T00:49:52.003Z] launch gambit-foF2 depth=60d TOV=2026.07.29T00:30
+[LGDC 2026-09-27T00:49:54.210Z] result ok gambit-foF2 depth=60d TOV=2026.07.29T00:30 size=18089 sha=28a5ddd8ebf1d38e
+[LGDC 2026-09-27T00:49:54.210Z] sondeo Q2formal done
