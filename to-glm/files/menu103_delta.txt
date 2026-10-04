@@ -1,0 +1,111 @@
+From 23bfdb30f1cb8efe62b4d0a083da5621fc8631da Mon Sep 17 00:00:00 2001
+From: David Lopez Salvador <davidlopezsalvador@users.noreply.github.com>
+Date: Sun, 4 Oct 2026 02:14:39 +0200
+Subject: [PATCH] UI-103: P1 delete-on-pop retencion tec (helper + wiring
+ save-first + TU)
+
+---
+ src/App.cpp              | 17 ++++++++++++-----
+ src/Data/TecCache.cpp    |  7 +++++++
+ src/Data/TecCache.h      |  1 +
+ tests/test_tec_cache.cpp | 19 +++++++++++++++++++
+ 4 files changed, 39 insertions(+), 5 deletions(-)
+
+diff --git a/src/App.cpp b/src/App.cpp
+index e688fd8..324d1de 100644
+--- a/src/App.cpp
++++ b/src/App.cpp
+@@ -3011,11 +3011,10 @@ void App::pushHistoryFrame(const GridData& grid, double ts, bool simulated) {
+     }
+     GridData fr = grid;
+     fr.timestamp = ts;
+-    size_t pos = 0;
+-    while (pos < impl->tecHist.size() && impl->tecHist[pos].timestamp < ts) pos++;
+-    impl->tecHist.insert(impl->tecHist.begin() + pos, fr);
+-    while (impl->tecHist.size() > 432) impl->tecHist.erase(impl->tecHist.begin());   // TEC-ext 034: cap 432 = 72 h @ 10 min
+-    // M10: todo frame real que entra al anillo persiste (simulated/ESA excluidos).
++    // M10: todo frame real persiste ANTES del cap (simulated/ESA excluidos).
++    // El pop expulsa el mas viejo — incluido el recien insertado si es viejo
++    // (gaps viejos de preload): al guardar primero, su fichero existe cuando
++    // el delete lo alcanza. Neto en disco 0 por frame (P1, particion 102).
+     if (teccache::shouldCacheFrame(grid.valid, simulated, impl->tecCacheEnabled)) {
+         teccache::Frame f;
+         f.epoch = ts;
+@@ -3024,6 +3023,14 @@ void App::pushHistoryFrame(const GridData& grid, double ts, bool simulated) {
+         f.v = grid.values;
+         teccache::saveFrame("cache", f);
+     }
++    size_t pos = 0;
++    while (pos < impl->tecHist.size() && impl->tecHist[pos].timestamp < ts) pos++;
++    impl->tecHist.insert(impl->tecHist.begin() + pos, fr);
++    while (impl->tecHist.size() > 432) {
++        const double dropTs = impl->tecHist.begin()->timestamp;
++        impl->tecHist.erase(impl->tecHist.begin());
++        teccache::removeFrame("cache", dropTs);   // P1 delete-on-pop (particion 102)
++    }   // TEC-ext 034: cap 432 = 72 h @ 10 min
+ }
+ 
+ // M11: subida GL de la imagen SDO (render thread, patron Earth.cpp:14-31
+diff --git a/src/Data/TecCache.cpp b/src/Data/TecCache.cpp
+index 2bcd8d5..797a0ad 100644
+--- a/src/Data/TecCache.cpp
++++ b/src/Data/TecCache.cpp
+@@ -92,6 +92,13 @@ bool saveFrame(const std::string& dir, const Frame& f) {
+     return !ec;
+ }
+ 
++bool removeFrame(const std::string& dir, double epoch) {
++    std::error_code ec;
++    const bool gone =
++        std::filesystem::remove(dir + "/" + frameName(epoch), ec);
++    return gone && !ec;
++}
++
+ bool loadFrame(const std::string& path, Frame& out) {
+     Frame f;
+     if (!readAll(path, f)) return false;
+diff --git a/src/Data/TecCache.h b/src/Data/TecCache.h
+index 94da709..a426850 100644
+--- a/src/Data/TecCache.h
++++ b/src/Data/TecCache.h
+@@ -35,6 +35,7 @@ bool isFresh(double epoch, double nowUtc, double maxAgeH);
+ std::string frameName(double epoch);   // "tec_<s>.bin"
+ bool ensureDir(const std::string& dir);
+ bool saveFrame(const std::string& dir, const Frame& f);  // atomica tmp+rename
++bool removeFrame(const std::string& dir, double epoch);  // P1 delete-on-pop: borra tec_<epoch>.bin si existe (best-effort, nunca lanza)
+ bool loadFrame(const std::string& path, Frame& out);     // false si corrupto
+ 
+ struct ScanResult {
+diff --git a/tests/test_tec_cache.cpp b/tests/test_tec_cache.cpp
+index fd756cd..e7413f4 100644
+--- a/tests/test_tec_cache.cpp
++++ b/tests/test_tec_cache.cpp
+@@ -186,6 +186,25 @@ int main() {
+         }
+     }
+ 
++    std::printf("--- P1: retencion delete-on-pop (removeFrame) ---\n");
++    {
++        std::string d = freshDir("ret");
++        const int N = 435;
++        for (int i = 0; i < N; i++)
++            check_bool("save para retencion", saveFrame(d, makeFrame(2000000.0 + i * 600.0, 2, 2)));
++        for (int i = 0; i < N - 432; i++)
++            check_bool("removeFrame borra existente",
++                       removeFrame(d, 2000000.0 + i * 600.0));
++        std::size_t left = 0;
++        for (const auto& e : std::filesystem::directory_iterator(d)) {
++            if (!e.is_regular_file()) continue;
++            const std::string nm = e.path().filename().string();
++            if (nm.compare(0, 4, "tec_") == 0) ++left;
++        }
++        check_bool("quedan 432 en disco tras pops", left == 432);
++        check_bool("removeFrame false sin fichero", !removeFrame(d, 1.0));
++    }
++
+     std::printf("\n[test_tec_cache] %d OK, %d FAIL\n", g_ok, g_fail);
+     return g_fail == 0 ? 0 : 1;
+ }
+-- 
+2.53.0.windows.3
+
