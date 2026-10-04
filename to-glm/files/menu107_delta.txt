@@ -1,0 +1,96 @@
+From 8268fcb6973140c771a3779693fe4bb1e18aa644 Mon Sep 17 00:00:00 2001
+From: David Lopez Salvador <davidlopezsalvador@users.noreply.github.com>
+Date: Sun, 4 Oct 2026 03:26:02 +0200
+Subject: [PATCH] UI-107: fit-check fitsInRing pre-fetch + wiring preload + TU
+
+---
+ src/App.cpp              | 13 ++++++++++++-
+ src/Data/TecCache.cpp    |  5 +++++
+ src/Data/TecCache.h      |  5 +++++
+ tests/test_tec_cache.cpp | 11 +++++++++++
+ 4 files changed, 33 insertions(+), 1 deletion(-)
+
+diff --git a/src/App.cpp b/src/App.cpp
+index 324d1de..4d7f4e5 100644
+--- a/src/App.cpp
++++ b/src/App.cpp
+@@ -1356,14 +1356,25 @@ bool App::init(int width, int height, const char* title) {
+                     teccache::missingInWindow(cachedEp, idxEp, nowPre,
+                                               (std::size_t)teccache::kCapFrames);
+                 self->impl->histTotal.store((int)want.size());
++                int nSkipped = 0;
+                 for (std::size_t k : want) {
+                     if (self->impl->shutdownRequested.load()) break;   // M0.2
++                    {
++                        std::lock_guard<std::mutex> tlk(self->impl->tecHistMutex);
++                        const std::size_t nRing = self->impl->tecHist.size();
++                        const double ringOld = nRing > 0 ? self->impl->tecHist.front().timestamp : 0.0;
++                        if (!teccache::fitsInRing(nRing, (std::size_t)teccache::kCapFrames, ringOld, idx[k].timeUtc)) {
++                            ++nSkipped;
++                            self->impl->histDone.store(self->impl->histDone.load() + 1);
++                            continue;
++                        }
++                    }
+                     GridData fr;
+                     if (loader.fetchFrame(idx[k].url, idx[k].timeUtc, fr))
+                         self->pushHistoryFrame(fr, idx[k].timeUtc, false);
+                     self->impl->histDone.store(self->impl->histDone.load() + 1);
+                 }
+-                printf("[App] History preload: %d cached + %d fetched\n", nCached, (int)want.size());
++                printf("[App] History preload: %d cached + %d fetched + %d skipped\n", nCached, (int)want.size() - nSkipped, nSkipped);
+             }
+             self->impl->histLoading.store(false);
+         });
+diff --git a/src/Data/TecCache.cpp b/src/Data/TecCache.cpp
+index 797a0ad..9125570 100644
+--- a/src/Data/TecCache.cpp
++++ b/src/Data/TecCache.cpp
+@@ -178,4 +178,9 @@ std::vector<std::size_t> missingInWindow(
+     return out;
+ }
+ 
++bool fitsInRing(std::size_t ringSize, std::size_t cap, double oldestEpoch, double epoch) {
++    if (ringSize < cap) return true;
++    return epoch > oldestEpoch;
++}
++
+ }  // namespace teccache
+diff --git a/src/Data/TecCache.h b/src/Data/TecCache.h
+index a426850..b8ef57e 100644
+--- a/src/Data/TecCache.h
++++ b/src/Data/TecCache.h
+@@ -62,4 +62,9 @@ std::vector<std::size_t> missingInWindow(const std::vector<double>& cachedEpochs
+                                          const std::vector<double>& indexEpochs,
+                                          double nowUtc, std::size_t cap);
+ 
++// Fit-check pre-fetch (P1 retencion, particion 106): decide SI pedir vale
++// la pena. Cabe ssi hay hueco (ringSize < cap) o epoch > oldestEpoch.
++// Puro, sin I/O ni estado; fuera-de-ventana NO es su asunto (missingInWindow).
++bool fitsInRing(std::size_t ringSize, std::size_t cap, double oldestEpoch, double epoch);
++
+ }  // namespace teccache
+diff --git a/tests/test_tec_cache.cpp b/tests/test_tec_cache.cpp
+index e7413f4..2b60994 100644
+--- a/tests/test_tec_cache.cpp
++++ b/tests/test_tec_cache.cpp
+@@ -205,6 +205,17 @@ int main() {
+         check_bool("removeFrame false sin fichero", !removeFrame(d, 1.0));
+     }
+ 
++    std::printf("--- P1b: fit-check fitsInRing (6 bordes) ---\n");
++    {
++        const std::size_t C = 432;
++        check_bool("hueco aunque epoch<oldest", fitsInRing(100, C, 500.0, 100.0));
++        check_bool("lleno+epoch>oldest", fitsInRing(C, C, 500.0, 600.0));
++        check_bool("lleno+epoch==oldest false", !fitsInRing(C, C, 500.0, 500.0));
++        check_bool("lleno+epoch<oldest false", !fitsInRing(C, C, 500.0, 100.0));
++        check_bool("vacio true con oldest 0.0", fitsInRing(0, C, 0.0, 100.0));
++        check_bool("viejo rige oldest sin ventana", !fitsInRing(C, C, 500.0, 1.0));
++    }
++
+     std::printf("\n[test_tec_cache] %d OK, %d FAIL\n", g_ok, g_fail);
+     return g_fail == 0 ? 0 : 1;
+ }
+-- 
+2.53.0.windows.3
+
