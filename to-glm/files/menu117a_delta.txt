@@ -1,0 +1,315 @@
+From db82221c7ff04fc8ea62eb62e5517f2cc0eb1f2d Mon Sep 17 00:00:00 2001
+From: David Lopez Salvador <davidlopezsalvador@users.noreply.github.com>
+Date: Sun, 4 Oct 2026 13:28:24 +0200
+Subject: [PATCH] UI-117A: EN total + sin ESC + rueda a ImGui
+
+---
+ src/App.cpp                   | 25 ++++++++++++-------------
+ src/Data/DiasAdapter.cpp      |  2 +-
+ src/Data/GiroAdapter.cpp      |  8 ++++----
+ src/Data/GloTecAdapter.cpp    |  2 +-
+ src/Data/IrtamState.cpp       | 10 +++++-----
+ src/Data/Kc2gAdapter.cpp      |  2 +-
+ src/Data/SolarWindAdapter.cpp |  2 +-
+ tests/test_irtam_state.cpp    | 12 ++++++------
+ 8 files changed, 31 insertions(+), 32 deletions(-)
+
+diff --git a/src/App.cpp b/src/App.cpp
+index 7e0b7cd..3ab2e5b 100644
+--- a/src/App.cpp
++++ b/src/App.cpp
+@@ -193,7 +193,7 @@ struct App::Impl {
+     bool giroStationsVisible = true;
+     bool auroraVisible = true;
+     bool showEarth = true, showAtmosphere = true, showStars = true;
+-    // UI-087: flags de flotantes del menu Ventana (sin persistencia; default true = conducta actual).
++    // UI-087: flags de flotantes del menu Windows (sin persistencia; default true = conducta actual).
+     bool showWinCircuit = true, showWinLegend = true, showWinAlt = true;
+     bool showWinLimb = true, showWinTime = true;
+     bool terminatorVisible = true;
+@@ -1400,7 +1400,7 @@ bool App::init(int width, int height, const char* title) {
+                     self->impl->catalogReady.store(true);
+                     break;
+                 }
+-                printf("[GiroAdapter] catalogo intento %d/3 fallido\n", a + 1);
++                printf("[GiroAdapter] catalog attempt %d/3 failed\n", a + 1);
+                 for (int s = 0; s < 5 && !self->impl->shutdownRequested.load(); s++)
+                     std::this_thread::sleep_for(std::chrono::seconds(1));
+             }
+@@ -1680,7 +1680,8 @@ bool App::init(int width, int height, const char* title) {
+ 
+     // Set scroll callback once (respeta la UI: sobre paneles, la rueda es de ImGui).
+     glfwSetWindowUserPointer(window, this);
+-    glfwSetScrollCallback(window, [](GLFWwindow* w, double, double sy) {
++    glfwSetScrollCallback(window, [](GLFWwindow* w, double xoffset, double sy) {
++        ImGui_ImplGlfw_ScrollCallback(w, xoffset, sy);   // la rueda llega a ImGui (scroll UI)
+         auto* self = static_cast<App*>(glfwGetWindowUserPointer(w));
+         if (!self) return;
+         if (ImGui::GetIO().WantCaptureMouse) return;  // encima de la UI: no zoom
+@@ -1776,8 +1777,6 @@ void App::run() {
+ }
+ 
+ void App::processInput() {
+-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+-        glfwSetWindowShouldClose(window, true);
+ 
+     // Cinema (C): solo auto-rotacion. Hide UI (H): oculta todo (opcion aparte).
+     bool cDown = glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS;
+@@ -2024,7 +2023,7 @@ void App::update(float dt) {
+                           gmtime_r(&tt, &gg);
+ #endif
+                           strftime(c1, sizeof(c1), "%H:%M", &gg); }
+-                        printf("[kc2g] replay: %d st con historia, rango [%s..%s UTC]\n",
++                        printf("[kc2g] replay: %d st with history, range [%s..%s UTC]\n",
+                                nSt, c0, c1);
+                     } else {
+                         printf("[kc2g] replay: sin historia acumulada (freeze honesto FASE A)\n");
+@@ -3011,7 +3010,7 @@ void App::restoreKc2gCache() {
+       gmtime_r(&tt, &gg);
+ #endif
+       strftime(c1, sizeof(c1), "%H:%M", &gg); }
+-    printf("[kc2g] cache: %d batches restored, %d st con historia, rango [%s..%s UTC]\n",
++    printf("[kc2g] cache: %d batches restored, %d st with history, range [%s..%s UTC]\n",
+            n, nSt, c0, c1);
+ }
+ 
+@@ -3508,7 +3507,7 @@ void App::render() {
+     ImGui_ImplGlfw_NewFrame();
+     ImGui::NewFrame();
+ 
+-    // UI-091: barra de menus (particion 090) — System/Globe/Ionosphere/Space/Radio + Ventana.
++    // UI-091: barra de menus (particion 090) — System/Globe/Ionosphere/Space/Radio + Windows.
+     if (ImGui::BeginMainMenuBar()) {
+         if (ImGui::BeginMenu("System")) {
+     ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
+@@ -3790,7 +3789,7 @@ void App::render() {
+         } else {
+             ImGui::Text("%s", line.c_str());
+         }
+-        if (ImGui::IsItemHovered()) ImGui::SetItemTooltip("DATA-age del bucket gambit-coeffs (TOV del mensaje, no del fetch). Malla 46x45 evaluada en P1b.");
++        if (ImGui::IsItemHovered()) ImGui::SetItemTooltip("DATA-age of the gambit-coeffs bucket (message TOV, not fetch time). 46x45 grid evaluated in P1b.");
+     }
+     bool showTEC = impl->tecVisible;
+     if (ImGui::Checkbox("Color Layer", &showTEC)) {
+@@ -4397,7 +4396,7 @@ void App::render() {
+         ImGui::TextColored(ImVec4(1.0f, 0.4f, 0.4f, 1.0f), "Error: %s", rpErr.c_str());
+         ImGui::EndMenu();
+         }
+-        if (ImGui::BeginMenu("Ventana")) {
++        if (ImGui::BeginMenu("Windows")) {
+             ImGui::MenuItem("Circuit", nullptr, &impl->showWinCircuit);
+             ImGui::MenuItem("Legend", nullptr, &impl->showWinLegend);
+             ImGui::MenuItem("Altitude", nullptr, &impl->showWinAlt);
+@@ -4935,7 +4934,7 @@ void App::render() {
+                                   (shiB - sloB) / 3600.0);
+                     modeLabel = mb;
+                 } else {
+-                    modeLabel = "Loop: capa sin historia (unión)";
++                    modeLabel = "Loop: layer with no history (union)";
+                 }
+             }
+             ImGui::TextDisabled("%s", modeLabel.c_str());
+@@ -5027,9 +5026,9 @@ void App::render() {
+                             irtamstate::formatTovShort(ldt.dataEpoch).c_str());
+                     }
+                     if (ImGui::IsItemHovered())
+-                        ImGui::SetItemTooltip("Hora-dato real de la capa activa (stale = clampeada al borde de su historia o worker en curso). Muestra la distancia del cursor al dato; el aviso worker solo aplica a capas IRTAM.");
++                        ImGui::SetItemTooltip("Real data-time of the active layer (stale = clamped to its history edge or worker in progress). Shows the cursor-to-data distance; the worker notice applies to IRTAM layers only.");
+                 } else {
+-                    ImGui::TextDisabled("DATA sin dato en capa");
++                    ImGui::TextDisabled("DATA no data on layer");
+                 }
+             }
+         }
+diff --git a/src/Data/DiasAdapter.cpp b/src/Data/DiasAdapter.cpp
+index 194fa2f..2eff03d 100644
+--- a/src/Data/DiasAdapter.cpp
++++ b/src/Data/DiasAdapter.cpp
+@@ -263,7 +263,7 @@ bool DiasAdapter::fetch(double utc) {
+     }
+     lastFetchUtc_ = utc;
+     error_.clear();
+-    printf("[DiasAdapter] OK: %d estaciones EU\n", (int)samples_.size());
++    printf("[DiasAdapter] OK: %d EU stations\n", (int)samples_.size());
+     return true;
+ }
+ 
+diff --git a/src/Data/GiroAdapter.cpp b/src/Data/GiroAdapter.cpp
+index 91dda6c..da25b1c 100644
+--- a/src/Data/GiroAdapter.cpp
++++ b/src/Data/GiroAdapter.cpp
+@@ -117,7 +117,7 @@ bool GiroAdapter::fetchCatalog() {
+     lgdcpacing::recordLaunch(catMs);
+     lgdctrace::trace("launch", "catalog");
+     if (!catalogOk) {
+-        fprintf(stderr, "[GiroAdapter] No se pudo obtener el catalogo de estaciones\n");
++        fprintf(stderr, "[GiroAdapter] Could not fetch station catalog\n");
+         return false;
+     }
+     // Cada fila: ...ursiCode=XXXXX">XXXXX</a></big></td><td...><big>NAME</big></td>
+@@ -148,7 +148,7 @@ bool GiroAdapter::fetchCatalog() {
+         samples_ = std::move(parsed);
+         progress_ = 0;
+     }
+-    printf("[GiroAdapter] Catalogo cargado: %d estaciones\n", (int)samples_.size());
++    printf("[GiroAdapter] Catalog loaded: %d stations\n", (int)samples_.size());
+     return !samples_.empty();
+ }
+ 
+@@ -392,7 +392,7 @@ bool GiroAdapter::fetchStationsSync(double utc) {
+     double now = (utc > 0) ? utc : (double)std::time(nullptr);
+     int ok = pollRound(now);
+     lastFetchUtc_ = now;
+-    printf("[GiroAdapter] Sincrono getbest: %d estaciones actualizadas\n", ok);
++    printf("[GiroAdapter] Sync getbest: %d stations updated\n", ok);
+     return ok > 0;
+ }
+ 
+@@ -403,7 +403,7 @@ void GiroAdapter::fetchStationsAsync() {
+         double now = (double)std::time(nullptr);
+         int ok = pollRound(now);
+         lastFetchUtc_ = now;
+-        printf("[GiroAdapter] getbest async: %d estaciones actualizadas\n", ok);
++        printf("[GiroAdapter] getbest async: %d stations updated\n", ok);
+         fetching_.store(false);
+     }).detach();
+ }
+diff --git a/src/Data/GloTecAdapter.cpp b/src/Data/GloTecAdapter.cpp
+index 6f49c07..c80d105 100644
+--- a/src/Data/GloTecAdapter.cpp
++++ b/src/Data/GloTecAdapter.cpp
+@@ -298,7 +298,7 @@ bool GloTecAdapter::fetchTEC(double utc) {    // 1) Obtener el indice y extraer
+ 
+     float minv = 1e9f, maxv = -1e9f;
+     for (float v : grid_.values) { minv = fminf(minv, v); maxv = fmaxf(maxv, v); }
+-    printf("[GloTecAdapter] TEC real GloTEC OK (%dx%d): min=%.2f max=%.2f TECU\n",
++    printf("[GloTecAdapter] Real TEC GloTEC OK (%dx%d): min=%.2f max=%.2f TECU\n",
+            grid_.width, grid_.height, minv, maxv);
+     return true;
+ }
+diff --git a/src/Data/IrtamState.cpp b/src/Data/IrtamState.cpp
+index 9b9c175..ec90a01 100644
+--- a/src/Data/IrtamState.cpp
++++ b/src/Data/IrtamState.cpp
+@@ -16,11 +16,11 @@ std::string badgeLine(const std::string& param, bool valid, double dataEpoch,
+         // (no solo en tooltip) — 429/504/parse-fail/ventana/TOV-no-comun.
+         if (!error.empty()) {
+             std::snprintf(buf, sizeof(buf),
+-                          "IRTAM %s: sin datos (%s; reintento pasivo)",
++                          "IRTAM %s: no data (%s; passive retry)",
+                           param.c_str(), error.c_str());
+         } else {
+             std::snprintf(buf, sizeof(buf),
+-                          "IRTAM %s: sin datos (backfill en curso)",
++                          "IRTAM %s: no data (backfill running)",
+                           param.c_str());
+         }
+         return std::string(buf);
+@@ -66,7 +66,7 @@ const char* perLayerZoneName(double replayEpoch, double nowUtc,
+     if (tec) return "solo-TEC";
+     if (giro) return "solo-GIRO";
+     if (irtam) return "solo-IRTAM";
+-    return "sin datos";
++    return "no data";
+ }
+ 
+ TovBracket bracketTovs(const std::vector<double>& sortedTovs, double epoch) {
+@@ -130,7 +130,7 @@ std::string badgeSampled(const std::string& param, double shownTov,
+     char buf[256];
+     if (shownTov <= 0.0) {
+         std::snprintf(buf, sizeof(buf),
+-                      "IRTAM %s: sin datos en este instante (replay)",
++                      "IRTAM %s: no data at this time (replay)",
+                       param.c_str());
+         return std::string(buf);
+     }
+@@ -138,7 +138,7 @@ std::string badgeSampled(const std::string& param, double shownTov,
+     if (clamped) {
+         std::snprintf(buf, sizeof(buf),
+                       "IRTAM %s | retrospectivo @ %s | %.0f min "
+-                      "(borde de ventana)",
++                      "(window edge)",
+                       param.c_str(), formatTovShort(shownTov).c_str(), ageMin);
+     } else {
+         std::snprintf(buf, sizeof(buf), "IRTAM %s | retrospectivo @ %s | %.0f min",
+diff --git a/src/Data/Kc2gAdapter.cpp b/src/Data/Kc2gAdapter.cpp
+index b8ff7ee..f070bc0 100755
+--- a/src/Data/Kc2gAdapter.cpp
++++ b/src/Data/Kc2gAdapter.cpp
+@@ -632,7 +632,7 @@ bool Kc2gAdapter::fetch(double nowUtc) {
+         }
+         kc2gcache::saveFrame("cache", f);
+     }
+-    printf("[Kc2gAdapter] failover: %d/%d filas usables (%d grid, %d stale, fresco %.1f min)\n",
++    printf("[Kc2gAdapter] failover: %d/%d usable rows (%d grid, %d stale, fresh %.1f min)\n",
+            st.panelUsable, st.rows, st.gridUsable, st.stale,
+            st.freshestAgeMin < 0.0 ? -1.0 : st.freshestAgeMin);
+     return st.panelUsable > 0;
+diff --git a/src/Data/SolarWindAdapter.cpp b/src/Data/SolarWindAdapter.cpp
+index db38024..4fa59b2 100644
+--- a/src/Data/SolarWindAdapter.cpp
++++ b/src/Data/SolarWindAdapter.cpp
+@@ -263,7 +263,7 @@ bool SolarWindAdapter::fetch(double utc) {
+     lastFetchUtc_ = utc;
+     simulated_ = false;
+     error_.clear();
+-    printf("[SolarWindAdapter] Viento solar real: speed=%.0f km/s density=%.1f cm^-3 Bz=%.1f nT (hist %d pts)\n",
++    printf("[SolarWindAdapter] Real solar wind: speed=%.0f km/s density=%.1f cm^-3 Bz=%.1f nT (hist %d pts)\n",
+            latest_.speed, latest_.density, latest_.bz, (int)bzHistory_.size());
+     return true;
+ }
+diff --git a/tests/test_irtam_state.cpp b/tests/test_irtam_state.cpp
+index 20927cd..000d943 100644
+--- a/tests/test_irtam_state.cpp
++++ b/tests/test_irtam_state.cpp
+@@ -25,7 +25,7 @@ int main() {
+     {
+         const std::string s = badgeLine("foF2", false, 0.0, "", -1.0, false);
+         check_bool("sin dato: menciona backfill",
+-                   s.find("backfill en curso") != std::string::npos);
++                   s.find("backfill running") != std::string::npos);
+         check_bool("sin dato: nunca vacio", !s.empty());
+     }
+     {
+@@ -35,7 +35,7 @@ int main() {
+         check_bool("error 429 visible en linea",
+                    s.find("429") != std::string::npos);
+         check_bool("error: reintento pasivo (sin re-burst)",
+-                   s.find("reintento pasivo") != std::string::npos);
++                   s.find("passive retry") != std::string::npos);
+     }
+     {
+         const std::string s =
+@@ -68,7 +68,7 @@ int main() {
+         // Sin dato en replay: sigue honesto, sin nota de congelado.
+         const std::string s = badgeLine("foF2", false, 0.0, "", -1.0, true);
+         check_bool("replay sin dato: honesto",
+-                   s.find("sin datos") != std::string::npos);
++                   s.find("no data") != std::string::npos);
+     }
+ 
+     std::printf("--- M-irtam-replay-A: zonas de la ventana union ---\n");
+@@ -150,9 +150,9 @@ int main() {
+         const std::string c =
+             badgeSampled("B0", 1464004800.0, 1464004800.0 + 4320.0 * 60.0, true);
+         check_bool("clamp con nota de borde",
+-                   c.find("borde de ventana") != std::string::npos);
++                   c.find("window edge") != std::string::npos);
+         const std::string n = badgeSampled("hmF2", 0.0, 9999.0, false);
+-        check_bool("sin TOV: honesto", n.find("sin datos") != std::string::npos);
++        check_bool("sin TOV: honesto", n.find("no data") != std::string::npos);
+     }
+ 
+     std::printf("--- M-irtam-replay-025: hora-dato por capa (rangos runtime) ---\n");
+@@ -240,7 +240,7 @@ int main() {
+         LayerRanges e;
+         check_bool("7: rangos vacios -> sin datos",
+                    std::string(perLayerZoneName(now - 3.0 * 3600.0, now,
+-                                                e)) == "sin datos");
++                                                e)) == "no data");
+         LayerRanges all;
+         all.tecOldest = now - 86.6 * 3600.0;
+         all.tecNewest = now;
+-- 
+2.53.0.windows.3
+
