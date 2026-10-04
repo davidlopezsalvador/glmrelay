@@ -1,0 +1,34 @@
+From 386adfae575ec5139e99f9ebe580853ef47afde5 Mon Sep 17 00:00:00 2001
+From: David Lopez Salvador <davidlopezsalvador@users.noreply.github.com>
+Date: Sun, 4 Oct 2026 10:02:54 +0200
+Subject: [PATCH] UI-111: acople cap 432 a kCapFrames (2 whiles)
+
+---
+ src/App.cpp | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/App.cpp b/src/App.cpp
+index 4d7f4e5..7e0b7cd 100644
+--- a/src/App.cpp
++++ b/src/App.cpp
+@@ -2956,7 +2956,7 @@ void App::restoreTecCache() {
+             g.valid = true;
+             impl->tecHist.push_back(g);  // scan ordenado asc
+         }
+-        while (impl->tecHist.size() > 432) impl->tecHist.erase(impl->tecHist.begin());   // TEC-ext 034: cap 432 = 72 h @ 10 min
++        while (impl->tecHist.size() > (std::size_t)teccache::kCapFrames) impl->tecHist.erase(impl->tecHist.begin());   // TEC-ext 034: cap 432 = 72 h @ 10 min
+     }
+     const double newest = scan.frames.back().epoch;
+     const double now = (double)std::time(nullptr);
+@@ -3037,7 +3037,7 @@ void App::pushHistoryFrame(const GridData& grid, double ts, bool simulated) {
+     size_t pos = 0;
+     while (pos < impl->tecHist.size() && impl->tecHist[pos].timestamp < ts) pos++;
+     impl->tecHist.insert(impl->tecHist.begin() + pos, fr);
+-    while (impl->tecHist.size() > 432) {
++    while (impl->tecHist.size() > (std::size_t)teccache::kCapFrames) {
+         const double dropTs = impl->tecHist.begin()->timestamp;
+         impl->tecHist.erase(impl->tecHist.begin());
+         teccache::removeFrame("cache", dropTs);   // P1 delete-on-pop (particion 102)
+-- 
+2.53.0.windows.3
+
