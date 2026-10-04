@@ -1,0 +1,621 @@
+[OK] OpenGL 4.0.0 - Build 20.19.15.5171
+[OK] Renderer: Intel(R) HD Graphics 4600
+[Earth] textures/earth-night-hires.jpg: 13500x6750 (GL max 16384)
+[OK] GridLayer initialized
+[OK] DataManager initialized (cache: data/cache)
+[OK] GridLayer initialized
+[OK] GiroAdapter initialized
+[OK] IonosondeLayer initialized
+[OK] HFTraceLayer initialized
+[OK] DiasAdapter initialized (Ionostream EU)
+[OK] IrtamCoeffAdapter initialized
+[OK] Kc2gAdapter initialized (failover-only)
+[OK] SolarWindLayer initialized
+[OK] FaradayLayer initialized
+[OK] VolumeRenderer initialized
+[OK] GridLayer initialized
+[OK] GridLayer initialized
+[OK] SliceLayer initialized
+[OK] RefShells initialized (3888 verts)
+[OK] GridLayer initialized
+[OK] EbroAdapter initialized (FTP Ebre EB040)
+[OK] FramebuffeSdro I(MmSagAAeAd 4xa) incomplete
+pter iFramenitibufalfeized
+r: MSAA 4x no soportado, cayendo a 0x
+[App] settings.cfg loaded
+[Sdo] switch -> HMIIF (cache 1635604 s) (stale, refrescando...)
+[App] TEC cache: 432 restored, newest 11:37 UTC (pruned 0, dropped 0)
+[DiasAdapter] OK: 8 EU stations
+[kc2g] cache: 22 batches restored, 32 st with history, range [16:40..00:30 UTC]
+[OK] All initialized
+[LGDC 2026-10-04T16:38:36.556Z] launch catalog
+[GiroAdapter] Catalog loaded: 129 stations
+[WATCHDOG] stall 401ms (poll 2 update 169 render 228 swap 2) focused=1 iconified=0 vol=155ms bundles=2
+[LGDC 2026-10-04T16:38:36.737Z] launch getbest EB040
+[DiasAdapter] OK: 8 EU stations
+[GloTecAdapter] Real TEC GloTEC OK (72x72): min=3.88 max=67.55 TECU
+[GloTecAdapter] Index OK: 4466 frames
+[SolarIndices] sunspots: 342 filas
+[SolarIndices] Kp=4.00 Dst=-56 F10.7=95 Ap=20 SSN=55 (5/5 real)
+[SolarWindAdapter] Real solar wind: speed=492 km/s density=8.1 cm^-3 Bz=-2.4 nT (hist 3812 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=48.0
+[RadioProp] MUF=18.0 FOT=15.3 LUF=6.5 S4=0.22 AE=438 TAI=1.6 FR=33deg SpF=24% (GIRO mock) (Kp NOAA)
+[Xray] GOES long 2.27e-07 W/m2 (B2.3)
+[App] Initial fetch pass done
+[LGDC 2026-10-04T16:38:48.738Z] launch getbest JR055
+[Ebro] ftp: Remote file not found
+[LGDC 2026-10-04T16:38:49.443Z] gate-consult deny gambit foF2 2026.10.01T11:45 ms-since-last=705
+[LGDC 2026-10-04T16:39:00.744Z] launch getbest PQ052
+[LGDC 2026-10-04T16:39:07.495Z] gate-consult deny gambit foF2 2026.10.01T11:45 ms-since-last=6751
+[LGDC 2026-10-04T16:39:12.744Z] launch getbest EA036
+[LGDC 2026-10-04T16:39:24.754Z] launch getbest KI167
+[LGDC 2026-10-04T16:39:26.017Z] gate-consult deny gambit foF2 2026.10.01T11:45 ms-since-last=1263
+[LGDC 2026-10-04T16:39:36.762Z] launch getbest FF051
+[LGDC 2026-10-04T16:39:44.930Z] gate-consult deny gambit foF2 2026.10.01T11:45 ms-since-last=8168
+[WATCHDOG] focus lost (iconified=0)
+[LGDC 2026-10-04T16:39:48.777Z] launch getbest VT139
+[LGDC 2026-10-04T16:40:00.777Z] launch getbest GM037
+[LGDC 2026-10-04T16:40:04.456Z] gate-consult deny gambit foF2 2026.10.01T11:45 ms-since-last=3679
+[WATCHDOG] focus gained (iconified=0)
+[LGDC 2026-10-04T16:40:12.789Z] launch getbest AT138
+[LGDC 2026-10-04T16:40:23.229Z] gate-consult deny gambit foF2 2026.10.01T11:45 ms-since-last=10440
+[LGDC 2026-10-04T16:40:24.795Z] launch getbest KL154
+[WATCHDOG] focus lost (iconified=0)
+[LGDC 2026-10-04T16:40:36.805Z] launch getbest RV149
+[LGDC 2026-10-04T16:40:41.988Z] gate-consult deny gambit foF2 2026.10.01T11:45 ms-since-last=5183
+[LGDC 2026-10-04T16:40:48.808Z] launch getbest TR170
+[LGDC 2026-10-04T16:41:00.448Z] gate-consult deny gambit foF2 2026.10.01T11:45 ms-since-last=11640
+[LGDC 2026-10-04T16:41:00.820Z] launch getbest OL246
+[LGDC 2026-10-04T16:41:12.835Z] launch getbest RL052
+[LGDC 2026-10-04T16:41:19.352Z] gate-consult deny gambit foF2 2026.10.01T11:45 ms-since-last=6517
+[LGDC 2026-10-04T16:41:24.839Z] launch getbest TR169
+[LGDC 2026-10-04T16:41:36.569Z] gate-consult deny gambit foF2 2026.10.01T11:45 ms-since-last=11730
+[LGDC 2026-10-04T16:41:36.849Z] launch getbest SO148
+[LGDC 2026-10-04T16:41:48.859Z] launch getbest EG931
+[LGDC 2026-10-04T16:41:54.001Z] gate-consult deny gambit foF2 2026.10.01T11:45 ms-since-last=5142
+[LGDC 2026-10-04T16:42:00.859Z] launch getbest CS839
+[LGDC 2026-10-04T16:42:11.442Z] gate-consult deny gambit foF2 2026.10.01T11:45 ms-since-last=10583
+[LGDC 2026-10-04T16:42:12.865Z] launch getbest BC840
+[LGDC 2026-10-04T16:42:24.870Z] launch getbest DB049
+[LGDC 2026-10-04T16:42:28.584Z] gate-consult deny gambit foF2 2026.10.01T11:45 ms-since-last=3714
+[LGDC 2026-10-04T16:42:36.879Z] launch getbest MZ152
+[LGDC 2026-10-04T16:42:45.940Z] gate-consult deny gambit foF2 2026.10.01T11:45 ms-since-last=9061
+[LGDC 2026-10-04T16:42:48.882Z] launch getbest AC843
+[LGDC 2026-10-04T16:43:00.886Z] launch getbest PF765
+[LGDC 2026-10-04T16:43:03.625Z] gate-consult deny gambit foF2 2026.10.01T11:45 ms-since-last=2739
+[LGDC 2026-10-04T16:43:12.899Z] launch getbest EI764
+[LGDC 2026-10-04T16:43:20.771Z] gate-consult deny gambit foF2 2026.10.01T11:45 ms-since-last=7872
+[LGDC 2026-10-04T16:43:24.905Z] launch getbest SMK29
+[LGDC 2026-10-04T16:43:36.913Z] launch getbest AU930
+[DiasAdapter] OK: 8 EU stations
+[LGDC 2026-10-04T16:43:38.123Z] gate-consult deny gambit foF2 2026.10.01T11:45 ms-since-last=1210
+[Ebro] ftp: Remote file not found
+[LGDC 2026-10-04T16:43:48.927Z] launch getbest BVJ03
+[LGDC 2026-10-04T16:43:55.595Z] gate-consult deny gambit foF2 2026.10.01T11:45 ms-since-last=6668
+[LGDC 2026-10-04T16:44:00.938Z] launch getbest TNJ20
+[LGDC 2026-10-04T16:44:12.610Z] gate-consult deny gambit foF2 2026.10.01T11:45 ms-since-last=11672
+[LGDC 2026-10-04T16:44:12.948Z] launch getbest LD160
+[GloTecAdapter] Real TEC GloTEC OK (72x72): min=3.71 max=68.09 TECU
+[LGDC 2026-10-04T16:44:24.951Z] launch getbest CAJ2M
+[SolarIndices] Kp=4.00 Dst=-58 F10.7=95 Ap=20 SSN=55 (5/5 real)
+[SolarWindAdapter] Real solar wind: speed=500 km/s density=8.2 cm^-3 Bz=-0.5 nT (hist 3812 pts)
+[LGDC 2026-10-04T16:44:28.994Z] gate-consult deny gambit foF2 2026.10.01T11:45 ms-since-last=4043
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=48.0
+[RadioProp] MUF=23.2 FOT=19.7 LUF=9.2 S4=0.22 AE=438 TAI=1.6 FR=33deg SpF=24% (GIRO real) (Kp NOAA)
+[Xray] GOES long 2.13e-07 W/m2 (B2.1)
+[LGDC 2026-10-04T16:44:36.963Z] launch getbest LA42Q
+[LGDC 2026-10-04T16:44:48.333Z] gate-consult deny gambit foF2 2026.10.01T11:45 ms-since-last=11370
+[LGDC 2026-10-04T16:44:48.963Z] launch getbest BLJ03
+[LGDC 2026-10-04T16:45:00.969Z] launch getbest CXM9B
+[LGDC 2026-10-04T16:45:09.501Z] gate-consult deny gambit foF2 2026.10.01T11:45 ms-since-last=8532
+[LGDC 2026-10-04T16:45:12.979Z] launch getbest IC437
+[App] History preload: 432 cached + 152 fetched + 38 skipped
+[LGDC 2026-10-04T16:45:24.988Z] launch getbest TO535
+[LGDC 2026-10-04T16:45:25.913Z] gate-consult deny gambit foF2 2026.10.01T11:45 ms-since-last=925
+[LGDC 2026-10-04T16:45:37.000Z] launch getbest DH224
+[LGDC 2026-10-04T16:45:40.727Z] gate-consult deny gambit foF2 2026.10.01T11:45 ms-since-last=3727
+[LGDC 2026-10-04T16:45:49.001Z] launch getbest NI135
+[LGDC 2026-10-04T16:45:55.762Z] gate-consult deny gambit foF2 2026.10.01T11:45 ms-since-last=6761
+[LGDC 2026-10-04T16:46:01.024Z] launch getbest CB53N
+[LGDC 2026-10-04T16:46:10.706Z] gate-consult deny gambit foF2 2026.10.01T11:45 ms-since-last=9682
+[LGDC 2026-10-04T16:46:13.028Z] launch getbest TV51R
+[LGDC 2026-10-04T16:46:25.029Z] launch getbest XI434
+[LGDC 2026-10-04T16:46:25.663Z] gate-consult deny gambit foF2 2026.10.01T11:45 ms-since-last=634
+[LGDC 2026-10-04T16:46:37.030Z] launch getbest MO155
+[LGDC 2026-10-04T16:46:40.455Z] gate-consult deny gambit foF2 2026.10.01T11:45 ms-since-last=3425
+[LGDC 2026-10-04T16:46:49.045Z] launch getbest ML10L
+[LGDC 2026-10-04T16:46:55.277Z] gate-consult deny gambit foF2 2026.10.01T11:45 ms-since-last=6232
+[LGDC 2026-10-04T16:47:01.059Z] launch getbest MA155
+[LGDC 2026-10-04T16:47:10.042Z] gate-consult deny gambit foF2 2026.10.01T11:45 ms-since-last=8983
+[LGDC 2026-10-04T16:47:13.072Z] launch getbest DW41K
+[LGDC 2026-10-04T16:47:24.755Z] gate-consult deny gambit foF2 2026.10.01T11:45 ms-since-last=11683
+[LGDC 2026-10-04T16:47:25.083Z] launch getbest GR13L
+[LGDC 2026-10-04T16:47:37.088Z] launch getbest NDA81
+[LGDC 2026-10-04T16:47:39.568Z] gate-consult deny gambit foF2 2026.10.01T11:45 ms-since-last=2480
+[LGDC 2026-10-04T16:47:49.096Z] launch getbest RM041
+[LGDC 2026-10-04T16:47:54.456Z] gate-consult deny gambit foF2 2026.10.01T11:45 ms-since-last=5360
+[LGDC 2026-10-04T16:48:01.103Z] launch getbest TR0P2
+[LGDC 2026-10-04T16:48:09.377Z] gate-consult deny gambit foF2 2026.10.01T11:45 ms-since-last=8274
+[LGDC 2026-10-04T16:48:13.109Z] launch getbest MU12K
+[LGDC 2026-10-04T16:48:24.166Z] gate-consult deny gambit foF2 2026.10.01T11:45 ms-since-last=11057
+[LGDC 2026-10-04T16:48:25.111Z] launch getbest CS31K
+[GiroAdapter] getbest async: 20 stations updated
+[GiroAdapter] getbest async: 0 stations updated
+[DiasAdapter] OK: 8 EU stations
+[LGDC 2026-10-04T16:48:38.995Z] gate-consult deny gambit foF2 2026.10.01T11:45 ms-since-last=13884
+[Ebro] ftp: Remote file not found
+[LGDC 2026-10-04T16:48:54.444Z] result fail gambit foF2 2026.10.01T11:45 red/pre-gate
+[Irtam] fetch foF2 2026.10.01T11:45: fallo red/pre-gate
+[LGDC 2026-10-04T16:49:11.474Z] launch gambit foF2 2026.10.01T11:45
+[LGDC 2026-10-04T16:49:11.481Z] result ok gambit foF2 2026.10.01T11:45
+[Irtam] bucket foF2 2026.10.01T11:45 OK (TOV 1790855100)
+[LGDC 2026-10-04T16:49:20.685Z] gate-consult deny gambit foF2 2026.10.01T12:00 ms-since-last=11323
+[LGDC 2026-10-04T16:49:37.616Z] launch gambit foF2 2026.10.01T12:00
+[LGDC 2026-10-04T16:49:37.619Z] result ok gambit foF2 2026.10.01T12:00
+[Irtam] bucket foF2 2026.10.01T12:00 OK (TOV 1790856000)
+[LGDC 2026-10-04T16:49:46.814Z] gate-consult deny gambit foF2 2026.10.01T12:15 ms-since-last=11340
+[GloTecAdapter] Error: indice GloTEC vacio
+[LGDC 2026-10-04T16:50:04.463Z] launch gambit foF2 2026.10.01T12:15
+[LGDC 2026-10-04T16:50:04.467Z] result ok gambit foF2 2026.10.01T12:15
+[Irtam] bucket foF2 2026.10.01T12:15 OK (TOV 1790856900)
+[SolarIndices] Kp=4.33 Dst=-57 F10.7=95 Ap=20 SSN=55 (5/5 real)
+[SolarWindAdapter] Real solar wind: speed=525 km/s density=12.9 cm^-3 Bz=-2.9 nT (hist 3809 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=47.0
+[RadioProp] MUF=23.2 FOT=19.7 LUF=9.2 S4=0.22 AE=438 TAI=1.6 FR=33deg SpF=24% (GIRO real) (Kp NOAA)
+[Xray] GOES long 2.10e-07 W/m2 (B2.1)
+[LGDC 2026-10-04T16:50:13.965Z] gate-consult deny gambit foF2 2026.10.01T12:30 ms-since-last=12171
+[LGDC 2026-10-04T16:50:30.960Z] launch gambit foF2 2026.10.01T12:30
+[LGDC 2026-10-04T16:50:30.971Z] result ok gambit foF2 2026.10.01T12:30
+[Irtam] bucket foF2 2026.10.01T12:30 OK (TOV 1790857800)
+[LGDC 2026-10-04T16:50:40.121Z] gate-consult deny gambit foF2 2026.10.01T12:45 ms-since-last=11298
+[LGDC 2026-10-04T16:50:57.026Z] launch gambit foF2 2026.10.01T12:45
+[LGDC 2026-10-04T16:50:57.030Z] result ok gambit foF2 2026.10.01T12:45
+[Irtam] bucket foF2 2026.10.01T12:45 OK (TOV 1790858700)
+[LGDC 2026-10-04T16:51:06.259Z] gate-consult deny gambit foF2 2026.10.01T13:00 ms-since-last=11340
+[LGDC 2026-10-04T16:51:23.896Z] launch gambit foF2 2026.10.01T13:00
+[LGDC 2026-10-04T16:51:23.901Z] result ok gambit foF2 2026.10.01T13:00
+[Irtam] bucket foF2 2026.10.01T13:00 OK (TOV 1790859600)
+[LGDC 2026-10-04T16:51:33.146Z] gate-consult deny gambit foF2 2026.10.01T13:15 ms-since-last=11344
+[WATCHDOG] focus gained (iconified=0)
+[LGDC 2026-10-04T16:51:50.366Z] launch gambit foF2 2026.10.01T13:15
+[LGDC 2026-10-04T16:51:50.370Z] result ok gambit foF2 2026.10.01T13:15
+[Irtam] bucket foF2 2026.10.01T13:15 OK (TOV 1790860500)
+[LGDC 2026-10-04T16:51:59.626Z] gate-consult deny gambit foF2 2026.10.01T13:30 ms-since-last=11384
+[WATCHDOG] focus lost (iconified=0)
+[LGDC 2026-10-04T16:52:17.302Z] launch gambit foF2 2026.10.01T13:30
+[LGDC 2026-10-04T16:52:17.307Z] result ok gambit foF2 2026.10.01T13:30
+[Irtam] bucket foF2 2026.10.01T13:30 OK (TOV 1790861400)
+[WATCHDOG] stall 450ms (poll 0 update 422 render 10 swap 18) focused=0 iconified=0 vol=413ms bundles=0
+[LGDC 2026-10-04T16:52:35.039Z] launch gambit foF2 2026.10.01T13:45
+[LGDC 2026-10-04T16:52:35.044Z] result ok gambit foF2 2026.10.01T13:45
+[Irtam] bucket foF2 2026.10.01T13:45 OK (TOV 1790862300)
+[LGDC 2026-10-04T16:52:50.326Z] launch gambit foF2 2026.10.01T14:00
+[LGDC 2026-10-04T16:52:50.331Z] result ok gambit foF2 2026.10.01T14:00
+[Irtam] bucket foF2 2026.10.01T14:00 OK (TOV 1790863200)
+[LGDC 2026-10-04T16:53:05.794Z] launch gambit foF2 2026.10.01T14:15
+[LGDC 2026-10-04T16:53:05.799Z] result ok gambit foF2 2026.10.01T14:15
+[Irtam] bucket foF2 2026.10.01T14:15 OK (TOV 1790864100)
+[LGDC 2026-10-04T16:53:20.638Z] launch gambit foF2 2026.10.01T14:30
+[LGDC 2026-10-04T16:53:20.642Z] result ok gambit foF2 2026.10.01T14:30
+[Irtam] bucket foF2 2026.10.01T14:30 OK (TOV 1790865000)
+[LGDC 2026-10-04T16:53:33.292Z] gate-consult deny gambit foF2 2026.10.01T14:45 ms-since-last=14730
+[LGDC 2026-10-04T16:53:36.411Z] launch getbest EA036
+[LGDC 2026-10-04T16:53:36.663Z] launch getbest PQ052
+[LGDC 2026-10-04T16:53:36.914Z] launch getbest FF051
+[DiasAdapter] OK: 7 EU stations
+[LGDC 2026-10-04T16:53:37.165Z] launch getbest JR055
+[LGDC 2026-10-04T16:53:37.429Z] launch getbest GM037
+[LGDC 2026-10-04T16:53:37.683Z] launch getbest AT138
+[LGDC 2026-10-04T16:53:37.935Z] launch getbest MZ152
+[LGDC 2026-10-04T16:53:38.188Z] launch getbest SO148
+[LGDC 2026-10-04T16:53:38.444Z] launch getbest TR169
+[LGDC 2026-10-04T16:53:38.694Z] launch getbest DB049
+[LGDC 2026-10-04T16:53:38.948Z] launch getbest EG931
+[LGDC 2026-10-04T16:53:39.200Z] launch getbest PF765
+[LGDC 2026-10-04T16:53:39.464Z] launch getbest VT139
+[GiroAdapter] getbest async: 12 stations updated
+[Ebro] ftp: Remote file not found
+[LGDC 2026-10-04T16:53:52.603Z] gate-consult deny gambit foF2 2026.10.01T14:45 ms-since-last=13139
+[LGDC 2026-10-04T16:54:10.130Z] launch gambit foF2 2026.10.01T14:45
+[LGDC 2026-10-04T16:54:10.135Z] result ok gambit foF2 2026.10.01T14:45
+[Irtam] bucket foF2 2026.10.01T14:45 OK (TOV 1790865900)
+[LGDC 2026-10-04T16:54:19.750Z] gate-consult deny gambit foF2 2026.10.01T15:00 ms-since-last=11733
+[LGDC 2026-10-04T16:54:37.193Z] launch gambit foF2 2026.10.01T15:00
+[LGDC 2026-10-04T16:54:37.196Z] result ok gambit foF2 2026.10.01T15:00
+[Irtam] bucket foF2 2026.10.01T15:00 OK (TOV 1790866800)
+[LGDC 2026-10-04T16:54:46.685Z] gate-consult deny gambit foF2 2026.10.01T15:15 ms-since-last=11676
+[LGDC 2026-10-04T16:55:04.635Z] launch gambit foF2 2026.10.01T15:15
+[LGDC 2026-10-04T16:55:04.639Z] result ok gambit foF2 2026.10.01T15:15
+[Irtam] bucket foF2 2026.10.01T15:15 OK (TOV 1790867700)
+[LGDC 2026-10-04T16:55:14.602Z] gate-consult deny gambit foF2 2026.10.01T15:30 ms-since-last=12352
+[WATCHDOG] focus gained (iconified=0)
+[WATCHDOG] focus lost (iconified=0)
+[LGDC 2026-10-04T16:55:32.403Z] launch gambit foF2 2026.10.01T15:30
+[LGDC 2026-10-04T16:55:32.406Z] result ok gambit foF2 2026.10.01T15:30
+[Irtam] bucket foF2 2026.10.01T15:30 OK (TOV 1790868600)
+[LGDC 2026-10-04T16:55:41.984Z] gate-consult deny gambit foF2 2026.10.01T15:45 ms-since-last=11731
+[GloTecAdapter] Real TEC GloTEC OK (72x72): min=3.61 max=68.95 TECU
+[SolarIndices] Kp=4.67 Dst=-58 F10.7=95 Ap=20 SSN=55 (5/5 real)
+[SolarWindAdapter] Real solar wind: speed=532 km/s density=12.6 cm^-3 Bz=-3.8 nT (hist 3810 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=47.0
+[RadioProp] MUF=24.7 FOT=21.0 LUF=9.7 S4=0.27 AE=550 TAI=1.9 FR=33deg SpF=28% (GIRO real) (Kp NOAA)
+[Xray] GOES long 2.04e-07 W/m2 (B2.0)
+[LGDC 2026-10-04T16:56:00.628Z] launch gambit foF2 2026.10.01T15:45
+[LGDC 2026-10-04T16:56:00.634Z] result ok gambit foF2 2026.10.01T15:45
+[Irtam] bucket foF2 2026.10.01T15:45 OK (TOV 1790869500)
+[LGDC 2026-10-04T16:56:10.290Z] gate-consult deny gambit foF2 2026.10.01T16:00 ms-since-last=11908
+[WATCHDOG] focus gained (iconified=0)
+[LGDC 2026-10-04T16:56:30.218Z] launch gambit foF2 2026.10.01T16:00
+[LGDC 2026-10-04T16:56:30.223Z] result ok gambit foF2 2026.10.01T16:00
+[Irtam] bucket foF2 2026.10.01T16:00 OK (TOV 1790870400)
+[WATCHDOG] focus lost (iconified=0)
+[LGDC 2026-10-04T16:56:42.034Z] gate-consult deny gambit foF2 2026.10.01T16:15 ms-since-last=14575
+[WATCHDOG] focus gained (iconified=0)
+[WATCHDOG] focus lost (iconified=0)
+[LGDC 2026-10-04T16:57:04.777Z] launch gambit foF2 2026.10.01T16:15
+[LGDC 2026-10-04T16:57:04.783Z] result ok gambit foF2 2026.10.01T16:15
+[Irtam] bucket foF2 2026.10.01T16:15 OK (TOV 1790871300)
+[LGDC 2026-10-04T16:57:19.965Z] launch gambit foF2 2026.10.01T16:30
+[LGDC 2026-10-04T16:57:19.971Z] result ok gambit foF2 2026.10.01T16:30
+[Irtam] bucket foF2 2026.10.01T16:30 OK (TOV 1790872200)
+[LGDC 2026-10-04T16:57:36.570Z] launch gambit foF2 2026.10.01T16:45
+[LGDC 2026-10-04T16:57:36.575Z] result ok gambit foF2 2026.10.01T16:45
+[Irtam] bucket foF2 2026.10.01T16:45 OK (TOV 1790873100)
+[LGDC 2026-10-04T16:57:53.198Z] launch gambit hmF2 2026.10.01T11:45
+[LGDC 2026-10-04T16:57:53.208Z] result ok gambit hmF2 2026.10.01T11:45
+[Irtam] bucket hmF2 2026.10.01T11:45 OK (TOV 1790855100)
+[LGDC 2026-10-04T16:58:08.084Z] launch gambit hmF2 2026.10.01T12:00
+[LGDC 2026-10-04T16:58:08.090Z] result ok gambit hmF2 2026.10.01T12:00
+[Irtam] bucket hmF2 2026.10.01T12:00 OK (TOV 1790856000)
+[LGDC 2026-10-04T16:58:20.634Z] gate-consult deny gambit hmF2 2026.10.01T12:15 ms-since-last=14816
+[LGDC 2026-10-04T16:58:36.440Z] launch getbest EB040
+[LGDC 2026-10-04T16:58:36.695Z] launch getbest BVJ03
+[LGDC 2026-10-04T16:58:36.947Z] launch getbest CAJ2M
+[LGDC 2026-10-04T16:58:37.201Z] launch getbest NI135
+[DiasAdapter] OK: 8 EU stations
+[LGDC 2026-10-04T16:58:37.451Z] launch getbest CB53N
+[LGDC 2026-10-04T16:58:37.703Z] launch getbest TV51R
+[LGDC 2026-10-04T16:58:37.958Z] launch getbest GR13L
+[LGDC 2026-10-04T16:58:38.016Z] gate-consult deny gambit hmF2 2026.10.01T12:15 ms-since-last=58
+[LGDC 2026-10-04T16:58:38.213Z] launch getbest RM041
+[GiroAdapter] getbest async: 7 stations updated
+[Ebro] ftp: Remote file not found
+[WATCHDOG] focus gained (iconified=0)
+Framebuffer (MSAA 4x) incomplete
+[LGDC 2026-10-04T16:58:53.110Z] gate-consult deny gambit hmF2 2026.10.01T12:15 ms-since-last=14897
+[LGDC 2026-10-04T16:59:08.463Z] result fail gambit hmF2 2026.10.01T12:15 red/pre-gate
+[Irtam] fetch hmF2 2026.10.01T12:15: fallo red/pre-gate
+[WATCHDOG] focus lost (iconified=0)
+[LGDC 2026-10-04T16:59:25.738Z] launch gambit hmF2 2026.10.01T12:15
+[LGDC 2026-10-04T16:59:25.741Z] result ok gambit hmF2 2026.10.01T12:15
+[Irtam] bucket hmF2 2026.10.01T12:15 OK (TOV 1790856900)
+[LGDC 2026-10-04T16:59:35.671Z] gate-consult deny gambit hmF2 2026.10.01T12:30 ms-since-last=12101
+[WATCHDOG] focus gained (iconified=0)
+[LGDC 2026-10-04T16:59:53.099Z] launch gambit hmF2 2026.10.01T12:30
+[LGDC 2026-10-04T16:59:53.102Z] result ok gambit hmF2 2026.10.01T12:30
+[Irtam] bucket hmF2 2026.10.01T12:30 OK (TOV 1790857800)
+[LGDC 2026-10-04T17:00:02.495Z] gate-consult deny gambit foF2 2026.10.01T17:00 ms-since-last=11513
+[LGDC 2026-10-04T17:00:20.279Z] launch gambit foF2 2026.10.01T17:00
+[LGDC 2026-10-04T17:00:20.285Z] result ok gambit foF2 2026.10.01T17:00
+[Irtam] bucket foF2 2026.10.01T17:00 OK (TOV 1790874000)
+[LGDC 2026-10-04T17:00:29.393Z] gate-consult deny gambit hmF2 2026.10.01T12:45 ms-since-last=11629
+[LGDC 2026-10-04T17:00:46.816Z] launch gambit hmF2 2026.10.01T12:45
+[LGDC 2026-10-04T17:00:46.822Z] result ok gambit hmF2 2026.10.01T12:45
+[Irtam] bucket hmF2 2026.10.01T12:45 OK (TOV 1790858700)
+[LGDC 2026-10-04T17:00:56.116Z] gate-consult deny gambit hmF2 2026.10.01T13:00 ms-since-last=11453
+[LGDC 2026-10-04T17:01:13.370Z] launch gambit hmF2 2026.10.01T13:00
+[LGDC 2026-10-04T17:01:13.374Z] result ok gambit hmF2 2026.10.01T13:00
+[Irtam] bucket hmF2 2026.10.01T13:00 OK (TOV 1790859600)
+[LGDC 2026-10-04T17:01:22.702Z] gate-consult deny gambit hmF2 2026.10.01T13:15 ms-since-last=11474
+[GloTecAdapter] Error: indice GloTEC vacio
+[SolarIndices] Kp=4.00 Dst=-58 F10.7=95 Ap=20 SSN=55 (5/5 real)
+[SolarWindAdapter] Real solar wind: speed=524 km/s density=12.8 cm^-3 Bz=-4.0 nT (hist 3813 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=48.0
+[RadioProp] MUF=24.3 FOT=20.7 LUF=9.5 S4=0.22 AE=438 TAI=1.6 FR=33deg SpF=24% (GIRO real) (Kp NOAA)
+[Xray] GOES long 2.06e-07 W/m2 (B2.1)
+[LGDC 2026-10-04T17:01:40.570Z] launch gambit hmF2 2026.10.01T13:15
+[LGDC 2026-10-04T17:01:40.575Z] result ok gambit hmF2 2026.10.01T13:15
+[Irtam] bucket hmF2 2026.10.01T13:15 OK (TOV 1790860500)
+[LGDC 2026-10-04T17:01:49.858Z] gate-consult deny gambit hmF2 2026.10.01T13:30 ms-since-last=11514
+[LGDC 2026-10-04T17:02:07.515Z] launch gambit hmF2 2026.10.01T13:30
+[LGDC 2026-10-04T17:02:07.517Z] result ok gambit hmF2 2026.10.01T13:30
+[Irtam] bucket hmF2 2026.10.01T13:30 OK (TOV 1790861400)
+[LGDC 2026-10-04T17:02:16.778Z] gate-consult deny gambit hmF2 2026.10.01T13:45 ms-since-last=11426
+[LGDC 2026-10-04T17:02:35.673Z] launch gambit hmF2 2026.10.01T13:45
+[LGDC 2026-10-04T17:02:35.676Z] result ok gambit hmF2 2026.10.01T13:45
+[Irtam] bucket hmF2 2026.10.01T13:45 OK (TOV 1790862300)
+[LGDC 2026-10-04T17:02:44.929Z] gate-consult deny gambit hmF2 2026.10.01T14:00 ms-since-last=12849
+[WATCHDOG] focus lost (iconified=0)
+[WATCHDOG] focus gained (iconified=0)
+[LGDC 2026-10-04T17:03:02.329Z] launch gambit hmF2 2026.10.01T14:00
+[LGDC 2026-10-04T17:03:02.334Z] result ok gambit hmF2 2026.10.01T14:00
+[Irtam] bucket hmF2 2026.10.01T14:00 OK (TOV 1790863200)
+[LGDC 2026-10-04T17:03:11.603Z] gate-consult deny gambit hmF2 2026.10.01T14:15 ms-since-last=11523
+[WATCHDOG] focus lost (iconified=0)
+[WATCHDOG] focus gained (iconified=0)
+[WATCHDOG] focus lost (iconified=0)
+[LGDC 2026-10-04T17:03:28.888Z] launch gambit hmF2 2026.10.01T14:15
+[LGDC 2026-10-04T17:03:28.893Z] result ok gambit hmF2 2026.10.01T14:15
+[Irtam] bucket hmF2 2026.10.01T14:15 OK (TOV 1790864100)
+[LGDC 2026-10-04T17:03:36.463Z] launch getbest EA036
+[LGDC 2026-10-04T17:03:36.714Z] launch getbest KL154
+[LGDC 2026-10-04T17:03:36.968Z] launch getbest KI167
+[DiasAdapter] OK: 8 EU stations
+[LGDC 2026-10-04T17:03:37.218Z] launch getbest PQ052
+[LGDC 2026-10-04T17:03:37.474Z] launch getbest FF051
+[LGDC 2026-10-04T17:03:37.734Z] launch getbest OL246
+[LGDC 2026-10-04T17:03:37.985Z] launch getbest RV149
+[LGDC 2026-10-04T17:03:38.242Z] launch getbest TR170
+[LGDC 2026-10-04T17:03:38.495Z] launch getbest BC840
+[LGDC 2026-10-04T17:03:38.501Z] gate-consult deny gambit hmF2 2026.10.01T14:30 ms-since-last=6
+[LGDC 2026-10-04T17:03:38.748Z] launch getbest AC843
+[LGDC 2026-10-04T17:03:39.009Z] launch getbest CS839
+[LGDC 2026-10-04T17:03:39.259Z] launch getbest RL052
+[LGDC 2026-10-04T17:03:39.521Z] launch getbest AU930
+[LGDC 2026-10-04T17:03:39.771Z] launch getbest EI764
+[LGDC 2026-10-04T17:03:40.022Z] launch getbest SMK29
+[GiroAdapter] getbest async: 3 stations updated
+[Ebro] ftp: Remote file not found
+[WATCHDOG] focus gained (iconified=0)
+[LGDC 2026-10-04T17:03:54.032Z] gate-consult deny gambit hmF2 2026.10.01T14:30 ms-since-last=14010
+[LGDC 2026-10-04T17:04:09.479Z] result fail gambit hmF2 2026.10.01T14:30 red/pre-gate
+[Irtam] fetch hmF2 2026.10.01T14:30: fallo red/pre-gate
+[LGDC 2026-10-04T17:04:26.488Z] launch gambit hmF2 2026.10.01T14:30
+[LGDC 2026-10-04T17:04:26.492Z] result ok gambit hmF2 2026.10.01T14:30
+[Irtam] bucket hmF2 2026.10.01T14:30 OK (TOV 1790865000)
+[LGDC 2026-10-04T17:04:35.777Z] gate-consult deny gambit hmF2 2026.10.01T14:45 ms-since-last=11428
+[LGDC 2026-10-04T17:04:53.215Z] launch gambit hmF2 2026.10.01T14:45
+[LGDC 2026-10-04T17:04:53.219Z] result ok gambit hmF2 2026.10.01T14:45
+[Irtam] bucket hmF2 2026.10.01T14:45 OK (TOV 1790865900)
+[LGDC 2026-10-04T17:05:02.610Z] gate-consult deny gambit hmF2 2026.10.01T15:00 ms-since-last=11552
+[LGDC 2026-10-04T17:05:20.282Z] launch gambit hmF2 2026.10.01T15:00
+[LGDC 2026-10-04T17:05:20.285Z] result ok gambit hmF2 2026.10.01T15:00
+[Irtam] bucket hmF2 2026.10.01T15:00 OK (TOV 1790866800)
+[LGDC 2026-10-04T17:05:29.795Z] gate-consult deny gambit hmF2 2026.10.01T15:15 ms-since-last=11706
+[LGDC 2026-10-04T17:05:48.184Z] launch gambit hmF2 2026.10.01T15:15
+[LGDC 2026-10-04T17:05:48.187Z] result ok gambit hmF2 2026.10.01T15:15
+[Irtam] bucket hmF2 2026.10.01T15:15 OK (TOV 1790867700)
+[LGDC 2026-10-04T17:05:58.365Z] gate-consult deny gambit hmF2 2026.10.01T15:30 ms-since-last=12816
+[WATCHDOG] focus lost (iconified=0)
+[LGDC 2026-10-04T17:06:17.319Z] launch gambit hmF2 2026.10.01T15:30
+[LGDC 2026-10-04T17:06:17.324Z] result ok gambit hmF2 2026.10.01T15:30
+[Irtam] bucket hmF2 2026.10.01T15:30 OK (TOV 1790868600)
+[LGDC 2026-10-04T17:06:27.023Z] gate-consult deny gambit hmF2 2026.10.01T15:45 ms-since-last=12434
+[LGDC 2026-10-04T17:06:44.568Z] launch gambit hmF2 2026.10.01T15:45
+[LGDC 2026-10-04T17:06:44.573Z] result ok gambit hmF2 2026.10.01T15:45
+[Irtam] bucket hmF2 2026.10.01T15:45 OK (TOV 1790869500)
+[WATCHDOG] focus gained (iconified=0)
+[WATCHDOG] focus lost (iconified=0)
+[LGDC 2026-10-04T17:06:54.454Z] gate-consult deny gambit hmF2 2026.10.01T16:00 ms-since-last=11948
+[WATCHDOG] focus gained (iconified=0)
+[GloTecAdapter] Real TEC GloTEC OK (72x72): min=3.68 max=68.39 TECU
+[SolarIndices] Kp=4.00 Dst=-55 F10.7=95 Ap=20 SSN=55 (5/5 real)
+[SolarWindAdapter] Real solar wind: speed=518 km/s density=14.4 cm^-3 Bz=-5.8 nT (hist 3814 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=49.0
+[RadioProp] MUF=24.7 FOT=21.0 LUF=9.7 S4=0.22 AE=438 TAI=1.6 FR=33deg SpF=24% (GIRO real) (Kp NOAA)
+[Xray] GOES long 2.07e-07 W/m2 (B2.1)
+[LGDC 2026-10-04T17:07:17.021Z] launch gambit hmF2 2026.10.01T16:00
+[LGDC 2026-10-04T17:07:17.025Z] result ok gambit hmF2 2026.10.01T16:00
+[Irtam] bucket hmF2 2026.10.01T16:00 OK (TOV 1790870400)
+[LGDC 2026-10-04T17:07:26.608Z] gate-consult deny gambit hmF2 2026.10.01T16:15 ms-since-last=12159
+[WATCHDOG] focus lost (iconified=0)
+[LGDC 2026-10-04T17:07:45.752Z] launch gambit hmF2 2026.10.01T16:15
+[LGDC 2026-10-04T17:07:45.755Z] result ok gambit hmF2 2026.10.01T16:15
+[Irtam] bucket hmF2 2026.10.01T16:15 OK (TOV 1790871300)
+[LGDC 2026-10-04T17:07:55.758Z] gate-consult deny gambit hmF2 2026.10.01T16:30 ms-since-last=12584
+[LGDC 2026-10-04T17:08:13.568Z] launch gambit hmF2 2026.10.01T16:30
+[LGDC 2026-10-04T17:08:13.573Z] result ok gambit hmF2 2026.10.01T16:30
+[Irtam] bucket hmF2 2026.10.01T16:30 OK (TOV 1790872200)
+[LGDC 2026-10-04T17:08:22.857Z] gate-consult deny gambit hmF2 2026.10.01T16:45 ms-since-last=11384
+[LGDC 2026-10-04T17:08:36.470Z] launch getbest JR055
+[LGDC 2026-10-04T17:08:36.727Z] launch getbest VT139
+[LGDC 2026-10-04T17:08:36.978Z] launch getbest GM037
+[DiasAdapter] OK: 9 EU stations
+[LGDC 2026-10-04T17:08:37.232Z] launch getbest AT138
+[LGDC 2026-10-04T17:08:37.483Z] launch getbest MZ152
+[LGDC 2026-10-04T17:08:37.738Z] launch getbest LD160
+[LGDC 2026-10-04T17:08:37.988Z] launch getbest DB049
+[LGDC 2026-10-04T17:08:38.170Z] gate-consult deny gambit hmF2 2026.10.01T16:45 ms-since-last=182
+[LGDC 2026-10-04T17:08:38.240Z] launch getbest EG931
+[LGDC 2026-10-04T17:08:38.492Z] launch getbest SO148
+[LGDC 2026-10-04T17:08:38.744Z] launch getbest BVJ03
+[LGDC 2026-10-04T17:08:38.995Z] launch getbest PF765
+[LGDC 2026-10-04T17:08:39.248Z] launch getbest TNJ20
+[LGDC 2026-10-04T17:08:39.499Z] launch getbest CAJ2M
+[LGDC 2026-10-04T17:08:39.751Z] launch getbest BLJ03
+[LGDC 2026-10-04T17:08:40.003Z] launch getbest CXM9B
+[LGDC 2026-10-04T17:08:40.253Z] launch getbest LA42Q
+[LGDC 2026-10-04T17:08:40.507Z] launch getbest TO535
+[LGDC 2026-10-04T17:08:40.759Z] launch getbest IC437
+[LGDC 2026-10-04T17:08:41.016Z] launch getbest DH224
+[LGDC 2026-10-04T17:08:41.268Z] launch getbest XI434
+[LGDC 2026-10-04T17:08:41.522Z] launch getbest DW41K
+[LGDC 2026-10-04T17:08:41.775Z] launch getbest CS31K
+[LGDC 2026-10-04T17:08:42.025Z] launch getbest MO155
+[LGDC 2026-10-04T17:08:42.280Z] launch getbest ML10L
+[LGDC 2026-10-04T17:08:42.533Z] launch getbest MU12K
+[LGDC 2026-10-04T17:08:42.788Z] launch getbest NDA81
+[LGDC 2026-10-04T17:08:43.041Z] launch getbest MA155
+[Ebro] ftp: Remote file not found
+[LGDC 2026-10-04T17:08:43.295Z] launch getbest TR0P2
+[GiroAdapter] getbest async: 13 stations updated
+[LGDC 2026-10-04T17:08:53.392Z] gate-consult deny gambit hmF2 2026.10.01T16:45 ms-since-last=10097
+[LGDC 2026-10-04T17:09:10.637Z] launch gambit hmF2 2026.10.01T16:45
+[LGDC 2026-10-04T17:09:10.643Z] result ok gambit hmF2 2026.10.01T16:45
+[Irtam] bucket hmF2 2026.10.01T16:45 OK (TOV 1790873100)
+[LGDC 2026-10-04T17:09:19.956Z] gate-consult deny gambit hmF2 2026.10.01T17:00 ms-since-last=11501
+[LGDC 2026-10-04T17:09:37.317Z] launch gambit hmF2 2026.10.01T17:00
+[LGDC 2026-10-04T17:09:37.322Z] result ok gambit hmF2 2026.10.01T17:00
+[Irtam] bucket hmF2 2026.10.01T17:00 OK (TOV 1790874000)
+[LGDC 2026-10-04T17:09:46.617Z] gate-consult deny gambit B0 2026.10.01T11:45 ms-since-last=11445
+[LGDC 2026-10-04T17:10:04.397Z] launch gambit B0 2026.10.01T11:45
+[LGDC 2026-10-04T17:10:04.402Z] result ok gambit B0 2026.10.01T11:45
+[Irtam] bucket B0 2026.10.01T11:45 OK (TOV 1790855100)
+[LGDC 2026-10-04T17:10:13.644Z] gate-consult deny gambit B0 2026.10.01T12:00 ms-since-last=11781
+[LGDC 2026-10-04T17:10:31.003Z] launch gambit B0 2026.10.01T12:00
+[LGDC 2026-10-04T17:10:31.006Z] result ok gambit B0 2026.10.01T12:00
+[Irtam] bucket B0 2026.10.01T12:00 OK (TOV 1790856000)
+[LGDC 2026-10-04T17:10:40.289Z] gate-consult deny gambit B0 2026.10.01T12:15 ms-since-last=11423
+[LGDC 2026-10-04T17:10:58.310Z] launch gambit B0 2026.10.01T12:15
+[LGDC 2026-10-04T17:10:58.314Z] result ok gambit B0 2026.10.01T12:15
+[Irtam] bucket B0 2026.10.01T12:15 OK (TOV 1790856900)
+[WATCHDOG] focus gained (iconified=0)
+[LGDC 2026-10-04T17:11:07.845Z] gate-consult deny gambit B0 2026.10.01T12:30 ms-since-last=12118
+[WATCHDOG] focus lost (iconified=1)
+[WATCHDOG] stall 336ms (poll 0 update 332 render 3 swap 0) focused=0 iconified=1 vol=323ms bundles=0
+[LGDC 2026-10-04T17:11:28.211Z] launch gambit B0 2026.10.01T12:30
+[LGDC 2026-10-04T17:11:28.214Z] result ok gambit B0 2026.10.01T12:30
+[Irtam] bucket B0 2026.10.01T12:30 OK (TOV 1790857800)
+[LGDC 2026-10-04T17:11:44.425Z] launch gambit B0 2026.10.01T12:45
+[LGDC 2026-10-04T17:11:44.430Z] result ok gambit B0 2026.10.01T12:45
+[Irtam] bucket B0 2026.10.01T12:45 OK (TOV 1790858700)
+[LGDC 2026-10-04T17:12:00.076Z] launch gambit B0 2026.10.01T13:00
+[LGDC 2026-10-04T17:12:00.078Z] result ok gambit B0 2026.10.01T13:00
+[Irtam] bucket B0 2026.10.01T13:00 OK (TOV 1790859600)
+[WATCHDOG] focus gained (iconified=1)
+[LGDC 2026-10-04T17:12:11.165Z] gate-consult deny gambit B0 2026.10.01T13:15 ms-since-last=13205
+[WATCHDOG] stall 8090ms (poll 0 update 3 render 6 swap 8081) focused=1 iconified=0 vol=0ms bundles=0
+[WATCHDOG] focus lost (iconified=0)
+[WATCHDOG] stall 597ms (poll 0 update 2 render 400 swap 195) focused=0 iconified=0 vol=0ms bundles=0
+[WATCHDOG] focus gained (iconified=0)
+[WATCHDOG] focus lost (iconified=0)
+[LGDC 2026-10-04T17:12:29.078Z] launch gambit B0 2026.10.01T13:15
+[LGDC 2026-10-04T17:12:29.082Z] result ok gambit B0 2026.10.01T13:15
+[Irtam] bucket B0 2026.10.01T13:15 OK (TOV 1790860500)
+[LGDC 2026-10-04T17:12:41.242Z] gate-consult deny gambit B0 2026.10.01T13:30 ms-since-last=14350
+[GloTecAdapter] Error: indice GloTEC vacio
+[SolarIndices] Kp=4.00 Dst=-56 F10.7=95 Ap=20 SSN=55 (5/5 real)
+[SolarWindAdapter] Real solar wind: speed=555 km/s density=5.2 cm^-3 Bz=-5.4 nT (hist 3811 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=49.0
+[RadioProp] MUF=23.9 FOT=20.3 LUF=9.3 S4=0.22 AE=438 TAI=1.6 FR=33deg SpF=24% (GIRO real) (Kp NOAA)
+[Xray] GOES long 2.05e-07 W/m2 (B2.1)
+[WATCHDOG] stall 252ms (poll 0 update 240 render 11 swap 1) focused=0 iconified=1 vol=232ms bundles=0
+[WATCHDOG] focus gained (iconified=1)
+[WATCHDOG] stall 7611ms (poll 5 update 3 render 3 swap 7600) focused=1 iconified=0 vol=0ms bundles=0
+[LGDC 2026-10-04T17:13:04.284Z] launch gambit B0 2026.10.01T13:30
+[LGDC 2026-10-04T17:13:04.287Z] result ok gambit B0 2026.10.01T13:30
+[Irtam] bucket B0 2026.10.01T13:30 OK (TOV 1790861400)
+[WATCHDOG] focus lost (iconified=0)
+[WATCHDOG] stall 262ms (poll 0 update 2 render 1 swap 259) focused=0 iconified=0 vol=0ms bundles=0
+[WATCHDOG] stall 421ms (poll 0 update 5 render 286 swap 129) focused=0 iconified=0 vol=0ms bundles=0
+[LGDC 2026-10-04T17:13:16.478Z] gate-consult deny gambit B0 2026.10.01T13:45 ms-since-last=14741
+[WATCHDOG] stall 298ms (poll 0 update 283 render 3 swap 12) focused=0 iconified=0 vol=277ms bundles=0
+[LGDC 2026-10-04T17:13:36.477Z] launch getbest EA036
+[LGDC 2026-10-04T17:13:36.735Z] launch getbest TV51R
+[LGDC 2026-10-04T17:13:36.987Z] launch getbest NI135
+[DiasAdapter] OK: 9 EU stations
+[LGDC 2026-10-04T17:13:37.239Z] launch getbest CB53N
+[LGDC 2026-10-04T17:13:37.393Z] launch gambit B0 2026.10.01T13:45
+[LGDC 2026-10-04T17:13:37.397Z] result ok gambit B0 2026.10.01T13:45
+[Irtam] bucket B0 2026.10.01T13:45 OK (TOV 1790862300)
+[LGDC 2026-10-04T17:13:37.549Z] launch getbest GR13L
+[LGDC 2026-10-04T17:13:37.806Z] launch getbest RM041
+[GiroAdapter] getbest async: 6 stations updated
+[Ebro] ftp: Remote file not found
+[WATCHDOG] focus gained (iconified=0)
+[LGDC 2026-10-04T17:13:47.474Z] gate-consult deny gambit B0 2026.10.01T14:00 ms-since-last=9668
+[WATCHDOG] focus lost (iconified=0)
+[LGDC 2026-10-04T17:14:05.263Z] launch gambit B0 2026.10.01T14:00
+[LGDC 2026-10-04T17:14:05.265Z] result ok gambit B0 2026.10.01T14:00
+[Irtam] bucket B0 2026.10.01T14:00 OK (TOV 1790863200)
+[LGDC 2026-10-04T17:14:15.091Z] gate-consult deny gambit B0 2026.10.01T14:15 ms-since-last=12184
+[WATCHDOG] focus gained (iconified=0)
+[WATCHDOG] focus lost (iconified=0)
+[LGDC 2026-10-04T17:14:32.549Z] launch gambit B0 2026.10.01T14:15
+[LGDC 2026-10-04T17:14:32.554Z] result ok gambit B0 2026.10.01T14:15
+[Irtam] bucket B0 2026.10.01T14:15 OK (TOV 1790864100)
+[WATCHDOG] stall 381ms (poll 0 update 374 render 5 swap 2) focused=0 iconified=0 vol=366ms bundles=0
+[WATCHDOG] stall 322ms (poll 0 update 6 render 1 swap 315) focused=0 iconified=0 vol=0ms bundles=0
+[LGDC 2026-10-04T17:14:49.590Z] launch gambit B0 2026.10.01T14:30
+[LGDC 2026-10-04T17:14:49.593Z] result ok gambit B0 2026.10.01T14:30
+[Irtam] bucket B0 2026.10.01T14:30 OK (TOV 1790865000)
+[WATCHDOG] stall 254ms (poll 0 update 249 render 4 swap 1) focused=0 iconified=0 vol=228ms bundles=0
+[LGDC 2026-10-04T17:15:12.788Z] launch gambit foF2 2026.10.01T17:15
+[LGDC 2026-10-04T17:15:12.796Z] result ok gambit foF2 2026.10.01T17:15
+[Irtam] bucket foF2 2026.10.01T17:15 OK (TOV 1790874900)
+[WATCHDOG] stall 386ms (poll 0 update 381 render 3 swap 3) focused=0 iconified=0 vol=377ms bundles=0
+[LGDC 2026-10-04T17:15:30.819Z] launch gambit hmF2 2026.10.01T17:15
+[LGDC 2026-10-04T17:15:30.821Z] result ok gambit hmF2 2026.10.01T17:15
+[Irtam] bucket hmF2 2026.10.01T17:15 OK (TOV 1790874900)
+[LGDC 2026-10-04T17:15:48.073Z] launch gambit B0 2026.10.01T14:45
+[LGDC 2026-10-04T17:15:48.076Z] result ok gambit B0 2026.10.01T14:45
+[Irtam] bucket B0 2026.10.01T14:45 OK (TOV 1790865900)
+[LGDC 2026-10-04T17:16:05.576Z] launch gambit B0 2026.10.01T15:00
+[LGDC 2026-10-04T17:16:05.579Z] result ok gambit B0 2026.10.01T15:00
+[Irtam] bucket B0 2026.10.01T15:00 OK (TOV 1790866800)
+[LGDC 2026-10-04T17:16:16.776Z] gate-consult deny gambit B0 2026.10.01T15:15 ms-since-last=13437
+[LGDC 2026-10-04T17:16:36.390Z] launch gambit B0 2026.10.01T15:15
+[LGDC 2026-10-04T17:16:36.395Z] result ok gambit B0 2026.10.01T15:15
+[Irtam] bucket B0 2026.10.01T15:15 OK (TOV 1790867700)
+[LGDC 2026-10-04T17:16:45.669Z] gate-consult deny gambit B0 2026.10.01T15:30 ms-since-last=11458
+[LGDC 2026-10-04T17:17:03.026Z] launch gambit B0 2026.10.01T15:30
+[LGDC 2026-10-04T17:17:03.032Z] result ok gambit B0 2026.10.01T15:30
+[Irtam] bucket B0 2026.10.01T15:30 OK (TOV 1790868600)
+[LGDC 2026-10-04T17:17:12.327Z] gate-consult deny gambit B0 2026.10.01T15:45 ms-since-last=11486
+[LGDC 2026-10-04T17:17:29.757Z] launch gambit B0 2026.10.01T15:45
+[LGDC 2026-10-04T17:17:29.761Z] result ok gambit B0 2026.10.01T15:45
+[Irtam] bucket B0 2026.10.01T15:45 OK (TOV 1790869500)
+[LGDC 2026-10-04T17:17:39.034Z] gate-consult deny gambit B0 2026.10.01T16:00 ms-since-last=11562
+[LGDC 2026-10-04T17:17:56.482Z] launch gambit B0 2026.10.01T16:00
+[LGDC 2026-10-04T17:17:56.486Z] result ok gambit B0 2026.10.01T16:00
+[Irtam] bucket B0 2026.10.01T16:00 OK (TOV 1790870400)
+[LGDC 2026-10-04T17:18:05.698Z] gate-consult deny gambit B0 2026.10.01T16:15 ms-since-last=11469
+[LGDC 2026-10-04T17:18:23.338Z] launch gambit B0 2026.10.01T16:15
+[LGDC 2026-10-04T17:18:23.343Z] result ok gambit B0 2026.10.01T16:15
+[Irtam] bucket B0 2026.10.01T16:15 OK (TOV 1790871300)
+[GloTecAdapter] Real TEC GloTEC OK (72x72): min=3.95 max=68.43 TECU
+[SolarIndices] Kp=4.00 Dst=-56 F10.7=95 Ap=20 SSN=55 (5/5 real)
+[SolarWindAdapter] Real solar wind: speed=516 km/s density=12.0 cm^-3 Bz=-3.9 nT (hist 3813 pts)
+[AuroraAdapter] Ovation OK (72x72): min=0.0 max=50.0
+[RadioProp] MUF=23.9 FOT=20.3 LUF=9.3 S4=0.22 AE=438 TAI=1.6 FR=33deg SpF=24% (GIRO real) (Kp NOAA)
+[Xray] GOES long 2.02e-07 W/m2 (B2.0)
+[LGDC 2026-10-04T17:18:33.220Z] gate-consult deny gambit B0 2026.10.01T16:30 ms-since-last=12031
+[LGDC 2026-10-04T17:18:36.487Z] launch getbest PQ052
+[LGDC 2026-10-04T17:18:36.749Z] launch getbest GM037
+[LGDC 2026-10-04T17:18:37.002Z] launch getbest FF051
+[DiasAdapter] OK: 9 EU stations
+[LGDC 2026-10-04T17:18:37.256Z] launch getbest JR055
+[LGDC 2026-10-04T17:18:37.507Z] launch getbest TR169
+[LGDC 2026-10-04T17:18:37.773Z] launch getbest VT139
+[GiroAdapter] getbest async: 5 stations updated
+[Ebro] ftp: Remote file not found
+[LGDC 2026-10-04T17:18:48.588Z] gate-consult deny gambit B0 2026.10.01T16:30 ms-since-last=10815
+[LGDC 2026-10-04T17:19:08.586Z] launch gambit B0 2026.10.01T16:30
+[LGDC 2026-10-04T17:19:08.589Z] result ok gambit B0 2026.10.01T16:30
+[Irtam] bucket B0 2026.10.01T16:30 OK (TOV 1790872200)
+[LGDC 2026-10-04T17:19:24.046Z] launch gambit B0 2026.10.01T16:45
+[LGDC 2026-10-04T17:19:24.051Z] result ok gambit B0 2026.10.01T16:45
+[Irtam] bucket B0 2026.10.01T16:45 OK (TOV 1790873100)
+[LGDC 2026-10-04T17:19:33.626Z] gate-consult deny gambit B0 2026.10.01T17:00 ms-since-last=11655
+[LGDC 2026-10-04T17:19:50.883Z] launch gambit B0 2026.10.01T17:00
+[LGDC 2026-10-04T17:19:50.886Z] result ok gambit B0 2026.10.01T17:00
+[Irtam] bucket B0 2026.10.01T17:00 OK (TOV 1790874000)
+[LGDC 2026-10-04T17:20:00.438Z] gate-consult deny gambit B0 2026.10.01T17:15 ms-since-last=11701
+[LGDC 2026-10-04T17:20:17.815Z] launch gambit B0 2026.10.01T17:15
+[LGDC 2026-10-04T17:20:17.818Z] result ok gambit B0 2026.10.01T17:15
+[Irtam] bucket B0 2026.10.01T17:15 OK (TOV 1790874900)
+[LGDC 2026-10-04T17:20:27.229Z] gate-consult deny gambit B1 2026.10.01T07:00 ms-since-last=11497
+[LGDC 2026-10-04T17:20:44.589Z] launch gambit B1 2026.10.01T07:00
+[LGDC 2026-10-04T17:20:44.592Z] result ok gambit B1 2026.10.01T07:00
+[Irtam] bucket B1 2026.10.01T07:00 OK (TOV 1790838000)
+[LGDC 2026-10-04T17:20:53.974Z] gate-consult deny gambit B1 2026.10.01T07:15 ms-since-last=11547
+[LGDC 2026-10-04T17:21:11.360Z] launch gambit B1 2026.10.01T07:15
+[LGDC 2026-10-04T17:21:11.365Z] result ok gambit B1 2026.10.01T07:15
+[Irtam] bucket B1 2026.10.01T07:15 OK (TOV 1790838900)
+[LGDC 2026-10-04T17:21:20.545Z] gate-consult deny gambit B1 2026.10.01T07:30 ms-since-last=11325
+[LGDC 2026-10-04T17:21:38.013Z] launch gambit B1 2026.10.01T07:30
+[LGDC 2026-10-04T17:21:38.018Z] result ok gambit B1 2026.10.01T07:30
+[Irtam] bucket B1 2026.10.01T07:30 OK (TOV 1790839800)
+[LGDC 2026-10-04T17:21:48.256Z] gate-consult deny gambit B1 2026.10.01T07:45 ms-since-last=12461
+[LGDC 2026-10-04T17:22:05.647Z] launch gambit B1 2026.10.01T07:45
+[LGDC 2026-10-04T17:22:05.652Z] result ok gambit B1 2026.10.01T07:45
+[Irtam] bucket B1 2026.10.01T07:45 OK (TOV 1790840700)
+[LGDC 2026-10-04T17:22:14.820Z] gate-consult deny gambit B1 2026.10.01T08:00 ms-since-last=11280
+[LGDC 2026-10-04T17:22:32.155Z] launch gambit B1 2026.10.01T08:00
+[LGDC 2026-10-04T17:22:32.157Z] result ok gambit B1 2026.10.01T08:00
+[Irtam] bucket B1 2026.10.01T08:00 OK (TOV 1790841600)
+[LGDC 2026-10-04T17:22:41.792Z] gate-consult deny gambit B1 2026.10.01T08:15 ms-since-last=11774
+[LGDC 2026-10-04T17:22:59.693Z] launch gambit B1 2026.10.01T08:15
+[LGDC 2026-10-04T17:22:59.698Z] result ok gambit B1 2026.10.01T08:15
+[Irtam] bucket B1 2026.10.01T08:15 OK (TOV 1790842500)
+[LGDC 2026-10-04T17:23:09.395Z] gate-consult deny gambit B1 2026.10.01T08:30 ms-since-last=11940
