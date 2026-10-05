@@ -1,0 +1,484 @@
+From 8cc4611239ea3ef80d04d0b98423e46ac17b1366 Mon Sep 17 00:00:00 2001
+From: David Lopez Salvador <davidlopezsalvador@users.noreply.github.com>
+Date: Mon, 5 Oct 2026 20:58:45 +0200
+Subject: [PATCH] UI-139: motor de alertas de propagacion (S-5)
+
+---
+ CMakeLists.txt        |   3 +
+ src/App.cpp           |  95 +++++++++++++++++++++++--
+ src/Data/Alerts.h     | 150 ++++++++++++++++++++++++++++++++++++++++
+ tests/test_alerts.cpp | 157 ++++++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 398 insertions(+), 7 deletions(-)
+ create mode 100644 src/Data/Alerts.h
+ create mode 100644 tests/test_alerts.cpp
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index b1337bf..1543565 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -189,6 +189,9 @@ add_test(NAME volume_jitter COMMAND test_volume_jitter)
+ add_executable(test_tour tests/test_tour.cpp)
+ target_include_directories(test_tour PRIVATE src)
+ add_test(NAME tour COMMAND test_tour)
++add_executable(test_alerts tests/test_alerts.cpp)
++target_include_directories(test_alerts PRIVATE src)
++add_test(NAME alerts COMMAND test_alerts)
+ # M7 (plan 10): absorcion D Sauer-Wilkinson + termino SID del LUF — llama a
+ # PRODUCCION (deriveLUF/flareAbsorption/dRegionAbsorptionDb de
+ # RadioPropagationAdapter), no replica. Sin std::thread: solo CURL.
+diff --git a/src/App.cpp b/src/App.cpp
+index 2183b1b..4983b1e 100644
+--- a/src/App.cpp
++++ b/src/App.cpp
+@@ -35,6 +35,7 @@
+ #include "Globe/Atmosphere.h"
+ #include "Globe/Terminator.h"
+ #include "Ionosphere/GridLayer.h"
++#include "Data/Alerts.h"
+ #include "Utils/Exporter.h"
+ #include "Utils/Tour.h"
+ #include "Ionosphere/IonosondeLayer.h"
+@@ -190,6 +191,7 @@ struct App::Impl {
+     bool tourOn = false;      // S-4: tour didactico (tecla T)
+     bool tourSpanish = true;  // idioma del overlay del tour
+     float tourT = 0.0f;       // reloj del tour (solo avanza con dato listo)
++    alerts::Engine alerts_;   // S-5: motor de reglas sobre bundles (hilo ppal)
+     float cineHintUntil = 0.0f;
+     char hintMsg[64] = "";
+     // Espejos persistentes de UI (antes static locales / locales de panel).
+@@ -2939,9 +2941,39 @@ void App::fetchWorker() {
+     }
+ }
+ 
+-// Aplica en el hilo principal los bundles frescos del worker (llamadas GL
+-// y UI van aqui; el worker nunca toca OpenGL).
+-void App::consumeBundles() {
++// Aplica en el hilo principal los bundles frescos del worker (llamadas GL
++// y UI van aqui; el worker nunca toca OpenGL).
++// S-5: evaluacion del motor de alertas sobre los ultimos publicados (una
++// evaluacion por publicacion; sin red/hilos nuevos; lo ausente deshabilita).
++static void evalAlertRules(alerts::Engine& eng,
++                           bool kpOk, float kp, double kpT,
++                           bool bzOk, float bz, double bzT,
++                           bool xOk, char xCls, double xT,
++                           bool mufOk, float muf, double mufT) {
++    alerts::Input in;
++    in.kpOk = kpOk;
++    in.kp = kp;
++    in.bzOk = bzOk;
++    in.bz = bz;
++    in.xrayOk = xOk;
++    in.xrayClass = xCls;
++    in.mufOk = mufOk;
++    in.muf = muf;
++    double utc = 0.0;
++    if (mufOk) utc = mufT;
++    else if (xOk) utc = xT;
++    else if (bzOk) utc = bzT;
++    else if (kpOk) utc = kpT;
++    if (utc <= 0.0) return;
++    in.utc = utc;
++    eng.evaluate(in);
++}
++
++void App::consumeBundles() {
++    auto pIx = impl->lastIndices;
++    auto pW = impl->lastWind;
++    auto pRp = impl->lastRadio;
++    auto pXr = impl->lastXray;
+     auto t = impl->getTec();
+     if (t && t != impl->lastTec) {
+         impl->lastTec = t;
+@@ -2976,10 +3008,28 @@ void App::consumeBundles() {
+         impl->lastRadio = rp;
+         ++impl->watchBundles;
+     }
+-    auto xr = impl->getXray();
+-    if (xr && xr != impl->lastXray) {
+-        impl->lastXray = xr;
+-        ++impl->watchBundles;
++    auto xr = impl->getXray();
++    if (xr && xr != impl->lastXray) {
++        impl->lastXray = xr;
++        ++impl->watchBundles;
++    }
++    // S-5: una evaluacion si alguno de los 4 bundles vigilados se publico.
++    if (impl->lastIndices != pIx || impl->lastWind != pW ||
++        impl->lastRadio != pRp || impl->lastXray != pXr) {
++        const bool kpOk = impl->lastIndices && impl->lastIndices->snap.valid;
++        const bool bzOk = impl->lastWind && impl->lastWind->latest.valid;
++        const bool xOk = impl->lastXray && impl->lastXray->latest.valid;
++        const bool mufOk = impl->lastRadio && impl->lastRadio->latest.valid;
++        evalAlertRules(
++            impl->alerts_,
++            kpOk, kpOk ? impl->lastIndices->snap.kp : 0.0f,
++            kpOk ? impl->lastIndices->snap.timeUtc : 0.0,
++            bzOk, bzOk ? impl->lastWind->latest.bz : 0.0f,
++            bzOk ? impl->lastWind->latest.timeUtc : 0.0,
++            xOk, xOk ? impl->lastXray->latest.fclass : 'A',
++            xOk ? impl->lastXray->latest.timeUtc : 0.0,
++            mufOk, mufOk ? impl->lastRadio->latest.muf : 0.0f,
++            mufOk ? impl->lastRadio->latest.timeUtc : 0.0);
+     }
+     auto sd = impl->getSdo();
+     if (sd && sd != impl->lastSdo) {
+@@ -4531,6 +4581,37 @@ void App::render() {
+             if (ImGui::IsItemHovered()) ImGui::SetItemTooltip("SID (sudden ionospheric disturbance): the ongoing X-ray flare enhances D-layer absorption and closes the lower HF bands. Model total absorption in dB (Sauer-Wilkinson simplified: flare + auroral Kp terms at this point). Fades out as the flare decays.");
+         }
+     }
++    // S-5: semaforo de alertas sobre bundles publicados (0 red nueva).
++    // El aviso ambar M7 de arriba se MANTIENE como detalle de flare: la regla
++    // X del motor lee la misma fuente (rpFlux/XraySample) y el panel lleva el
++    // estado — conectado por fuente de verdad, sin duplicar logica.
++    {
++        const alerts::Engine& ae = impl->alerts_;
++        auto lvlCol = [](int l) {
++            if (l == alerts::RED) return ImVec4(0.9f, 0.2f, 0.2f, 1.0f);
++            if (l == alerts::AMBER) return ImVec4(1.0f, 0.8f, 0.0f, 1.0f);
++            if (l == alerts::OFF) return ImVec4(0.5f, 0.5f, 0.5f, 1.0f);
++            return ImVec4(0.3f, 0.9f, 0.3f, 1.0f);
++        };
++        auto lvlTxt = [](int l) {
++            return (l == alerts::RED) ? "RED" : (l == alerts::AMBER) ? "AMBER"
++                                              : (l == alerts::OFF)   ? "OFF"
++                                                                     : "GREEN";
++        };
++        ImGui::TextColored(lvlCol(ae.overall()), "Alerts: %s", lvlTxt(ae.overall()));
++        if (ImGui::IsItemHovered()) ImGui::SetItemTooltip("Propagation alerts engine (S-5): rules over published bundles, no new fetches. Kp>=5, Bz<-10 nT, X-ray>=M, MUF drop>20% vs 24 h median. Red needs 2 consecutive samples. Gray OFF = missing data or short history (declared, never an alert).");
++        const char* tn[4] = {"Kp", "Bz", "X-ray", "MUF drop"};
++        for (int r = 0; r < 4; ++r) {
++            ImGui::TextColored(lvlCol(ae.level(r)), "  %s: %s", tn[r], lvlTxt(ae.level(r)));
++        }
++        if (ImGui::IsItemHovered()) ImGui::SetItemTooltip("Per-rule state. Thresholds: Kp 4/5, Bz -5/-10 nT, X-ray C/M, MUF drop 10%/20% vs 24 h median (6+ samples over 3+ h or disabled).");
++        int shown = 0;
++        for (int i = (int)ae.events().size() - 1; i >= 0 && shown < 6; --i, ++shown) {
++            const alerts::Event& ev = ae.events()[i];
++            ImGui::TextDisabled("  %s %s -> %s", alerts::Engine::ruleName(ev.rule),
++                                lvlTxt(ev.from), lvlTxt(ev.to));
++        }
++    }
+     // S4 gauge 0..1
+     ImVec4 s4Col(0.3f, 0.9f, 0.3f, 1.0f);
+     if (showS4 > 0.3f) s4Col = ImVec4(1.0f, 0.8f, 0.0f, 1.0f);
+diff --git a/src/Data/Alerts.h b/src/Data/Alerts.h
+new file mode 100644
+index 0000000..299a39a
+--- /dev/null
++++ b/src/Data/Alerts.h
+@@ -0,0 +1,150 @@
++#pragma once
++// S-5 alertas de propagacion (ruling 130 sec.6.5): motor de reglas puro.
++// Sin GL, sin red, sin hilos, sin persistencia, sin sonido. Se evalua al
++// publicar cada bundle (hilo principal) sobre los ultimos valores; la cola
++// acotada de eventos ES la cola que un futuro hook de audio consumiria
++// (modo demo). Todo literal en ASCII; umbrales del catalogo con nombre.
++#include <algorithm>
++#include <string>
++#include <vector>
++
++namespace alerts {
++
++enum Level { GREEN = 0, AMBER = 1, RED = 2, OFF = 3 };  // OFF = deshabilitada
++enum Rule { KP = 0, BZ = 1, XRAY = 2, MUF = 3, NRULES = 4 };
++
++// Umbrales del catalogo (constantes nombradas).
++constexpr float KP_AMBER = 4.0f, KP_RED = 5.0f;
++constexpr float BZ_AMBER = -5.0f, BZ_RED = -10.0f;  // Bz sur negativo
++constexpr int XRAY_AMBER_RANK = 2;                 // C
++constexpr int XRAY_RED_RANK = 3;                   // M
++constexpr float MUF_AMBER_DROP = 0.10f;            // vs mediana 24 h
++constexpr float MUF_RED_DROP = 0.20f;              // vs mediana 24 h
++constexpr int DEBOUNCE_N = 2;                      // muestras seguidas para rojo
++constexpr size_t MUF_HIST_MAX = 288;               // 24 h a 5 min/muestra
++constexpr size_t MUF_MIN_SAMPLES = 6;
++constexpr double MUF_MIN_SPAN_SEC = 3.0 * 3600.0;
++constexpr size_t LOG_MAX = 32;  // cola acotada de eventos en memoria
++
++inline int xrayRank(char c) {
++    if (c == 'X') return 4;
++    if (c == 'M') return 3;
++    if (c == 'C') return 2;
++    if (c == 'B') return 1;
++    return 0;  // 'A' y resto
++}
++
++struct Input {
++    bool kpOk = false;
++    float kp = 0.0f;
++    bool bzOk = false;
++    float bz = 0.0f;
++    bool xrayOk = false;
++    char xrayClass = 'A';
++    bool mufOk = false;
++    float muf = 0.0f;
++    double utc = 0.0;  // tiempo de la muestra (s)
++};
++
++struct Event {
++    double utc = 0.0;
++    int rule = 0;
++    int from = OFF;
++    int to = OFF;
++};
++
++class Engine {
++public:
++    // Evalua una muestra (una publicacion de bundles). Barata y pura.
++    void evaluate(const Input& in) {
++        if (in.utc > lastUtc_) lastUtc_ = in.utc;
++        setRule(KP, in.kpOk ? rawKp(in.kp) : OFF, in.utc);
++        setRule(BZ, in.bzOk ? rawBz(in.bz) : OFF, in.utc);
++        setRule(XRAY, in.xrayOk ? rawXray(in.xrayClass) : OFF, in.utc);
++        setRule(MUF, mufLevel(in), in.utc);
++    }
++
++    Level overall() const {
++        int w = GREEN;
++        for (int r = 0; r < NRULES; ++r)
++            if (levels_[r] != OFF && levels_[r] > w) w = levels_[r];
++        return (Level)w;
++    }
++    Level level(int rule) const { return (Level)levels_[rule]; }
++    const std::vector<Event>& events() const { return log_; }
++    size_t mufSamples() const { return mufHist_.size(); }
++
++    static const char* ruleName(int r) {
++        return (r == KP) ? "Kp" : (r == BZ) ? "Bz" : (r == XRAY) ? "X-ray" : "MUF drop";
++    }
++
++private:
++    static int rawKp(float kp) { return kp >= KP_RED ? RED : (kp >= KP_AMBER ? AMBER : GREEN); }
++    static int rawBz(float bz) { return bz <= BZ_RED ? RED : (bz <= BZ_AMBER ? AMBER : GREEN); }
++    static int rawXray(char c) {
++        const int r = xrayRank(c);
++        return r >= XRAY_RED_RANK ? RED : (r >= XRAY_AMBER_RANK ? AMBER : GREEN);
++    }
++
++    void setRule(int r, int raw, double utc) {
++        int cur = levels_[r];
++        int want;
++        if (raw == OFF) {
++            redCount_[r] = 0;
++            want = OFF;
++        } else if (raw == RED) {
++            // Antiparpadeo: el rojo exige DEBOUNCE_N muestras seguidas;
++            // mientras cuenta se muestra ambar sin latchear rojo.
++            if (cur == RED || ++redCount_[r] >= DEBOUNCE_N)
++                want = RED;
++            else
++                want = AMBER;
++        } else {
++            redCount_[r] = 0;
++            want = raw;
++        }
++        if (want != cur) {
++            levels_[r] = want;
++            log_.push_back(Event{utc, r, cur, want});
++            if (log_.size() > LOG_MAX) log_.erase(log_.begin());
++        }
++    }
++
++    int mufLevel(const Input& in) {
++        if (in.mufOk && in.utc > lastMufUtc_ && in.muf > 0.0f) {
++            mufHist_.push_back(MufPt{in.utc, in.muf});
++            lastMufUtc_ = in.utc;
++            while (mufHist_.size() > MUF_HIST_MAX) mufHist_.erase(mufHist_.begin());
++            while (!mufHist_.empty() && in.utc - mufHist_.front().utc > 24.0 * 3600.0)
++                mufHist_.erase(mufHist_.begin());
++        }
++        // Historia insuficiente -> deshabilitada y declarado (no alerta).
++        if (mufHist_.size() < MUF_MIN_SAMPLES) return OFF;
++        if (mufHist_.back().utc - mufHist_.front().utc < MUF_MIN_SPAN_SEC) return OFF;
++        std::vector<float> vs;
++        vs.reserve(mufHist_.size());
++        for (const MufPt& p : mufHist_) vs.push_back(p.v);
++        const size_t mid = vs.size() / 2;
++        std::nth_element(vs.begin(), vs.begin() + mid, vs.end());
++        const float med = vs[mid];
++        if (med <= 0.0f || !in.mufOk || in.muf <= 0.0f) return OFF;
++        const float drop = (med - in.muf) / med;
++        if (drop >= MUF_RED_DROP) return RED;
++        if (drop >= MUF_AMBER_DROP) return AMBER;
++        return GREEN;
++    }
++
++    struct MufPt {
++        double utc = 0.0;
++        float v = 0.0f;
++    };
++
++    int levels_[NRULES] = {OFF, OFF, OFF, OFF};
++    int redCount_[NRULES] = {0, 0, 0, 0};
++    std::vector<MufPt> mufHist_;
++    double lastMufUtc_ = 0.0;
++    double lastUtc_ = 0.0;
++    std::vector<Event> log_;
++};
++
++}  // namespace alerts
+diff --git a/tests/test_alerts.cpp b/tests/test_alerts.cpp
+new file mode 100644
+index 0000000..cb4308f
+--- /dev/null
++++ b/tests/test_alerts.cpp
+@@ -0,0 +1,157 @@
++// =============================================================================
++// test_alerts — S-5 alertas de propagacion (ruling 130 sec.6.5).
++//
++// Test de logica pura: sin GL, sin red. Llama a PRODUCCION
++// (alerts::Engine, src/Data/Alerts.h — motor de reglas sobre bundles).
++//
++// Pines: 4 umbrales del catalogo (rojo tras 2 muestras + verde/ambar),
++// antiparpadeo (1 muestra roja no latchea), dato faltante (!ok -> OFF, no
++// alerta), historia insuficiente (mediana no computable -> OFF declarado),
++// cola de eventos acotada y semaforo global = peor regla.
++// =============================================================================
++#include "Data/Alerts.h"
++
++#include <cstdio>
++#include <string>
++
++static int g_failures = 0;
++static int g_checks = 0;
++
++static void expectTrue(const char* what, bool cond) {
++    ++g_checks;
++    if (!cond) ++g_failures;
++    std::printf("  %-58s [%s]\n", what, cond ? "OK" : "FAIL");
++}
++
++static alerts::Input base(double utc) {
++    alerts::Input in;
++    in.utc = utc;
++    in.kpOk = true;
++    in.kp = 2.0f;
++    in.bzOk = true;
++    in.bz = 1.0f;
++    in.xrayOk = true;
++    in.xrayClass = 'B';
++    in.mufOk = true;
++    in.muf = 20.0f;
++    return in;
++}
++
++// Siembra historia MUF suficiente: 6 muestras a 20 MHz en 4 h.
++static void seedMuf(alerts::Engine& e, double t0) {
++    for (int i = 0; i < 6; ++i) {
++        alerts::Input in = base(t0 + i * 3600.0 * 4.0 / 5.0);
++        e.evaluate(in);
++    }
++}
++
++int main() {
++    std::printf("== alerts: umbrales del catalogo ==\n");
++    {
++        alerts::Engine e;
++        seedMuf(e, 1000000.0);
++        expectTrue("base todo GREEN", e.overall() == alerts::GREEN);
++        alerts::Input a = base(2000000.0);
++        a.kp = 5.0f;
++        e.evaluate(a);  // 1a muestra roja: aun no latchea
++        expectTrue("Kp 1 muestra -> no RED", e.level(alerts::KP) != alerts::RED);
++        e.evaluate(a);  // 2a seguida: rojo
++        expectTrue("Kp 2 seguidas -> RED", e.level(alerts::KP) == alerts::RED);
++        expectTrue("global RED", e.overall() == alerts::RED);
++        alerts::Input b = base(2000100.0);
++        b.kp = 3.0f;
++        e.evaluate(b);
++        expectTrue("Kp 3.0 -> GREEN", e.level(alerts::KP) == alerts::GREEN);
++    }
++    {
++        alerts::Engine e;
++        seedMuf(e, 1000000.0);
++        alerts::Input a = base(2000000.0);
++        a.bz = -11.0f;
++        e.evaluate(a);
++        e.evaluate(a);
++        expectTrue("Bz -11 -> RED", e.level(alerts::BZ) == alerts::RED);
++        alerts::Input b = base(2000100.0);
++        b.bz = 0.0f;
++        e.evaluate(b);
++        expectTrue("Bz 0 -> GREEN", e.level(alerts::BZ) == alerts::GREEN);
++        alerts::Input c = base(2000200.0);
++        c.bz = -7.0f;
++        e.evaluate(c);
++        expectTrue("Bz -7 -> AMBER", e.level(alerts::BZ) == alerts::AMBER);
++    }
++    {
++        alerts::Engine e;
++        seedMuf(e, 1000000.0);
++        alerts::Input a = base(2000000.0);
++        a.xrayClass = 'M';
++        e.evaluate(a);
++        e.evaluate(a);
++        expectTrue("X-ray M -> RED", e.level(alerts::XRAY) == alerts::RED);
++        alerts::Input b = base(2000100.0);
++        b.xrayClass = 'C';
++        e.evaluate(b);
++        expectTrue("X-ray C -> AMBER", e.level(alerts::XRAY) == alerts::AMBER);
++    }
++    {
++        alerts::Engine e;
++        seedMuf(e, 1910000.0);  // mediana 20 MHz (ventana <24 h de las muestras)
++        alerts::Input a = base(1930000.0);
++        a.muf = 14.0f;  // caida 30%
++        e.evaluate(a);
++        e.evaluate(a);
++        expectTrue("MUF -30% -> RED", e.level(alerts::MUF) == alerts::RED);
++        alerts::Input b = base(1930100.0);
++        b.muf = 17.0f;  // caida 15%
++        e.evaluate(b);
++        expectTrue("MUF -15% -> AMBER", e.level(alerts::MUF) == alerts::AMBER);
++        alerts::Input c = base(1930200.0);
++        c.muf = 20.0f;
++        e.evaluate(c);
++        expectTrue("MUF sin caida -> GREEN", e.level(alerts::MUF) == alerts::GREEN);
++    }
++
++    std::printf("== alerts: dato faltante e historia insuficiente ==\n");
++    {
++        alerts::Engine e;
++        seedMuf(e, 1000000.0);
++        alerts::Input a = base(2000000.0);
++        a.bzOk = false;
++        a.bz = -50.0f;  // valor basura: sin ok NO debe alertar
++        e.evaluate(a);
++        e.evaluate(a);
++        expectTrue("Bz ausente -> OFF (no alerta)", e.level(alerts::BZ) == alerts::OFF);
++        expectTrue("global sigue GREEN", e.overall() == alerts::GREEN);
++    }
++    {
++        alerts::Engine e;  // sin historia MUF
++        alerts::Input a = base(1000000.0);
++        e.evaluate(a);
++        expectTrue("MUF sin historia -> OFF", e.level(alerts::MUF) == alerts::OFF);
++        alerts::Input b = base(1000600.0);  // 2a muestra, 10 min: aun insuficiente
++        e.evaluate(b);
++        expectTrue("MUF 2 muestras -> OFF", e.level(alerts::MUF) == alerts::OFF);
++    }
++
++    std::printf("== alerts: cola de eventos ==\n");
++    {
++        alerts::Engine e;
++        seedMuf(e, 1000000.0);
++        const size_t n0 = e.events().size();
++        alerts::Input a = base(2000000.0);
++        a.kp = 5.0f;
++        e.evaluate(a);
++        e.evaluate(a);
++        expectTrue("evento registrado al enrojecer", e.events().size() > n0);
++        const alerts::Event& ev = e.events().back();
++        expectTrue("evento Kp ...->RED", ev.rule == alerts::KP && ev.to == alerts::RED);
++        expectTrue("cola acotada a 32", e.events().size() <= 32);
++    }
++
++    if (g_failures == 0) {
++        std::printf("\ntest_alerts: TODOS OK (%d checks)\n", g_checks);
++        return 0;
++    }
++    std::printf("\ntest_alerts: %d FALLOS de %d checks\n", g_failures, g_checks);
++    return 1;
++}
+-- 
+2.53.0.windows.3
+
