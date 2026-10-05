@@ -1,0 +1,156 @@
+From b5dbad4edcc9f4f07241000e55b9fd4134456f15 Mon Sep 17 00:00:00 2001
+From: David Lopez Salvador <davidlopezsalvador@users.noreply.github.com>
+Date: Mon, 5 Oct 2026 16:52:57 +0200
+Subject: [PATCH] UI-135: jitter blue-noise del punto de entrada (S-3)
+
+---
+ CMakeLists.txt                    |  5 ++-
+ src/Ionosphere/VolumeRenderer.cpp |  8 +++-
+ src/Utils/VolumeJitter.h          | 19 +++++++++
+ tests/test_volume_jitter.cpp      | 68 +++++++++++++++++++++++++++++++
+ 4 files changed, 98 insertions(+), 2 deletions(-)
+ create mode 100644 src/Utils/VolumeJitter.h
+ create mode 100644 tests/test_volume_jitter.cpp
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 796220d..6258909 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -182,7 +182,10 @@ target_include_directories(test_exporter PRIVATE src libs/glad/include libs/stb)
+ add_test(NAME exporter COMMAND test_exporter)
+ add_executable(test_volume_shadow tests/test_volume_shadow.cpp)
+ target_include_directories(test_volume_shadow PRIVATE src)
+-add_test(NAME volume_shadow COMMAND test_volume_shadow)
++add_test(NAME volume_shadow COMMAND test_volume_shadow)
++add_executable(test_volume_jitter tests/test_volume_jitter.cpp)
++target_include_directories(test_volume_jitter PRIVATE src)
++add_test(NAME volume_jitter COMMAND test_volume_jitter)
+ # M7 (plan 10): absorcion D Sauer-Wilkinson + termino SID del LUF — llama a
+ # PRODUCCION (deriveLUF/flareAbsorption/dRegionAbsorptionDb de
+ # RadioPropagationAdapter), no replica. Sin std::thread: solo CURL.
+diff --git a/src/Ionosphere/VolumeRenderer.cpp b/src/Ionosphere/VolumeRenderer.cpp
+index 32c6a7e..da736c7 100644
+--- a/src/Ionosphere/VolumeRenderer.cpp
++++ b/src/Ionosphere/VolumeRenderer.cpp
+@@ -71,12 +71,18 @@ void main() {
+     }
+ 
+     float dt = (tExit - tEnter) / float(u_steps);
++    // S-3: jitter del punto de entrada (ruling 130 sec.6.3). IGN espacial
++    // determinista (sin componente temporal: el motor no tiene TAA).
++    // Decorrela el peine de muestreo entre pixeles vecinos (anti-banding);
++    // espejo CPU en Utils/VolumeJitter.h (misma formula).
++    float jit = fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))));
++    float tEnterJ = tEnter + dt * jit;
+     vec3 accumColor = vec3(0.0);
+     float accumAlpha = 0.0;
+ 
+     for (int i = 0; i < 256; i++) {
+         if (i >= u_steps) break;
+-        float t = tEnter + dt * (float(i) + 0.5);
++        float t = tEnterJ + dt * (float(i) + 0.5);
+         if (t >= tExit) break;
+ 
+         vec3 p = ro + rd * t;
+diff --git a/src/Utils/VolumeJitter.h b/src/Utils/VolumeJitter.h
+new file mode 100644
+index 0000000..205917f
+--- /dev/null
++++ b/src/Utils/VolumeJitter.h
+@@ -0,0 +1,19 @@
++#pragma once
++// S-3 jitter del punto de entrada (ruling 130 sec.6.3): espejo CPU del
++// offset espacial del shader del volumen. IGN determinista (misma formula
++// en ambos lados): offset en [0,1) SOLO del punto de entrada del rayo.
++// SIN componente temporal (el motor no tiene TAA; acumulador temporal
++// PROHIBIDO por la spec): mismos coords -> mismo offset siempre.
++#include <cmath>
++
++namespace volumejitter {
++
++// Offset en [0,1) para el pixel (x, y). IGN (Jimenez 2014).
++inline float entryOffset(float x, float y) {
++    const float d = x * 0.06711056f + y * 0.00583715f;
++    const float f = d - std::floor(d);
++    const float g = 52.9829189f * f;
++    return g - std::floor(g);
++}
++
++}  // namespace volumejitter
+diff --git a/tests/test_volume_jitter.cpp b/tests/test_volume_jitter.cpp
+new file mode 100644
+index 0000000..309eec8
+--- /dev/null
++++ b/tests/test_volume_jitter.cpp
+@@ -0,0 +1,68 @@
++// =============================================================================
++// test_volume_jitter - S-3 jitter del punto de entrada (ruling 130 sec.6.3).
++//
++// Test de logica pura: sin GL, sin red. Llama a PRODUCCION
++// (volumejitter::entryOffset, src/Utils/VolumeJitter.h - espejo CPU de la
++// formula IGN del shader del volumen).
++//
++// Pines: valores exactos MEDIDOS con produccion en 3 coords, rango [0,1) en
++// barrido 64x64, determinismo (mismos coords -> mismo offset: sin componente
++// temporal por construccion) y descorrelacion (los 4096 no son constantes).
++// Nota: el pin es sobre el espejo CPU; el shader usa la expresion identica
++// (la ultima ulp puede variar por precision GPU y es irrelevante al uso).
++// =============================================================================
++#include "Utils/VolumeJitter.h"
++
++#include <cmath>
++#include <cstdio>
++
++static int g_failures = 0;
++static int g_checks = 0;
++
++static void expectTrue(const char* what, bool cond) {
++    ++g_checks;
++    if (!cond) ++g_failures;
++    std::printf("  %-58s [%s]\n", what, cond ? "OK" : "FAIL");
++}
++
++static void expectSame(const char* what, float a, float b) {
++    ++g_checks;
++    const bool ok = (a == b);
++    if (!ok) ++g_failures;
++    std::printf("  %-58s [%s]\n", what, ok ? "OK" : "FAIL");
++}
++
++int main() {
++    std::printf("== volume_jitter: valores exactos medidos ==\n");
++    {
++        expectSame("(0,7) -> 0.164884567", volumejitter::entryOffset(0.0f, 7.0f), 0.164884567f);
++        expectSame("(37,98) -> 0.921024323", volumejitter::entryOffset(37.0f, 98.0f), 0.921024323f);
++        expectSame("(148,371) -> 0.189423084",
++                   volumejitter::entryOffset(148.0f, 371.0f), 0.189423084f);
++    }
++
++    std::printf("== volume_jitter: rango + determinismo + descorrelacion ==\n");
++    {
++        bool inRange = true;
++        float first = volumejitter::entryOffset(0.0f, 0.0f);
++        bool varied = false;
++        for (int y = 0; y < 64; ++y) {
++            for (int x = 0; x < 64; ++x) {
++                const float v = volumejitter::entryOffset((float)x, (float)y);
++                if (!(v >= 0.0f && v < 1.0f)) inRange = false;
++                if (v != first) varied = true;
++                // Sin componente temporal: repetir da identico.
++                if (volumejitter::entryOffset((float)x, (float)y) != v) inRange = false;
++            }
++        }
++        expectTrue("64x64 todo en [0,1)", inRange);
++        expectTrue("no constante (descorrelacion espacial)", varied);
++    }
++
++    if (g_failures == 0) {
++        std::printf("\ntest_volume_jitter: TODOS OK (%d checks)\n", g_checks);
++        return 0;
++    }
++    std::printf("\ntest_volume_jitter: %d FALLOS de %d checks\n", g_failures, g_checks);
++    return 1;
++}
+-- 
+2.53.0.windows.3
+
