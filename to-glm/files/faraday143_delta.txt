@@ -1,0 +1,1054 @@
+From cc67f95fa5a6a49867316ad4df60fead33be43ba Mon Sep 17 00:00:00 2001
+From: David Lopez Salvador <davidlopezsalvador@users.noreply.github.com>
+Date: Mon, 5 Oct 2026 23:22:00 +0200
+Subject: [PATCH] UI-143: Faraday IGRF real en camino vertical (M-1)
+
+---
+ CMakeLists.txt                       | 337 ++++++++++++++-------------
+ src/App.cpp                          |  22 +-
+ src/Data/RadioPropagationAdapter.cpp |  74 ++++--
+ src/Data/RadioPropagationAdapter.h   |  19 +-
+ src/Ionosphere/FaradayLayer.cpp      |  36 ++-
+ src/Ionosphere/FaradayLayer.h        |  13 +-
+ src/Utils/Igrf.cpp                   | 197 ++++++++++++++++
+ src/Utils/Igrf.h                     |  54 +++++
+ tests/test_igrf.cpp                  | 103 ++++++++
+ 9 files changed, 654 insertions(+), 201 deletions(-)
+ create mode 100644 src/Utils/Igrf.cpp
+ create mode 100644 src/Utils/Igrf.h
+ create mode 100644 tests/test_igrf.cpp
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 1543565..4a776be 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -52,12 +52,12 @@ set(SOURCES
+     src/Ionosphere/FaradayLayer.cpp
+     src/Ionosphere/RefShells.cpp
+     src/Ionosphere/SliceLayer.cpp
+-    src/Ionosphere/HFTraceLayer.cpp
++    src/Ionosphere/HFTraceLayer.cpp
+     src/Data/DataManager.cpp
+     src/Data/EsaAdapter.cpp
+     src/Data/GloTecAdapter.cpp
+     src/Data/GiroAdapter.cpp
+-    src/Data/Kc2gAdapter.cpp
++    src/Data/Kc2gAdapter.cpp
+     src/Data/NoaaAdapter.cpp
+     src/Data/SolarIndicesAdapter.cpp
+     src/Data/SolarWindAdapter.cpp
+@@ -65,26 +65,27 @@ set(SOURCES
+     src/Data/AuroraAdapter.cpp
+     src/Data/EbroAdapter.cpp
+     src/Data/XrayAdapter.cpp
+-    src/Data/DiasAdapter.cpp
+-    src/Data/TecCache.cpp  # M10: cache TEC en disco (puro, sin curl/GL)
+-    src/Data/Kc2gCache.cpp  # FASE B (P2): cache kc2g en disco (puro, sin curl/GL)
+-    src/Data/IrtamCache.cpp  # M-IRTAM (F1): cache IRTAM en disco (puro, sin curl/GL)
+-    src/Data/IrtamCoeffParse.cpp  # M-IRTAM-F2 (P1a): parse gambit-coeffs (puro, sin curl/GL)
+-    src/Data/IrtamCoeffCache.cpp  # M-IRTAM-F2 (P2): cache numerica (puro, sin curl/GL)
+-    src/Data/LgdcPacing.cpp  # M-IRTAM-F2 (P3): gate lgdc compartido (puro, sin curl/GL)
+-    src/Data/LgdcTrace.cpp  # Ciclo traza: log stderr con timestamp (solo-log, sin curl/GL)
++    src/Data/DiasAdapter.cpp
++    src/Data/TecCache.cpp  # M10: cache TEC en disco (puro, sin curl/GL)
++    src/Data/Kc2gCache.cpp  # FASE B (P2): cache kc2g en disco (puro, sin curl/GL)
++    src/Data/IrtamCache.cpp  # M-IRTAM (F1): cache IRTAM en disco (puro, sin curl/GL)
++    src/Data/IrtamCoeffParse.cpp  # M-IRTAM-F2 (P1a): parse gambit-coeffs (puro, sin curl/GL)
++    src/Data/IrtamCoeffCache.cpp  # M-IRTAM-F2 (P2): cache numerica (puro, sin curl/GL)
++    src/Data/LgdcPacing.cpp  # M-IRTAM-F2 (P3): gate lgdc compartido (puro, sin curl/GL)
++    src/Data/LgdcTrace.cpp  # Ciclo traza: log stderr con timestamp (solo-log, sin curl/GL)
+     src/Data/ProviderStatus.cpp  # M-prov-matrix (048): estado por proveedor (puro, sin curl/GL)
+-    src/Data/IrtamCoeffAdapter.cpp  # M-IRTAM-F2 (P4): adaptador gambit (curl/gate; URL vive aqui)
+-    src/Data/IrtamGridEval.cpp  # M-IRTAM-F2 (P1b): eval Jones-Gallet 46x45 (puro, sin curl/GL)
+-    src/Data/IrtamState.cpp  # M-IRTAM-F2 (P5): estados honestos + replay (puro, sin curl/GL)
++    src/Data/IrtamCoeffAdapter.cpp  # M-IRTAM-F2 (P4): adaptador gambit (curl/gate; URL vive aqui)
++    src/Data/IrtamGridEval.cpp  # M-IRTAM-F2 (P1b): eval Jones-Gallet 46x45 (puro, sin curl/GL)
++    src/Data/IrtamState.cpp  # M-IRTAM-F2 (P5): estados honestos + replay (puro, sin curl/GL)
+     src/Data/SdoImageAdapter.cpp  # M11: imagenes SDO (stb decode en worker)
+     src/UI/SidePanel.cpp
+     src/UI/TimelineBar.cpp
+-    src/UI/StationPanel.cpp
++    src/UI/StationPanel.cpp
+     src/UI/SunPanel.cpp  # M11: ventana Sun
+-    src/Utils/CoordinateSystem.cpp
+-    src/Utils/SolarPosition.cpp
+-    src/Utils/Exporter.cpp  # S-1: exportacion PNG+CSV (logica pura + stb write)
++    src/Utils/CoordinateSystem.cpp
++    src/Utils/SolarPosition.cpp
++    src/Utils/Exporter.cpp  # S-1: exportacion PNG+CSV (logica pura + stb write)
++    src/Utils/Igrf.cpp  # M'-1: IGRF-14 grado 8 (puro, sin GL/red)
+ )
+ 
+ # ── Executable ───────────────────────────────────────────────────────
+@@ -132,39 +133,39 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/data")
+ endif()
+ 
+ # Tests (logica pura: sin GL/GLFW/red — corren en cualquier CI).
+-# Condicion 5 de la revision MUSE. M4: test_getbest_parse con fixture real
+-# (multichar EB040 capturado en vivo); M5: test_model_foF2 (clima+haversine);
+-# M7: test_d_region (absorcion D + LUF-SID); M8: test_hf_circuit
+-# (circuito HF: geodesia/slerp/bandState/MUF-FOT inline en HFTraceLayer.h);
+-# M4R-A: test_kc2g_parse (failover kc2g: parser puro + time-filter +
+-# fixture real de prop.kc2g.com; segunda implementacion = generador Python).
+-
++# Condicion 5 de la revision MUSE. M4: test_getbest_parse con fixture real
++# (multichar EB040 capturado en vivo); M5: test_model_foF2 (clima+haversine);
++# M7: test_d_region (absorcion D + LUF-SID); M8: test_hf_circuit
++# (circuito HF: geodesia/slerp/bandState/MUF-FOT inline en HFTraceLayer.h);
++# M4R-A: test_kc2g_parse (failover kc2g: parser puro + time-filter +
++# fixture real de prop.kc2g.com; segunda implementacion = generador Python).
++
+ enable_testing()
+-# M4 (7.1): parser multichar de getbest — llama a PRODUCCION
+-# (GiroAdapter::parseGetbest real sobre fixture real), no replica.
+-add_executable(test_getbest_parse tests/test_getbest_parse.cpp)
+-target_include_directories(test_getbest_parse PRIVATE src)
+-target_sources(test_getbest_parse PRIVATE src/Data/GiroAdapter.cpp src/Data/LgdcPacing.cpp src/Data/LgdcTrace.cpp)  # M-IRTAM-F2 (P3): GiroAdapter registra en el gate (+ traza solo-log)
+-target_link_libraries(test_getbest_parse PRIVATE CURL::libcurl)
+-if(NOT WIN32)
+-    # Linux: GiroAdapter.cpp usa std::thread -> pthread. En MSYS2 (winpthreads)
+-    # lo enlaza el driver de g++ solo; en Windows Threads::Threads no existe.
+-    target_link_libraries(test_getbest_parse PRIVATE Threads::Threads)
+-endif()
+-add_test(NAME getbest_parse COMMAND test_getbest_parse)
+-# M4R-A (FASE A): parser kc2g del failover — llama a PRODUCCION
+-# (Kc2gAdapter::parseStations/gridUsable/panelUsable/toSample sobre
+-# fixture real capturado en vivo), no replica. LayerProfile.h (check del
+-# sello sanitizeB0/B1) via IonosondeLayer.h: glad/glm solo cabeceras
+-# (patron model_foF2). std::thread -> pthread en Linux (patron getbest).
+-add_executable(test_kc2g_parse tests/test_kc2g_parse.cpp)
+-target_include_directories(test_kc2g_parse PRIVATE src libs/glad/include)
+-target_sources(test_kc2g_parse PRIVATE src/Data/Kc2gAdapter.cpp src/Data/Kc2gCache.cpp)
+-target_link_libraries(test_kc2g_parse PRIVATE CURL::libcurl)
+-if(NOT WIN32)
+-    target_link_libraries(test_kc2g_parse PRIVATE Threads::Threads)
+-endif()
+-add_test(NAME kc2g_parse COMMAND test_kc2g_parse)
++# M4 (7.1): parser multichar de getbest — llama a PRODUCCION
++# (GiroAdapter::parseGetbest real sobre fixture real), no replica.
++add_executable(test_getbest_parse tests/test_getbest_parse.cpp)
++target_include_directories(test_getbest_parse PRIVATE src)
++target_sources(test_getbest_parse PRIVATE src/Data/GiroAdapter.cpp src/Data/LgdcPacing.cpp src/Data/LgdcTrace.cpp)  # M-IRTAM-F2 (P3): GiroAdapter registra en el gate (+ traza solo-log)
++target_link_libraries(test_getbest_parse PRIVATE CURL::libcurl)
++if(NOT WIN32)
++    # Linux: GiroAdapter.cpp usa std::thread -> pthread. En MSYS2 (winpthreads)
++    # lo enlaza el driver de g++ solo; en Windows Threads::Threads no existe.
++    target_link_libraries(test_getbest_parse PRIVATE Threads::Threads)
++endif()
++add_test(NAME getbest_parse COMMAND test_getbest_parse)
++# M4R-A (FASE A): parser kc2g del failover — llama a PRODUCCION
++# (Kc2gAdapter::parseStations/gridUsable/panelUsable/toSample sobre
++# fixture real capturado en vivo), no replica. LayerProfile.h (check del
++# sello sanitizeB0/B1) via IonosondeLayer.h: glad/glm solo cabeceras
++# (patron model_foF2). std::thread -> pthread en Linux (patron getbest).
++add_executable(test_kc2g_parse tests/test_kc2g_parse.cpp)
++target_include_directories(test_kc2g_parse PRIVATE src libs/glad/include)
++target_sources(test_kc2g_parse PRIVATE src/Data/Kc2gAdapter.cpp src/Data/Kc2gCache.cpp)
++target_link_libraries(test_kc2g_parse PRIVATE CURL::libcurl)
++if(NOT WIN32)
++    target_link_libraries(test_kc2g_parse PRIVATE Threads::Threads)
++endif()
++add_test(NAME kc2g_parse COMMAND test_kc2g_parse)
+ # M5 (plan 8.2/8.3): modelo climatologico + haversine — llama a
+ # PRODUCCION (inline de LayerProfile.h + densityDir de DensityVolume.h
+ # + SolarPosition real para el check de convencion subsolar), no replica.
+@@ -174,123 +175,133 @@ add_executable(test_model_foF2 tests/test_model_foF2.cpp)
+ target_include_directories(test_model_foF2 PRIVATE src libs/glad/include)
+ target_sources(test_model_foF2 PRIVATE src/Utils/SolarPosition.cpp)
+ add_test(NAME model_foF2 COMMAND test_model_foF2)
+-add_executable(test_layer_winner tests/test_layer_winner.cpp)
+-target_include_directories(test_layer_winner PRIVATE src libs/glad/include)
+-add_test(NAME layer_winner COMMAND test_layer_winner)
+-add_executable(test_exporter tests/test_exporter.cpp src/Utils/Exporter.cpp)
+-target_include_directories(test_exporter PRIVATE src libs/glad/include libs/stb)
+-add_test(NAME exporter COMMAND test_exporter)
+-add_executable(test_volume_shadow tests/test_volume_shadow.cpp)
+-target_include_directories(test_volume_shadow PRIVATE src)
+-add_test(NAME volume_shadow COMMAND test_volume_shadow)
+-add_executable(test_volume_jitter tests/test_volume_jitter.cpp)
+-target_include_directories(test_volume_jitter PRIVATE src)
+-add_test(NAME volume_jitter COMMAND test_volume_jitter)
+-add_executable(test_tour tests/test_tour.cpp)
+-target_include_directories(test_tour PRIVATE src)
+-add_test(NAME tour COMMAND test_tour)
+-add_executable(test_alerts tests/test_alerts.cpp)
+-target_include_directories(test_alerts PRIVATE src)
+-add_test(NAME alerts COMMAND test_alerts)
+-# M7 (plan 10): absorcion D Sauer-Wilkinson + termino SID del LUF — llama a
+-# PRODUCCION (deriveLUF/flareAbsorption/dRegionAbsorptionDb de
+-# RadioPropagationAdapter), no replica. Sin std::thread: solo CURL.
+-add_executable(test_d_region tests/test_d_region.cpp)
+-target_include_directories(test_d_region PRIVATE src)
+-target_sources(test_d_region PRIVATE src/Data/RadioPropagationAdapter.cpp)
+-target_link_libraries(test_d_region PRIVATE CURL::libcurl)
+-add_test(NAME d_region COMMAND test_d_region)
+-# M8 (plan 11): circuito HF — llama a PRODUCCION (namespace hfc inline en
+-# HFTraceLayer.h sobre HfMath.h), no replica. glm/glad: solo cabeceras
+-# via HFTraceLayer.h (patron model_foF2), sin link y sin std::thread.
+-add_executable(test_hf_circuit tests/test_hf_circuit.cpp)
+-target_include_directories(test_hf_circuit PRIVATE src libs/glad/include libs/glm)
+-add_test(NAME hf_circuit COMMAND test_hf_circuit)
++add_executable(test_layer_winner tests/test_layer_winner.cpp)
++target_include_directories(test_layer_winner PRIVATE src libs/glad/include)
++add_test(NAME layer_winner COMMAND test_layer_winner)
++add_executable(test_exporter tests/test_exporter.cpp src/Utils/Exporter.cpp)
++target_include_directories(test_exporter PRIVATE src libs/glad/include libs/stb)
++add_test(NAME exporter COMMAND test_exporter)
++add_executable(test_volume_shadow tests/test_volume_shadow.cpp)
++target_include_directories(test_volume_shadow PRIVATE src)
++add_test(NAME volume_shadow COMMAND test_volume_shadow)
++add_executable(test_volume_jitter tests/test_volume_jitter.cpp)
++target_include_directories(test_volume_jitter PRIVATE src)
++add_test(NAME volume_jitter COMMAND test_volume_jitter)
++add_executable(test_tour tests/test_tour.cpp)
++target_include_directories(test_tour PRIVATE src)
++add_test(NAME tour COMMAND test_tour)
++add_executable(test_alerts tests/test_alerts.cpp)
++target_include_directories(test_alerts PRIVATE src)
++add_test(NAME alerts COMMAND test_alerts)
++# M'-1 (ruling 142 sec.4): Faraday IGRF real - llama a PRODUCCION
++# (namespace igrf + RadioPropagationAdapter::resolveTecSI/medianOf/
++# stationOmegaRad), no replica. El adapter usa curl: enlaza CURL::libcurl.
++add_executable(test_igrf tests/test_igrf.cpp src/Utils/Igrf.cpp src/Data/RadioPropagationAdapter.cpp)
++target_include_directories(test_igrf PRIVATE src libs/glad/include)
++target_link_libraries(test_igrf PRIVATE CURL::libcurl)
++if(NOT WIN32)
++    target_link_libraries(test_igrf PRIVATE Threads::Threads)
++endif()
++add_test(NAME igrf COMMAND test_igrf)
++# M7 (plan 10): absorcion D Sauer-Wilkinson + termino SID del LUF — llama a
++# PRODUCCION (deriveLUF/flareAbsorption/dRegionAbsorptionDb de
++# RadioPropagationAdapter), no replica. Sin std::thread: solo CURL.
++add_executable(test_d_region tests/test_d_region.cpp)
++target_include_directories(test_d_region PRIVATE src)
++target_sources(test_d_region PRIVATE src/Data/RadioPropagationAdapter.cpp src/Utils/Igrf.cpp)  # M'-1: adapter usa igrf::
++target_link_libraries(test_d_region PRIVATE CURL::libcurl)
++add_test(NAME d_region COMMAND test_d_region)
++# M8 (plan 11): circuito HF — llama a PRODUCCION (namespace hfc inline en
++# HFTraceLayer.h sobre HfMath.h), no replica. glm/glad: solo cabeceras
++# via HFTraceLayer.h (patron model_foF2), sin link y sin std::thread.
++add_executable(test_hf_circuit tests/test_hf_circuit.cpp)
++target_include_directories(test_hf_circuit PRIVATE src libs/glad/include libs/glm)
++add_test(NAME hf_circuit COMMAND test_hf_circuit)
+ add_executable(test_hop_geometry tests/test_hop_geometry.cpp)
+ target_include_directories(test_hop_geometry PRIVATE src)
+ add_test(NAME hop_geometry COMMAND test_hop_geometry)
+-add_executable(test_m2_sun tests/test_m2_sun.cpp src/Utils/SolarPosition.cpp)
+-target_include_directories(test_m2_sun PRIVATE src)
+-add_test(NAME m2_sun COMMAND test_m2_sun)
+-# M10 (cache TEC en disco): logica pura, sin GL/curl. Llama a PRODUCCION
+-# (namespace teccache en src/Data/TecCache), no replica.
+-add_executable(test_tec_cache tests/test_tec_cache.cpp src/Data/TecCache.cpp)
+-target_include_directories(test_tec_cache PRIVATE src)
+-add_test(NAME tec_cache COMMAND test_tec_cache)
+-# M11 (SDO): matematica del disco + λs. Llama a PRODUCCION (sundisk +
+-# SolarPosition::getApparentEclipticLonDeg), no replica.
+-add_executable(test_sdo_projection tests/test_sdo_projection.cpp src/Utils/SolarPosition.cpp)
+-target_include_directories(test_sdo_projection PRIVATE src libs/glm)
+-add_test(NAME sdo_projection COMMAND test_sdo_projection)
+-# M11 (SDO): parseo sunspot_report con fixture real en vivo — llama a
+-# PRODUCCION (SolarIndicesAdapter::parseSunspotReport), no replica.
+-# std::thread -> pthread en Linux (patron getbest/kc2g).
+-add_executable(test_sdo_adapter tests/test_sdo_adapter.cpp)
+-target_include_directories(test_sdo_adapter PRIVATE src)
+-target_sources(test_sdo_adapter PRIVATE src/Data/SolarIndicesAdapter.cpp)
+-target_link_libraries(test_sdo_adapter PRIVATE CURL::libcurl)
+-if(NOT WIN32)
+-    target_link_libraries(test_sdo_adapter PRIVATE Threads::Threads)
+-endif()
+-add_test(NAME sdo_adapter COMMAND test_sdo_adapter)
+-# FASE B (P1): historia kc2g por acumulacion — llama a PRODUCCION
+-# (Kc2gAdapter::accumulateBatch/sampleHistoryAt), no replica.
+-add_executable(test_kc2g_history tests/test_kc2g_history.cpp)
+-target_include_directories(test_kc2g_history PRIVATE src)
+-target_sources(test_kc2g_history PRIVATE src/Data/Kc2gAdapter.cpp src/Data/Kc2gCache.cpp)
+-target_link_libraries(test_kc2g_history PRIVATE CURL::libcurl)
+-if(NOT WIN32)
+-    target_link_libraries(test_kc2g_history PRIVATE Threads::Threads)
+-endif()
+-add_test(NAME kc2g_history COMMAND test_kc2g_history)
+-# FASE B (P2): cache kc2g en disco — llama a PRODUCCION
+-# (namespace kc2gcache en src/Data/Kc2gCache), no replica.
+-add_executable(test_kc2g_cache tests/test_kc2g_cache.cpp src/Data/Kc2gCache.cpp)
+-target_include_directories(test_kc2g_cache PRIVATE src)
+-add_test(NAME kc2g_cache COMMAND test_kc2g_cache)
+-# M-IRTAM (F1): cache IRTAM en disco — llama a PRODUCCION
+-# (namespace irtamcache en src/Data/IrtamCache), no replica.
+-add_executable(test_irtam_cache tests/test_irtam_cache.cpp src/Data/IrtamCache.cpp)
+-target_include_directories(test_irtam_cache PRIVATE src)
+-add_test(NAME irtam_cache COMMAND test_irtam_cache)
+-# M-IRTAM-F2 (P1a): parse gambit-coeffs — llama a PRODUCCION
+-# (namespace irtamcoeff en src/Data/IrtamCoeffParse), no replica.
+-add_executable(test_irtam_coeff_parse tests/test_irtam_coeff_parse.cpp src/Data/IrtamCoeffParse.cpp)
+-target_include_directories(test_irtam_coeff_parse PRIVATE src)
+-add_test(NAME irtam_coeff_parse COMMAND test_irtam_coeff_parse)
+-# M-IRTAM-F2 (P2): cache numerica — llama a PRODUCCION
+-# (namespace irtamccache en src/Data/IrtamCoeffCache), no replica.
+-add_executable(test_irtamc_cache tests/test_irtamc_cache.cpp src/Data/IrtamCoeffCache.cpp src/Data/IrtamCoeffParse.cpp)
+-target_include_directories(test_irtamc_cache PRIVATE src)
+-add_test(NAME irtamc_cache COMMAND test_irtamc_cache)
+-# M-IRTAM-F2 (P3): gate lgdc compartido — llama a PRODUCCION
+-# (namespace lgdcpacing en src/Data/LgdcPacing), no replica.
+-add_executable(test_irtamc_gate tests/test_irtamc_gate.cpp src/Data/LgdcPacing.cpp)
+-target_include_directories(test_irtamc_gate PRIVATE src)
+-add_test(NAME irtamc_gate COMMAND test_irtamc_gate)
+-# M-IRTAM-F2 (P4): planificacion del backfill — llama a PRODUCCION
+-# (namespace irtamfetch en src/Data/IrtamCoeffAdapter), no replica.
+-# El adapter usa curl (twin getbest_parse): enlaza CURL::libcurl.
+-add_executable(test_irtam_adapter tests/test_irtam_adapter.cpp src/Data/IrtamCoeffAdapter.cpp src/Data/IrtamCoeffCache.cpp src/Data/IrtamCoeffParse.cpp src/Data/LgdcPacing.cpp src/Data/LgdcTrace.cpp)
+-target_include_directories(test_irtam_adapter PRIVATE src libs/glad/include)  # GridData via GridLayer.h: glad solo cabeceras (patron kc2g_parse)
+-target_link_libraries(test_irtam_adapter PRIVATE CURL::libcurl)
+-if(NOT WIN32)
+-    target_link_libraries(test_irtam_adapter PRIVATE Threads::Threads)
+-endif()
+-add_test(NAME irtam_adapter COMMAND test_irtam_adapter)
+-# M-IRTAM-F2 (P1b): evaluacion Jones-Gallet — llama a PRODUCCION
+-# (namespace irtameval en src/Data/IrtamGridEval), no replica.
+-add_executable(test_irtam_grid_eval tests/test_irtam_grid_eval.cpp src/Data/IrtamGridEval.cpp src/Data/IrtamCoeffParse.cpp)
+-target_include_directories(test_irtam_grid_eval PRIVATE src libs/glad/include)  # GridData via GridLayer.h (patron kc2g_parse)
+-add_test(NAME irtam_grid_eval COMMAND test_irtam_grid_eval)
+-# M-IRTAM-F2 (P5): estados honestos + replay — llama a PRODUCCION
+-# (namespace irtamstate en src/Data/IrtamState), no replica.
+-add_executable(test_irtam_state tests/test_irtam_state.cpp src/Data/IrtamState.cpp)
+-target_include_directories(test_irtam_state PRIVATE src)
+-add_test(NAME irtam_state COMMAND test_irtam_state)
+-# Ciclo traza: formato + sumidero — llama a PRODUCCION (lgdctrace), no replica.
+-add_executable(test_lgdc_trace tests/test_lgdc_trace.cpp src/Data/LgdcTrace.cpp)
+-target_include_directories(test_lgdc_trace PRIVATE src)
++add_executable(test_m2_sun tests/test_m2_sun.cpp src/Utils/SolarPosition.cpp)
++target_include_directories(test_m2_sun PRIVATE src)
++add_test(NAME m2_sun COMMAND test_m2_sun)
++# M10 (cache TEC en disco): logica pura, sin GL/curl. Llama a PRODUCCION
++# (namespace teccache en src/Data/TecCache), no replica.
++add_executable(test_tec_cache tests/test_tec_cache.cpp src/Data/TecCache.cpp)
++target_include_directories(test_tec_cache PRIVATE src)
++add_test(NAME tec_cache COMMAND test_tec_cache)
++# M11 (SDO): matematica del disco + λs. Llama a PRODUCCION (sundisk +
++# SolarPosition::getApparentEclipticLonDeg), no replica.
++add_executable(test_sdo_projection tests/test_sdo_projection.cpp src/Utils/SolarPosition.cpp)
++target_include_directories(test_sdo_projection PRIVATE src libs/glm)
++add_test(NAME sdo_projection COMMAND test_sdo_projection)
++# M11 (SDO): parseo sunspot_report con fixture real en vivo — llama a
++# PRODUCCION (SolarIndicesAdapter::parseSunspotReport), no replica.
++# std::thread -> pthread en Linux (patron getbest/kc2g).
++add_executable(test_sdo_adapter tests/test_sdo_adapter.cpp)
++target_include_directories(test_sdo_adapter PRIVATE src)
++target_sources(test_sdo_adapter PRIVATE src/Data/SolarIndicesAdapter.cpp)
++target_link_libraries(test_sdo_adapter PRIVATE CURL::libcurl)
++if(NOT WIN32)
++    target_link_libraries(test_sdo_adapter PRIVATE Threads::Threads)
++endif()
++add_test(NAME sdo_adapter COMMAND test_sdo_adapter)
++# FASE B (P1): historia kc2g por acumulacion — llama a PRODUCCION
++# (Kc2gAdapter::accumulateBatch/sampleHistoryAt), no replica.
++add_executable(test_kc2g_history tests/test_kc2g_history.cpp)
++target_include_directories(test_kc2g_history PRIVATE src)
++target_sources(test_kc2g_history PRIVATE src/Data/Kc2gAdapter.cpp src/Data/Kc2gCache.cpp)
++target_link_libraries(test_kc2g_history PRIVATE CURL::libcurl)
++if(NOT WIN32)
++    target_link_libraries(test_kc2g_history PRIVATE Threads::Threads)
++endif()
++add_test(NAME kc2g_history COMMAND test_kc2g_history)
++# FASE B (P2): cache kc2g en disco — llama a PRODUCCION
++# (namespace kc2gcache en src/Data/Kc2gCache), no replica.
++add_executable(test_kc2g_cache tests/test_kc2g_cache.cpp src/Data/Kc2gCache.cpp)
++target_include_directories(test_kc2g_cache PRIVATE src)
++add_test(NAME kc2g_cache COMMAND test_kc2g_cache)
++# M-IRTAM (F1): cache IRTAM en disco — llama a PRODUCCION
++# (namespace irtamcache en src/Data/IrtamCache), no replica.
++add_executable(test_irtam_cache tests/test_irtam_cache.cpp src/Data/IrtamCache.cpp)
++target_include_directories(test_irtam_cache PRIVATE src)
++add_test(NAME irtam_cache COMMAND test_irtam_cache)
++# M-IRTAM-F2 (P1a): parse gambit-coeffs — llama a PRODUCCION
++# (namespace irtamcoeff en src/Data/IrtamCoeffParse), no replica.
++add_executable(test_irtam_coeff_parse tests/test_irtam_coeff_parse.cpp src/Data/IrtamCoeffParse.cpp)
++target_include_directories(test_irtam_coeff_parse PRIVATE src)
++add_test(NAME irtam_coeff_parse COMMAND test_irtam_coeff_parse)
++# M-IRTAM-F2 (P2): cache numerica — llama a PRODUCCION
++# (namespace irtamccache en src/Data/IrtamCoeffCache), no replica.
++add_executable(test_irtamc_cache tests/test_irtamc_cache.cpp src/Data/IrtamCoeffCache.cpp src/Data/IrtamCoeffParse.cpp)
++target_include_directories(test_irtamc_cache PRIVATE src)
++add_test(NAME irtamc_cache COMMAND test_irtamc_cache)
++# M-IRTAM-F2 (P3): gate lgdc compartido — llama a PRODUCCION
++# (namespace lgdcpacing en src/Data/LgdcPacing), no replica.
++add_executable(test_irtamc_gate tests/test_irtamc_gate.cpp src/Data/LgdcPacing.cpp)
++target_include_directories(test_irtamc_gate PRIVATE src)
++add_test(NAME irtamc_gate COMMAND test_irtamc_gate)
++# M-IRTAM-F2 (P4): planificacion del backfill — llama a PRODUCCION
++# (namespace irtamfetch en src/Data/IrtamCoeffAdapter), no replica.
++# El adapter usa curl (twin getbest_parse): enlaza CURL::libcurl.
++add_executable(test_irtam_adapter tests/test_irtam_adapter.cpp src/Data/IrtamCoeffAdapter.cpp src/Data/IrtamCoeffCache.cpp src/Data/IrtamCoeffParse.cpp src/Data/LgdcPacing.cpp src/Data/LgdcTrace.cpp)
++target_include_directories(test_irtam_adapter PRIVATE src libs/glad/include)  # GridData via GridLayer.h: glad solo cabeceras (patron kc2g_parse)
++target_link_libraries(test_irtam_adapter PRIVATE CURL::libcurl)
++if(NOT WIN32)
++    target_link_libraries(test_irtam_adapter PRIVATE Threads::Threads)
++endif()
++add_test(NAME irtam_adapter COMMAND test_irtam_adapter)
++# M-IRTAM-F2 (P1b): evaluacion Jones-Gallet — llama a PRODUCCION
++# (namespace irtameval en src/Data/IrtamGridEval), no replica.
++add_executable(test_irtam_grid_eval tests/test_irtam_grid_eval.cpp src/Data/IrtamGridEval.cpp src/Data/IrtamCoeffParse.cpp)
++target_include_directories(test_irtam_grid_eval PRIVATE src libs/glad/include)  # GridData via GridLayer.h (patron kc2g_parse)
++add_test(NAME irtam_grid_eval COMMAND test_irtam_grid_eval)
++# M-IRTAM-F2 (P5): estados honestos + replay — llama a PRODUCCION
++# (namespace irtamstate en src/Data/IrtamState), no replica.
++add_executable(test_irtam_state tests/test_irtam_state.cpp src/Data/IrtamState.cpp)
++target_include_directories(test_irtam_state PRIVATE src)
++add_test(NAME irtam_state COMMAND test_irtam_state)
++# Ciclo traza: formato + sumidero — llama a PRODUCCION (lgdctrace), no replica.
++add_executable(test_lgdc_trace tests/test_lgdc_trace.cpp src/Data/LgdcTrace.cpp)
++target_include_directories(test_lgdc_trace PRIVATE src)
+ add_test(NAME lgdc_trace COMMAND test_lgdc_trace)
+ # M-prov-matrix (048): matriz de estado — llama a PRODUCCION (provstatus), no replica.
+ add_executable(test_provider_status tests/test_provider_status.cpp src/Data/ProviderStatus.cpp)
+diff --git a/src/App.cpp b/src/App.cpp
+index 4983b1e..58b09f2 100644
+--- a/src/App.cpp
++++ b/src/App.cpp
+@@ -4473,10 +4473,20 @@ void App::render() {
+             stFot = RadioPropagationAdapter::deriveFOT(stMuf);
+             stLuf = RadioPropagationAdapter::deriveLUF(stMuf, rpStation->foF2, rpStation->latDeg, rpStation->lonDeg, rpEpoch, rpFlux, rpKp);
+             stS4 = RadioPropagationAdapter::deriveS4(rpStation->latDeg, rpStation->lonDeg, rpEpoch);
+-            stSpF = RadioPropagationAdapter::deriveSpreadF(rpStation->latDeg, rpStation->lonDeg, rpEpoch, rpKp);
+-            float tecu = 15.0f;
+-            if (rpStation->nmF2 > 0.0f) tecu = rpStation->nmF2 * 2e-11f;  // ~slab 200 km
+-            stFar = RadioPropagationAdapter::deriveFaraday(tecu, rpStation->latDeg);
++            stSpF = RadioPropagationAdapter::deriveSpreadF(rpStation->latDeg, rpStation->lonDeg, rpEpoch, rpKp);
++            // M'-1: cadena TEC unica (rung 0 = grid mostrado SOLO si es TEC;
++            // si no, nmF2-slab; si no, mock 15) -> Omega REAL a su FOT.
++            const GridData& cg = impl->tecLayer.getGrid();
++            const bool gridIsTec = cg.valid && impl->mapVariable == 0;
++            int tecRung = -1;
++            const float tecSI = RadioPropagationAdapter::resolveTecSI(
++                gridIsTec, gridIsTec ? FaradayLayer::sampleGridTec(
++                                           cg, rpStation->latDeg, rpStation->lonDeg, 15.0f)
++                                     : 0.0f,
++                rpStation->nmF2 > 0.0f, rpStation->nmF2, tecRung);
++            stFar = (float)RadioPropagationAdapter::stationOmegaRad(
++                        rpStation->latDeg, rpStation->lonDeg, tecSI, stFot * 1e6) *
++                    57.29577951308232f;
+         }
+     }
+     float showMuf = rpStation && stHasData ? stMuf : rp.muf;
+@@ -4632,8 +4642,8 @@ void App::render() {
+     if (ImGui::IsItemHovered()) ImGui::SetItemTooltip("TAI: TEC activity 0-3 (Kp proxy). 0 quiet, 3 heavily disturbed. Anticipates GPS errors. Global index, not per station.");
+     ImGui::ProgressBar(glm::clamp(rp.tai / 3.0f, 0.0f, 1.0f), ImVec2(0, 0), "tec activity");
+     if (ImGui::IsItemHovered()) ImGui::SetItemTooltip("TAI normalized 0-3.");
+-    ImGui::Text("Faraday: %.0f deg", showFaraday);
+-    if (ImGui::IsItemHovered()) ImGui::SetItemTooltip(rpStation ? "Faraday rotation at this station (deg at 100 MHz, one hop), from its NmF2-derived TEC. Rotates polarization; fading on linear/satellite antennas. See 3D vectors in Ionosphere." : "Median Faraday rotation (deg at 100 MHz, one hop). Rotates polarization; fading on linear/satellite antennas. See 3D vectors in Ionosphere.");
++    ImGui::Text("Faraday @FOT %.1f MHz: %.0f deg", showFot, showFaraday);
++    if (ImGui::IsItemHovered()) ImGui::SetItemTooltip(rpStation ? "Faraday rotation at this station (deg, one hop) at its FOT: real IGRF-14 field (vertical path) times its TEC chain. Rotates polarization; fading on linear/satellite antennas. See 3D vectors in Ionosphere." : "Median Faraday rotation (deg, one hop) over valid stations, each at its own FOT. Real IGRF-14 field times station TEC. See 3D vectors in Ionosphere.");
+     ImGui::Text("Spread-F: %.0f %%", showSpF);
+     if (ImGui::IsItemHovered()) ImGui::SetItemTooltip("Spread-F: % occurrence of spread echoes in the ionogram. Nocturnal equatorial/auroral. Causes fading and unstable MUF. The map uses a diverging colormap.");
+     ImGui::ProgressBar(glm::clamp(showSpF / 100.0f, 0.0f, 1.0f), ImVec2(0, 0), "spread-F");
+diff --git a/src/Data/RadioPropagationAdapter.cpp b/src/Data/RadioPropagationAdapter.cpp
+index 6b99a4e..9326a7a 100644
+--- a/src/Data/RadioPropagationAdapter.cpp
++++ b/src/Data/RadioPropagationAdapter.cpp
+@@ -94,6 +94,11 @@ float RadioPropagationAdapter::dRegionAbsorptionDb(float cosChi, float xrayFlux,
+ 
+ float RadioPropagationAdapter::deriveLUF(float muf, float foF2, float latDeg, float lonDeg, double utc,
+                                          float xrayFlux, float kp) {
++    // M'-1: firma intacta (sellada M7); latDeg/kp hoy no se usan en el cuerpo.
++    // Casts para -Wall -Wextra (el TU igrf compila este fichero con warnings
++    // estrictos): cero comportamiento.
++    (void)latDeg;
++    (void)kp;
+     if (muf <= 0.0f) return 0.0f;
+     // Absorcion de capa D: maxima de dia en el subsolar. Aproximacion simple:
+     // hora local solar a partir de lon + UTC.
+@@ -159,12 +164,34 @@ float RadioPropagationAdapter::deriveS4(float latDeg, float lonDeg, double utc)
+     return fminf(1.0f, fmaxf(0.02f, 0.55f * post * eq + aur * post + 0.03f));
+ }
+ 
+-float RadioPropagationAdapter::deriveFaraday(float tecu, float latDeg) {
+-    // Rotacion a 100 MHz ~ 2.36e4 * B_par(T) * TEC(e/m2) / f^2. Con B~30uT y
+-    // TEC 10 TECU -> ~ decenas de grados. Aproximacion didactica:
+-    float tec = fmaxf(1.0f, tecu);
+-    float dip = cosf(latDeg * 3.14159265f / 180.0f);  // max en ecuador magnetico
+-    return 2.2f * tec * (0.4f + 0.6f * fabsf(dip));
++#include "Utils/Igrf.h"
++
++// M'-1: Faraday REAL (camino vertical v1). B vertical IGRF-14 a 300 km;
++// juguete 2.2*TEC*(0.4+0.6|..|) extinguido (censo 142 sec.4).
++double RadioPropagationAdapter::stationOmegaRad(double latDeg, double lonDeg,
++                                                double tecM2, double freqHz) {
++    const igrf::Ned b = igrf::fieldNed(latDeg, lonDeg, igrf::FARADAY_EVAL_ALT_KM);
++    return igrf::omegaRad((double)b.d * 1e-9, tecM2, freqHz);
++}
++
++float RadioPropagationAdapter::resolveTecSI(bool gridOk, float gridTecu,
++                                             bool hasNmF2, float nmF2, int& rung) {
++    if (gridOk && gridTecu > 0.0f) {
++        rung = 0;
++        return gridTecu * 1e16f;
++    }
++    if (hasNmF2 && nmF2 > 0.0f) {
++        rung = 1;
++        return nmF2 * 2e5f;  // slab ~200 km (patron App.cpp historico)
++    }
++    rung = 2;
++    return 15.0f * 1e16f;  // mock declarado
++}
++
++float RadioPropagationAdapter::medianOf(std::vector<float> v) {
++    if (v.empty()) return 0.0f;
++    std::sort(v.begin(), v.end());
++    return v[v.size() / 2];
+ }
+ 
+ float RadioPropagationAdapter::stationValue(const StationSample& s, int var, double utc, float kpProxy,
+@@ -183,12 +210,15 @@ void RadioPropagationAdapter::fillSimulated(double utc) {
+     usedGiroReal_ = false;
+     latest_.timeUtc = utc;
+     latest_.muf = 18.0f + 4.0f * sinf((float)(utc * 0.00002));
+-    latest_.fot = deriveFOT(latest_.muf);
+-    latest_.luf = 7.5f;
+-    latest_.s4 = 0.15f;
+-    latest_.ae = 120.0f;
+-    latest_.tai = 0.8f;
+-    latest_.faradayDeg = 25.0f;
++    latest_.fot = deriveFOT(latest_.muf);
++    latest_.luf = 7.5f;
++    latest_.s4 = 0.15f;
++    latest_.ae = 120.0f;
++    latest_.tai = 0.8f;
++    // Mock declarado SOBRE EL CAMINO REAL: lat 10 / 15 TECU / FOT del mock.
++    latest_.faradayDeg =
++        (float)(stationOmegaRad(10.0, 0.0, 15.0e16, (double)latest_.fot * 1e6) *
++                57.29577951308232);
+     latest_.spreadF = 12.0f;
+     latest_.valid = true;
+     aeHistory_.clear();
+@@ -247,8 +277,24 @@ bool RadioPropagationAdapter::fetch(double utc, const std::vector<StationSample>
+     latest_.ae = 40.0f + 90.0f * kp + 12.0f * kp * kp * 0.2f;
+     // TAI 0..3 (actividad TEC): escala con Kp + Spread-F diurno
+     latest_.tai = fminf(3.0f, 0.3f + 0.32f * kp);
+-    // Faraday mediana: con TEC mediano ~15 TECU
+-    latest_.faradayDeg = deriveFaraday(15.0f, 10.0f);
++    // Faraday mediana: Omega REAL por estacion valida (su lat/lon + su cadena
++    // TEC + su FOT) -> mediana, mismo patron que mufMed. En el worker la
++    // cadena es nmF2->15 (el grid vive en el hilo principal, no se toca aqui).
++    {
++        std::vector<float> oms;
++        for (const StationSample& st : giroSamples) {
++            if (!st.valid || st.muf <= 0.0f) continue;
++            int rung = -1;
++            const float tecSI =
++                resolveTecSI(false, 0.0f, st.nmF2 > 0.0f, st.nmF2, rung);
++            const double fotHz = (double)deriveFOT(st.muf) * 1e6;
++            if (fotHz <= 0.0) continue;
++            oms.push_back((float)(stationOmegaRad(st.latDeg, st.lonDeg, tecSI, fotHz) *
++                                  57.29577951308232));
++        }
++        if (!oms.empty()) latest_.faradayDeg = medianOf(oms);
++        // Sin estaciones validas se conserva el valor previo (declarado).
++    }
+     latest_.spreadF = 8.0f + 4.0f * kp;
+     if (latest_.spreadF > 60.0f) latest_.spreadF = 60.0f;
+     latest_.valid = true;
+diff --git a/src/Data/RadioPropagationAdapter.h b/src/Data/RadioPropagationAdapter.h
+index 1058da9..4643660 100644
+--- a/src/Data/RadioPropagationAdapter.h
++++ b/src/Data/RadioPropagationAdapter.h
+@@ -12,7 +12,7 @@ struct RadioPropSample {
+     float s4 = 0.0f;         // indice de centelleo S4 (0..1, mostrado en dB aprox)
+     float ae = 0.0f;         // nT, auroral electrojet (proxy de Kp si no hay Kyoto)
+     float tai = 0.0f;        // indice TEC activity (proxy 0..3)
+-    float faradayDeg = 0.0f; // deg, rotacion de Faraday mediana (a 100 MHz, un salto)
++    float faradayDeg = 0.0f; // deg, mediana de Omega REAL por estacion (cada una a su FOT, un salto)
+     float spreadF = 0.0f;    // %, ocurrencia Spread-F ecuatorial/nocturna
+     double timeUtc = 0.0;
+     bool valid = false;
+@@ -62,9 +62,20 @@ public:
+     static float deriveLUF(float muf, float foF2, float latDeg, float lonDeg, double utc,
+                            float xrayFlux, float kp);
+     static float deriveFOT(float muf);
+-    static float deriveSpreadF(float latDeg, float lonDeg, double utc, float kpProxy);
+-    static float deriveS4(float latDeg, float lonDeg, double utc);
+-    static float deriveFaraday(float tecu, float latDeg);
++    static float deriveSpreadF(float latDeg, float lonDeg, double utc, float kpProxy);
++    static float deriveS4(float latDeg, float lonDeg, double utc);
++    // M'-1 (ruling 142 sec.4): rotacion de Faraday REAL en camino vertical v1
++    // (juguete 2.2*TEC*(0.4+0.6|..|) EXTINGUIDO). Omega en radianes via
++    // igrf::omegaRad con B vertical IGRF-14 a 300 km. tecM2 en m^-2 (SI).
++    static double stationOmegaRad(double latDeg, double lonDeg, double tecM2,
++                                  double freqHz);
++    // Cadena TEC unica (3 eslabones declarados): grid GloTec si valido (rung
++    // 0) -> heuristica nmF2-slab (rung 1) -> mock 15 TECU (rung 2). SI m^-2.
++    // El worker NO toca el grid (hilo principal): sus eslabones son nmF2->15.
++    static float resolveTecSI(bool gridOk, float gridTecu, bool hasNmF2, float nmF2,
++                              int& rung);
++    // Mediana (patron mufMed): copia ordenada, elemento central superior.
++    static float medianOf(std::vector<float> v);
+     // M7 (plan 10, P4 sellado): termino de flare del LUF (MHz-equivalente,
+     // A ~ F^0.75). Unica fuente de verdad: la usa deriveLUF (dayF interno
+     // lstH) y el panel para el trigger del aviso (dayFactor = max(0, cosChi);
+diff --git a/src/Ionosphere/FaradayLayer.cpp b/src/Ionosphere/FaradayLayer.cpp
+index 305f2ca..97136ac 100644
+--- a/src/Ionosphere/FaradayLayer.cpp
++++ b/src/Ionosphere/FaradayLayer.cpp
+@@ -1,4 +1,6 @@
+ #include "FaradayLayer.h"
++#include "Data/RadioPropagationAdapter.h"  // M'-1: helper compartido stationOmegaRad
++#include "Utils/Igrf.h"                    // M'-1: FARADAY_REF_FREQ_HZ/FULL_DEG
+ #include <glm/gtc/matrix_transform.hpp>
+ #include <cmath>
+ #include <cstdio>
+@@ -63,7 +65,8 @@ void FaradayLayer::updateData(const GridData& tecGrid, float fallbackTecu, const
+     if (vao_ != 0) rebuild();
+ }
+ 
+-static float sampleTec(const GridData& g, float latDeg, float lonDeg, float fallback) {
++float FaradayLayer::sampleGridTec(const GridData& g, float latDeg, float lonDeg,
++                                    float fallback) {
+     if (!g.valid || g.width < 2 || g.height < 2 || g.values.empty()) return fallback;
+     const int W = g.width, H = g.height;
+     float gx = (lonDeg + 180.0f) / 360.0f * W - 0.5f;
+@@ -92,26 +95,37 @@ void FaradayLayer::rebuild() {
+             float lon = -180.0f + (360.0f * j / NLON);
+             glm::vec3 P = latLonToPos(lat, lon, r);
+             glm::vec3 radial = glm::normalize(P);
+-            // TEC local bajo el vector (del grid GloTEC) -> rotacion local.
+-            float tecu = sampleTec(tecGrid_, lat, lon, fallbackTecu_);
+-            float local = 2.2f * tecu * (0.4f + 0.6f * fabsf(cosf(lat * 3.14159265f / 180.0f)));
+-            // Rotacion local: mas de dia (subsolar) y en ecuador.
+-            float dayF = glm::clamp(glm::dot(radial, sunWorld_), -1.0f, 1.0f) * 0.5f + 0.5f;
+-            float eqF = expf(-powf(lat / 35.0f, 2.0f));
+-            local *= (0.35f + 0.9f * dayF * (0.5f + 0.5f * eqF));
++            // TEC local bajo el vector (del grid GloTEC) -> rotacion REAL.
++            // Camino vertical v1 a 100 MHz (FARADAY_REF_FREQ_HZ) via helper
++            // compartido; parches dayF/eqF eliminados (el TEC del grid ya
++            // lleva la variacion diurna/ecuatorial: hoy doble-contaba).
++            const float tecSI =
++                sampleGridTec(tecGrid_, lat, lon, fallbackTecu_) * 1e16f;
++            const double om =
++                RadioPropagationAdapter::stationOmegaRad(lat, lon, tecSI,
++                                                         igrf::FARADAY_REF_FREQ_HZ);
++            const float local = (float)fabs(om * 57.29577951308232);  // grados
+             // Direccion: radial inclinado en azimut por el angulo (polarizacion).
+             // Base tangencial este-oeste:
+             glm::vec3 east = glm::normalize(glm::cross(glm::vec3(0, 1, 0), radial) +
+                                             glm::vec3(1e-5f));
+             float tilt = glm::radians(fmodf(local, 90.0f));
+             glm::vec3 dir = glm::normalize(radial * cosf(tilt * 0.5f) + east * sinf(tilt * 0.5f));
++            // Escala visual recalibrada a magnitud fisica (FARADAY_FULL_DEG):
++            // antes u=local/60 con grados-juguete (~decenas); ahora grados
++            // reales (cientos). Base 0.02 + vano 0.10, como antes en espiritu.
++            constexpr float kLenBase = 0.02f;
++            constexpr float kLenSpan = 0.10f;
+             float len = (mode_ == 1)
+                 ? 0.06f * scale_
+-                : (0.02f + 0.0035f * fminf(local, 90.0f)) * scale_;
++                : (kLenBase + kLenSpan * fminf(local, (float)igrf::FARADAY_FULL_DEG) /
++                                        (float)igrf::FARADAY_FULL_DEG) *
++                      scale_;
+             glm::vec3 tail = P;
+             glm::vec3 head = P + dir * len;
+-            // Color divergente por rotacion (azul=baja, rojo=alta).
+-            float u = glm::clamp(local / 60.0f, 0.0f, 1.0f);
++            // Color divergente por rotacion (azul=baja, rojo=alta), escala
++            // recalibrada a grados reales (FARADAY_FULL_DEG).
++            float u = glm::clamp(local / (float)igrf::FARADAY_FULL_DEG, 0.0f, 1.0f);
+             glm::vec3 col;
+             if (u < 0.5f) col = glm::mix(glm::vec3(0.2f, 0.4f, 0.9f), glm::vec3(0.3f, 0.85f, 0.4f), u * 2.0f);
+             else          col = glm::mix(glm::vec3(0.3f, 0.85f, 0.4f), glm::vec3(0.95f, 0.25f, 0.15f), (u - 0.5f) * 2.0f);
+diff --git a/src/Ionosphere/FaradayLayer.h b/src/Ionosphere/FaradayLayer.h
+index 893cb2f..ac56e05 100644
+--- a/src/Ionosphere/FaradayLayer.h
++++ b/src/Ionosphere/FaradayLayer.h
+@@ -17,10 +17,17 @@ public:
+     void init();
+     // Reconstruye los vectores con el TEC LOCAL bajo cada punto (grid 72x72
+     // estilo GloTEC: fila 0 = sur, col 0 = lon -180). Si el grid no es valido
+-    // usa fallbackTecu. La rotacion local es 2.2*TEC*(0.4+0.6*|cos lat|) @100MHz.
+-    //   sunWorld: direccion solar (modula dia/noche). mode: 0=longitud por
+-    //   valor, 1=longitud fija + color por valor.
++    // usa fallbackTecu. La rotacion local es Omega REAL IGRF a 100 MHz
++    // (referencia FARADAY_REF_FREQ_HZ) via helper compartido stationOmegaRad.
++    //   sunWorld: se conserva el parametro (compatibilidad de llamada); la
++    //   modulacion dia/noche la lleva el TEC real del grid (parches dayF/eqF
++    //   eliminados: hoy doble-contaban).
++    //   mode: 0=longitud por valor, 1=longitud fija + color por valor.
+     void updateData(const GridData& tecGrid, float fallbackTecu, const glm::vec3& sunWorld, int mode);
++    // Muestreo bilineal del grid (misma convencion que GridLayer): referencia
++    // para la cadena TEC de App (hilo principal). Devuelve fallback si el
++    // grid no es valido.
++    static float sampleGridTec(const GridData& g, float latDeg, float lonDeg, float fallback);
+     void render(const glm::mat4& view, const glm::mat4& projection);
+     void destroy();
+ 
+diff --git a/src/Utils/Igrf.cpp b/src/Utils/Igrf.cpp
+new file mode 100644
+index 0000000..9a9ba44
+--- /dev/null
++++ b/src/Utils/Igrf.cpp
+@@ -0,0 +1,197 @@
++// Igrf (M'-1): implementacion. Transcripcion propia de la receta publicada
++// (IAGA cookbook / codigo de referencia NOAA): recursion Schmidt con k(n,m),
++// componentes (Br, Bteta, Bphi), rotacion ECEF->NED geodesica.
++// Coeficientes: IGRF-14 main-field, grado 1..8, epoca 2025.0 congelada
++// (columna 2025.0 del fichero oficial; SV 2025-30 NO aplicada por spec).
++// Fuente: https://www.ngdc.noaa.gov/IAGA/vmod/coeffs/igrf14coeffs.txt
++// (recuperado 2026-10-05; g10(2025) = -29350.0 nT como testigo).
++#include "Utils/Igrf.h"
++
++namespace igrf {
++namespace {
++
++// Un registro por coeficiente: (n, m, esH, valor nT).
++struct Coef {
++    int n, m, isH;
++    double v;
++};
++
++// Tabla estatica grado 1..8, epoca 2025.0 (80 entradas).
++// Orden: n ascendente; por n: g_n^0, luego pares (g_n^m, h_n^m).
++// (n, m, esH, valor nT). Transcrita de la columna 2025.0 del fichero oficial.
++const Coef kCoefs[80] = {
++    {1, 0, 0, -29350.00f},
++    {1, 1, 0, -1410.30f},
++    {1, 1, 1, 4545.50f},
++    {2, 0, 0, -2556.20f},
++    {2, 1, 0, 2950.90f},
++    {2, 1, 1, -3133.60f},
++    {2, 2, 0, 1648.70f},
++    {2, 2, 1, -814.20f},
++    {3, 0, 0, 1360.90f},
++    {3, 1, 0, -2404.20f},
++    {3, 1, 1, -56.90f},
++    {3, 2, 0, 1243.80f},
++    {3, 2, 1, 237.60f},
++    {3, 3, 0, 453.40f},
++    {3, 3, 1, -549.60f},
++    {4, 0, 0, 894.70f},
++    {4, 1, 0, 799.60f},
++    {4, 1, 1, 278.60f},
++    {4, 2, 0, 55.80f},
++    {4, 2, 1, -134.00f},
++    {4, 3, 0, -281.10f},
++    {4, 3, 1, 212.00f},
++    {4, 4, 0, 12.00f},
++    {4, 4, 1, -375.40f},
++    {5, 0, 0, -232.90f},
++    {5, 1, 0, 369.00f},
++    {5, 1, 1, 45.30f},
++    {5, 2, 0, 187.20f},
++    {5, 2, 1, 220.00f},
++    {5, 3, 0, -138.70f},
++    {5, 3, 1, -122.90f},
++    {5, 4, 0, -141.90f},
++    {5, 4, 1, 42.90f},
++    {5, 5, 0, 20.90f},
++    {5, 5, 1, 106.20f},
++    {6, 0, 0, 64.30f},
++    {6, 1, 0, 63.80f},
++    {6, 1, 1, -18.40f},
++    {6, 2, 0, 76.70f},
++    {6, 2, 1, 16.80f},
++    {6, 3, 0, -115.70f},
++    {6, 3, 1, 48.90f},
++    {6, 4, 0, -40.90f},
++    {6, 4, 1, -59.80f},
++    {6, 5, 0, 14.90f},
++    {6, 5, 1, 10.90f},
++    {6, 6, 0, -60.80f},
++    {6, 6, 1, 72.80f},
++    {7, 0, 0, 79.60f},
++    {7, 1, 0, -76.90f},
++    {7, 1, 1, -48.90f},
++    {7, 2, 0, -8.80f},
++    {7, 2, 1, -14.40f},
++    {7, 3, 0, 59.30f},
++    {7, 3, 1, -1.00f},
++    {7, 4, 0, 15.80f},
++    {7, 4, 1, 23.50f},
++    {7, 5, 0, 2.50f},
++    {7, 5, 1, -7.40f},
++    {7, 6, 0, -11.20f},
++    {7, 6, 1, -25.10f},
++    {7, 7, 0, 14.30f},
++    {7, 7, 1, -2.20f},
++    {8, 0, 0, 23.10f},
++    {8, 1, 0, 10.90f},
++    {8, 1, 1, 7.20f},
++    {8, 2, 0, -17.50f},
++    {8, 2, 1, -12.60f},
++    {8, 3, 0, 2.00f},
++    {8, 3, 1, 11.50f},
++    {8, 4, 0, -21.80f},
++    {8, 4, 1, -9.70f},
++    {8, 5, 0, 16.90f},
++    {8, 5, 1, 12.70f},
++    {8, 6, 0, 14.90f},
++    {8, 6, 1, 0.70f},
++    {8, 7, 0, -16.80f},
++    {8, 7, 1, -5.20f},
++    {8, 8, 0, 1.00f},
++    {8, 8, 1, 3.90f},
++};
++
++constexpr double kAkm = 6378.137;          // WGS-84 semieje mayor (km)
++constexpr double kInvF = 298.257223563;      // WGS-84 1/f
++constexpr double kArefKm = 6371.2;           // radio de referencia IGRF (km)
++constexpr int kNmax = 8;
++
++}  // namespace
++
++double faradayK() {
++    // CODATA 2022 (exactas donde aplique): e, c exactas por definicion SI.
++    constexpr double e = 1.602176634e-19;      // C, carga elemental
++    constexpr double eps0 = 8.8541878128e-12;  // F/m, permitividad del vacio
++    constexpr double me = 9.1093837015e-31;    // kg, masa del electron
++    constexpr double c = 299792458.0;          // m/s, velocidad de la luz
++    constexpr double pi = 3.141592653589793;
++    return (e * e * e) / (8.0 * pi * pi * eps0 * me * me * c);
++}
++
++Ned fieldNed(double latDeg, double lonDeg, double altKm) {
++    // Clamp declarado [0, 1000] km.
++    if (altKm < 0.0) altKm = 0.0;
++    if (altKm > 1000.0) altKm = 1000.0;
++    // WGS-84: geodesico (lat, lon, h) -> ECEF (km).
++    constexpr double pi = 3.141592653589793;
++    const double f = 1.0 / kInvF;
++    const double e2 = f * (2.0 - f);
++    const double la = latDeg * pi / 180.0;
++    const double lo = lonDeg * pi / 180.0;
++    const double s = sin(la), c = cos(la);
++    const double Np = kAkm / sqrt(1.0 - e2 * s * s);
++    const double X = (Np + altKm) * c * cos(lo);
++    const double Y = (Np + altKm) * c * sin(lo);
++    const double Z = (Np * (1.0 - e2) + altKm) * s;
++    const double r = sqrt(X * X + Y * Y + Z * Z);
++    const double thc = acos(Z / r);  // colatitud geocentrica
++    const double lam = atan2(Y, X);
++    // Legendre Schmidt semi-normalizada + derivada (recursion estandar).
++    double P[9][9] = {};
++    double dP[9][9] = {};
++    P[0][0] = 1.0;
++    const double st = sin(thc), ct = cos(thc);
++    for (int n = 1; n <= kNmax; ++n) {
++        for (int m = 0; m <= n; ++m) {
++            // OJO: aritmetica en double (la division entera truncaria k).
++            const double k = (n > 1) ? (double)((n - 1) * (n - 1) - m * m) /
++                                           (double)((2 * n - 1) * (2 * n - 3))
++                                     : 0.0;
++            const double pN1 = P[n - 1][m];
++            const double dN1 = dP[n - 1][m];
++            const double pN2 = (m <= n - 2) ? P[n - 2][m] : 0.0;
++            const double dN2 = (m <= n - 2) ? dP[n - 2][m] : 0.0;
++            if (n == m) {
++                P[n][m] = st * P[n - 1][m - 1];
++                dP[n][m] = st * dP[n - 1][m - 1] + ct * P[n - 1][m - 1];
++            } else if (n == 1) {
++                P[n][m] = ct * pN1;
++                dP[n][m] = ct * dN1 - st * pN1;
++            } else {
++                P[n][m] = ct * pN1 - k * pN2;
++                dP[n][m] = ct * dN1 - st * pN1 - k * dN2;
++            }
++        }
++    }
++    // Suma de armadura esferica (nT).
++    double Br = 0.0, Bt = 0.0, Bp = 0.0;
++    for (const Coef& cf : kCoefs) {
++        const double q = pow(kArefKm / r, cf.n + 2);
++        const double cm = cos(cf.m * lam), sm = sin(cf.m * lam);
++        const double g = cf.isH ? 0.0 : cf.v;
++        const double h = cf.isH ? cf.v : 0.0;
++        const double B = g * cm + h * sm;
++        Br += (cf.n + 1) * q * B * P[cf.n][cf.m];
++        Bt += -q * B * dP[cf.n][cf.m];
++        if (st > 1e-9)
++            Bp += -q * cf.m * (-g * sm + h * cm) * P[cf.n][cf.m] / st;
++    }
++    // (Br, Bt, Bp) geocentricos -> ECEF.
++    const double stc = sin(thc), ctc = cos(thc);
++    const double sl = sin(lam), cl = cos(lam);
++    const double Fx = Br * stc * cl + Bt * ctc * cl + Bp * -sl;
++    const double Fy = Br * stc * sl + Bt * ctc * sl + Bp * cl;
++    const double Fz = Br * ctc + Bt * -stc;
++    // ECEF -> NED geodesico.
++    const double nx = -s * cos(lo), ny = -s * sin(lo), nz = c;
++    const double ex = -sin(lo), ey = cos(lo);
++    const double ux = c * cos(lo), uy = c * sin(lo), uz = s;
++    Ned out;
++    out.n = (float)(Fx * nx + Fy * ny + Fz * nz);
++    out.e = (float)(Fx * ex + Fy * ey);
++    out.d = (float)-(Fx * ux + Fy * uy + Fz * uz);
++    return out;
++}
++
++}  // namespace igrf
+diff --git a/src/Utils/Igrf.h b/src/Utils/Igrf.h
+new file mode 100644
+index 0000000..87229cb
+--- /dev/null
++++ b/src/Utils/Igrf.h
+@@ -0,0 +1,54 @@
++#pragma once
++// Igrf (M'-1, ruling 142 sec.4): campo geomagnetico IGRF-14 real.
++// Puro: sin GL, sin red, sin hilos, sin persistencia. Coeficientes g/h
++// embebidos (grado 8, epoca 2025.0 congelada, sin variacion secular).
++// Fuente: IAGA/NOAA ngdc.noaa.gov/IAGA/vmod/coeffs/igrf14coeffs.txt
++// (Schmidt semi-normalizados, nT). Evaluacion Schmidt estandar (receta IAGA),
++// geodesico->geocentrico WGS-84, salida NED en nT.
++// Mas rotacion de Faraday en camino vertical (v1): Omega = K/f^2 * Bpar * N_T
++// con K derivado de constantes CODATA nombradas (cero literales magicas).
++#include <cmath>
++
++namespace igrf {
++
++struct Ned {
++    float n = 0.0f;  // norte (nT)
++    float e = 0.0f;  // este (nT)
++    float d = 0.0f;  // abajo/down (nT, positivo hacia la Tierra)
++};
++
++// Campo a (lat, lon, altKm). Alt clamp declarado [0, 1000] km.
++Ned fieldNed(double latDeg, double lonDeg, double altKm);
++
++inline float modNed(const Ned& b) {
++    return sqrtf(b.n * b.n + b.e * b.e + b.d * b.d);
++}
++// Inclinacion (dip): positiva hacia abajo (norte), negativa (sur).
++inline float dipDeg(const Ned& b) {
++    const float m = modNed(b);
++    if (m <= 0.0f) return 0.0f;
++    float s = b.d / m;
++    if (s > 1.0f) s = 1.0f;
++    if (s < -1.0f) s = -1.0f;
++    return asinf(s) * 57.29577951f;
++}
++
++// --- Rotacion de Faraday (camino vertical v1) ---
++// K = e^3/(8*pi^2*eps0*me^2*c) ~ 2.365e4 (B en T, N_T en m^-2, f en Hz).
++double faradayK();  // derivada de CODATA en codigo, sin literal magico
++// Omega en radianes. Geometria v1: camino vertical, Bpar = NED-Z a 300 km
++// (FARADAY_EVAL_ALT_KM); integral colapsada a Bpar*N_T (B constante).
++inline double omegaRad(double bParT, double tecM2, double freqHz) {
++    const double f2 = freqHz * freqHz;
++    if (f2 <= 0.0) return 0.0;
++    return faradayK() / f2 * bParT * tecM2;
++}
++inline double omegaDeg(double bParT, double tecM2, double freqHz) {
++    return omegaRad(bParT, tecM2, freqHz) * 57.29577951308232;
++}
++
++constexpr double FARADAY_REF_FREQ_HZ = 100.0e6;  // capa: referencia 100 MHz
++constexpr double FARADAY_EVAL_ALT_KM = 300.0;    // centroide F
++constexpr double FARADAY_FULL_DEG = 720.0;       // escala visual de la capa
++
++}  // namespace igrf
+diff --git a/tests/test_igrf.cpp b/tests/test_igrf.cpp
+new file mode 100644
+index 0000000..8274229
+--- /dev/null
++++ b/tests/test_igrf.cpp
+@@ -0,0 +1,103 @@
++// =============================================================================
++// test_igrf - M'-1 Faraday IGRF real (ruling 142 sec.4).
++//
++// Test de logica pura: sin GL, sin red. Llama a PRODUCCION
++// (igrf::fieldNed/omegaRad/faradayK + RadioPropagationAdapter::resolveTecSI/
++// medianOf/stationOmegaRad).
++//
++// Pines: (i) ancla Omega 50 uT/10 TECU/100 MHz = 11.8 rad = 678 deg (+-1%);
++// (ii) ley 1/f^2 exacta; (iii) Bpar=0 -> Omega=0; (iv) IGRF 3 anclas vs
++// referencia grado-13 del MISMO fichero oficial (+-2% |B|, +-2 dip) +
++// monotonia del dip; (v) mediana sintetica; (vi) cadena TEC por eslabones.
++// Fuente coefs: https://www.ngdc.noaa.gov/IAGA/vmod/coeffs/igrf14coeffs.txt
++// (columna 2025.0, recuperado 2026-10-05; testigo g10 = -29350.0 nT).
++// Referencia grado-13: harness Python independiente sobre el mismo fichero
++// (la calculadora NOAA corre ese mismo modelo grado-13; la tolerancia cubre
++// el truncado grado-8, medido <=0.13%/0.32deg).
++// =============================================================================
++#include "Utils/Igrf.h"
++#include "Data/RadioPropagationAdapter.h"
++
++#include <cmath>
++#include <cstdio>
++#include <string>
++#include <vector>
++
++static int g_failures = 0;
++static int g_checks = 0;
++
++static void expectTrue(const char* what, bool cond) {
++    ++g_checks;
++    if (!cond) ++g_failures;
++    std::printf("  %-58s [%s]\n", what, cond ? "OK" : "FAIL");
++}
++
++int main() {
++    std::printf("== igrf: ancla Omega + ley 1/f2 ==\n");
++    {
++        // 50 uT, 10 TECU = 1e17 m^-2, 100 MHz -> 11.82399 rad = 677.5 deg.
++        const double om = igrf::omegaRad(5e-5, 1e17, 100e6);
++        expectTrue("ancla 11.824 rad +-1%", fabs(om - 11.82399) / 11.82399 < 0.01);
++        const double dg = igrf::omegaDeg(5e-5, 1e17, 100e6);
++        expectTrue("ancla 677.5 deg +-1%", fabs(dg - 677.5) / 677.5 < 0.01);
++        expectTrue("K ~2.365e4 +-0.1%", fabs(igrf::faradayK() - 2.365e4) / 2.365e4 < 1e-3);
++        const double om2 = igrf::omegaRad(5e-5, 1e17, 200e6);
++        expectTrue("ley Om(2f)=Om(f)/4 exacta", fabs(om2 - om / 4.0) / om < 1e-12);
++        expectTrue("Bpar=0 -> Om=0 exacto", igrf::omegaRad(0.0, 1e17, 100e6) == 0.0);
++    }
++
++    std::printf("== igrf: anclas grado-13 (+-2%% |B|, +-2 dip) ==\n");
++    {
++        // Valores de referencia: harness independiente, grado 13 completo.
++        struct Anchor {
++            double la, lo, h, f, dip;
++        };
++        const Anchor a[] = {
++            {0.0, 0.0, 0.0, 28153.0, -17.95},
++            {51.5, 0.0, 0.0, 49293.0, 63.69},
++            {-33.9, 151.2, 0.0, 52051.0, -65.02},
++        };
++        for (const Anchor& an : a) {
++            const igrf::Ned b = igrf::fieldNed(an.la, an.lo, an.h);
++            const float f = igrf::modNed(b);
++            const float d = igrf::dipDeg(b);
++            char what[96];
++            std::snprintf(what, sizeof(what), "(%.1f,%.1f) |B| +-2%%", an.la, an.lo);
++            expectTrue(what, fabsf(f - (float)an.f) / (float)an.f < 0.02f);
++            std::snprintf(what, sizeof(what), "(%.1f,%.1f) dip +-2deg", an.la, an.lo);
++            expectTrue(what, fabsf(d - (float)an.dip) < 2.0f);
++        }
++    }
++    {
++        // Monotonia del dip con |lat| en el meridiano 0 (produccion).
++        const float d20 = igrf::dipDeg(igrf::fieldNed(20.0, 0.0, 0.0));
++        const float d60 = igrf::dipDeg(igrf::fieldNed(60.0, 0.0, 0.0));
++        const float dm20 = igrf::dipDeg(igrf::fieldNed(-20.0, 0.0, 0.0));
++        expectTrue("dip crece al polo N", d60 > d20 && d20 > 0.0f);
++        expectTrue("dip sur negativo", dm20 < 0.0f);
++    }
++
++    std::printf("== igrf: mediana + cadena TEC ==\n");
++    {
++        expectTrue("mediana impar", RadioPropagationAdapter::medianOf({3.0f, 1.0f, 2.0f}) == 2.0f);
++        expectTrue("mediana 1 elem", RadioPropagationAdapter::medianOf({7.0f}) == 7.0f);
++        expectTrue("mediana vacia 0", RadioPropagationAdapter::medianOf({}) == 0.0f);
++    }
++    {
++        // Cadena TEC: cada eslabon cae al siguiente sin inventar.
++        int rung = -1;
++        float tec = RadioPropagationAdapter::resolveTecSI(true, 12.0f, true, 1e12f, rung);
++        expectTrue("grid valido -> rung 0 y 12e16", rung == 0 && tec == 12.0f * 1e16f);
++        tec = RadioPropagationAdapter::resolveTecSI(false, 0.0f, true, 1e12f, rung);
++        expectTrue("sin grid + nmF2 -> rung 1 y Nm*2e5", rung == 1 && tec == 1e12f * 2e5f);
++        tec = RadioPropagationAdapter::resolveTecSI(false, 0.0f, false, 0.0f, rung);
++        expectTrue("nada -> rung 2 mock 15e16", rung == 2 && tec == 15.0f * 1e16f);
++    }
++
++    if (g_failures == 0) {
++        std::printf("\ntest_igrf: TODOS OK (%d checks)\n", g_checks);
++        return 0;
++    }
++    std::printf("\ntest_igrf: %d FALLOS de %d checks\n", g_failures, g_checks);
++    return 1;
++}
+-- 
+2.53.0.windows.3
+
