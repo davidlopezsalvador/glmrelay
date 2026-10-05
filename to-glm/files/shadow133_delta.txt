@@ -1,0 +1,240 @@
+From a12b7ee440bf7451963110e3cd2d9d49c6ff4064 Mon Sep 17 00:00:00 2001
+From: David Lopez Salvador <davidlopezsalvador@users.noreply.github.com>
+Date: Mon, 5 Oct 2026 14:26:06 +0200
+Subject: [PATCH] UI-133: sombra dura del planeta en el volumen (S-2)
+
+---
+ CMakeLists.txt                    |  5 +-
+ src/App.cpp                       |  8 +++-
+ src/Ionosphere/VolumeRenderer.cpp | 12 ++++-
+ src/Ionosphere/VolumeRenderer.h   |  3 ++
+ src/Utils/VolumeShadow.h          | 24 ++++++++++
+ tests/test_volume_shadow.cpp      | 78 +++++++++++++++++++++++++++++++
+ 6 files changed, 127 insertions(+), 3 deletions(-)
+ create mode 100644 src/Utils/VolumeShadow.h
+ create mode 100644 tests/test_volume_shadow.cpp
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index c018e09..796220d 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -179,7 +179,10 @@ target_include_directories(test_layer_winner PRIVATE src libs/glad/include)
+ add_test(NAME layer_winner COMMAND test_layer_winner)
+ add_executable(test_exporter tests/test_exporter.cpp src/Utils/Exporter.cpp)
+ target_include_directories(test_exporter PRIVATE src libs/glad/include libs/stb)
+-add_test(NAME exporter COMMAND test_exporter)
++add_test(NAME exporter COMMAND test_exporter)
++add_executable(test_volume_shadow tests/test_volume_shadow.cpp)
++target_include_directories(test_volume_shadow PRIVATE src)
++add_test(NAME volume_shadow COMMAND test_volume_shadow)
+ # M7 (plan 10): absorcion D Sauer-Wilkinson + termino SID del LUF — llama a
+ # PRODUCCION (deriveLUF/flareAbsorption/dRegionAbsorptionDb de
+ # RadioPropagationAdapter), no replica. Sin std::thread: solo CURL.
+diff --git a/src/App.cpp b/src/App.cpp
+index ea52480..b163c27 100644
+--- a/src/App.cpp
++++ b/src/App.cpp
+@@ -3512,7 +3512,11 @@ void App::render() {
+         if (showShell) impl->shellLayer.render(view, proj);
+         if (showPeak) impl->peakShell.render(view, proj);
+         if (showModel) impl->tecColShell.render(view, proj);
+-        if (showVolScene) impl->volumeLayer.render(view, proj, camPos);
++        if (showVolScene) {
++            // S-2: sol del frame para la sombra dura del volumen.
++            impl->volumeLayer.setSunDirection(impl->sunDirection);
++            impl->volumeLayer.render(view, proj, camPos);
++        }
+         if (showSlice) impl->sliceLayer.render(view, proj);
+         // Terminador aqui (post-bloom): linea fina y nitida, sin quemarse.
+         if (impl->terminatorVisible) {
+@@ -3575,6 +3579,8 @@ void App::render() {
+         glDepthMask(GL_FALSE);
+         glEnable(GL_BLEND);
+         glBlendFunc(GL_SRC_ALPHA, GL_ONE);
++        // S-2: mismo sol del frame que en el pase de escena.
++        impl->volumeLayer.setSunDirection(impl->sunDirection);
+         impl->volumeLayer.render(view, proj, camPos);
+         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+         glDepthMask(GL_TRUE);
+diff --git a/src/Ionosphere/VolumeRenderer.cpp b/src/Ionosphere/VolumeRenderer.cpp
+index 6cea1b1..32c6a7e 100644
+--- a/src/Ionosphere/VolumeRenderer.cpp
++++ b/src/Ionosphere/VolumeRenderer.cpp
+@@ -25,6 +25,7 @@ uniform sampler3D u_density;    // log10(Ne) normalizado 0..1 (filtrado)
+ uniform sampler3D u_layer;      // rama ganadora 0..3 (SIN filtrar: texelFetch)
+ uniform sampler1D u_colormap;
+ uniform vec3 u_camPos;
++uniform vec3 u_sunDir;            // S-2: direccion solar (sombra dura, ruling 130 sec.6.2)
+ uniform float u_innerR, u_outerR;
+ uniform float u_opacityScale;
+ uniform int u_steps;
+@@ -79,6 +80,12 @@ void main() {
+         if (t >= tExit) break;
+ 
+         vec3 p = ro + rd * t;
++        // S-2: sombra dura del planeta (ruling 130 sec.6.2). Multiplicativa:
++        // el dimming cosChi de CPU se conserva y se combina. Dura, sin
++        // penumbra; espejo CPU en Utils/VolumeShadow.h (misma matematica).
++        float sh0, sh1;
++        float sunShadow = 1.0;
++        if (raySphere(p, u_sunDir, u_innerR, sh0, sh1) && sh0 > 1e-4) sunShadow = 0.0;
+         float r = length(p);
+         float altNorm = clamp((r - u_innerR) / (u_outerR - u_innerR), 0.0, 1.0);
+ 
+@@ -109,7 +116,8 @@ void main() {
+         } else {
+             col = texture(u_colormap, d).rgb;
+         }
+-        float a = clamp(d * d * u_opacityScale * dt * 40.0, 0.0, 1.0);
++        col *= sunShadow;
++        float a = clamp(d * d * u_opacityScale * dt * 40.0, 0.0, 1.0) * sunShadow;
+         if (u_isoOn != 0) {
+             // Iso-bandas logNe 10.5/11/11.5 (normalizado 0.556/0.667/0.778).
+             float m = min(min(abs(d - 0.556), abs(d - 0.667)), abs(d - 0.778));
+@@ -249,6 +257,8 @@ void VolumeRenderer::render(const glm::mat4& view, const glm::mat4& projection,
+     glUniformMatrix4fv(glGetUniformLocation(shader_, "u_projection"), 1, GL_FALSE, &projection[0][0]);
+     glUniform3f(glGetUniformLocation(shader_, "u_camPos"),
+                 camPosWorld.x, camPosWorld.y, camPosWorld.z);
++    glUniform3f(glGetUniformLocation(shader_, "u_sunDir"),
++                sunDir_.x, sunDir_.y, sunDir_.z);
+     glUniform1f(glGetUniformLocation(shader_, "u_innerR"), innerR);
+     glUniform1f(glGetUniformLocation(shader_, "u_outerR"), outerR);
+     glUniform1f(glGetUniformLocation(shader_, "u_opacityScale"), opacityScale_);
+diff --git a/src/Ionosphere/VolumeRenderer.h b/src/Ionosphere/VolumeRenderer.h
+index af27e81..61aa108 100644
+--- a/src/Ionosphere/VolumeRenderer.h
++++ b/src/Ionosphere/VolumeRenderer.h
+@@ -39,6 +39,8 @@ public:
+     // Vista explotada: multiplica (r-1) de ambas esferas.
+     void setExplode(float f) { explode_ = glm::clamp(f, 1.0f, 5.0f); }
+     void setStepCount(int n) { steps_ = glm::clamp(n, 16, 256); }
++    // S-2: direccion solar para la sombra dura (la fija App por frame).
++    void setSunDirection(const glm::vec3& d) { sunDir_ = d; }
+ 
+     bool hasVolume() const { return hasVolume_; }
+ 
+@@ -56,6 +58,7 @@ private:
+     bool isoOn_ = false;
+     int steps_ = 64;
+     int mode_ = 0;
++    glm::vec3 sunDir_ = glm::vec3(0.0f, 0.0f, 1.0f);
+     bool visible_ = false;
+     bool hasVolume_ = false;
+     std::string colormapName_ = "viridis";
+diff --git a/src/Utils/VolumeShadow.h b/src/Utils/VolumeShadow.h
+new file mode 100644
+index 0000000..9ba9976
+--- /dev/null
++++ b/src/Utils/VolumeShadow.h
+@@ -0,0 +1,24 @@
++#pragma once
++// S-2 sombra del planeta (ruling 130 sec.6.2): espejo CPU del test
++// rayo-esfera del shader del volumen. Misma matematica que raySphere() del
++// GLSL: si el rayo desde la muestra P hacia el sol cruza la esfera interior
++// (radio innerR), la muestra esta en sombra dura. Multiplicativo: el dimming
++// cosChi de CPU (DensityVolume) se conserva y se combina.
++// P vive en [innerR, outerR] por construccion del march (fuera de la esfera
++// interior): cualquier interseccion queda delante (t0 > 0). Guarda 1e-4
++// contra tangencias numericas (frontera = luz, como el gate estricto 126).
++#include <cmath>
++
++namespace volumeshadow {
++
++// true = en sombra (emision extinguida). L debe estar normalizada.
++inline bool shadowed(float px, float py, float pz,
++                     float lx, float ly, float lz, float innerR) {
++    const float b = px * lx + py * ly + pz * lz;
++    const float c = px * px + py * py + pz * pz - innerR * innerR;
++    const float disc = b * b - c;
++    if (disc < 0.0f) return false;
++    return (-b - std::sqrt(disc)) > 1e-4f;
++}
++
++}  // namespace volumeshadow
+diff --git a/tests/test_volume_shadow.cpp b/tests/test_volume_shadow.cpp
+new file mode 100644
+index 0000000..fd59091
+--- /dev/null
++++ b/tests/test_volume_shadow.cpp
+@@ -0,0 +1,78 @@
++// =============================================================================
++// test_volume_shadow — S-2 sombra dura del planeta (ruling 130 sec.6.2).
++//
++// Test de logica pura: sin GL, sin red. Llama a PRODUCCION
++// (volumeshadow::shadowed, src/Utils/VolumeShadow.h — espejo CPU del test
++// rayo-esfera del shader del volumen, misma matematica y misma guarda 1e-4).
++//
++// Pines: subsolar iluminado, antisolar en sombra, limbo iluminado,
++// frontera exacta (t0 == 0 -> luz, como el gate estricto 126) y monotonía
++// día->noche a lo largo del ecuador solar.
++// =============================================================================
++#include "Utils/VolumeShadow.h"
++
++#include <cmath>
++#include <cstdio>
++
++static int g_failures = 0;
++static int g_checks = 0;
++
++static void expectTrue(const char* what, bool cond) {
++    ++g_checks;
++    if (!cond) ++g_failures;
++    std::printf("  %-58s [%s]\n", what, cond ? "OK" : "FAIL");
++}
++
++int main() {
++    // Marco: sol en +X, esfera interior r=1.00942 (60 km sobre r=1).
++    const float Lx = 1.0f, Ly = 0.0f, Lz = 0.0f;
++    const float kInner = 1.0f + 60.0f / 6371.0f;
++
++    std::printf("== volume_shadow: casos estructurales ==\n");
++    {
++        // Subsolar: P sobre el eje del sol -> el planeta queda detras.
++        expectTrue("subsolar iluminado",
++                   !volumeshadow::shadowed(1.05f * Lx, 0.0f, 0.0f, Lx, Ly, Lz, kInner));
++    }
++    {
++        // Antisolar: P tras el planeta -> el rayo al sol cruza la esfera.
++        expectTrue("antisolar en sombra",
++                   volumeshadow::shadowed(-1.05f * Lx, 0.0f, 0.0f, Lx, Ly, Lz, kInner));
++    }
++    {
++        // Limbo (terminador geometrico): rayo tangencial, sin interseccion.
++        expectTrue("limbo iluminado",
++                   !volumeshadow::shadowed(0.0f, 1.05f, 0.0f, Lx, Ly, Lz, kInner));
++    }
++    {
++        // Frontera exacta: P sobre la esfera en el lado nocturno (t0 == 0).
++        // La guarda deja la frontera en luz (gate estricto: protege el borde).
++        expectTrue("frontera t0==0 -> luz",
++                   !volumeshadow::shadowed(-kInner * Lx, 0.0f, 0.0f, Lx, Ly, Lz, kInner));
++    }
++
++    std::printf("== volume_shadow: monotonia dia->noche ==\n");
++    {
++        // A lo largo del ecuador solar solo hay UNA transicion luz->sombra,
++        // y cae en el hemisferio nocturno (terminador geometrico a 90 grados).
++        int flips = 0;
++        bool prev = false;
++        bool prevInit = false;
++        for (int i = 0; i <= 36; ++i) {
++            const float a = (float)i * 3.14159265f / 36.0f;  // 0 = subsolar
++            const float px = 1.05f * cosf(a), py = 1.05f * sinf(a);
++            const bool s = volumeshadow::shadowed(px, py, 0.0f, Lx, Ly, Lz, kInner);
++            if (prevInit && s != prev) ++flips;
++            prev = s;
++            prevInit = true;
++        }
++        expectTrue("una sola transicion luz->sombra", flips == 1);
++    }
++
++    if (g_failures == 0) {
++        std::printf("\ntest_volume_shadow: TODOS OK (%d checks)\n", g_checks);
++        return 0;
++    }
++    std::printf("\ntest_volume_shadow: %d FALLOS de %d checks\n", g_failures, g_checks);
++    return 1;
++}
+-- 
+2.53.0.windows.3
+
