@@ -1,0 +1,65 @@
+From e9280ff89c0d88eb8e407fa2fb9d67d756c0cb1b Mon Sep 17 00:00:00 2001
+From: David Lopez Salvador <davidlopezsalvador@users.noreply.github.com>
+Date: Mon, 5 Oct 2026 09:41:23 +0200
+Subject: [PATCH] UI-127: fix early-out NeF2(hmE) + pin E-fuerte 167.0
+
+---
+ src/Ionosphere/LayerProfile.h | 16 +++++++++++++++-
+ tests/test_layer_winner.cpp   |  7 +++++--
+ 2 files changed, 20 insertions(+), 3 deletions(-)
+
+diff --git a/src/Ionosphere/LayerProfile.h b/src/Ionosphere/LayerProfile.h
+index 1cc8885..803e53d 100644
+--- a/src/Ionosphere/LayerProfile.h
++++ b/src/Ionosphere/LayerProfile.h
+@@ -69,7 +69,21 @@ inline float chapmanAlpha(float Nm, float hm, float H, float h) {
+ // F2-bottomside de evalNeTotal (mantener sincronizado; el TU lo pinnea).
+ static inline float f2FloorKm(const LayerProfile& p) {
+     if (!(p.hasE && p.hasF2)) return -1.0f;
+-    if (p.NmE <= p.NmF2) return p.hmE;   // early-out: sin cruce a la vista
++    // Early-out correcto (ruling 124 sec.2, veredicto 126 sec.4):
++    // NmE <= NeF2(hmE) => sin cruce en [hmE, hmF2] => suelo = hmE.
++    // NeF2(hmE): Epstein bottomside en hmE, replica 1:1 de evalNeTotal
++    // (mantener sincronizado). Cuesta 1 Epstein (3-4 trascendentes) donde
++    // antes habia una comparacion; memoizacion POR COLUMNA pre-autorizada
++    // en 124 sec.2 si el perf-baseline lo exigiera.
++    {
++        float B0e = p.B0 > 0.0f ? p.B0 : 100.0f;
++        float xe = (p.hmF2 - p.hmE) / B0e;
++        const float xmaxe = 1.6f;
++        float xce = xe < xmaxe ? xe : xmaxe;
++        float NeF2_at_hmE = p.NmF2 * expf(-powf(xce, p.B1) / coshf(xce));
++        if (xe > xmaxe) NeF2_at_hmE *= expf(-(xe - xmaxe) / 1.2f);
++        if (p.NmE <= NeF2_at_hmE) return p.hmE;
++    }
+     float sup = p.hmE;
+     for (float h = p.hmF2; h >= 60.0f; h -= 1.0f) {
+         float e = chapmanAlpha(p.NmE, p.hmE, 10.0f, h);
+diff --git a/tests/test_layer_winner.cpp b/tests/test_layer_winner.cpp
+index 1772611..003ff63 100644
+--- a/tests/test_layer_winner.cpp
++++ b/tests/test_layer_winner.cpp
+@@ -5,8 +5,8 @@
+ // (f2FloorKm + evalNeTotal, inline de src/Ionosphere/LayerProfile.h).
+ //
+ // Pines: suelos exactos donde la regla es estructural (early-out hmE,
+-// NINGUNO -1 sin hasE), estructura donde hay scan (rango, no valor
+-// transcrito), winners robustos por margenes amplios, e invariante best
++// NINGUNO -1 sin hasE, cruce E-fuerte == 167.0 medido con produccion),
++// winners robustos por margenes amplios, e invariante best
+ // contra replica independiente del max() viejo (aislacion del gate).
+ // =============================================================================
+ #include "Ionosphere/LayerProfile.h"
+@@ -93,6 +93,9 @@ int main() {
+         p.NmF2 = 1e12f; p.hmF2 = 300.0f; p.B0 = 60.0f; p.B1 = 2.5f; p.hasF2 = true;
+         const float f = f2FloorKm(p);
+         expectTrue("cruce: hmE < suelo <= hmF2", f > 110.0f && f <= 300.0f);
++        // Pin E-fuerte exacto (veredicto 126 sec.4.2): valor MEDIDO con produccion,
++        // no rango. Caza el early-out defectuoso (daba 110.0 aqui).
++        expectSame("cruce E-fuerte B0=60 -> suelo == 167.0 exacto", f, 167.0f);
+     }
+     {
+         // Continuidad: B0 a +-2 km del mismo perfil -> suelos a pocos km.
+-- 
+2.53.0.windows.3
+
