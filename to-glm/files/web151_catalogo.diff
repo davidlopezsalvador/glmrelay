@@ -1,0 +1,146 @@
+--- a/src/components/ionosphere/ideasData.ts
++++ b/src/components/ionosphere/ideasData.ts
+@@ -8,7 +8,7 @@
+ export interface IdeaItem {
+   id: string;
+   title: string;
+-  status: "demo" | "propuesta";
++  status: "demo" | "propuesta" | "aplazada"; // aplazada = fuera de paridad (poda 136), sin ciclo propio
+   impact: number; // 1-5
+   effort: number; // 1-5
+   category: "visual" | "fisica" | "datos" | "radio" | "ux";
+@@ -198,7 +198,7 @@
+   {
+     id: "glow",
+     title: "Airglow cromático en el shell (557.7/630 nm)",
+-    status: "propuesta",
++    status: "aplazada",
+     impact: 3,
+     effort: 2,
+     category: "visual",
+@@ -210,7 +210,7 @@
+   {
+     id: "iono",
+     title: "Ionogramas sintetizados desde el perfil Ne(h)",
+-    status: "propuesta",
++    status: "aplazada",
+     impact: 5,
+     effort: 4,
+     category: "radio",
+@@ -234,7 +234,7 @@
+   {
+     id: "es",
+     title: "Es (esporádica E) como capa de primer orden",
+-    status: "propuesta",
++    status: "aplazada",
+     impact: 4,
+     effort: 3,
+     category: "radio",
+@@ -258,7 +258,7 @@
+   {
+     id: "pred",
+     title: "Predicción foF2/MUF 24-48 h",
+-    status: "propuesta",
++    status: "aplazada",
+     impact: 5,
+     effort: 4,
+     category: "radio",
+--- a/src/components/ionosphere/hud/IdeasPanel.tsx
++++ b/src/components/ionosphere/hud/IdeasPanel.tsx
+@@ -26,6 +26,7 @@
+ 
+   const demos = IDEAS.filter((i) => i.status === "demo");
+   const propuestas = IDEAS.filter((i) => i.status === "propuesta");
++  const aplazadas = IDEAS.filter((i) => i.status === "aplazada");
+ 
+   return (
+     <div className="fixed inset-0 z-50 flex justify-end pointer-events-none">
+@@ -41,7 +42,7 @@
+               Exploración de ideas y evaluación
+             </h2>
+             <p className="text-[11px] text-slate-500 mt-0.5">
+-              Revisión del repositorio C++ · 10 ideas demostradas aquí · 11 propuestas con plan de port
++              Revisión del repositorio C++ · 10 ideas demostradas aquí · 7 propuestas · 4 aplazadas (fuera de paridad)
+             </p>
+           </div>
+           <button onClick={onClose} className="text-slate-400 hover:text-slate-100 transition-colors p-1.5">
+@@ -81,6 +82,10 @@
+               ))}
+               <SectionTitle>Propuestas para la versión C++/OpenGL</SectionTitle>
+               {propuestas.map((idea) => (
++                <IdeaCard key={idea.id} idea={idea} />
++              ))}
++              <SectionTitle>Aplazadas (fuera de paridad, sin ciclo propio)</SectionTitle>
++              {aplazadas.map((idea) => (
+                 <IdeaCard key={idea.id} idea={idea} />
+               ))}
+             </>
+@@ -166,10 +171,12 @@
+           className={`text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded ring-1 shrink-0 ${
+             idea.status === "demo"
+               ? "bg-emerald-500/15 text-emerald-300 ring-emerald-400/30"
+-              : "bg-slate-500/15 text-slate-400 ring-slate-400/20"
++              : idea.status === "aplazada"
++                ? "bg-amber-500/15 text-amber-300 ring-amber-400/30"
++                : "bg-slate-500/15 text-slate-400 ring-slate-400/20"
+           }`}
+         >
+-          {idea.status === "demo" ? "demo" : "propuesta"}
++          {idea.status === "demo" ? "demo" : idea.status === "aplazada" ? "aplazada" : "propuesta"}
+         </span>
+         <span className="text-xs text-slate-100 font-medium flex-1 leading-snug">{idea.title}</span>
+         <span className={`text-[9px] uppercase px-1.5 py-0.5 rounded ring-1 shrink-0 ${CAT_COLOR[idea.category]}`}>
+--- a/src/components/ionosphere/IonosphereScene.tsx
++++ b/src/components/ionosphere/IonosphereScene.tsx
+@@ -15,6 +15,7 @@
+ 
+ import { getSunInfo } from "@/lib/iono/solar";
+ import { buildFoF2Grid, buildHmF2Grid, sampleGrid, GRID_W, GRID_H } from "@/lib/iono/ionomath";
++import type { StationDatum } from "@/lib/iono/ionomath";
+ import { computeLink, LinkResult } from "@/lib/iono/hf";
+ import { latLonToVec3 } from "@/lib/iono/geo";
+ 
+@@ -88,7 +89,7 @@
+       fMax: number;
+       stamp: number;
+     };
+-    disposables: { dispose(): void }[];
++    disposables: ({ dispose(): void } | THREE.Group)[];
+     lastLinkKey: string;
+     lastGridStamp: number;
+   } | null>(null);
+@@ -363,7 +364,11 @@
+       const so = S.current;
+       if (so) {
+         so.controls.dispose();
+-        so.disposables.forEach((d) => d.dispose());
++        so.disposables.forEach((d) => {
++          // Baseline W-1: rings.group no tiene dispose (era error de tipos y
++          // TypeError en runtime al limpiar); guarda type-safe.
++          if ("dispose" in d) d.dispose();
++        });
+         so.stationsObj?.points.geometry.dispose();
+         so.stationsObj?.mat.dispose();
+         so.auroraObj?.mesh.geometry.dispose();
+@@ -390,10 +395,19 @@
+       ...s,
+       foF2: sampleStationAt(s, effMs),
+     }));
++    // Baseline W-1: StationDatum admite undefined, no null; el mapper
++    // convierte una vez (?? trata ambos como ausente: identico runtime).
++    const gridIn: StationDatum[] = sampled.map((s) => ({
++      code: s.code,
++      name: s.name,
++      lat: s.lat,
++      lon: s.lon,
++      foF2: s.foF2 ?? undefined,
++    }));
+ 
+     const f107 = props.spaceWeather?.f107.now ?? 110;
+-    const foGrid = buildFoF2Grid(sampled, effMs / 1000, f107, true);
+-    const hmGrid = buildHmF2Grid(sampled, effMs / 1000);
++    const foGrid = buildFoF2Grid(gridIn, effMs / 1000, f107, true);
++    const hmGrid = buildHmF2Grid(gridIn, effMs / 1000);
+ 
+     // rango robusto (percentiles para no romper el colormap con outliers)
+     const sorted = [...foGrid.values].sort((a, b) => a - b);
