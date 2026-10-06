@@ -1,0 +1,207 @@
+From e24fa74a54970478b892119ac7b951af2f65405c Mon Sep 17 00:00:00 2001
+From: David Lopez Salvador <davidlopezsalvador@users.noreply.github.com>
+Date: Tue, 6 Oct 2026 01:58:06 +0200
+Subject: [PATCH] UI-145: fix recursion Schmidt cuasi-normalizada + anclas
+ ppigrf (M-1 fix)
+
+---
+ src/App.cpp         |  2 +-
+ src/Utils/Igrf.cpp  | 77 +++++++++++++++++++++++++++------------------
+ src/Utils/Igrf.h    |  4 +++
+ tests/test_igrf.cpp | 27 +++++++++++-----
+ 4 files changed, 70 insertions(+), 40 deletions(-)
+
+diff --git a/src/App.cpp b/src/App.cpp
+index 58b09f2..51b5797 100644
+--- a/src/App.cpp
++++ b/src/App.cpp
+@@ -4642,7 +4642,7 @@ void App::render() {
+     if (ImGui::IsItemHovered()) ImGui::SetItemTooltip("TAI: TEC activity 0-3 (Kp proxy). 0 quiet, 3 heavily disturbed. Anticipates GPS errors. Global index, not per station.");
+     ImGui::ProgressBar(glm::clamp(rp.tai / 3.0f, 0.0f, 1.0f), ImVec2(0, 0), "tec activity");
+     if (ImGui::IsItemHovered()) ImGui::SetItemTooltip("TAI normalized 0-3.");
+-    ImGui::Text("Faraday @FOT %.1f MHz: %.0f deg", showFot, showFaraday);
++    ImGui::Text("Faraday @FOT %.1f MHz: %.0f deg", showFot, showFaraday);
+     if (ImGui::IsItemHovered()) ImGui::SetItemTooltip(rpStation ? "Faraday rotation at this station (deg, one hop) at its FOT: real IGRF-14 field (vertical path) times its TEC chain. Rotates polarization; fading on linear/satellite antennas. See 3D vectors in Ionosphere." : "Median Faraday rotation (deg, one hop) over valid stations, each at its own FOT. Real IGRF-14 field times station TEC. See 3D vectors in Ionosphere.");
+     ImGui::Text("Spread-F: %.0f %%", showSpF);
+     if (ImGui::IsItemHovered()) ImGui::SetItemTooltip("Spread-F: % occurrence of spread echoes in the ionogram. Nocturnal equatorial/auroral. Causes fading and unstable MUF. The map uses a diverging colormap.");
+diff --git a/src/Utils/Igrf.cpp b/src/Utils/Igrf.cpp
+index 9a9ba44..5ea4bef 100644
+--- a/src/Utils/Igrf.cpp
++++ b/src/Utils/Igrf.cpp
+@@ -107,10 +107,48 @@ constexpr double kInvF = 298.257223563;      // WGS-84 1/f
+ constexpr double kArefKm = 6371.2;           // radio de referencia IGRF (km)
+ constexpr int kNmax = 8;
+ 
++// Acceso seguro (n-2,m) inexistente = 0 (m > n-2).
++static double Sget(int n, int m, const double S[9][9]) {
++    if (n < 0 || m < 0 || m > n) return 0.0;
++    return S[n][m];
++}
++
++// Recursion Schmidt cuasi-normalizada compartida (campo + anclas del TU).
++static void evalSchmidt(double thc, double S[9][9], double dS[9][9]) {
++    const double st = sin(thc), ct = cos(thc);
++    S[0][0] = 1.0;
++    dS[0][0] = 0.0;
++    S[1][1] = st;
++    dS[1][1] = ct;
++    S[1][0] = ct;
++    dS[1][0] = -st;
++    for (int n = 2; n <= kNmax; ++n) {
++        const double f = sqrt((2.0 * n - 1.0) / (2.0 * n));
++        S[n][n] = st * S[n - 1][n - 1] * f;
++        dS[n][n] = (ct * S[n - 1][n - 1] + st * dS[n - 1][n - 1]) * f;
++        for (int m = 0; m < n; ++m) {
++            const double a = (2.0 * n - 1.0) / sqrt((double)((n - m) * (n + m)));
++            const double b = sqrt((double)((n - 1) * (n - 1) - m * m) /
++                                  (double)((n - m) * (n + m)));
++            S[n][m] = a * ct * S[n - 1][m] - b * Sget(n - 2, m, S);
++            dS[n][m] = a * (-st * S[n - 1][m] + ct * dS[n - 1][m]) - b * Sget(n - 2, m, dS);
++        }
++    }
++}
++
+ }  // namespace
+ 
++// Ancla de funcion para el TU (receta prescrita 144, verificable a mano).
++double schmidtS(int n, int m, double theta) {
++    if (n < 0 || n > kNmax || m < 0 || m > n) return 0.0;
++    double S[9][9] = {};
++    double dS[9][9] = {};
++    evalSchmidt(theta, S, dS);
++    return S[n][m];
++}
++
+ double faradayK() {
+-    // CODATA 2022 (exactas donde aplique): e, c exactas por definicion SI.
++    // CODATA 2018 (e y c exactas por definicion SI).
+     constexpr double e = 1.602176634e-19;      // C, carga elemental
+     constexpr double eps0 = 8.8541878128e-12;  // F/m, permitividad del vacio
+     constexpr double me = 9.1093837015e-31;    // kg, masa del electron
+@@ -137,33 +175,10 @@ Ned fieldNed(double latDeg, double lonDeg, double altKm) {
+     const double r = sqrt(X * X + Y * Y + Z * Z);
+     const double thc = acos(Z / r);  // colatitud geocentrica
+     const double lam = atan2(Y, X);
+-    // Legendre Schmidt semi-normalizada + derivada (recursion estandar).
+-    double P[9][9] = {};
+-    double dP[9][9] = {};
+-    P[0][0] = 1.0;
+-    const double st = sin(thc), ct = cos(thc);
+-    for (int n = 1; n <= kNmax; ++n) {
+-        for (int m = 0; m <= n; ++m) {
+-            // OJO: aritmetica en double (la division entera truncaria k).
+-            const double k = (n > 1) ? (double)((n - 1) * (n - 1) - m * m) /
+-                                           (double)((2 * n - 1) * (2 * n - 3))
+-                                     : 0.0;
+-            const double pN1 = P[n - 1][m];
+-            const double dN1 = dP[n - 1][m];
+-            const double pN2 = (m <= n - 2) ? P[n - 2][m] : 0.0;
+-            const double dN2 = (m <= n - 2) ? dP[n - 2][m] : 0.0;
+-            if (n == m) {
+-                P[n][m] = st * P[n - 1][m - 1];
+-                dP[n][m] = st * dP[n - 1][m - 1] + ct * P[n - 1][m - 1];
+-            } else if (n == 1) {
+-                P[n][m] = ct * pN1;
+-                dP[n][m] = ct * dN1 - st * pN1;
+-            } else {
+-                P[n][m] = ct * pN1 - k * pN2;
+-                dP[n][m] = ct * dN1 - st * pN1 - k * dN2;
+-            }
+-        }
+-    }
++    const double st = sin(thc);
++    double S[9][9] = {};
++    double dS[9][9] = {};
++    evalSchmidt(thc, S, dS);
+     // Suma de armadura esferica (nT).
+     double Br = 0.0, Bt = 0.0, Bp = 0.0;
+     for (const Coef& cf : kCoefs) {
+@@ -172,10 +187,10 @@ Ned fieldNed(double latDeg, double lonDeg, double altKm) {
+         const double g = cf.isH ? 0.0 : cf.v;
+         const double h = cf.isH ? cf.v : 0.0;
+         const double B = g * cm + h * sm;
+-        Br += (cf.n + 1) * q * B * P[cf.n][cf.m];
+-        Bt += -q * B * dP[cf.n][cf.m];
++        Br += (cf.n + 1) * q * B * S[cf.n][cf.m];
++        Bt += -q * B * dS[cf.n][cf.m];
+         if (st > 1e-9)
+-            Bp += -q * cf.m * (-g * sm + h * cm) * P[cf.n][cf.m] / st;
++            Bp += -q * cf.m * (-g * sm + h * cm) * S[cf.n][cf.m] / st;
+     }
+     // (Br, Bt, Bp) geocentricos -> ECEF.
+     const double stc = sin(thc), ctc = cos(thc);
+diff --git a/src/Utils/Igrf.h b/src/Utils/Igrf.h
+index 87229cb..0ccd58e 100644
+--- a/src/Utils/Igrf.h
++++ b/src/Utils/Igrf.h
+@@ -20,6 +20,10 @@ struct Ned {
+ // Campo a (lat, lon, altKm). Alt clamp declarado [0, 1000] km.
+ Ned fieldNed(double latDeg, double lonDeg, double altKm);
+ 
++// Ancla de funcion para test (receta prescrita): Schmidt cuasi-normalizada
++// S[n][m](theta), theta = colatitud en radianes. p.ej. S[2][0](x) = (3x^2-1)/2.
++double schmidtS(int n, int m, double theta);
++
+ inline float modNed(const Ned& b) {
+     return sqrtf(b.n * b.n + b.e * b.e + b.d * b.d);
+ }
+diff --git a/tests/test_igrf.cpp b/tests/test_igrf.cpp
+index 8274229..df1f0ec 100644
+--- a/tests/test_igrf.cpp
++++ b/tests/test_igrf.cpp
+@@ -11,9 +11,10 @@
+ // monotonia del dip; (v) mediana sintetica; (vi) cadena TEC por eslabones.
+ // Fuente coefs: https://www.ngdc.noaa.gov/IAGA/vmod/coeffs/igrf14coeffs.txt
+ // (columna 2025.0, recuperado 2026-10-05; testigo g10 = -29350.0 nT).
+-// Referencia grado-13: harness Python independiente sobre el mismo fichero
+-// (la calculadora NOAA corre ese mismo modelo grado-13; la tolerancia cubre
+-// el truncado grado-8, medido <=0.13%/0.32deg).
++// Referencia de anclas: paquete publicado ppigrf 2.1.0 (IGRF14.shc oficial,
++// grado 13) corrido el 2026-10-05 — FUENTE INDEPENDIENTE del codigo bajo
++// test (otra receta y otros coefs efectivos que los embebidos grado-8).
++// La calculadora NOAA corre ese mismo modelo grado-13.
+ // =============================================================================
+ #include "Utils/Igrf.h"
+ #include "Data/RadioPropagationAdapter.h"
+@@ -46,16 +47,16 @@ int main() {
+         expectTrue("Bpar=0 -> Om=0 exacto", igrf::omegaRad(0.0, 1e17, 100e6) == 0.0);
+     }
+ 
+-    std::printf("== igrf: anclas grado-13 (+-2%% |B|, +-2 dip) ==\n");
++    std::printf("== igrf: anclas ppigrf-2.1.0 (+-2%% |B|, +-2 dip) ==\n");
+     {
+-        // Valores de referencia: harness independiente, grado 13 completo.
++        // Valores ppigrf (grado 13 oficial) medidos el 2026-10-05.
+         struct Anchor {
+             double la, lo, h, f, dip;
+         };
+         const Anchor a[] = {
+-            {0.0, 0.0, 0.0, 28153.0, -17.95},
+-            {51.5, 0.0, 0.0, 49293.0, 63.69},
+-            {-33.9, 151.2, 0.0, 52051.0, -65.02},
++            {0.0, 0.0, 0.0, 31835.0, -30.17},
++            {51.5, 0.0, 0.0, 49068.0, 66.52},
++            {-33.9, 151.2, 0.0, 57011.0, -64.41},
+         };
+         for (const Anchor& an : a) {
+             const igrf::Ned b = igrf::fieldNed(an.la, an.lo, an.h);
+@@ -76,6 +77,16 @@ int main() {
+         expectTrue("dip crece al polo N", d60 > d20 && d20 > 0.0f);
+         expectTrue("dip sur negativo", dm20 < 0.0f);
+     }
++    {
++        // Anclas de funcion a mano (receta prescrita, verificables en papel):
++        // S[2][0](x) = (3x^2-1)/2; S[2][2] = (sqrt3/2)sin^2T; S[3][0] = (5x^3-3x)/2.
++        expectTrue("S[2][0](x=0.5) = -0.125",
++                   fabs(igrf::schmidtS(2, 0, acos(0.5)) - (-0.125)) < 1e-9);
++        expectTrue("S[2][2](sinT=0.6) = (sqrt3/2)*0.36",
++                   fabs(igrf::schmidtS(2, 2, asin(0.6)) - (0.8660254037844386 * 0.36)) < 1e-9);
++        expectTrue("S[3][0](x=0.5) = -0.4375",
++                   fabs(igrf::schmidtS(3, 0, acos(0.5)) - (-0.4375)) < 1e-9);
++    }
+ 
+     std::printf("== igrf: mediana + cadena TEC ==\n");
+     {
+-- 
+2.53.0.windows.3
+
