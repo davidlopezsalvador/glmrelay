@@ -1,0 +1,283 @@
+From c680b343e525f2bcb77f77845c40c81d2bb1d931 Mon Sep 17 00:00:00 2001
+From: t <t@t>
+Date: Tue, 6 Oct 2026 17:13:20 +0200
+Subject: [PATCH] wip
+
+---
+ package.json                                  |  5 +-
+ src/components/ionosphere/IonosphereScene.tsx | 56 ++++++++++++++++
+ src/lib/iono/export.test.ts                   | 57 ++++++++++++++++
+ src/lib/iono/export.ts                        | 66 +++++++++++++++++++
+ 4 files changed, 183 insertions(+), 1 deletion(-)
+ create mode 100644 src/lib/iono/export.test.ts
+ create mode 100644 src/lib/iono/export.ts
+
+diff --git a/package.json b/package.json
+index 31d47fc..6879469 100644
+--- a/package.json
++++ b/package.json
+@@ -7,6 +7,7 @@
+     "build": "next build && cp -r .next/static .next/standalone/.next/ && cp -r public .next/standalone/",
+     "start": "NODE_ENV=production bun .next/standalone/server.js 2>&1 | tee server.log",
+     "lint": "eslint .",
++    "test": "vitest run",
+     "db:push": "prisma db push --accept-data-loss",
+     "db:generate": "prisma generate",
+     "db:migrate": "prisma migrate dev",
+@@ -91,6 +92,8 @@
+     "eslint-config-next": "^16.1.1",
+     "tailwindcss": "^4",
+     "tw-animate-css": "^1.3.5",
+-    "typescript": "^5"
++    "typescript": "^5",
++    "vite": "^5.0.0",
++    "vitest": "^5.0.3"
+   }
+ }
+diff --git a/src/components/ionosphere/IonosphereScene.tsx b/src/components/ionosphere/IonosphereScene.tsx
+index c5b4f68..44f5cbb 100644
+--- a/src/components/ionosphere/IonosphereScene.tsx
++++ b/src/components/ionosphere/IonosphereScene.tsx
+@@ -15,6 +15,7 @@ import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
+ 
+ import { getSunInfo } from "@/lib/iono/solar";
+ import { buildFoF2Grid, buildHmF2Grid, sampleGrid, GRID_W, GRID_H } from "@/lib/iono/ionomath";
++import { buildPngName, gridCsv } from "@/lib/iono/export";
+ import type { StationDatum } from "@/lib/iono/ionomath";
+ import { computeLink, LinkResult } from "@/lib/iono/hf";
+ import { latLonToVec3 } from "@/lib/iono/geo";
+@@ -89,6 +90,10 @@ export default function IonosphereScene(props: Props) {
+       fMax: number;
+       stamp: number;
+     };
++    // W-2 export: ultimo grid foF2 + epoch para el CSV (tecla E).
++    lastFoGrid: { w: number; h: number; values: Float32Array } | null;
++    lastEffMs: number;
++    exportReq: boolean;
+     disposables: ({ dispose(): void } | THREE.Group)[];
+     lastLinkKey: string;
+     lastGridStamp: number;
+@@ -179,6 +184,9 @@ export default function IonosphereScene(props: Props) {
+         disposables: [dayTex, nightTex, cmapTex, earth.mesh.geometry, earth.mat, atmo.mesh.geometry, atmo.mat, shell.mesh.geometry, shell.mat, shell.foTex, shell.hmTex, rings.group, stars.points.geometry, stars.mat],
+         lastLinkKey: "",
+         lastGridStamp: -1,
++        lastFoGrid: null,
++        lastEffMs: 0,
++        exportReq: false,
+       };
+ 
+       // resize
+@@ -240,6 +248,34 @@ export default function IonosphereScene(props: Props) {
+       renderer.domElement.addEventListener("pointerdown", onDown);
+       renderer.domElement.addEventListener("pointerup", onUp);
+ 
++      // W-2 export (tecla E, flanco): sin colision web (solo este listener
++      // global de tecla suelta; carrusel/sidebar usan las suyas). Se ignoran
++      // inputs de texto, modificadores y repeticiones.
++      const onKey = (e: KeyboardEvent) => {
++        if (e.repeat || e.metaKey || e.ctrlKey || e.altKey) return;
++        const t = e.target as HTMLElement | null;
++        const tag = t?.tagName ?? "";
++        if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
++        if ((e.key === "e" || e.key === "E") && S.current) S.current.exportReq = true;
++      };
++      window.addEventListener("keydown", onKey);
++
++      // W-2 export: descarga via anchor (DOM; lo puro vive en lib/iono/export).
++      const downloadDataUrl = (url: string, name: string) => {
++        const a = document.createElement("a");
++        a.href = url;
++        a.download = name;
++        document.body.appendChild(a);
++        a.click();
++        a.remove();
++      };
++      const downloadText = (text: string, name: string) => {
++        const blob = new Blob([text], { type: "text/csv;charset=utf-8" });
++        const url = URL.createObjectURL(blob);
++        downloadDataUrl(url, name);
++        setTimeout(() => URL.revokeObjectURL(url), 5000);
++      };
++
+       // loop
+       let raf = 0;
+       let lastT = performance.now();
+@@ -340,6 +376,22 @@ export default function IonosphereScene(props: Props) {
+         controls.autoRotate = propsRef.current.settings.cinema;
+         controls.update();
+         composer.render();
++        // W-2 export: captura sincrona en el mismo frame (buffer valido).
++        const sox = S.current;
++        if (sox?.exportReq) {
++          sox.exportReq = false;
++          try {
++            const url = renderer.domElement.toDataURL("image/png");
++            const sec = Math.floor((sox.lastEffMs || Date.now()) / 1000);
++            downloadDataUrl(url, buildPngName(sec));
++            if (sox.lastFoGrid) {
++              const csv = gridCsv("foF2", { ...sox.lastFoGrid, valid: true }, sec);
++              downloadText(csv, buildPngName(sec, "csv"));
++            }
++          } catch (err) {
++            console.error("[export] failed", err);
++          }
++        }
+       };
+       tick();
+ 
+@@ -347,6 +399,7 @@ export default function IonosphereScene(props: Props) {
+         ro.disconnect();
+         renderer.domElement.removeEventListener("pointerdown", onDown);
+         renderer.domElement.removeEventListener("pointerup", onUp);
++        window.removeEventListener("keydown", onKey);
+         cancelAnimationFrame(raf);
+       };
+     };
+@@ -417,6 +470,9 @@ export default function IonosphereScene(props: Props) {
+ 
+     updateShellTextures(so.shellObj!.foTex, so.shellObj!.hmTex, foGrid.values, hmGrid.values, fMin, fMin + span);
+     so.gridState = { fo: foGrid.values, hm: hmGrid.values, fMin, fMax: fMin + span, stamp: Date.now() };
++    // W-2: snapshot para export (copia: el loop lo reescribe por frame).
++    so.lastFoGrid = { w: GRID_W, h: GRID_H, values: foGrid.values.slice() };
++    so.lastEffMs = effMs;
+     props.callbacks.onLegendRange?.(fMin, fMin + span);
+ 
+     // rebuild estaciones (posiciones fijas, color por foF2)
+diff --git a/src/lib/iono/export.test.ts b/src/lib/iono/export.test.ts
+new file mode 100644
+index 0000000..14f25eb
+--- /dev/null
++++ b/src/lib/iono/export.test.ts
+@@ -0,0 +1,57 @@
++/**
++ * TU W-2 export (ruling 150, spec del veredicto 152): pines del formato CSV
++ * contra el golden del Exporter C++ (drop 131, norma 144). Vitest.
++ */
++import { describe, expect, it } from "vitest";
++import { buildPngName, fmtG9, gridCsv, type WebGrid } from "./export";
++
++describe("buildPngName", () => {
++  it("epoch fijo -> iono-20261001-114500Z.png (mismo TOV que el TU C++)", () => {
++    expect(buildPngName(1790855100)).toBe("iono-20261001-114500Z.png");
++  });
++  it("epoch 0", () => {
++    expect(buildPngName(0)).toBe("iono-19700101-000000Z.png");
++  });
++});
++
++describe("fmtG9 (%.9g de C)", () => {
++  it("golden C++: 1.5 / -2.25 / 0 / 100.125", () => {
++    expect(fmtG9(1.5)).toBe("1.5");
++    expect(fmtG9(-2.25)).toBe("-2.25");
++    expect(fmtG9(0)).toBe("0");
++    expect(fmtG9(100.125)).toBe("100.125");
++  });
++  it("exponentes estilo C (%e con 2+ digitos)", () => {
++    expect(fmtG9(1e17)).toBe("1e+17");
++    expect(fmtG9(1.23456789e-5)).toBe("1.23456789e-05");
++  });
++  it("NaN -> nan ( spelling glibc, filas estables)", () => {
++    expect(fmtG9(NaN)).toBe("nan");
++  });
++});
++
++describe("gridCsv", () => {
++  it("bundle 2x2 exacto con timestamp del dato por fila", () => {
++    const g: WebGrid = {
++      w: 2,
++      h: 2,
++      // filas web: j=0 norte. valores identidad para el pin.
++      values: new Float32Array([10, 11, 20, 21]),
++      valid: true,
++    };
++    // lat_idx 0 = sur = j=1 -> [20,21]; lat_idx 1 = j=0 -> [10,11].
++    const want =
++      "# var=foF2 width=2 height=2\n" +
++      "# layout: values[lat_idx*width+lon_idx], row0=lat-90 south, col0=lon-180\n" +
++      "lat_idx,lon_idx,value,tov_epoch\n" +
++      "0,0,20,1790855100\n" +
++      "0,1,21,1790855100\n" +
++      "1,0,10,1790855100\n" +
++      "1,1,11,1790855100\n";
++    expect(gridCsv("foF2", g, 1790855100)).toBe(want);
++  });
++  it("vacio declarado", () => {
++    const g: WebGrid = { w: 0, h: 0, values: new Float32Array(0), valid: false };
++    expect(gridCsv("foF2", g, 1790855100)).toContain("# empty\n");
++  });
++});
+diff --git a/src/lib/iono/export.ts b/src/lib/iono/export.ts
+new file mode 100644
+index 0000000..73c3aa4
+--- /dev/null
++++ b/src/lib/iono/export.ts
+@@ -0,0 +1,66 @@
++/**
++ * Export W-2 (ruling 150, spec del veredicto 152): evidencia exportable web.
++ * Logica pura, sin DOM ni red: el hilo de render aporta el grid y el canvas.
++ * Formato espejo del Exporter C++ (drop 131, golden CSV como oraculo,
++ * norma 144): cabecera documentada, timestamp DEL DATO por fila, valores
++ * con %.9g, grid invalido -> "# empty", nombres UTC iono-YYYYMMDD-HHMMSSZ.
++ * Layout web: values[j*W+i] con fila 0 = lat 90 (NORTE), col 0 = lon -180;
++ * se vuelca a lat_idx con fila 0 = lat -90 (sur), como el C++.
++ */
++
++export interface WebGrid {
++  w: number;
++  h: number;
++  values: Float32Array;
++  valid: boolean;
++}
++
++/** Nombre determinista UTC: "iono-YYYYMMDD-HHMMSSZ.<ext>". */
++export function buildPngName(utcEpochSec: number, ext = "png"): string {
++  const d = new Date(utcEpochSec * 1000);
++  const p = (n: number, w = 2) => String(n).padStart(w, "0");
++  return (
++    `iono-${d.getUTCFullYear()}${p(d.getUTCMonth() + 1)}${p(d.getUTCDate())}` +
++    `-${p(d.getUTCHours())}${p(d.getUTCMinutes())}${p(d.getUTCSeconds())}Z.${ext}`
++  );
++}
++
++/**
++ * %.9g de C (9 digitos significativos; %e si exp < -4 o >= 9; NaN -> "nan"
++ * como glibc, Infinity -> "inf"/"-inf"). Los grids nunca traen infinitos;
++ * NaN = sin dato en web (el C++ no tiene el concepto: usa flag valid).
++ */
++export function fmtG9(v: number): string {
++  if (Number.isNaN(v)) return "nan";
++  if (!isFinite(v)) return v < 0 ? "-inf" : "inf";
++  if (v === 0) return "0";
++  const e = Math.floor(Math.log10(Math.abs(v)));
++  if (e < -4 || e >= 9) {
++    const m = v / Math.pow(10, e);
++    let ms = m.toFixed(8).replace(/0+$/, "");
++    if (ms.endsWith(".")) ms = ms.slice(0, -1);
++    const es = e >= 0 ? "+" + e : "" + e;
++    const ep = es.length < 3 ? es[0] + "0" + es.slice(1) : es;
++    return ms + "e" + ep;
++  }
++  return String(parseFloat(v.toPrecision(9)));
++}
++
++/** CSV de la capa activa. Ver layout en cabecera del fichero. */
++export function gridCsv(varName: string, grid: WebGrid, tovEpochSec: number): string {
++  let s = `# var=${varName} width=${grid.w} height=${grid.h}\n`;
++  s += "# layout: values[lat_idx*width+lon_idx], row0=lat-90 south, col0=lon-180\n";
++  s += "lat_idx,lon_idx,value,tov_epoch\n";
++  const tov = Math.floor(tovEpochSec);
++  if (!grid.valid || grid.w <= 0 || grid.h <= 0 || grid.values.length !== grid.w * grid.h) {
++    s += "# empty\n";
++    return s;
++  }
++  for (let la = 0; la < grid.h; la++) {
++    const j = grid.h - 1 - la; // fila web 0 = norte -> lat_idx 0 = sur
++    for (let lo = 0; lo < grid.w; lo++) {
++      s += `${la},${lo},${fmtG9(grid.values[j * grid.w + lo])},${tov}\n`;
++    }
++  }
++  return s;
++}
+-- 
+2.53.0.windows.3
+
