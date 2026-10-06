@@ -1,0 +1,607 @@
+From d3691ba741714fade8283df3f1b5c64dd02c6898 Mon Sep 17 00:00:00 2001
+From: t <t@t>
+Date: Tue, 6 Oct 2026 23:59:03 +0200
+Subject: [PATCH] w167
+
+---
+ src/lib/iono/densityVolume.test.ts |   4 +
+ src/lib/iono/densityVolume.ts      |   1 +
+ src/lib/iono/layerProfile.test.ts  | 267 +++++++++++++++++++++++++++++
+ src/lib/iono/layerProfile.ts       | 263 ++++++++++++++++++++++++++++
+ 4 files changed, 535 insertions(+)
+ create mode 100644 src/lib/iono/layerProfile.test.ts
+ create mode 100644 src/lib/iono/layerProfile.ts
+
+diff --git a/src/lib/iono/densityVolume.test.ts b/src/lib/iono/densityVolume.test.ts
+index 5d235bb..78acbd1 100644
+--- a/src/lib/iono/densityVolume.test.ts
++++ b/src/lib/iono/densityVolume.test.ts
+@@ -32,6 +32,7 @@ function blankVolume(): DensityVolume {
+     altMinKm: VOL_ALT_MIN_KM,
+     altMaxKm: VOL_ALT_MAX_KM,
+     data: [],
++    layer: [],
+     valid: false,
+     timestamp: 0,
+   };
+@@ -121,6 +122,7 @@ describe("densityVolume: extractPeakGrids (shells derivadas)", () => {
+       altMinKm: 60,
+       altMaxKm: 500,
+       data,
++      layer: [],
+       valid: true,
+       timestamp: 7,
+     };
+@@ -156,6 +158,7 @@ describe("densityVolume: integrateTEC y sampleVolume", () => {
+       altMinKm: 60,
+       altMaxKm: 500,
+       data: new Array(W * H * A).fill(0),
++      layer: [],
+       valid: true,
+       timestamp: 0,
+     };
+@@ -175,6 +178,7 @@ describe("densityVolume: integrateTEC y sampleVolume", () => {
+       altMinKm: 60,
+       altMaxKm: 500,
+       data: new Array(W * H * A).fill(0.37),
++      layer: [],
+       valid: true,
+       timestamp: 0,
+     };
+diff --git a/src/lib/iono/densityVolume.ts b/src/lib/iono/densityVolume.ts
+index 4f8c412..45e51d8 100644
+--- a/src/lib/iono/densityVolume.ts
++++ b/src/lib/iono/densityVolume.ts
+@@ -30,6 +30,7 @@ export interface DensityVolume {
+   altMinKm: number;
+   altMaxKm: number;
+   data: number[]; // log10(Ne) normalizado 0..1, layout del oraculo
++  layer: number[]; // rama ganadora por muestra (0=D,1=E,2=F1,3=F2)
+   valid: boolean;
+   timestamp: number;
+ }
+diff --git a/src/lib/iono/layerProfile.test.ts b/src/lib/iono/layerProfile.test.ts
+new file mode 100644
+index 0000000..a71726c
+--- /dev/null
++++ b/src/lib/iono/layerProfile.test.ts
+@@ -0,0 +1,267 @@
++/**
++ * TU W-3 layer profile + builder (spec 166 P1): replica los pines del TU C++
++ * (tests/test_layer_winner.cpp, norma 144: suelos exactos 110/-1/167,
++ * REAL-shape 145/155/136, continuidad, winners por margenes, invariante
++ * best contra max() viejo) + pines propios del builder (memo invisible,
++ * rangos, invalido). Vitest.
++ */
++import { describe, expect, it } from "vitest";
++import {
++  blankProfile,
++  buildDensityVolume,
++  chapmanAlpha,
++  evalNeTotal,
++  f2FloorKm,
++  profileFromFo,
++  sanitizeB0,
++  sanitizeB1,
++  type LayerProfileTS,
++} from "./layerProfile";
++import { densityDir, volumeAltKm } from "./densityVolume";
++
++function dayNoF1(): LayerProfileTS {
++  return {
++    NmE: 1.116e11, hmE: 110,
++    NmF1: 0, hmF1: 180,
++    NmF2: 1.24e12, hmF2: 300, B0: 100, B1: 3,
++    hasE: true, hasF1: false, hasF2: true,
++  };
++}
++
++// Replica INDEPENDIENTE del max() viejo (sin gate), mismo genero que el
++// evalRefMax del TU C++: aisla la puerta f2Floor (si divergen, cae ruidoso).
++function evalRefMax(p: LayerProfileTS, hKm: number, cosChi: number): { ne: number; winner: number } {
++  let best = 0;
++  let win = -1;
++  if (cosChi > 0) {
++    const v = chapmanAlpha(1e9 * Math.sqrt(cosChi), 75, 10, hKm);
++    if (v > best) {
++      best = v;
++      win = 0;
++    }
++  }
++  if (p.hasE) {
++    const v = chapmanAlpha(p.NmE, p.hmE, 10, hKm);
++    if (v > best) {
++      best = v;
++      win = 1;
++    }
++  }
++  if (p.hasF1) {
++    const v = chapmanAlpha(p.NmF1, p.hmF1, 25, hKm);
++    if (v > best) {
++      best = v;
++      win = 2;
++    }
++  }
++  if (p.hasF2) {
++    let NeF2 = 0;
++    if (hKm <= p.hmF2) {
++      const B0 = p.B0 > 0 ? p.B0 : 100;
++      const x = (p.hmF2 - hKm) / B0;
++      const xc = x < 1.6 ? x : 1.6;
++      const base = p.NmF2 * Math.exp(-Math.pow(xc, p.B1) / Math.cosh(xc));
++      NeF2 = x > 1.6 ? base * Math.exp(-(x - 1.6) / 1.2) : base;
++    } else {
++      const Htop = 60 * (1 + (hKm - p.hmF2) / 300);
++      NeF2 = p.NmF2 * Math.exp(-(hKm - p.hmF2) / Htop);
++    }
++    if (NeF2 > best) {
++      best = NeF2;
++      win = 3;
++    }
++  }
++  return { ne: best, winner: win };
++}
++
++describe("layerProfile: chapmanAlpha y saneado", () => {
++  it("en el pico z=0 -> Nm exacto", () => {
++    expect(chapmanAlpha(1.5e11, 110, 10, 110)).toBe(1.5e11);
++  });
++
++  it("sanitize oraculo-exacto (default B0 100, ver decision)", () => {
++    expect(sanitizeB0(0)).toBe(100);
++    expect(sanitizeB0(10)).toBe(20);
++    expect(sanitizeB0(400)).toBe(300);
++    expect(sanitizeB1(0)).toBe(3);
++    expect(sanitizeB1(1)).toBe(1.7);
++    expect(sanitizeB1(9)).toBe(4);
++  });
++
++  it("profileFromFo mapea fo->Nm con flags y hmF1 de partida", () => {
++    expect(blankProfile().hasE).toBe(false);
++    const p = profileFromFo(4, 3, 7, 300, 0, 1);
++    expect(p.hasE && p.hasF1 && p.hasF2).toBe(true);
++    expect(p.NmE).toBe(1.24e10 * 16);
++    expect(p.NmF2).toBe(1.24e10 * 49);
++    expect(p.hmF1).toBe(240);
++    expect(p.B0).toBe(100);
++    expect(p.B1).toBe(1.7);
++    const q = profileFromFo(4, 0, 7, 300, 0, 1);
++    expect(q.hasF1).toBe(false);
++    expect(q.hmF1).toBe(180);
++  });
++});
++
++describe("layerProfile: f2FloorKm (pines exactos del C++)", () => {
++  it("sumergido B0=100 -> suelo == hmE exacto", () => {
++    expect(f2FloorKm(dayNoF1())).toBe(110);
++  });
++
++  it("noche sin-E -> NINGUNO (-1) exacto", () => {
++    const p = blankProfile();
++    p.NmF2 = 3e11;
++    p.hmF2 = 350;
++    p.B0 = 120;
++    p.B1 = 3;
++    p.hasF2 = true;
++    expect(f2FloorKm(p)).toBe(-1);
++  });
++
++  it("cruce E-fuerte B0=60 -> suelo == 167.0 exacto", () => {
++    const p = blankProfile();
++    p.NmE = 1.8e12;
++    p.hasE = true;
++    p.NmF2 = 1e12;
++    p.hmF2 = 300;
++    p.B0 = 60;
++    p.B1 = 2.5;
++    p.hasF2 = true;
++    expect(f2FloorKm(p)).toBe(167);
++  });
++
++  it("continuidad B0+-2 -> suelos a <=15 km", () => {
++    const mk = (B0: number): LayerProfileTS => {
++      const p = blankProfile();
++      p.NmE = 1.8e12;
++      p.hasE = true;
++      p.NmF2 = 1e12;
++      p.hmF2 = 300;
++      p.B0 = B0;
++      p.B1 = 2.5;
++      p.hasF2 = true;
++      return p;
++    };
++    const fa = f2FloorKm(mk(58));
++    const fb = f2FloorKm(mk(62));
++    expect(fa > 110 && fb > 110 && Math.abs(fa - fb) <= 15).toBe(true);
++  });
++
++  it("REAL-shape: B0=60->145, 45->155, 80->136 exactos", () => {
++    const NmE = 1.24e10 * 16;
++    const NmF2 = 1.24e10 * 49;
++    for (const [B0, want] of [[60, 145], [45, 155], [80, 136]] as const) {
++      const p = blankProfile();
++      p.NmE = NmE;
++      p.hasE = true;
++      p.NmF2 = NmF2;
++      p.hmF2 = 300;
++      p.B1 = 3;
++      p.hasF2 = true;
++      p.B0 = B0;
++      expect(f2FloorKm(p)).toBe(want);
++    }
++  });
++});
++
++describe("layerProfile: winners (margenes del C++)", () => {
++  it("dia sin-F1: 75->D, 110->E, 200/300->F2", () => {
++    const p = dayNoF1();
++    expect(evalNeTotal(p, 75, 0.9, 1).winner).toBe(0);
++    expect(evalNeTotal(p, 110, 0.9, 1).winner).toBe(1);
++    expect(evalNeTotal(p, 200, 0.9, 1).winner).toBe(3);
++    expect(evalNeTotal(p, 300, 0.9, 1).winner).toBe(3);
++  });
++
++  it("dia E-sumergido +F1: suelo hmE, 60->D, 100->E", () => {
++    const p = { ...dayNoF1(), NmF1: 3.1e11, hmF1: 240, hasF1: true };
++    expect(f2FloorKm(p)).toBe(110);
++    expect(evalNeTotal(p, 60, 0.9, 1).winner).toBe(0);
++    expect(evalNeTotal(p, 100, 0.9, 1).winner).toBe(1);
++  });
++
++  it("noche todo F2; dia sin-E: suelo -1 y 60->F2", () => {
++    const n = blankProfile();
++    n.NmF2 = 3e11;
++    n.hmF2 = 350;
++    n.B0 = 120;
++    n.B1 = 3;
++    n.hasF2 = true;
++    expect(evalNeTotal(n, 60, -0.5, 1).winner).toBe(3);
++    expect(evalNeTotal(n, 300, -0.5, 1).winner).toBe(3);
++    const d = { ...dayNoF1(), hasE: false };
++    expect(f2FloorKm(d)).toBe(-1);
++    expect(evalNeTotal(d, 60, 0.9, 1).winner).toBe(3);
++  });
++
++  it("perfil vacio de noche -> {0, -1}", () => {
++    expect(evalNeTotal(blankProfile(), 200, -0.5, 1)).toEqual({ ne: 0, winner: -1 });
++  });
++});
++
++describe("layerProfile: invariante best contra max() viejo", () => {
++  it("4 perfiles x 12 alturas bit-identico", () => {
++    const ps: LayerProfileTS[] = [
++      dayNoF1(),
++      { ...dayNoF1(), NmF1: 3.1e11, hmF1: 240, hasF1: true },
++      { ...blankProfile(), NmF2: 3e11, hmF2: 350, B0: 120, B1: 3, hasF2: true },
++      { ...dayNoF1(), hasE: false },
++    ];
++    const hs = [60, 80, 100, 120, 150, 180, 200, 250, 300, 400, 500, 700];
++    for (let pi = 0; pi < 4; pi++) {
++      for (const h of hs) {
++        const cc = pi === 2 ? -0.5 : 0.9;
++        const a = evalNeTotal(ps[pi], h, cc, 1);
++        const b = evalRefMax(ps[pi], h, cc);
++        // Invariante best bit-identico (igual que el C++: solo el valor).
++        expect(a.ne === b.ne).toBe(true);
++        if (b.winner === 3 && a.winner !== 3) {
++          // Unica divergencia legitima: la puerta f2Floor retiene el win.
++          expect(h <= f2FloorKm(ps[pi])).toBe(true);
++        } else {
++          expect(a.winner).toBe(b.winner);
++        }
++      }
++    }
++  });
++});
++
++describe("layerProfile: buildDensityVolume", () => {
++  it("tamano erroneo -> invalido", () => {
++    const v = buildDensityVolume([dayNoF1()], 2, 2, 3, 60, 500, -1, 0, 0, 1);
++    expect(v.valid).toBe(false);
++  });
++
++  it("rejilla 2x2x3 uniforme: valida, data en [0,1], layer en 0..3", () => {
++    const v = buildDensityVolume(
++      [dayNoF1(), dayNoF1(), dayNoF1(), dayNoF1()], 2, 2, 3, 60, 500, -1, 0, 0, 1
++    );
++    expect(v.valid).toBe(true);
++    expect(v.data.length).toBe(12);
++    expect(v.layer.length).toBe(12);
++    for (const d of v.data) expect(d >= 0 && d <= 1).toBe(true);
++    for (const l of v.layer) expect(l >= 0 && l <= 3).toBe(true);
++  });
++
++  it("memoizacion invisible: igual que el ingenuo celda a celda", () => {
++    const profs = [dayNoF1(), dayNoF1(), dayNoF1(), dayNoF1()];
++    const v = buildDensityVolume(profs, 2, 2, 3, 60, 500, -1, 0, 0, 1);
++    for (let latIdx = 0; latIdx < 2; latIdx++) {
++      const latDeg = -90 + (180 * (latIdx + 0.5)) / 2;
++      for (let lonIdx = 0; lonIdx < 2; lonIdx++) {
++        const lonDeg = -180 + (360 * (lonIdx + 0.5)) / 2;
++        const [cx, cy, cz] = densityDir(latDeg, lonDeg);
++        const cosChi = -cx;
++        const p = profs[latIdx * 2 + lonIdx];
++        for (let a = 0; a < 3; a++) {
++          const h = volumeAltKm(a, 3, 60, 500);
++          const r = evalNeTotal(p, h, cosChi, 1);
++          const ii = (a * 2 + latIdx) * 2 + lonIdx;
++          const want = ((r.ne > 0 ? Math.log10(r.ne) : 0) - 8) / 4.5;
++          expect(v.data[ii] === Math.min(1, Math.max(0, want))).toBe(true);
++          expect(v.layer[ii]).toBe(r.winner < 0 ? 0 : r.winner);
++        }
++      }
++    }
++  });
++});
+diff --git a/src/lib/iono/layerProfile.ts b/src/lib/iono/layerProfile.ts
+new file mode 100644
+index 0000000..4184bdb
+--- /dev/null
++++ b/src/lib/iono/layerProfile.ts
+@@ -0,0 +1,263 @@
++/**
++ * Perfil de capas + constructor del volumen W-3 (spec 166-P1, primer tramo
++ * del wiring): port de src/Ionosphere/LayerProfile.h (evalNeTotal con
++ * winner, f2FloorKm, profileFromStation, sanitize) y de
++ * buildDensityVolume (src/Ionosphere/DensityVolume.h). Puro: sin DOM,
++ * sin three, sin GL.
++ *
++ * DECISION DECLARADA neTotal <-> evalNeTotal (n2 de 164/166): el nucleo
++ * Chapman-alfa/Epstein es el mismo ya porteado en ionomath; la COMBINACION
++ * difiere y ambas conviven: neTotal queda para radio/UI (sin winner, flare
++ * interno desde xrayFlux, E/F1 atenuadas por dayFactor inline, F2 con
++ * factor nocturno 0.25+0.75*dayFactor) y este evalNeTotal con winner para
++ * el volumen (D con gate estricto cosChi>0 y flareFactor externo, E/F1 sin
++ * atenuar --lo hace applyDayNight--, F2 plena + puerta f2Floor). Divergencia
++ * de borde declarada: sanitizeB0 default 100 del oraculo vs 90 legacy de
++ * ionomath (solo a entrada invalida; el builder usa el del oraculo).
++ * Memoizacion del suelo por perfil (124 sec.2 pre-autorizada): el suelo
++ * solo depende del perfil, el builder lo calcula una vez por celda de
++ * perfil; bit-identico al ingenuo (pineado en el TU).
++ */
++import {
++  densityDir,
++  volumeAltKm,
++  type DensityVolume,
++} from "./densityVolume";
++
++export const FO_TO_NM = 1.24e10; // Nm = 1.24e10 * fo^2 (fo MHz -> m^-3)
++
++export interface LayerProfileTS {
++  NmE: number;
++  hmE: number;
++  NmF1: number;
++  hmF1: number;
++  NmF2: number;
++  hmF2: number;
++  B0: number;
++  B1: number;
++  hasE: boolean;
++  hasF1: boolean;
++  hasF2: boolean;
++}
++
++export function blankProfile(): LayerProfileTS {
++  return {
++    NmE: 0, hmE: 110,
++    NmF1: 0, hmF1: 180,
++    NmF2: 0, hmF2: 300, B0: 100, B1: 3,
++    hasE: false, hasF1: false, hasF2: false,
++  };
++}
++
++// Saneado al ingerir (oraculo exacto, default B0 100 -- ver decision arriba).
++export function sanitizeB0(v: number): number {
++  if (!(v > 0)) return 100;
++  if (v < 20) return 20;
++  if (v > 300) return 300;
++  return v;
++}
++
++export function sanitizeB1(v: number): number {
++  if (!(v > 0)) return 3;
++  if (v < 1.7) return 1.7;
++  if (v > 4) return 4;
++  return v;
++}
++
++/** Perfil desde frecuencias medidas (port de profileFromStation). */
++export function profileFromFo(
++  foE: number,
++  foF1: number,
++  foF2: number,
++  hmF2: number,
++  B0: number,
++  B1: number,
++  nmF2 = 0
++): LayerProfileTS {
++  const p = blankProfile();
++  if (foE > 0) {
++    p.NmE = FO_TO_NM * foE * foE;
++    p.hmE = 110;
++    p.hasE = true;
++  }
++  if (foF1 > 0) {
++    p.NmF1 = FO_TO_NM * foF1 * foF1;
++    // hF1 real no disponible: aproximacion de partida del oraculo.
++    p.hmF1 = hmF2 > 0 ? Math.max(150, 0.8 * hmF2) : 180;
++    p.hasF1 = true;
++  }
++  if (foF2 > 0 && hmF2 > 0) {
++    p.NmF2 = nmF2 > 0 ? nmF2 : FO_TO_NM * foF2 * foF2;
++    p.hmF2 = hmF2;
++    p.B0 = sanitizeB0(B0);
++    p.B1 = sanitizeB1(B1);
++    p.hasF2 = true;
++  }
++  return p;
++}
++
++// Chapman-alfa: Ne(h) = Nm * exp(0.5 * (1 - z - exp(-z))), z = (h-hm)/H.
++export function chapmanAlpha(Nm: number, hm: number, H: number, h: number): number {
++  const z = (h - hm) / H;
++  return Nm * Math.exp(0.5 * (1 - z - Math.exp(-z)));
++}
++
++/**
++ * Suelo de validez F2 (ruling 124): mayor h con NeE(h) >= NeF2(h), clamp
++ * hmE; NINGUNO (-1) sin hasE. Con early-out correcto (NmE <= NeF2(hmE)
++ * => suelo = hmE) y barrido 1 km con Epstein bottomside 1:1.
++ */
++export function f2FloorKm(p: LayerProfileTS): number {
++  if (!(p.hasE && p.hasF2)) return -1;
++  {
++    const B0e = p.B0 > 0 ? p.B0 : 100;
++    const xe = (p.hmF2 - p.hmE) / B0e;
++    const xmaxe = 1.6;
++    const xce = xe < xmaxe ? xe : xmaxe;
++    let NeF2AtHmE = p.NmF2 * Math.exp(-Math.pow(xce, p.B1) / Math.cosh(xce));
++    if (xe > xmaxe) NeF2AtHmE *= Math.exp(-(xe - xmaxe) / 1.2);
++    if (p.NmE <= NeF2AtHmE) return p.hmE;
++  }
++  let sup = p.hmE;
++  for (let h = p.hmF2; h >= 60; h -= 1) {
++    const e = chapmanAlpha(p.NmE, p.hmE, 10, h);
++    const B0 = p.B0 > 0 ? p.B0 : 100;
++    const x = (p.hmF2 - h) / B0;
++    const xc = x < 1.6 ? x : 1.6;
++    let f = p.NmF2 * Math.exp(-Math.pow(xc, p.B1) / Math.cosh(xc));
++    if (x > 1.6) f *= Math.exp(-(x - 1.6) / 1.2);
++    if (e >= f && h > sup) sup = h;
++  }
++  return sup;
++}
++
++export interface NeWinner {
++  ne: number;
++  /** Rama ganadora del max(): 0=D, 1=E, 2=F1, 3=F2; -1 ninguna. */
++  winner: number;
++}
++
++function evalWithFloor(
++  p: LayerProfileTS,
++  hKm: number,
++  cosChi: number,
++  flareFactor: number,
++  floor: number
++): NeWinner {
++  let best = 0;
++  let win = -1;
++  // D: sin fo medible; fondo Chapman Nm=1e9*sqrt(cosChi), H=10, hm=75.
++  if (cosChi > 0) {
++    const NmD = 1e9 * Math.sqrt(cosChi) * flareFactor;
++    const v = chapmanAlpha(NmD, 75, 10, hKm);
++    if (v > best) {
++      best = v;
++      win = 0;
++    }
++  }
++  if (p.hasE) {
++    const v = chapmanAlpha(p.NmE, p.hmE, 10, hKm);
++    if (v > best) {
++      best = v;
++      win = 1;
++    }
++  }
++  if (p.hasF1) {
++    const v = chapmanAlpha(p.NmF1, p.hmF1, 25, hKm);
++    if (v > best) {
++      best = v;
++      win = 2;
++    }
++  }
++  if (p.hasF2) {
++    let NeF2 = 0;
++    if (hKm <= p.hmF2) {
++      const B0 = p.B0 > 0 ? p.B0 : 100;
++      const x = (p.hmF2 - hKm) / B0;
++      const xmax = 1.6;
++      const xc = x < xmax ? x : xmax;
++      const base = p.NmF2 * Math.exp(-Math.pow(xc, p.B1) / Math.cosh(xc));
++      NeF2 = x > xmax ? base * Math.exp(-(x - xmax) / 1.2) : base;
++    } else {
++      const Htop = 60 * (1 + (hKm - p.hmF2) / 300);
++      NeF2 = p.NmF2 * Math.exp(-(hKm - p.hmF2) / Htop);
++    }
++    // Estricto: E gana su propio voxel pico (puerta del suelo).
++    if (NeF2 > best) {
++      best = NeF2;
++      if (hKm > floor) win = 3;
++    }
++  }
++  return { ne: best, winner: win };
++}
++
++/**
++ * Densidad total [m^-3] a altura hKm (port de evalNeTotal).
++ * winner: rama ganadora del max() (empates -> la mas baja).
++ */
++export function evalNeTotal(
++  p: LayerProfileTS,
++  hKm: number,
++  cosChi: number,
++  flareFactor: number
++): NeWinner {
++  return evalWithFloor(p, hKm, cosChi, flareFactor, f2FloorKm(p));
++}
++
++// Rango log10 [8, 12.5] -> [0,1].
++export function normLogNe(ne: number): number {
++  const l10 = ne > 0 ? Math.log10(ne) : 0;
++  const n = (l10 - 8) / (12.5 - 8);
++  return Math.min(1, Math.max(0, n));
++}
++
++/**
++ * Construye el volumen muestreando evalNeTotal sobre la rejilla de
++ * perfiles (un LayerProfileTS por celda, layout GridData). sunDir en el
++ * marco del motor; flareFactor global >= 1. Suelo memoizado por perfil.
++ */
++export function buildDensityVolume(
++  profiles: LayerProfileTS[],
++  lonRes: number,
++  latRes: number,
++  altRes: number,
++  altMinKm: number,
++  altMaxKm: number,
++  sunX: number,
++  sunY: number,
++  sunZ: number,
++  flareFactor: number
++): DensityVolume {
++  const vol: DensityVolume = {
++    lonRes,
++    latRes,
++    altRes,
++    altMinKm,
++    altMaxKm,
++    data: new Array(lonRes * latRes * altRes).fill(0),
++    layer: new Array(lonRes * latRes * altRes).fill(0),
++    valid: false,
++    timestamp: 0,
++  };
++  if (profiles.length !== lonRes * latRes) return vol;
++  const floors = profiles.map((p) => f2FloorKm(p));
++  for (let latIdx = 0; latIdx < latRes; latIdx++) {
++    const latDeg = -90 + (180 * (latIdx + 0.5)) / latRes;
++    for (let lonIdx = 0; lonIdx < lonRes; lonIdx++) {
++      const lonDeg = -180 + (360 * (lonIdx + 0.5)) / lonRes;
++      const [cx, cy, cz] = densityDir(latDeg, lonDeg);
++      const cosChi = cx * sunX + cy * sunY + cz * sunZ;
++      const pi = latIdx * lonRes + lonIdx;
++      const p = profiles[pi];
++      for (let a = 0; a < altRes; a++) {
++        const h = volumeAltKm(a, altRes, altMinKm, altMaxKm);
++        const r = evalWithFloor(p, h, cosChi, flareFactor, floors[pi]);
++        const ii = (a * latRes + latIdx) * lonRes + lonIdx;
++        vol.data[ii] = normLogNe(r.ne);
++        vol.layer[ii] = r.winner < 0 ? 0 : r.winner > 3 ? 3 : r.winner;
++      }
++    }
++  }
++  vol.valid = true;
++  return vol;
++}
+-- 
+2.53.0.windows.3
+
