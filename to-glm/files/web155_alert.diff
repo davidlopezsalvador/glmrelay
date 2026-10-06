@@ -1,0 +1,517 @@
+From cc0cd73f6c5dbdd9352e74728697a80f1c7e69de Mon Sep 17 00:00:00 2001
+From: t <t@t>
+Date: Tue, 6 Oct 2026 18:56:43 +0200
+Subject: [PATCH] w155
+
+---
+ package.json                                  |   2 +-
+ src/app/page.tsx                              |  41 ++++-
+ .../ionosphere/hud/SpaceWeatherPanel.tsx      |  45 ++++-
+ src/lib/iono/alerts.test.ts                   | 133 +++++++++++++
+ src/lib/iono/alerts.ts                        | 174 ++++++++++++++++++
+ 5 files changed, 388 insertions(+), 7 deletions(-)
+ create mode 100644 src/lib/iono/alerts.test.ts
+ create mode 100644 src/lib/iono/alerts.ts
+
+diff --git a/package.json b/package.json
+index 6879469..c1c6bd5 100644
+--- a/package.json
++++ b/package.json
+@@ -93,7 +93,7 @@
+     "tailwindcss": "^4",
+     "tw-animate-css": "^1.3.5",
+     "typescript": "^5",
+-    "vite": "^5.0.0",
++    "vite": "^7.0.0",
+     "vitest": "^5.0.3"
+   }
+ }
+diff --git a/src/app/page.tsx b/src/app/page.tsx
+index 558e6e5..3cc0e96 100644
+--- a/src/app/page.tsx
++++ b/src/app/page.tsx
+@@ -1,6 +1,6 @@
+ "use client";
+ 
+-import { useCallback, useEffect, useMemo, useState } from "react";
++import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+ import { RadioTower, FlaskConical, Github, X, Signal } from "lucide-react";
+ 
+ import IonosphereScene from "@/components/ionosphere/IonosphereScene";
+@@ -19,6 +19,7 @@ import {
+   DEFAULT_SETTINGS,
+ } from "@/components/ionosphere/types";
+ import { LinkResult } from "@/lib/iono/hf";
++import { AlertEngine, type AlertSnapshot } from "@/lib/iono/alerts";
+ 
+ async function fetchJson<T>(url: string, timeoutMs = 30000): Promise<T | null> {
+   try {
+@@ -47,6 +48,37 @@ export default function Home() {
+   const [ideasOpen, setIdeasOpen] = useState(false);
+   const [now, setNow] = useState(() => new Date());
+ 
++  // W-2 alertas: motor vivo en ref; se evalua al publicar datos (sw/ionos),
++  // sin fetch nuevo. La mediana MUF replica el patron global del C++.
++  const alertsRef = useRef<AlertEngine | null>(null);
++  if (!alertsRef.current) alertsRef.current = new AlertEngine();
++  const [alertSnap, setAlertSnap] = useState<AlertSnapshot | null>(null);
++
++  useEffect(() => {
++    const eng = alertsRef.current;
++    if (!eng) return;
++    const mufs = (ionos?.stations ?? [])
++      .map((s) => s.muf3000)
++      .filter((v): v is number => v != null && v > 0);
++    const sorted = [...mufs].sort((a, b) => a - b);
++    eng.evaluate({
++      utc: Date.now() / 1000,
++      kpOk: sw != null,
++      kp: sw?.kp.now ?? 0,
++      bzOk: sw != null && sw.wind.t != null,
++      bz: sw?.wind.bz ?? 0,
++      xrayOk: sw != null,
++      xrayClass: sw?.xray.class ?? "A",
++      mufOk: mufs.length > 0,
++      muf: sorted.length ? sorted[Math.floor(sorted.length / 2)] : 0,
++    });
++    setAlertSnap({
++      overall: eng.overall(),
++      levels: [eng.level(0), eng.level(1), eng.level(2), eng.level(3)],
++      events: [...eng.events()],
++    });
++  }, [sw, ionos]);
++
+   // ─── polling de datos ───
+   useEffect(() => {
+     let alive = true;
+@@ -195,7 +227,7 @@ export default function Home() {
+ 
+       {/* paneles laterales */}
+       <div className="absolute left-4 top-20 z-10 w-60 pointer-events-none space-y-3 hidden md:block">
+-        <SpaceWeatherPanel sw={sw} />
++        <SpaceWeatherPanel sw={sw} alerts={alertSnap} />
+       </div>
+       <div className="absolute right-4 top-20 z-10 w-64 pointer-events-none space-y-3 hidden md:block">
+         <LayersPanel settings={settings} onChange={onSettingsChange} ionosondes={ionos} fps={fps} />
+@@ -215,6 +247,7 @@ export default function Home() {
+         freq={linkFreq}
+         onFreq={setLinkFreq}
+         effSec={effSec}
++        alerts={alertSnap}
+       />
+ 
+       {/* barra de tiempo inferior */}
+@@ -338,6 +371,7 @@ function MobilePanels({
+   freq,
+   onFreq,
+   effSec,
++  alerts,
+ }: {
+   sw: SpaceWeatherData | null;
+   settings: SceneSettings;
+@@ -350,6 +384,7 @@ function MobilePanels({
+   freq: number;
+   onFreq: (f: number) => void;
+   effSec: number;
++  alerts: AlertSnapshot | null;
+ }) {
+   const [tab, setTab] = useState<"wx" | "radio" | "layers" | null>(null);
+   return (
+@@ -375,7 +410,7 @@ function MobilePanels({
+           </button>
+         ))}
+       </div>
+-      {tab === "wx" && <SpaceWeatherPanel sw={sw} />}
++      {tab === "wx" && <SpaceWeatherPanel sw={sw} alerts={alerts} />}
+       {tab === "radio" && (
+         <RadioPanel
+           link={link}
+diff --git a/src/components/ionosphere/hud/SpaceWeatherPanel.tsx b/src/components/ionosphere/hud/SpaceWeatherPanel.tsx
+index d382483..dbf22cd 100644
+--- a/src/components/ionosphere/hud/SpaceWeatherPanel.tsx
++++ b/src/components/ionosphere/hud/SpaceWeatherPanel.tsx
+@@ -6,7 +6,13 @@ import { SpaceWeatherData } from "../types";
+ import Sparkline from "./Sparkline";
+ 
+ /** Panel de clima espacial: Kp, F10.7, viento solar, GOES X-ray + disco solar SDO */
+-export default function SpaceWeatherPanel({ sw }: { sw: SpaceWeatherData | null }) {
++export default function SpaceWeatherPanel({
++  sw,
++  alerts,
++}: {
++  sw: SpaceWeatherData | null;
++  alerts?: import("@/lib/iono/alerts").AlertSnapshot | null;
++}) {
+   const [solarImg, setSolarImg] = useState(true);
+   if (!sw) {
+     return (
+@@ -153,12 +159,45 @@ export default function SpaceWeatherPanel({ sw }: { sw: SpaceWeatherData | null
+           </p>
+         </div>
+       )}
++      {alerts && <AlertsSection alerts={alerts} />}
+     </PanelBox>
+   );
+ }
+ 
+-function StatRow({
+-  icon,
++/** W-2 alertas: semaforo sobre bundles publicados + ultimas transiciones. */
++import { AlertLevel, RULE_NAMES, type AlertSnapshot } from "@/lib/iono/alerts";
++
++const LVL_TXT = ["GREEN", "AMBER", "RED", "OFF"] as const;
++const LVL_CLS = ["text-emerald-400", "text-amber-300", "text-red-400", "text-slate-500"] as const;
++
++function AlertsSection({ alerts }: { alerts: AlertSnapshot }) {
++  const evs = alerts.events.slice(-6).reverse();
++  return (
++    <div className="mt-2 pt-2 border-t border-white/10">
++      <div className="flex items-center justify-between">
++        <span className="text-[11px] uppercase tracking-wider text-slate-400">Alertas</span>
++        <span className={`text-[11px] font-semibold ${LVL_CLS[alerts.overall]}`}>
++          {LVL_TXT[alerts.overall]}
++        </span>
++      </div>
++      {RULE_NAMES.map((n, r) => (
++        <div key={n} className="flex items-center justify-between mt-0.5">
++          <span className="text-[11px] text-slate-500">{n}</span>
++          <span className={`text-[11px] font-medium ${LVL_CLS[alerts.levels[r]]}`}>
++            {LVL_TXT[alerts.levels[r]]}
++          </span>
++        </div>
++      ))}
++      {evs.map((ev, i) => (
++        <div key={`${ev.utc}-${i}`} className="text-[10px] text-slate-600">
++          {RULE_NAMES[ev.rule]} {LVL_TXT[ev.from]} -&gt; {LVL_TXT[ev.to]}
++        </div>
++      ))}
++    </div>
++  );
++}
++
++function StatRow({  icon,
+   label,
+   value,
+   extra,
+diff --git a/src/lib/iono/alerts.test.ts b/src/lib/iono/alerts.test.ts
+new file mode 100644
+index 0000000..d0f51cd
+--- /dev/null
++++ b/src/lib/iono/alerts.test.ts
+@@ -0,0 +1,133 @@
++/**
++ * TU W-2 alert (spec del veredicto 152, P3): casos borde replicados del TU
++ * C++ (drop 139, norma 144). Vitest.
++ */
++import { describe, expect, it } from "vitest";
++import { AlertEngine, AlertLevel, AlertRule, type AlertInput } from "./alerts";
++
++function base(utc: number): AlertInput {
++  return {
++    utc,
++    kpOk: true,
++    kp: 2.0,
++    bzOk: true,
++    bz: 1.0,
++    xrayOk: true,
++    xrayClass: "B",
++    mufOk: true,
++    muf: 20.0,
++  };
++}
++
++// Siembra historia MUF suficiente: 6 muestras a 20 MHz en 4 h.
++function seedMuf(e: AlertEngine, t0: number): void {
++  for (let i = 0; i < 6; i++) e.evaluate(base(t0 + (i * 3600 * 4) / 5));
++}
++
++describe("umbrales del catalogo", () => {
++  it("Kp 5 -> RED tras 2 seguidas (1 sola no latchea)", () => {
++    const e = new AlertEngine();
++    seedMuf(e, 1000000);
++    expect(e.overall()).toBe(AlertLevel.GREEN);
++    const a = base(2000000);
++    a.kp = 5.0;
++    e.evaluate(a);
++    expect(e.level(AlertRule.KP)).not.toBe(AlertLevel.RED);
++    e.evaluate(a);
++    expect(e.level(AlertRule.KP)).toBe(AlertLevel.RED);
++    expect(e.overall()).toBe(AlertLevel.RED);
++    const b = base(2000100);
++    b.kp = 3.0;
++    e.evaluate(b);
++    expect(e.level(AlertRule.KP)).toBe(AlertLevel.GREEN);
++  });
++
++  it("Bz -11 -> RED, 0 -> GREEN, -7 -> AMBER", () => {
++    const e = new AlertEngine();
++    seedMuf(e, 1000000);
++    const a = base(2000000);
++    a.bz = -11.0;
++    e.evaluate(a);
++    e.evaluate(a);
++    expect(e.level(AlertRule.BZ)).toBe(AlertLevel.RED);
++    const b = base(2000100);
++    b.bz = 0.0;
++    e.evaluate(b);
++    expect(e.level(AlertRule.BZ)).toBe(AlertLevel.GREEN);
++    const c = base(2000200);
++    c.bz = -7.0;
++    e.evaluate(c);
++    expect(e.level(AlertRule.BZ)).toBe(AlertLevel.AMBER);
++  });
++
++  it("X-ray M -> RED, C -> AMBER", () => {
++    const e = new AlertEngine();
++    seedMuf(e, 1000000);
++    const a = base(2000000);
++    a.xrayClass = "M";
++    e.evaluate(a);
++    e.evaluate(a);
++    expect(e.level(AlertRule.XRAY)).toBe(AlertLevel.RED);
++    const b = base(2000100);
++    b.xrayClass = "C";
++    e.evaluate(b);
++    expect(e.level(AlertRule.XRAY)).toBe(AlertLevel.AMBER);
++  });
++
++  it("MUF -30% -> RED, -15% -> AMBER, sin caida -> GREEN", () => {
++    const e = new AlertEngine();
++    seedMuf(e, 1910000); // mediana 20 MHz (ventana <24 h)
++    const a = base(1930000);
++    a.muf = 14.0;
++    e.evaluate(a);
++    e.evaluate(a);
++    expect(e.level(AlertRule.MUF)).toBe(AlertLevel.RED);
++    const b = base(1930100);
++    b.muf = 17.0;
++    e.evaluate(b);
++    expect(e.level(AlertRule.MUF)).toBe(AlertLevel.AMBER);
++    const c = base(1930200);
++    c.muf = 20.0;
++    e.evaluate(c);
++    expect(e.level(AlertRule.MUF)).toBe(AlertLevel.GREEN);
++  });
++});
++
++describe("dato faltante e historia insuficiente", () => {
++  it("Bz ausente -> OFF con valor basura, global intacto", () => {
++    const e = new AlertEngine();
++    seedMuf(e, 1000000);
++    const a = base(2000000);
++    a.bzOk = false;
++    a.bz = -50.0;
++    e.evaluate(a);
++    e.evaluate(a);
++    expect(e.level(AlertRule.BZ)).toBe(AlertLevel.OFF);
++    expect(e.overall()).toBe(AlertLevel.GREEN);
++  });
++
++  it("MUF sin historia (0 y 2 muestras) -> OFF", () => {
++    const e = new AlertEngine();
++    e.evaluate(base(1000000));
++    expect(e.level(AlertRule.MUF)).toBe(AlertLevel.OFF);
++    e.evaluate(base(1000600));
++    expect(e.level(AlertRule.MUF)).toBe(AlertLevel.OFF);
++  });
++});
++
++describe("cola de eventos", () => {
++  it("transicion registrada con regla/from/to y cota 32", () => {
++    const e = new AlertEngine();
++    seedMuf(e, 1000000);
++    const n0 = e.events().length;
++    const a = base(2000000);
++    a.kp = 5.0;
++    e.evaluate(a);
++    e.evaluate(a);
++    expect(e.events().length).toBeGreaterThan(n0);
++    const ev = e.events()[e.events().length - 1];
++    expect(ev.rule).toBe(AlertRule.KP);
++    expect(ev.to).toBe(AlertLevel.RED);
++    expect(e.events().length).toBeLessThanOrEqual(32);
++  });
++});
+diff --git a/src/lib/iono/alerts.ts b/src/lib/iono/alerts.ts
+new file mode 100644
+index 0000000..b3e799d
+--- /dev/null
++++ b/src/lib/iono/alerts.ts
+@@ -0,0 +1,174 @@
++/**
++ * Motor de alertas de propagacion W-2 (spec del veredicto 152, P3).
++ * Port fiel del motor C++ (drop 139, src/Data/Alerts.h): mismos umbrales
++ * con nombre, rojo tras 2 muestras, anillo MUF 24 h con mediana, OFF
++ * honesto, overall peor-sin-OFF, cola acotada de 32. Puro: sin DOM ni red.
++ * La cola de eventos ES la cola que consumiria un hook de audio (modo demo).
++ */
++export enum AlertLevel {
++  GREEN = 0,
++  AMBER = 1,
++  RED = 2,
++  OFF = 3,
++}
++
++export enum AlertRule {
++  KP = 0,
++  BZ = 1,
++  XRAY = 2,
++  MUF = 3,
++}
++export const NRULES = 4;
++
++// Umbrales del catalogo (constantes nombradas, identicas al C++).
++export const KP_AMBER = 4.0;
++export const KP_RED = 5.0;
++export const BZ_AMBER = -5.0; // Bz sur negativo
++export const BZ_RED = -10.0;
++export const XRAY_AMBER_RANK = 2; // C
++export const XRAY_RED_RANK = 3; // M
++export const MUF_AMBER_DROP = 0.1; // vs mediana 24 h
++export const MUF_RED_DROP = 0.2; // vs mediana 24 h
++export const DEBOUNCE_N = 2; // muestras seguidas para rojo
++export const MUF_HIST_MAX = 288; // 24 h a 5 min/muestra
++export const MUF_MIN_SAMPLES = 6;
++export const MUF_MIN_SPAN_SEC = 3 * 3600;
++export const LOG_MAX = 32; // cola acotada en memoria
++
++/** Rango NOAA de clase X-ray: A=0 B=1 C=2 M=3 X=4. */
++export function xrayRank(c: string): number {
++  if (c === "X") return 4;
++  if (c === "M") return 3;
++  if (c === "C") return 2;
++  if (c === "B") return 1;
++  return 0;
++}
++
++export interface AlertInput {
++  kpOk: boolean;
++  kp: number;
++  bzOk: boolean;
++  bz: number;
++  xrayOk: boolean;
++  xrayClass: string;
++  mufOk: boolean;
++  muf: number;
++  utc: number; // tiempo de la muestra (s)
++}
++
++export interface AlertEvent {
++  utc: number;
++  rule: number;
++  from: AlertLevel;
++  to: AlertLevel;
++}
++
++interface MufPt {
++  utc: number;
++  v: number;
++}
++
++export const RULE_NAMES = ["Kp", "Bz", "X-ray", "MUF drop"] as const;
++
++/** Foto inmutable para el panel (el motor sigue vivo en el ref de pagina). */
++export interface AlertSnapshot {
++  overall: AlertLevel;
++  levels: AlertLevel[];
++  events: AlertEvent[];
++}
++
++export class AlertEngine {
++  private levels: AlertLevel[] = [AlertLevel.OFF, AlertLevel.OFF, AlertLevel.OFF, AlertLevel.OFF];
++  private redCount: number[] = [0, 0, 0, 0];
++  private mufHist: MufPt[] = [];
++  private lastMufUtc = 0;
++  private log: AlertEvent[] = [];
++
++  /** Evalua una muestra (una publicacion de datos). Barata y pura. */
++  evaluate(input: AlertInput): void {
++    this.setRule(AlertRule.KP, input.kpOk ? AlertEngine.rawKp(input.kp) : AlertLevel.OFF, input.utc);
++    this.setRule(AlertRule.BZ, input.bzOk ? AlertEngine.rawBz(input.bz) : AlertLevel.OFF, input.utc);
++    this.setRule(
++      AlertRule.XRAY,
++      input.xrayOk ? AlertEngine.rawXray(input.xrayClass) : AlertLevel.OFF,
++      input.utc,
++    );
++    this.setRule(AlertRule.MUF, this.mufLevel(input), input.utc);
++  }
++
++  overall(): AlertLevel {
++    let w = AlertLevel.GREEN;
++    for (let r = 0; r < NRULES; r++) {
++      if (this.levels[r] !== AlertLevel.OFF && this.levels[r] > w) w = this.levels[r];
++    }
++    return w;
++  }
++
++  level(rule: number): AlertLevel {
++    return this.levels[rule];
++  }
++
++  events(): AlertEvent[] {
++    return this.log;
++  }
++
++  mufSamples(): number {
++    return this.mufHist.length;
++  }
++
++  private static rawKp(kp: number): AlertLevel {
++    return kp >= KP_RED ? AlertLevel.RED : kp >= KP_AMBER ? AlertLevel.AMBER : AlertLevel.GREEN;
++  }
++
++  private static rawBz(bz: number): AlertLevel {
++    return bz <= BZ_RED ? AlertLevel.RED : bz <= BZ_AMBER ? AlertLevel.AMBER : AlertLevel.GREEN;
++  }
++
++  private static rawXray(c: string): AlertLevel {
++    const r = xrayRank(c);
++    return r >= XRAY_RED_RANK ? AlertLevel.RED : r >= XRAY_AMBER_RANK ? AlertLevel.AMBER : AlertLevel.GREEN;
++  }
++
++  private setRule(r: number, raw: AlertLevel, utc: number): void {
++    const cur = this.levels[r];
++    let want: AlertLevel;
++    if (raw === AlertLevel.OFF) {
++      this.redCount[r] = 0;
++      want = AlertLevel.OFF;
++    } else if (raw === AlertLevel.RED) {
++      // Antiparpadeo: el rojo exige DEBOUNCE_N muestras seguidas;
++      // mientras cuenta se muestra ambar sin latchear rojo.
++      if (cur === AlertLevel.RED || ++this.redCount[r] >= DEBOUNCE_N) want = AlertLevel.RED;
++      else want = AlertLevel.AMBER;
++    } else {
++      this.redCount[r] = 0;
++      want = raw;
++    }
++    if (want !== cur) {
++      this.levels[r] = want;
++      this.log.push({ utc, rule: r, from: cur, to: want });
++      if (this.log.length > LOG_MAX) this.log.shift();
++    }
++  }
++
++  private mufLevel(input: AlertInput): AlertLevel {
++    if (input.mufOk && input.utc > this.lastMufUtc && input.muf > 0) {
++      this.mufHist.push({ utc: input.utc, v: input.muf });
++      this.lastMufUtc = input.utc;
++      while (this.mufHist.length > MUF_HIST_MAX) this.mufHist.shift();
++      while (this.mufHist.length > 0 && input.utc - this.mufHist[0].utc > 24 * 3600)
++        this.mufHist.shift();
++    }
++    // Historia insuficiente -> deshabilitada y declarado (no alerta).
++    if (this.mufHist.length < MUF_MIN_SAMPLES) return AlertLevel.OFF;
++    if (this.mufHist[this.mufHist.length - 1].utc - this.mufHist[0].utc < MUF_MIN_SPAN_SEC)
++      return AlertLevel.OFF;
++    const vs = this.mufHist.map((p) => p.v).sort((a, b) => a - b);
++    const med = vs[Math.floor(vs.length / 2)];
++    if (!(med > 0) || !input.mufOk || !(input.muf > 0)) return AlertLevel.OFF;
++    const drop = (med - input.muf) / med;
++    if (drop >= MUF_RED_DROP) return AlertLevel.RED;
++    if (drop >= MUF_AMBER_DROP) return AlertLevel.AMBER;
++    return AlertLevel.GREEN;
++  }
++}
+-- 
+2.53.0.windows.3
+
