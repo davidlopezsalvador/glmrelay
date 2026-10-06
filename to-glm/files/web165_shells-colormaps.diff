@@ -1,0 +1,557 @@
+From 7759983a244eecd97df7da9807fce9cd97b90159 Mon Sep 17 00:00:00 2001
+From: t <t@t>
+Date: Tue, 6 Oct 2026 23:15:26 +0200
+Subject: [PATCH] w165
+
+---
+ src/lib/iono/colormaps.test.ts     |  56 +++++++
+ src/lib/iono/colormaps.ts          |  37 +++++
+ src/lib/iono/densityVolume.test.ts | 184 +++++++++++++++++++++++
+ src/lib/iono/densityVolume.ts      | 233 +++++++++++++++++++++++++++++
+ 4 files changed, 510 insertions(+)
+ create mode 100644 src/lib/iono/colormaps.test.ts
+ create mode 100644 src/lib/iono/densityVolume.test.ts
+ create mode 100644 src/lib/iono/densityVolume.ts
+
+diff --git a/src/lib/iono/colormaps.test.ts b/src/lib/iono/colormaps.test.ts
+new file mode 100644
+index 0000000..24361a7
+--- /dev/null
++++ b/src/lib/iono/colormaps.test.ts
+@@ -0,0 +1,56 @@
++/**
++ * TU W-3 colormaps (spec 162 P1): pines PROPIOS (no hay TU C++ dedicado para
++ * Colormap.h). Pinea la semantica porteada de colormap::buildPalette y su
++ * alineacion con sampleColormap (mismo juego de stops). Vitest.
++ */
++import { describe, expect, it } from "vitest";
++import { buildPalette, sampleColormap, type ColormapName } from "./colormaps";
++
++const NAMES: ColormapName[] = ["viridis", "inferno", "plasma", "turbo", "aurora"];
++
++describe("colormaps: buildPalette", () => {
++  it("longitud n*3 y extremos == primer/ultimo stop (5 digitos por la guarda)", () => {
++    const p = buildPalette("viridis", 9);
++    expect(p.length).toBe(27);
++    expect(p[0]).toBeCloseTo(0.267, 5);
++    expect(p[1]).toBeCloseTo(0.004, 5);
++    expect(p[2]).toBeCloseTo(0.329, 5);
++    expect(p[24]).toBeCloseTo(0.993, 5);
++    expect(p[25]).toBeCloseTo(0.906, 5);
++    expect(p[26]).toBeCloseTo(0.144, 5);
++  });
++
++  it("nombre desconocido -> viridis", () => {
++    expect(buildPalette("nope", 5)).toEqual(buildPalette("viridis", 5));
++  });
++
++  it("las 5 paletas tienen extremos validos en [0,1]", () => {
++    for (const name of NAMES) {
++      const p = buildPalette(name, 17);
++      expect(p.length).toBe(51);
++      for (const v of p) expect(v >= -1e-9 && v <= 1 + 1e-9).toBe(true);
++    }
++  });
++
++  it("consistencia con sampleColormap en la misma malla", () => {
++    for (const name of NAMES) {
++      const n = 33;
++      const p = buildPalette(name, n);
++      let max = 0;
++      for (let i = 0; i < n; i++) {
++        const [r, g, b] = sampleColormap(name, i / (n - 1));
++        max = Math.max(max, Math.abs(p[i * 3] - r), Math.abs(p[i * 3 + 1] - g), Math.abs(p[i * 3 + 2] - b));
++      }
++      expect(max).toBeLessThan(1e-9);
++    }
++  });
++
++  it("aurora (5 stops) interpola el verde neon a mitad", () => {
++    const p = buildPalette("aurora", 5);
++    // t=0.5 cae en el stop central (0.05, 0.65, 0.15) salvo la guarda 1e-6
++    // del denominador (misma que el C++): pin con 5 digitos.
++    expect(p[6]).toBeCloseTo(0.05, 5);
++    expect(p[7]).toBeCloseTo(0.65, 5);
++    expect(p[8]).toBeCloseTo(0.15, 5);
++  });
++});
+diff --git a/src/lib/iono/colormaps.ts b/src/lib/iono/colormaps.ts
+index 7030c59..47159a8 100644
+--- a/src/lib/iono/colormaps.ts
++++ b/src/lib/iono/colormaps.ts
+@@ -91,6 +91,43 @@ export function sampleColormap(name: ColormapName, t: number): [number, number,
+   return [a.r + f * (b.r - a.r), a.g + f * (b.g - a.g), a.b + f * (b.b - a.b)];
+ }
+ 
++/**
++ * Paleta completa (W-3, spec 162-P1): port de colormap::buildPalette
++ * (src/Utils/Colormap.h). Misma semantica: t = i/(n-1), busqueda de tramo
++ * por inclusion, interpolacion lineal con guarda 1e-6, nombre desconocido
++ * -> viridis. Opera sobre las mismas tablas de este fichero (alineacion
++ * declarada: un solo juego de stops; sampleColormap y buildPalette son
++ * dos vistas del mismo dato). Salida plana RGB x n.
++ */
++export function buildPalette(name: string, n: number): number[] {
++  const stops =
++    name === "inferno"
++      ? INFERNO
++      : name === "plasma"
++      ? PLASMA
++      : name === "turbo"
++      ? TURBO
++      : name === "aurora"
++      ? AURORA
++      : VIRIDIS;
++  const out = new Array<number>(n * 3);
++  for (let i = 0; i < n; i++) {
++    const t = i / (n - 1);
++    let s = 0;
++    for (let j = 0; j < stops.length - 1; j++) {
++      if (t >= stops[j].pos && t <= stops[j + 1].pos) {
++        s = j;
++        break;
++      }
++    }
++    const f = (t - stops[s].pos) / (stops[s + 1].pos - stops[s].pos + 1e-6);
++    out[i * 3 + 0] = stops[s].r + f * (stops[s + 1].r - stops[s].r);
++    out[i * 3 + 1] = stops[s].g + f * (stops[s + 1].g - stops[s].g);
++    out[i * 3 + 2] = stops[s].b + f * (stops[s + 1].b - stops[s].b);
++  }
++  return out;
++}
++
+ /** Rampa CSS para leyendas UI */
+ export function colormapCss(name: ColormapName, n = 64): string {
+   const pts: string[] = [];
+diff --git a/src/lib/iono/densityVolume.test.ts b/src/lib/iono/densityVolume.test.ts
+new file mode 100644
+index 0000000..5d235bb
+--- /dev/null
++++ b/src/lib/iono/densityVolume.test.ts
+@@ -0,0 +1,184 @@
++/**
++ * TU W-3 density volume (spec 162 P1): pines PROPIOS contra el oraculo
++ * (src/Ionosphere/DensityVolume.h, norma 144; no hay TU C++ dedicado para
++ * este modulo). Pinea layout, alturas, direccion del motor, dia/noche,
++ * picos derivados, TEC y muestreo. Vitest.
++ */
++import { describe, expect, it } from "vitest";
++import {
++  VOL_ALT_MAX_KM,
++  VOL_ALT_MIN_KM,
++  VOL_ALT_RES,
++  VOL_LAT_RES,
++  VOL_LOG_MIN,
++  VOL_LOG_RANGE,
++  VOL_LON_RES,
++  VOL_PEAK_FLOOR,
++  applyDayNight,
++  densityDir,
++  extractPeakGrids,
++  integrateTEC,
++  sampleVolume,
++  volumeAltKm,
++  volumeIndex,
++  type DensityVolume,
++} from "./densityVolume";
++
++function blankVolume(): DensityVolume {
++  return {
++    lonRes: 0,
++    latRes: 0,
++    altRes: 0,
++    altMinKm: VOL_ALT_MIN_KM,
++    altMaxKm: VOL_ALT_MAX_KM,
++    data: [],
++    valid: false,
++    timestamp: 0,
++  };
++}
++
++describe("densityVolume: layout y constantes", () => {
++  it("pines del oraculo 72x72x48, alt 60..500, log 8..12.5, suelo 8.5", () => {
++    expect([VOL_LON_RES, VOL_LAT_RES, VOL_ALT_RES]).toEqual([72, 72, 48]);
++    expect([VOL_ALT_MIN_KM, VOL_ALT_MAX_KM]).toEqual([60, 500]);
++    expect(VOL_LOG_MIN).toBe(8);
++    expect(VOL_LOG_MIN + VOL_LOG_RANGE).toBeCloseTo(12.5, 12);
++    expect(VOL_PEAK_FLOOR).toBe(8.5);
++  });
++
++  it("volumeIndex == data[(a*H+y)*W+x]", () => {
++    const W = 72;
++    const H = 72;
++    expect(volumeIndex(0, 0, 0, W, H)).toBe(0);
++    expect(volumeIndex(1, 0, 0, W, H)).toBe(1);
++    expect(volumeIndex(0, 1, 0, W, H)).toBe(W);
++    expect(volumeIndex(0, 0, 1, W, H)).toBe(W * H);
++  });
++
++  it("volumeAltKm: extremos, n<=1 y malla densa abajo (^1.5)", () => {
++    expect(volumeAltKm(0, 48, 60, 500)).toBe(60);
++    expect(volumeAltKm(47, 48, 60, 500)).toBe(500);
++    expect(volumeAltKm(0, 1, 60, 500)).toBe(60);
++    const dLo = volumeAltKm(1, 48, 60, 500) - volumeAltKm(0, 48, 60, 500);
++    const dHi = volumeAltKm(47, 48, 60, 500) - volumeAltKm(46, 48, 60, 500);
++    expect(dHi > dLo).toBe(true);
++  });
++});
++
++describe("densityVolume: direccion del motor", () => {
++  it("(0,0) -> -X, (0,90E) -> +Z, polo -> +Y, unitaria", () => {
++    const a = densityDir(0, 0);
++    expect(a[0]).toBeCloseTo(-1, 9);
++    expect(a[1]).toBeCloseTo(0, 9);
++    expect(a[2]).toBeCloseTo(0, 9);
++    const b = densityDir(0, 90);
++    expect(b[2]).toBeCloseTo(1, 9);
++    const c = densityDir(90, 33);
++    expect(c[1]).toBeCloseTo(1, 9);
++  });
++});
++
++describe("densityVolume: applyDayNight", () => {
++  it("subsolar intacto, antisolar apaga E/F1", () => {
++    // 1x1: celda (lat 0, lon 0) -> dir (-1,0,0).
++    const day = [{ NmE: 100, NmF1: 200, hasE: true, hasF1: true }];
++    applyDayNight(day, 1, 1, -1, 0, 0);
++    expect(day[0].NmE).toBe(100);
++    expect(day[0].NmF1).toBe(200);
++    expect(day[0].hasE && day[0].hasF1).toBe(true);
++    const night = [{ NmE: 100, NmF1: 200, hasE: true, hasF1: true }];
++    applyDayNight(night, 1, 1, 1, 0, 0);
++    expect(night[0].NmE).toBe(0);
++    expect(night[0].NmF1).toBe(0);
++    expect(night[0].hasE || night[0].hasF1).toBe(false);
++  });
++
++  it("terminador parcial: e == 2/27 (mismo smoothstep del C++)", () => {
++    const t = [{ NmE: 100, NmF1: 200, hasE: true, hasF1: true }];
++    applyDayNight(t, 1, 1, 0, 1, 0); // dot = 0
++    expect(t[0].NmE).toBeCloseTo((100 * 2) / 27, 6);
++    expect(t[0].hasE).toBe(true);
++  });
++
++  it("rejilla de tamano erroneo -> no toca nada", () => {
++    const p = [{ NmE: 5, NmF1: 6, hasE: true, hasF1: true }];
++    applyDayNight(p, 2, 2, -1, 0, 0);
++    expect(p[0].NmE).toBe(5);
++  });
++});
++
++describe("densityVolume: extractPeakGrids (shells derivadas)", () => {
++  it("pico interior simetrico: logNe exacto y hm en el punto medio", () => {
++    const W = 2;
++    const H = 2;
++    const A = 5;
++    const data = new Array(W * H * A).fill(0);
++    data[(2 * H + 0) * W + 0] = 1;
++    const v: DensityVolume = {
++      lonRes: W,
++      latRes: H,
++      altRes: A,
++      altMinKm: 60,
++      altMaxKm: 500,
++      data,
++      valid: true,
++      timestamp: 7,
++    };
++    const out = extractPeakGrids(v);
++    expect(out.logNe.valid && out.hmKm.valid).toBe(true);
++    expect(out.logNe.width).toBe(W);
++    expect(out.logNe.values[0]).toBe(12.5);
++    const x0 = volumeAltKm(1, A, 60, 500);
++    const x2 = volumeAltKm(3, A, 60, 500);
++    expect(out.hmKm.values[0]).toBeCloseTo((x0 + x2) / 2, 9);
++    expect(out.hmKm.values[0] > x0 && out.hmKm.values[0] < x2).toBe(true);
++    // Columna plana a cero -> hueco (logNe 8.0 < 8.5, hm 0).
++    expect(out.logNe.values[1]).toBe(8);
++    expect(out.hmKm.values[1]).toBe(0);
++    expect(out.logNe.timestamp).toBe(7);
++  });
++
++  it("volumen invalido -> rejillas invalidas", () => {
++    const out = extractPeakGrids(blankVolume());
++    expect(out.logNe.valid || out.hmKm.valid).toBe(false);
++  });
++});
++
++describe("densityVolume: integrateTEC y sampleVolume", () => {
++  it("columna uniforme n=0 -> TEC == 1e8 * 440000 / 1e16", () => {
++    const W = 2;
++    const H = 2;
++    const A = 8;
++    const v: DensityVolume = {
++      lonRes: W,
++      latRes: H,
++      altRes: A,
++      altMinKm: 60,
++      altMaxKm: 500,
++      data: new Array(W * H * A).fill(0),
++      valid: true,
++      timestamp: 0,
++    };
++    expect(integrateTEC(v, 0, 0)).toBeCloseTo(0.0044, 9);
++    expect(integrateTEC(v, -1, 0)).toBe(0);
++    expect(integrateTEC(blankVolume(), 0, 0)).toBe(0);
++  });
++
++  it("campo constante -> la muestra vale la constante", () => {
++    const W = 3;
++    const H = 3;
++    const A = 3;
++    const v: DensityVolume = {
++      lonRes: W,
++      latRes: H,
++      altRes: A,
++      altMinKm: 60,
++      altMaxKm: 500,
++      data: new Array(W * H * A).fill(0.37),
++      valid: true,
++      timestamp: 0,
++    };
++    expect(sampleVolume(v, 10.5, -30.25, 200)).toBeCloseTo(0.37, 12);
++    expect(sampleVolume(blankVolume(), 0, 0, 200)).toBe(0);
++  });
++});
+diff --git a/src/lib/iono/densityVolume.ts b/src/lib/iono/densityVolume.ts
+new file mode 100644
+index 0000000..4f8c412
+--- /dev/null
++++ b/src/lib/iono/densityVolume.ts
+@@ -0,0 +1,233 @@
++/**
++ * Volumen de densidad electronica W-3 (spec 158 sec.5.4 / 162-P1): espejo
++ * puro de la parte NO-GL de src/Ionosphere/DensityVolume.h (drop C++ con
++ * LayerProfile). Layout, alturas, direccion del motor, dia/noche, picos
++ * derivados (pin 158 s5.4: shells DERIVADAS del volumen, no parametros
++ * sueltos), TEC y muestreo. Puro: sin DOM, sin three, sin GL.
++ * NO espejado (viaja con el wiring del volumen): buildDensityVolume
++ * (necesita la rejilla LayerProfile + evalNeTotal, inexistentes en lib).
++ * RefShells es clase GL pura (VAO/VBO/shader): nada que espejar; la web ya
++ * tiene anillos de referencia propios (buildRefRings). Ambas deudas
++ * declaradas, no derogadas.
++ */
++
++// Layout del oraculo: data[(altIdx*latRes + latIdx)*lonRes + lonIdx],
++// lonIdx 0 = lon -180, latIdx 0 = sur (lat -90), altIdx 0 = altMinKm.
++// Se guarda log10(Ne) normalizado 0..1 (rango log10 [8, 12.5]).
++export const VOL_LON_RES = 72;
++export const VOL_LAT_RES = 72;
++export const VOL_ALT_RES = 48;
++export const VOL_ALT_MIN_KM = 60;
++export const VOL_ALT_MAX_KM = 500;
++export const VOL_LOG_MIN = 8.0;
++export const VOL_LOG_RANGE = 4.5; // 12.5 - 8.0
++export const VOL_PEAK_FLOOR = 8.5; // picos bajo logNe 8.5 -> hueco (hm = 0)
++
++export interface DensityVolume {
++  lonRes: number;
++  latRes: number;
++  altRes: number;
++  altMinKm: number;
++  altMaxKm: number;
++  data: number[]; // log10(Ne) normalizado 0..1, layout del oraculo
++  valid: boolean;
++  timestamp: number;
++}
++
++export interface GridData {
++  width: number;
++  height: number;
++  values: number[];
++  valid: boolean;
++  timestamp: number;
++}
++
++/** Indice lineal del layout data[(a*H+y)*W+x]. */
++export function volumeIndex(x: number, y: number, a: number, w: number, h: number): number {
++  return (a * h + y) * w + x;
++}
++
++// h_i = altMin + (altMax-altMin) * (i/(n-1))^1.5
++export function volumeAltKm(i: number, n: number, altMinKm: number, altMaxKm: number): number {
++  const f = n <= 1 ? 0 : i / (n - 1);
++  return altMinKm + (altMaxKm - altMinKm) * Math.pow(f, 1.5);
++}
++
++function smoothstep(e0: number, e1: number, x: number): number {
++  const t = Math.min(1, Math.max(0, (x - e0) / (e1 - e0)));
++  return t * t * (3 - 2 * t);
++}
++
++/** Vista minima de perfil para applyDayNight (NmE/NmF1 + flags E/F1). */
++export interface DayNightProfile {
++  NmE: number;
++  NmF1: number;
++  hasE: boolean;
++  hasF1: boolean;
++}
++
++/**
++ * Atenua E/F1 de noche sobre una rejilla de perfiles (las sondas no miden
++ * foE/foF1 nocturnos). F2 y D los gestiona el evaluador. sunDir en el marco
++ * del motor. Port de applyDayNight: smoothstep(-0.05, 0.25, cosChi) con la
++ * convencion angular del motor (theta = pi - lon); e <= 0 apaga los flags.
++ */
++export function applyDayNight(
++  profiles: DayNightProfile[],
++  lonRes: number,
++  latRes: number,
++  sunX: number,
++  sunY: number,
++  sunZ: number
++): void {
++  if (profiles.length !== lonRes * latRes) return;
++  const kPi = Math.PI;
++  for (let latIdx = 0; latIdx < latRes; latIdx++) {
++    const latDeg = -90 + (180 * (latIdx + 0.5)) / latRes;
++    const phi = ((90 - latDeg) * kPi) / 180;
++    for (let lonIdx = 0; lonIdx < lonRes; lonIdx++) {
++      const lonDeg = -180 + (360 * (lonIdx + 0.5)) / lonRes;
++      const theta = kPi - (lonDeg * kPi) / 180; // convencion del motor
++      const cx = Math.sin(phi) * Math.cos(theta);
++      const cy = Math.cos(phi);
++      const cz = Math.sin(phi) * Math.sin(theta);
++      const e = smoothstep(-0.05, 0.25, cx * sunX + cy * sunY + cz * sunZ);
++      const p = profiles[latIdx * lonRes + lonIdx];
++      p.NmE *= e;
++      p.NmF1 *= e;
++      if (e <= 0) {
++        p.hasE = false;
++        p.hasF1 = false;
++      }
++    }
++  }
++}
++
++/**
++ * Direccion unitaria en el marco del motor (theta = pi - lon).
++ * OJO (historial de meridianos rotados 180 grados del C++): NO usar
++ * radians(lon) a secas; convencion verificada de IonosondeLayer.cpp:249.
++ */
++export function densityDir(latDeg: number, lonDeg: number): [number, number, number] {
++  const kPi = Math.PI;
++  const phi = ((90 - latDeg) * kPi) / 180;
++  const theta = kPi - (lonDeg * kPi) / 180;
++  const sn = Math.sin(phi);
++  return [sn * Math.cos(theta), Math.cos(phi), sn * Math.sin(theta)];
++}
++
++export interface PeakGrids {
++  logNe: GridData; // log10(Ne) del pico (para color)
++  hmKm: GridData; // altura del pico en km (refinada; hueco = 0)
++}
++
++/** Picos por columna extraidos del volumen (plan volume-derived-shells). */
++export function extractPeakGrids(v: DensityVolume): PeakGrids {
++  const blank = (): GridData => ({ width: 0, height: 0, values: [], valid: false, timestamp: 0 });
++  const out: PeakGrids = { logNe: blank(), hmKm: blank() };
++  out.logNe.width = v.lonRes;
++  out.logNe.height = v.latRes;
++  out.hmKm.width = v.lonRes;
++  out.hmKm.height = v.latRes;
++  out.logNe.values = new Array(v.lonRes * v.latRes).fill(0);
++  out.hmKm.values = new Array(v.lonRes * v.latRes).fill(0);
++  if (!v.valid || v.data.length === 0 || v.lonRes < 1 || v.latRes < 1 || v.altRes < 3) return out;
++  const W = v.lonRes;
++  const H = v.latRes;
++  const A = v.altRes;
++  const at = (x: number, y: number, a: number): number => v.data[(a * H + y) * W + x];
++  for (let y = 0; y < H; y++) {
++    for (let x = 0; x < W; x++) {
++      let bi = 0;
++      for (let a = 1; a < A; a++) if (at(x, y, a) > at(x, y, bi)) bi = a;
++      let peak = at(x, y, bi);
++      let hm = volumeAltKm(bi, A, v.altMinKm, v.altMaxKm);
++      if (bi > 0 && bi + 1 < A) {
++        // Refinamiento sub-muestra: parabola por los 3 puntos con sus
++        // alturas REALES (espaciado ^1.5 no uniforme). Vertice de Lagrange.
++        const x0 = volumeAltKm(bi - 1, A, v.altMinKm, v.altMaxKm);
++        const x1 = hm;
++        const x2 = volumeAltKm(bi + 1, A, v.altMinKm, v.altMaxKm);
++        const y0 = at(x, y, bi - 1);
++        const y1 = peak;
++        const y2 = at(x, y, bi + 1);
++        const den = x0 * (y1 - y2) + x1 * (y2 - y0) + x2 * (y0 - y1);
++        if (Math.abs(den) > 1e-9) {
++          let xs = (0.5 * (x0 * x0 * (y1 - y2) + x1 * x1 * (y2 - y0) + x2 * x2 * (y0 - y1))) / den;
++          if (xs < x0) xs = x0;
++          if (xs > x2) xs = x2;
++          // Valor en el vertice: t en [-1,1] sobre el tramo local.
++          let t = (xs - x1) / (0.5 * (x2 - x0) + 1e-9);
++          if (t < -1) t = -1;
++          if (t > 1) t = 1;
++          hm = xs;
++          peak = y1 - 0.25 * (y0 - y2) * t;
++        }
++      }
++      const logNe = VOL_LOG_MIN + VOL_LOG_RANGE * peak; // des-normalizar
++      out.logNe.values[y * W + x] = logNe;
++      out.hmKm.values[y * W + x] = logNe < VOL_PEAK_FLOOR ? 0 : hm;
++    }
++  }
++  out.logNe.valid = out.hmKm.valid = true;
++  out.logNe.timestamp = out.hmKm.timestamp = v.timestamp;
++  return out;
++}
++
++// TEC[TECU] = integral trapezoidal de Ne[m^-3] dh[m] / 1e16, con el Ah real
++// por tramo (alturas en ^1.5, NO uniformes).
++export function integrateTEC(v: DensityVolume, latIdx: number, lonIdx: number): number {
++  if (!v.valid || v.data.length === 0) return 0;
++  const W = v.lonRes;
++  const H = v.latRes;
++  const A = v.altRes;
++  if (latIdx < 0 || latIdx >= H || lonIdx < 0 || lonIdx >= W || A < 2) return 0;
++  let tec = 0;
++  for (let a = 0; a + 1 < A; a++) {
++    const n0 = v.data[(a * H + latIdx) * W + lonIdx];
++    const n1 = v.data[((a + 1) * H + latIdx) * W + lonIdx];
++    const Ne0 = Math.pow(10, VOL_LOG_MIN + VOL_LOG_RANGE * n0);
++    const Ne1 = Math.pow(10, VOL_LOG_MIN + VOL_LOG_RANGE * n1);
++    const dh =
++      (volumeAltKm(a + 1, A, v.altMinKm, v.altMaxKm) - volumeAltKm(a, A, v.altMinKm, v.altMaxKm)) * 1000;
++    tec += 0.5 * (Ne0 + Ne1) * dh;
++  }
++  return tec / 1e16;
++}
++
++/** Muestreo trilineal con wrap en lon y clamp en lat/alt. */
++export function sampleVolume(v: DensityVolume, latDeg: number, lonDeg: number, altKm: number): number {
++  if (!v.valid || v.data.length === 0 || v.lonRes < 2 || v.latRes < 2 || v.altRes < 2) return 0;
++  const W = v.lonRes;
++  const H = v.latRes;
++  const A = v.altRes;
++  const gx = ((lonDeg + 180) / 360) * W - 0.5;
++  const gy = ((latDeg + 90) / 180) * H - 0.5;
++  const x0 = Math.floor(gx);
++  const y0 = Math.floor(gy);
++  const fx = gx - x0;
++  const fy = gy - y0;
++  let a0 = 0;
++  while (a0 + 1 < A && volumeAltKm(a0 + 1, A, v.altMinKm, v.altMaxKm) <= altKm) a0++;
++  const a1 = a0 + 1 < A ? a0 + 1 : a0;
++  const h0 = volumeAltKm(a0, A, v.altMinKm, v.altMaxKm);
++  const h1 = volumeAltKm(a1, A, v.altMinKm, v.altMaxKm);
++  let fa = h1 > h0 ? (altKm - h0) / (h1 - h0) : 0;
++  fa = Math.min(1, Math.max(0, fa));
++  const at = (x: number, y: number, a: number): number => {
++    const xx = ((x % W) + W) % W;
++    const yy = y < 0 ? 0 : y >= H ? H - 1 : y;
++    return v.data[(a * H + yy) * W + xx];
++  };
++  const lo =
++    at(x0, y0, a0) * (1 - fx) * (1 - fy) +
++    at(x0 + 1, y0, a0) * fx * (1 - fy) +
++    at(x0, y0 + 1, a0) * (1 - fx) * fy +
++    at(x0 + 1, y0 + 1, a0) * fx * fy;
++  const hi =
++    at(x0, y0, a1) * (1 - fx) * (1 - fy) +
++    at(x0 + 1, y0, a1) * fx * (1 - fy) +
++    at(x0, y0 + 1, a1) * (1 - fx) * fy +
++    at(x0 + 1, y0 + 1, a1) * fx * fy;
++  return lo * (1 - fa) + hi * fa;
++}
+-- 
+2.53.0.windows.3
+
