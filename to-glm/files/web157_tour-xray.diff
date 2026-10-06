@@ -1,0 +1,548 @@
+From 80bef28d39a5e2aa8f9caf5075bad653be1ccae7 Mon Sep 17 00:00:00 2001
+From: t <t@t>
+Date: Tue, 6 Oct 2026 20:54:04 +0200
+Subject: [PATCH] w157
+
+---
+ src/app/page.tsx                              | 92 ++++++++++++++----
+ src/components/ionosphere/IonosphereScene.tsx | 56 ++++++++++-
+ src/lib/iono/alerts.ts                        | 41 ++++++++
+ src/lib/iono/tour.test.ts                     | 46 +++++++++
+ src/lib/iono/tour.ts                          | 96 +++++++++++++++++++
+ src/lib/iono/wiring.test.ts                   | 73 ++++++++++++++
+ 6 files changed, 386 insertions(+), 18 deletions(-)
+ create mode 100644 src/lib/iono/tour.test.ts
+ create mode 100644 src/lib/iono/tour.ts
+ create mode 100644 src/lib/iono/wiring.test.ts
+
+diff --git a/src/app/page.tsx b/src/app/page.tsx
+index 3cc0e96..0ac182e 100644
+--- a/src/app/page.tsx
++++ b/src/app/page.tsx
+@@ -19,7 +19,8 @@ import {
+   DEFAULT_SETTINGS,
+ } from "@/components/ionosphere/types";
+ import { LinkResult } from "@/lib/iono/hf";
+-import { AlertEngine, type AlertSnapshot } from "@/lib/iono/alerts";
++import { AlertEngine, buildAlertInput, type AlertSnapshot } from "@/lib/iono/alerts";
++import { tourCount, tourKey } from "@/lib/iono/tour";
+ 
+ async function fetchJson<T>(url: string, timeoutMs = 30000): Promise<T | null> {
+   try {
+@@ -49,29 +50,33 @@ export default function Home() {
+   const [now, setNow] = useState(() => new Date());
+ 
+   // W-2 alertas: motor vivo en ref; se evalua al publicar datos (sw/ionos),
+-  // sin fetch nuevo. La mediana MUF replica el patron global del C++.
++  // sin fetch nuevo. El wiring (normalizacion de clase + honestidad de
++  // fuentes + mediana MUF) vive en buildAlertInput: contrato testeado.
+   const alertsRef = useRef<AlertEngine | null>(null);
+   if (!alertsRef.current) alertsRef.current = new AlertEngine();
+   const [alertSnap, setAlertSnap] = useState<AlertSnapshot | null>(null);
+ 
++  // W-2 tour: toggle T con reinicio a t=0 (la escena resetea su reloj al
++  // activar); cualquier click en el canvas aborta sin salto de camara.
++  const [tourOn, setTourOn] = useState(false);
++  const [tourIdx, setTourIdx] = useState(0);
++  const [tourEs, setTourEs] = useState(true);
++  useEffect(() => {
++    const onKey = (e: KeyboardEvent) => {
++      if (e.repeat || e.metaKey || e.ctrlKey || e.altKey) return;
++      const tag = (e.target as HTMLElement | null)?.tagName ?? "";
++      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
++      if (e.key === "t" || e.key === "T") setTourOn((v) => !v);
++    };
++    window.addEventListener("keydown", onKey);
++    return () => window.removeEventListener("keydown", onKey);
++  }, []);
++
+   useEffect(() => {
+     const eng = alertsRef.current;
+     if (!eng) return;
+-    const mufs = (ionos?.stations ?? [])
+-      .map((s) => s.muf3000)
+-      .filter((v): v is number => v != null && v > 0);
+-    const sorted = [...mufs].sort((a, b) => a - b);
+-    eng.evaluate({
+-      utc: Date.now() / 1000,
+-      kpOk: sw != null,
+-      kp: sw?.kp.now ?? 0,
+-      bzOk: sw != null && sw.wind.t != null,
+-      bz: sw?.wind.bz ?? 0,
+-      xrayOk: sw != null,
+-      xrayClass: sw?.xray.class ?? "A",
+-      mufOk: mufs.length > 0,
+-      muf: sorted.length ? sorted[Math.floor(sorted.length / 2)] : 0,
+-    });
++    const mufs = (ionos?.stations ?? []).map((s) => s.muf3000);
++    eng.evaluate(buildAlertInput(sw, mufs, Date.now() / 1000));
+     setAlertSnap({
+       overall: eng.overall(),
+       levels: [eng.level(0), eng.level(1), eng.level(2), eng.level(3)],
+@@ -172,11 +177,15 @@ export default function Home() {
+         txCode={txCode}
+         rxCode={rxCode}
+         linkFreq={linkFreq}
++        tourActive={tourOn}
+         callbacks={{
+           onStationPick,
+           onLinkResult: setLink,
+           onLegendRange: (min, max) => setLegend({ min, max }),
+           onFps: setFps,
++          onTourIndex: setTourIdx,
++          onTourDone: () => setTourOn(false),
++          onTourAbort: () => setTourOn(false),
+         }}
+       />
+ 
+@@ -271,6 +280,55 @@ export default function Home() {
+       </div>
+ 
+       {/* indicador de selección TX/RX */}
++      {/* W-2 tour: boton de entrada (tecla T equivalente) */}
++      {!tourOn && (
++        <button
++          onClick={() => setTourOn(true)}
++          className="absolute bottom-4 left-4 z-10 pointer-events-auto flex items-center gap-1.5 text-xs px-3 py-2 rounded-xl bg-violet-500/15 text-violet-200 ring-1 ring-violet-400/30 hover:bg-violet-500/25 transition-colors backdrop-blur-md"
++        >
++          Tour guiado <span className="text-[9px] bg-violet-400/20 rounded-full px-1.5 py-0.5">T</span>
++        </button>
++      )}
++
++      {/* W-2 tour: overlay didactico HTML ES/EN (textos 137 verbatim) */}
++      {tourOn && (
++        <div className="absolute bottom-16 left-1/2 -translate-x-1/2 z-20 w-[min(92vw,30rem)] pointer-events-auto">
++          <div className="rounded-xl border border-white/10 bg-[#0a0f1e]/85 backdrop-blur-md shadow-2xl shadow-black/40 px-3.5 py-2.5">
++            <div className="flex items-center justify-between gap-2">
++              <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-violet-200/90">
++                Visita guiada {tourIdx + 1}/{tourCount()}
++              </span>
++              <span className="flex items-center gap-1">
++                <button
++                  onClick={() => setTourEs((v) => !v)}
++                  className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-slate-200 hover:bg-white/20"
++                >
++                  {tourEs ? "ES" : "EN"}
++                </button>
++                <button
++                  onClick={() => setTourOn(false)}
++                  className="text-slate-400 hover:text-slate-100 p-1 rounded-lg hover:bg-white/5"
++                  title="Cerrar tour"
++                >
++                  <X size={13} />
++                </button>
++              </span>
++            </div>
++            <div className="flex gap-1.5 mt-1.5 mb-1">
++              {Array.from({ length: tourCount() }, (_, i) => (
++                <div
++                  key={i}
++                  className={`h-1 flex-1 rounded-full ${i <= tourIdx ? "bg-violet-400" : "bg-white/10"}`}
++                />
++              ))}
++            </div>
++            <p className="text-[11px] text-slate-300 leading-snug">
++              {tourEs ? tourKey(tourIdx).es : tourKey(tourIdx).en}
++            </p>
++          </div>
++        </div>
++      )}
++
+       {(txCode || rxCode) && (
+         <div className="absolute top-16 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
+           <div className="flex items-center gap-2 text-xs bg-[#0a0f1e]/85 backdrop-blur-md ring-1 ring-white/10 rounded-full px-3.5 py-1.5">
+diff --git a/src/components/ionosphere/IonosphereScene.tsx b/src/components/ionosphere/IonosphereScene.tsx
+index 44f5cbb..aada690 100644
+--- a/src/components/ionosphere/IonosphereScene.tsx
++++ b/src/components/ionosphere/IonosphereScene.tsx
+@@ -19,6 +19,7 @@ import { buildPngName, gridCsv } from "@/lib/iono/export";
+ import type { StationDatum } from "@/lib/iono/ionomath";
+ import { computeLink, LinkResult } from "@/lib/iono/hf";
+ import { latLonToVec3 } from "@/lib/iono/geo";
++import { tourAdvance, tourEval } from "@/lib/iono/tour";
+ 
+ import {
+   buildStars,
+@@ -47,6 +48,10 @@ export interface SceneCallbacks {
+   onLinkResult?: (r: LinkResult | null) => void;
+   onLegendRange?: (min: number, max: number) => void;
+   onFps?: (fps: number) => void;
++  // W-2 tour: tramo activo (texto del overlay), fin y aborto por click.
++  onTourIndex?: (index: number) => void;
++  onTourDone?: () => void;
++  onTourAbort?: () => void;
+ }
+ 
+ interface Props {
+@@ -57,6 +62,7 @@ interface Props {
+   txCode: string | null;
+   rxCode: string | null;
+   linkFreq: number;
++  tourActive: boolean;
+   callbacks: SceneCallbacks;
+ }
+ 
+@@ -204,11 +210,22 @@ export default function IonosphereScene(props: Props) {
+       // picking manual (proyección a pantalla — preciso con puntos custom)
+       let downX = 0,
+         downY = 0;
++      // W-2 tour: cualquier click aborta (como el C++: la camara se queda
++      // donde esta) y ese gesto no selecciona estacion.
++      let tourAbortArmed = false;
+       const onDown = (e: PointerEvent) => {
+         downX = e.clientX;
+         downY = e.clientY;
++        if (propsRef.current.tourActive) {
++          tourAbortArmed = true;
++          propsRef.current.callbacks.onTourAbort?.();
++        }
+       };
+       const onUp = (e: PointerEvent) => {
++        if (tourAbortArmed) {
++          tourAbortArmed = false;
++          return;
++        }
+         if (Math.hypot(e.clientX - downX, e.clientY - downY) > 6) return; // drag
+         const so = S.current;
+         if (!so?.stationsObj) return;
+@@ -283,6 +300,11 @@ export default function IonosphereScene(props: Props) {
+         fpsN = 0,
+         fpsT = lastT;
+       let elapsed = 0;
++      // W-2 tour: reloj y base propios del loop (60 fps fuera de React).
++      let tourT = 0;
++      let tourBase: THREE.Vector3 | null = null;
++      let tourLastIdx = -1;
++      let tourDoneFired = false;
+ 
+       const tick = () => {
+         raf = requestAnimationFrame(tick);
+@@ -373,7 +395,39 @@ export default function IonosphereScene(props: Props) {
+           S.current.sunGlow.halo.position.copy(p);
+         }
+ 
+-        controls.autoRotate = propsRef.current.settings.cinema;
++        // W-2 tour: camara guiada (Tour.h del C++: ry/dist absolutos con
++        // curva smoothstep; adaptacion Q2: ry rota el azimut orbital desde
++        // la vista de activacion, dist fija el radio, el polar se conserva).
++        // Al salir (fin o aborto) la camara se queda donde esta: continuidad.
++        const Y_UP = new THREE.Vector3(0, 1, 0);
++        if (propsRef.current.tourActive) {
++          if (!tourBase) {
++            tourBase = camera.position.clone();
++            tourT = 0;
++            tourLastIdx = -1;
++            tourDoneFired = false;
++          }
++          const ready = propsRef.current.ionosondes != null;
++          tourT = tourAdvance(tourT, dt, ready);
++          const st = tourEval(tourT);
++          camera.position.copy(tourBase).applyAxisAngle(Y_UP, st.ry).setLength(st.dist);
++          controls.enabled = false;
++          controls.autoRotate = false;
++          if (st.index !== tourLastIdx) {
++            tourLastIdx = st.index;
++            propsRef.current.callbacks.onTourIndex?.(st.index);
++          }
++          if (st.done && !tourDoneFired) {
++            tourDoneFired = true;
++            propsRef.current.callbacks.onTourDone?.();
++          }
++        } else {
++          if (tourBase) {
++            tourBase = null;
++            controls.enabled = true;
++          }
++          controls.autoRotate = propsRef.current.settings.cinema;
++        }
+         controls.update();
+         composer.render();
+         // W-2 export: captura sincrona en el mismo frame (buffer valido).
+diff --git a/src/lib/iono/alerts.ts b/src/lib/iono/alerts.ts
+index b3e799d..fb29e8b 100644
+--- a/src/lib/iono/alerts.ts
++++ b/src/lib/iono/alerts.ts
+@@ -56,6 +56,47 @@ export interface AlertInput {
+   utc: number; // tiempo de la muestra (s)
+ }
+ 
++/** Vista minima del modelo space-weather para el contrato del wiring. */
++export interface SwLike {
++  kp: { now: number; source: string };
++  wind: { bz: number; t: string | null };
++  xray: { class: string };
++}
++
++// Em-dash que emite route.ts sin dato GOES, en escape para que las
++// lineas anadidas sigan siendo 100% ASCII (doctrina EOL/ASCII del canal).
++const XRAY_NO_DATA = "\u2014";
++
++/**
++ * Contrato del wiring (reparo n1 del veredicto 156 + P2 kpOk honesto):
++ * el modelo web da clase letra+magnitud ("M5.0") o "\u2014" sin dato GOES,
++ * mientras el motor espera 1 char como el fclass del C++. Se normaliza
++ * aqui, no en el motor (que sigue fiel al oraculo). La mediana MUF es la
++ * superior (vs[n/2]), igual que el nth_element mid del C++.
++ */
++export function buildAlertInput(
++  sw: SwLike | null,
++  mufs: (number | null | undefined)[],
++  utc: number
++): AlertInput {
++  const cls = sw?.xray.class ?? "";
++  const xOk = sw != null && cls !== "" && cls !== XRAY_NO_DATA;
++  const sorted = mufs
++    .filter((v): v is number => v != null && v > 0)
++    .sort((a, b) => a - b);
++  return {
++    utc,
++    kpOk: sw != null && sw.kp.source !== "unavailable",
++    kp: sw?.kp.now ?? 0,
++    bzOk: sw != null && sw.wind.t != null,
++    bz: sw?.wind.bz ?? 0,
++    xrayOk: xOk,
++    xrayClass: cls.charAt(0),
++    mufOk: sorted.length > 0,
++    muf: sorted.length ? sorted[Math.floor(sorted.length / 2)] : 0,
++  };
++}
++
+ export interface AlertEvent {
+   utc: number;
+   rule: number;
+diff --git a/src/lib/iono/tour.test.ts b/src/lib/iono/tour.test.ts
+new file mode 100644
+index 0000000..86aef6a
+--- /dev/null
++++ b/src/lib/iono/tour.test.ts
+@@ -0,0 +1,46 @@
++/**
++ * TU W-2 tour (spec 152: sin TU exigido; verificacion minima de la curva
++ * porteada de Tour.h para que el drop viaje con red). Vitest.
++ */
++import { describe, expect, it } from "vitest";
++import { tourAdvance, tourCount, tourEval, tourKey, tourTotal } from "./tour";
++
++describe("tour didactico", () => {
++  it("4 tramos, 44 s en total", () => {
++    expect(tourCount()).toBe(4);
++    expect(tourTotal()).toBe(44);
++  });
++
++  it("t=0 -> W0 implicito 0.0/3.2, tramo 0, no done", () => {
++    const s = tourEval(0);
++    expect(s.ry).toBe(0);
++    expect(s.dist).toBe(3.2);
++    expect(s.index).toBe(0);
++    expect(s.done).toBe(false);
++  });
++
++  it("mitad del tramo 0: smoothstep u=0.5 -> ry=0.3, dist intacta", () => {
++    const s = tourEval(6);
++    expect(s.ry).toBeCloseTo(0.3, 6);
++    expect(s.dist).toBe(3.2);
++    expect(s.index).toBe(0);
++  });
++
++  it("t>=44 -> done en el waypoint final 3.4/2.8", () => {
++    const s = tourEval(44);
++    expect(s.done).toBe(true);
++    expect(s.ry).toBe(3.4);
++    expect(s.dist).toBe(2.8);
++    expect(s.index).toBe(3);
++  });
++
++  it("el reloj solo avanza con dato listo", () => {
++    expect(tourAdvance(10, 0.5, false)).toBe(10);
++    expect(tourAdvance(10, 0.5, true)).toBeCloseTo(10.5, 9);
++  });
++
++  it("tourKey sujeta indices fuera de rango", () => {
++    expect(tourKey(-1)).toBe(tourKey(0));
++    expect(tourKey(99)).toBe(tourKey(3));
++  });
++});
+diff --git a/src/lib/iono/tour.ts b/src/lib/iono/tour.ts
+new file mode 100644
+index 0000000..234acb6
+--- /dev/null
++++ b/src/lib/iono/tour.ts
+@@ -0,0 +1,96 @@
++/**
++ * Tour didactico W-2 (spec del veredicto 152, P4): cola de keyframes pura.
++ * Port del modulo C++ (drop 137, src/Utils/Tour.h): mismos 4 tramos, mismas
++ * duraciones (12+12+10+10 = 44 s), misma curva smoothstep, textos 137
++ * reutilizados verbatim, reloj que solo avanza con dato listo. Puro: sin
++ * DOM ni three. La camara la mueve IonosphereScene (adaptacion Q2: el
++ * ry absoluto rota el azimut orbital y dist fija el radio; el polar se
++ * conserva, como en el C++ donde el tour solo toca rotateY+distance).
++ */
++export interface TourKey {
++  ry: number; // rotacion Y de camara al final del tramo (rad)
++  dist: number; // distancia de camara al final del tramo
++  dur: number; // duracion del tramo (s)
++  es: string;
++  en: string;
++}
++
++// Cola: 4 tramos (W0 inicial implicito 0.0/3.2). Total 44 s.
++const KEYS: TourKey[] = [
++  // 1. Terminador (W0 0.0/3.2 -> 0.6/3.2, 12 s).
++  {
++    ry: 0.6,
++    dist: 3.2,
++    dur: 12.0,
++    es: "Terminador: la linea dia-noche. La ionosfera despierta con el Sol: la densidad crece en el lado diurno y decae de noche.",
++    en: "Terminator: the day-night line. The ionosphere wakes with the Sun: density grows on the dayside and decays at night.",
++  },
++  // 2. Anomalia ecuatorial (0.6/3.2 -> 1.4/2.6, 12 s).
++  {
++    ry: 1.4,
++    dist: 2.6,
++    dur: 12.0,
++    es: "Anomalia ecuatorial: dos crestas de densidad a +-15 grados del ecuador magnetico, con el valle encima del ecuador.",
++    en: "Equatorial anomaly: two density crests at +-15 degrees of the magnetic equator, with the trough above the equator.",
++  },
++  // 3. Aurora (1.4/2.6 -> 2.4/3.0, 10 s).
++  {
++    ry: 2.4,
++    dist: 3.0,
++    dur: 10.0,
++    es: "Aurora: el ovalo auroral se aviva con la actividad geomagnetica (Kp alto, Bz sur).",
++    en: "Aurora: the auroral oval brightens with geomagnetic activity (high Kp, southward Bz).",
++  },
++  // 4. Tormenta (2.4/3.0 -> 3.4/2.8, 10 s).
++  {
++    ry: 3.4,
++    dist: 2.8,
++    dur: 10.0,
++    es: "Tormenta: viento solar rapido y Bz sur perturban la propagacion HF (MUF inestable, bandas cerradas).",
++    en: "Storm: fast solar wind and southward Bz disturb HF propagation (unstable MUF, closed bands).",
++  },
++];
++
++export function tourCount(): number {
++  return KEYS.length;
++}
++
++export function tourKey(i: number): TourKey {
++  return KEYS[Math.min(Math.max(i, 0), KEYS.length - 1)];
++}
++
++export function tourTotal(): number {
++  return KEYS.reduce((a, k) => a + k.dur, 0);
++}
++
++export interface TourState {
++  ry: number;
++  dist: number;
++  index: number; // tramo activo 0..3
++  done: boolean;
++}
++
++// Curva t -> estado (suavizado smoothstep dentro del tramo).
++export function tourEval(t: number): TourState {
++  if (t <= 0) return { ry: 0.0, dist: 3.2, index: 0, done: false };
++  let acc = 0;
++  let prevRy = 0.0;
++  let prevDist = 3.2;
++  for (let i = 0; i < KEYS.length; i++) {
++    const k = KEYS[i];
++    if (t < acc + k.dur) {
++      let u = (t - acc) / k.dur;
++      u = u * u * (3.0 - 2.0 * u);
++      return { ry: prevRy + (k.ry - prevRy) * u, dist: prevDist + (k.dist - prevDist) * u, index: i, done: false };
++    }
++    acc += k.dur;
++    prevRy = k.ry;
++    prevDist = k.dist;
++  }
++  return { ry: 3.4, dist: 2.8, index: KEYS.length - 1, done: true };
++}
++
++// Avance del reloj: solo suma dt si hay dato listo (condicion verificable).
++export function tourAdvance(clock: number, dt: number, ready: boolean): number {
++  return ready ? clock + dt : clock;
++}
+diff --git a/src/lib/iono/wiring.test.ts b/src/lib/iono/wiring.test.ts
+new file mode 100644
+index 0000000..f1201c3
+--- /dev/null
++++ b/src/lib/iono/wiring.test.ts
+@@ -0,0 +1,73 @@
++/**
++ * TU de contrato del wiring (reparo n1 del veredicto 156, P1 del 157):
++ * el modelo web entrega clase letra+magnitud ("M5.0") o "\u2014" sin dato;
++ * el motor espera 1 char. Este TU habria cazado el canal X-ray muerto.
++ * Vitest.
++ */
++import { describe, expect, it } from "vitest";
++import {
++  AlertEngine,
++  AlertLevel,
++  AlertRule,
++  buildAlertInput,
++  type SwLike,
++} from "./alerts";
++
++function swFlat(): SwLike {
++  return {
++    kp: { now: 2.0, source: "NOAA SWPC (live)" },
++    wind: { bz: 1.0, t: "2026-10-06T00:00:00" },
++    xray: { class: "B1.0" },
++  };
++}
++
++describe("contrato del wiring", () => {
++  it('"M5.0" -> char "M", xrayOk true', () => {
++    const sw = swFlat();
++    sw.xray.class = "M5.0";
++    const inp = buildAlertInput(sw, [], 1000);
++    expect(inp.xrayClass).toBe("M");
++    expect(inp.xrayOk).toBe(true);
++  });
++
++  it('"\u2014" sin dato -> xrayOk false (OFF honesto, no GREEN)', () => {
++    const sw = swFlat();
++    sw.xray.class = "\u2014";
++    const inp = buildAlertInput(sw, [], 1000);
++    expect(inp.xrayOk).toBe(false);
++  });
++
++  it("kp source unavailable -> kpOk false (P2)", () => {
++    const sw = swFlat();
++    sw.kp.source = "unavailable";
++    const inp = buildAlertInput(sw, [], 1000);
++    expect(inp.kpOk).toBe(false);
++  });
++
++  it("sw null -> todo OFF salvo MUF sin muestras", () => {
++    const inp = buildAlertInput(null, [], 1000);
++    expect(inp.kpOk).toBe(false);
++    expect(inp.bzOk).toBe(false);
++    expect(inp.xrayOk).toBe(false);
++    expect(inp.mufOk).toBe(false);
++  });
++
++  it("mediana MUF superior, nulos y no-positivos fuera", () => {
++    const inp = buildAlertInput(swFlat(), [10, null, 30, 0, 20, -5, undefined], 1000);
++    expect(inp.mufOk).toBe(true);
++    expect(inp.muf).toBe(20);
++  });
++
++  it("regresion n1: M5.0 dos muestras -> XRAY RED; \u2014 -> OFF", () => {
++    const e = new AlertEngine();
++    const sw = swFlat();
++    sw.xray.class = "M5.0";
++    e.evaluate(buildAlertInput(sw, [], 1000));
++    expect(e.level(AlertRule.XRAY)).not.toBe(AlertLevel.RED);
++    e.evaluate(buildAlertInput(sw, [], 1100));
++    expect(e.level(AlertRule.XRAY)).toBe(AlertLevel.RED);
++    sw.xray.class = "\u2014";
++    e.evaluate(buildAlertInput(sw, [], 1200));
++    expect(e.level(AlertRule.XRAY)).toBe(AlertLevel.OFF);
++  });
++});
+-- 
+2.53.0.windows.3
+
