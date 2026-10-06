@@ -1,0 +1,89 @@
+From d4e1fccedb250742a5a2c7e2d2501bf37777024c Mon Sep 17 00:00:00 2001
+From: t <t@t>
+Date: Tue, 6 Oct 2026 22:07:29 +0200
+Subject: [PATCH] w161
+
+---
+ src/lib/iono/volumeJitter.test.ts | 41 +++++++++++++++++++++++++++++++
+ src/lib/iono/volumeJitter.ts      | 21 ++++++++++++++++
+ 2 files changed, 62 insertions(+)
+ create mode 100644 src/lib/iono/volumeJitter.test.ts
+ create mode 100644 src/lib/iono/volumeJitter.ts
+
+diff --git a/src/lib/iono/volumeJitter.test.ts b/src/lib/iono/volumeJitter.test.ts
+new file mode 100644
+index 0000000..04cf4cd
+--- /dev/null
++++ b/src/lib/iono/volumeJitter.test.ts
+@@ -0,0 +1,41 @@
++/**
++ * TU W-3 jitter (spec 160 P1, TU OBLIGATORIO): replica los pines del TU C++
++ * (drop 135, tests/test_volume_jitter.cpp, norma 144). Los 3 valores son
++ * bit-exactos f32 (Math.fround por operacion en el espejo): se pinean con
++ * Math.fround del literal, igual que el sufijo f del C++. Vitest.
++ */
++import { describe, expect, it } from "vitest";
++import { entryOffset } from "./volumeJitter";
++
++describe("volume_jitter: valores exactos medidos", () => {
++  it("(0,7) -> 0.164884567", () => {
++    expect(entryOffset(0, 7)).toBe(Math.fround(0.164884567));
++  });
++
++  it("(37,98) -> 0.921024323", () => {
++    expect(entryOffset(37, 98)).toBe(Math.fround(0.921024323));
++  });
++
++  it("(148,371) -> 0.189423084", () => {
++    expect(entryOffset(148, 371)).toBe(Math.fround(0.189423084));
++  });
++});
++
++describe("volume_jitter: rango + determinismo + descorrelacion", () => {
++  it("64x64 todo en [0,1), no constante, repetir da identico", () => {
++    const first = entryOffset(0, 0);
++    let inRange = true;
++    let varied = false;
++    for (let y = 0; y < 64; y++) {
++      for (let x = 0; x < 64; x++) {
++        const v = entryOffset(x, y);
++        if (!(v >= 0 && v < 1)) inRange = false;
++        if (v !== first) varied = true;
++        // Sin componente temporal: repetir da identico.
++        if (entryOffset(x, y) !== v) inRange = false;
++      }
++    }
++    expect(inRange).toBe(true);
++    expect(varied).toBe(true);
++  });
++});
+diff --git a/src/lib/iono/volumeJitter.ts b/src/lib/iono/volumeJitter.ts
+new file mode 100644
+index 0000000..9222237
+--- /dev/null
++++ b/src/lib/iono/volumeJitter.ts
+@@ -0,0 +1,21 @@
++/**
++ * Blue-noise jitter del punto de entrada W-3 (spec 158 sec.5.2 / 160-P1):
++ * espejo puro del offset IGN del shader (drop 135,
++ * src/Utils/VolumeJitter.h, Jimenez 2014). Offset en [0,1) SOLO del punto
++ * de entrada del rayo. SIN componente temporal (el motor no tiene TAA;
++ * acumulador temporal PROHIBIDO por la spec): mismos coords -> mismo
++ * offset siempre. Cada operacion se redondea a f32 via Math.fround para
++ * ser bit-exacta con el float del C++ (pines medidos del TU 135).
++ * Puro: sin DOM, sin three.
++ */
++const KX = 0.06711056;
++const KY = 0.00583715;
++const KG = 52.9829189;
++
++/** Offset en [0,1) para el pixel (x, y). IGN (Jimenez 2014). */
++export function entryOffset(x: number, y: number): number {
++  const d = Math.fround(Math.fround(x * Math.fround(KX)) + Math.fround(y * Math.fround(KY)));
++  const f = Math.fround(d - Math.floor(d));
++  const g = Math.fround(Math.fround(KG) * f);
++  return Math.fround(g - Math.floor(g));
++}
+-- 
+2.53.0.windows.3
+
