@@ -1,0 +1,310 @@
+From db4748c0fa2714223aa789f864fbd5a4318bf7ca Mon Sep 17 00:00:00 2001
+From: t <t@t>
+Date: Tue, 6 Oct 2026 22:38:01 +0200
+Subject: [PATCH] w163
+
+---
+ src/lib/iono/godrays.test.ts | 116 ++++++++++++++++++++++++
+ src/lib/iono/godrays.ts      | 167 +++++++++++++++++++++++++++++++++++
+ 2 files changed, 283 insertions(+)
+ create mode 100644 src/lib/iono/godrays.test.ts
+ create mode 100644 src/lib/iono/godrays.ts
+
+diff --git a/src/lib/iono/godrays.test.ts b/src/lib/iono/godrays.test.ts
+new file mode 100644
+index 0000000..f14435d
+--- /dev/null
++++ b/src/lib/iono/godrays.test.ts
+@@ -0,0 +1,116 @@
++/**
++ * TU W-3 god rays (spec 162 P1, TU OBLIGATORIO): replica los pines del TU
++ * C++ (drops 143/147, tests/test_godrays.cpp, norma 144): proyeccion en
++ * 3 casos, 12 taps con decay monotono, mascara del corredor, puerta y
++ * stepping, mas pines de las constantes nombradas de la spec. Vitest.
++ */
++import { describe, expect, it } from "vitest";
++import {
++  DECAY,
++  EARTH_R,
++  FALLOFF_K,
++  GAIN,
++  MAX_RADIUS,
++  NTAPS,
++  SUN_B,
++  SUN_G,
++  SUN_R,
++  falloff,
++  gateSkip,
++  mat4LookAt,
++  mat4Mul,
++  mat4Perspective,
++  projectSun,
++  rayHitsEarth,
++  tapMask,
++  tapUV,
++  tapWeight,
++  vec3Normalize,
++  type Vec3,
++} from "./godrays";
++
++function setup(): { vp: ReturnType<typeof mat4Mul>; cam: Vec3 } {
++  const proj = mat4Perspective((45 * Math.PI) / 180, 16 / 9, 0.1, 100);
++  const cam: Vec3 = [0, 0, 3];
++  const view = mat4LookAt(cam, [0, 0, 0], [0, 1, 0]);
++  return { vp: mat4Mul(proj, view), cam };
++}
++
++describe("godrays: proyeccion sol->NDC (3 casos)", () => {
++  it("delante: ni behind ni offscreen", () => {
++    const { vp, cam } = setup();
++    const s = projectSun(vp, cam, vec3Normalize([0.2, 0.05, -1]));
++    expect(s.behind).toBe(false);
++    expect(s.offscreen).toBe(false);
++  });
++
++  it("detras: behind (w<=0) y gate skip", () => {
++    const { vp, cam } = setup();
++    const b = projectSun(vp, cam, [0, 0, 1]);
++    expect(b.behind).toBe(true);
++    expect(gateSkip(b, false)).toBe(true);
++  });
++
++  it("tras limbo: gate skip por oclusion", () => {
++    const { vp, cam } = setup();
++    const s = projectSun(vp, cam, vec3Normalize([0.2, 0.05, -1]));
++    expect(gateSkip(s, rayHitsEarth(cam, vec3Normalize([-1, 0, -2.9])))).toBe(true);
++  });
++});
++
++describe("godrays: 12 taps con decay monotono", () => {
++  it("NTAPS == 12", () => {
++    expect(NTAPS).toBe(12);
++  });
++
++  it("pesos no crecientes y positivos", () => {
++    for (let i = 1; i < NTAPS; i++) {
++      expect(tapWeight(i) <= tapWeight(i - 1) && tapWeight(i) > 0).toBe(true);
++    }
++  });
++
++  it("w0 == 1 exacto", () => {
++    expect(tapWeight(0)).toBe(1);
++  });
++});
++
++describe("godrays: mascara del corredor", () => {
++  it("hacia la Tierra -> 0", () => {
++    expect(tapMask([0, 0, 3], [0, 0, -1])).toBe(0);
++  });
++
++  it("al cielo -> 1", () => {
++    expect(tapMask([0, 0, 3], [0, 0, 1])).toBe(1);
++  });
++
++  it("falloff monotono", () => {
++    expect(falloff(0) > falloff(0.5) && falloff(0.5) > falloff(2)).toBe(true);
++  });
++});
++
++describe("godrays: puerta y stepping", () => {
++  it("off-screen -> skip", () => {
++    expect(gateSkip({ x: 1.5, y: 0, behind: false, offscreen: true }, false)).toBe(true);
++  });
++
++  it("tap0 == pixel", () => {
++    const t0 = tapUV(0, [0.5, 0.5], [0.9, 0.5], 16 / 9);
++    expect(Math.abs(t0[0] - 0.5) < 1e-6 && Math.abs(t0[1] - 0.5) < 1e-6).toBe(true);
++  });
++
++  it("tap11 avanza al sol (mismo eje, con clamp)", () => {
++    const t11 = tapUV(11, [0.5, 0.5], [0.9, 0.5], 16 / 9);
++    expect(Math.abs(t11[1] - 0.5) < 1e-6 && t11[0] > 0.5 && t11[0] <= 0.9).toBe(true);
++  });
++});
++
++describe("godrays: constantes nombradas de la spec", () => {
++  it("pines 143/147", () => {
++    expect(DECAY).toBe(0.9);
++    expect(MAX_RADIUS).toBe(0.45);
++    expect(FALLOFF_K).toBe(8);
++    expect(EARTH_R).toBe(1);
++    expect(GAIN).toBe(0.12);
++    expect([SUN_R, SUN_G, SUN_B]).toEqual([1, 0.9, 0.75]);
++  });
++});
+diff --git a/src/lib/iono/godrays.ts b/src/lib/iono/godrays.ts
+new file mode 100644
+index 0000000..c898c58
+--- /dev/null
++++ b/src/lib/iono/godrays.ts
+@@ -0,0 +1,167 @@
++/**
++ * God rays screen-space W-3 (spec 158 sec.5.3 / 162-P1): espejo puro del pase
++ * (drops 143/147, src/Utils/Godrays.h). Misma matematica que godrays.frag:
++ * 12 taps radiales hacia el sol en UV con correccion de aspecto, pesos
++ * decay^i, mascara analitica (opcion B: solo la Tierra ocluye) y puerta CPU
++ * (skip si el sol no esta en pantalla o tras el limbo). Incluye el algebra
++ * lineal minima que projectSun necesita (perspective/lookAt/mat4, convenio
++ * columna-mayor como glm). Puro: sin DOM, sin three, sin GL.
++ */
++export const NTAPS = 12;
++export const DECAY = 0.9;
++export const MAX_RADIUS = 0.45; // fraccion de alto de pantalla
++export const FALLOFF_K = 8.0;
++export const EARTH_R = 1.0;
++export const GAIN = 0.12; // ganancia global (post-ACES, display)
++export const SUN_R = 1.0;
++export const SUN_G = 0.9;
++export const SUN_B = 0.75; // sol calido
++const LIMB_GUARD = 1e-4;
++
++export type Vec2 = [number, number];
++export type Vec3 = [number, number, number];
++export type Vec4 = [number, number, number, number];
++/** Matriz 4x4 columna-mayor (16 numeros, como glm). */
++export type Mat4 = [
++  number, number, number, number,
++  number, number, number, number,
++  number, number, number, number,
++  number, number, number, number,
++];
++
++export function vec3Length(v: Vec3): number {
++  return Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
++}
++
++export function vec3Normalize(v: Vec3): Vec3 {
++  const l = vec3Length(v);
++  return [v[0] / l, v[1] / l, v[2] / l];
++}
++
++export function vec3Dot(a: Vec3, b: Vec3): number {
++  return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
++}
++
++export function vec3Cross(a: Vec3, b: Vec3): Vec3 {
++  return [
++    a[1] * b[2] - a[2] * b[1],
++    a[2] * b[0] - a[0] * b[2],
++    a[0] * b[1] - a[1] * b[0],
++  ];
++}
++
++/** glm::perspective (fovy en radianes). */
++export function mat4Perspective(fovy: number, aspect: number, near: number, far: number): Mat4 {
++  const t = Math.tan(fovy / 2);
++  return [
++    1 / (aspect * t), 0, 0, 0,
++    0, 1 / t, 0, 0,
++    0, 0, -(far + near) / (far - near), -1,
++    0, 0, -(2 * far * near) / (far - near), 0,
++  ];
++}
++
++/** glm::lookAt. */
++export function mat4LookAt(eye: Vec3, center: Vec3, up: Vec3): Mat4 {
++  const f = vec3Normalize([center[0] - eye[0], center[1] - eye[1], center[2] - eye[2]]);
++  const s = vec3Normalize(vec3Cross(f, up));
++  const u = vec3Cross(s, f);
++  return [
++    s[0], u[0], -f[0], 0,
++    s[1], u[1], -f[1], 0,
++    s[2], u[2], -f[2], 0,
++    -vec3Dot(s, eye), -vec3Dot(u, eye), vec3Dot(f, eye), 1,
++  ];
++}
++
++/** C = A * B (columna-mayor). */
++export function mat4Mul(a: Mat4, b: Mat4): Mat4 {
++  const c = new Array<number>(16);
++  for (let col = 0; col < 4; col++) {
++    for (let row = 0; row < 4; row++) {
++      c[col * 4 + row] =
++        a[row] * b[col * 4] + a[4 + row] * b[col * 4 + 1] + a[8 + row] * b[col * 4 + 2] + a[12 + row] * b[col * 4 + 3];
++    }
++  }
++  return c as Mat4;
++}
++
++export function mat4Transform(m: Mat4, v: Vec4): Vec4 {
++  return [
++    m[0] * v[0] + m[4] * v[1] + m[8] * v[2] + m[12] * v[3],
++    m[1] * v[0] + m[5] * v[1] + m[9] * v[2] + m[13] * v[3],
++    m[2] * v[0] + m[6] * v[1] + m[10] * v[2] + m[14] * v[3],
++    m[3] * v[0] + m[7] * v[1] + m[11] * v[2] + m[15] * v[3],
++  ];
++}
++
++export interface SunProj {
++  x: number; // NDC
++  y: number;
++  behind: boolean; // w <= 0 (detras de camara)
++  offscreen: boolean; // |x|>1 o |y|>1
++}
++
++// Sol lejano -> clip -> NDC (con w).
++export function projectSun(viewProj: Mat4, camPos: Vec3, sunDir: Vec3): SunProj {
++  const p: Vec4 = [
++    camPos[0] + sunDir[0] * 100,
++    camPos[1] + sunDir[1] * 100,
++    camPos[2] + sunDir[2] * 100,
++    1,
++  ];
++  const clip = mat4Transform(viewProj, p);
++  const s: SunProj = { x: 0, y: 0, behind: true, offscreen: true };
++  s.behind = clip[3] <= 0;
++  if (!s.behind) {
++    s.x = clip[0] / clip[3];
++    s.y = clip[1] / clip[3];
++    s.offscreen = s.x < -1 || s.x > 1 || s.y < -1 || s.y > 1;
++  }
++  return s;
++}
++
++// Test rayo-esfera (oclusora = Tierra r=1): true = el rayo cruza por delante.
++export function rayHitsEarth(ro: Vec3, rd: Vec3): boolean {
++  const b = vec3Dot(ro, rd);
++  const c = vec3Dot(ro, ro) - EARTH_R * EARTH_R;
++  const disc = b * b - c;
++  if (disc < 0) return false;
++  return -b + Math.sqrt(disc) > LIMB_GUARD;
++}
++
++// Peso del tap i (decay monotono).
++export function tapWeight(i: number): number {
++  return Math.pow(DECAY, i < 0 ? 0 : i);
++}
++
++export function falloff(dist: number): number {
++  const f = 1 / (1 + FALLOFF_K * dist);
++  return f < 0 ? 0 : f;
++}
++
++// Mascara del tap: 0 si su rayo visual cruza la Tierra, 1 si va al cielo.
++export function tapMask(camPos: Vec3, tapDir: Vec3): number {
++  return rayHitsEarth(camPos, tapDir) ? 0 : 1;
++}
++
++// Posicion UV del tap i entre el pixel y el sol (con correccion de aspecto
++// y clamp al radio maximo). i=0 -> el propio pixel.
++export function tapUV(i: number, uv: Vec2, sunUV: Vec2, aspect: number): Vec2 {
++  const auvx = uv[0] * aspect;
++  const auvy = uv[1];
++  const dx = sunUV[0] * aspect - auvx;
++  const dy = sunUV[1] - auvy;
++  const L = Math.sqrt(dx * dx + dy * dy);
++  if (L < 1e-5) return [uv[0], uv[1]];
++  const stepLen = (L < MAX_RADIUS ? L : MAX_RADIUS) / (NTAPS - 1);
++  const ux = dx / L;
++  const uy = dy / L;
++  return [(auvx + ux * (stepLen * i)) / aspect, auvy + uy * (stepLen * i)];
++}
++
++// Puerta CPU: el pase NO se invoca si el sol esta detras/off-screen o tras
++// el limbo (rayo camara->sol cruza la Tierra). Coste 0 por construccion.
++export function gateSkip(s: SunProj, sunBehindLimb: boolean): boolean {
++  return s.behind || s.offscreen || sunBehindLimb;
++}
+-- 
+2.53.0.windows.3
+
