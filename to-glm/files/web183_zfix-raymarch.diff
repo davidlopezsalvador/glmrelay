@@ -1,0 +1,681 @@
+From 24c2a3eb3513fed0725e873e2654705e580eb3b9 Mon Sep 17 00:00:00 2001
+From: t <t@t>
+Date: Wed, 7 Oct 2026 20:53:49 +0200
+Subject: [PATCH] w183
+
+---
+ src/components/ionosphere/IonosphereScene.tsx |  67 +++++++++-
+ src/components/ionosphere/builders.ts         | 105 +++++++++++++++
+ src/components/ionosphere/hud/LayersPanel.tsx |   8 +-
+ src/components/ionosphere/shaders.ts          | 123 ++++++++++++++++++
+ src/components/ionosphere/types.ts            |   2 +
+ src/lib/iono/profileGrid.test.ts              |  25 +++-
+ src/lib/iono/profileGrid.ts                   |  36 ++++-
+ src/lib/iono/volumeMarch.test.ts              |  36 +++++
+ src/lib/iono/volumeMarch.ts                   |  38 ++++--
+ 9 files changed, 419 insertions(+), 21 deletions(-)
+
+diff --git a/src/components/ionosphere/IonosphereScene.tsx b/src/components/ionosphere/IonosphereScene.tsx
+index ec26484..2a72f80 100644
+--- a/src/components/ionosphere/IonosphereScene.tsx
++++ b/src/components/ionosphere/IonosphereScene.tsx
+@@ -16,7 +16,7 @@ import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass.js";
+ 
+ import { getSunInfo } from "@/lib/iono/solar";
+ import { sampleGrid, GRID_W, GRID_H } from "@/lib/iono/ionomath";
+-import { buildLivePeakGrids } from "@/lib/iono/profileGrid";
++import { buildLivePeakGrids, buildLiveVolume } from "@/lib/iono/profileGrid";
+ import { godraysPassState, mat4Mul, type Mat4 } from "@/lib/iono/godrays";
+ import { buildPngName, gridCsv } from "@/lib/iono/export";
+ import { computeLink, LinkResult } from "@/lib/iono/hf";
+@@ -36,6 +36,8 @@ import {
+   buildRefRings,
+   buildSunGlow,
+   buildGodRaysPass,
++  buildVolumeMesh,
++  updateVolumeTextures,
+ } from "./builders";
+ import {
+   SpaceWeatherData,
+@@ -83,6 +85,15 @@ export default function IonosphereScene(props: Props) {
+     composer: EffectComposer;
+     bloom: UnrealBloomPass;
+     godRays: ShaderPass;
++    volumeObj: {
++      mesh: THREE.Mesh;
++      mat: THREE.ShaderMaterial;
++      densityTex: THREE.Data3DTexture;
++      layerTex: THREE.Data3DTexture;
++      altMinKm: number;
++      altMaxKm: number;
++      ready: boolean;
++    } | null;
+     earthMat?: THREE.ShaderMaterial;
+     atmoMat?: THREE.ShaderMaterial;
+     shellObj?: { mesh: THREE.Mesh; mat: THREE.ShaderMaterial; foTex: THREE.DataTexture; hmTex: THREE.DataTexture };
+@@ -175,6 +186,9 @@ export default function IonosphereScene(props: Props) {
+       const cmapTex = buildColormapTexture("viridis");
+       const shell = buildIonShell(cmapTex);
+       scene.add(shell.mesh);
++      // W-3 P2-182: volumen Ne (raymarch). Texturas reales al publicar datos.
++      const volume = buildVolumeMesh(cmapTex);
++      scene.add(volume.mesh);
+       const rings = buildRefRings();
+       scene.add(rings.group);
+       const sunGlow = buildSunGlow();
+@@ -188,6 +202,15 @@ export default function IonosphereScene(props: Props) {
+         composer,
+         bloom,
+         godRays,
++        volumeObj: {
++          mesh: volume.mesh,
++          mat: volume.mat as THREE.ShaderMaterial,
++          densityTex: volume.densityTex,
++          layerTex: volume.layerTex,
++          altMinKm: 60,
++          altMaxKm: 700,
++          ready: false,
++        },
+         earthMat: earth.mat,
+         atmoMat: atmo.mat,
+         shellObj: shell,
+@@ -405,6 +428,16 @@ export default function IonosphereScene(props: Props) {
+           S.current.sunGlow.core.position.copy(p);
+           S.current.sunGlow.halo.position.copy(p);
+         }
++        // W-3 volumen: uniforms por frame + visibilidad reactiva al toggle.
++        if (S.current?.volumeObj) {
++          const vo = S.current.volumeObj;
++          vo.mesh.visible = vo.ready && propsRef.current.settings.showVolume;
++          if (vo.mesh.visible) {
++            const vu = vo.mat.uniforms as Record<string, THREE.IUniform>;
++            (vu.u_camPos.value as THREE.Vector3).copy(camera.position);
++            (vu.u_sunDir.value as THREE.Vector3).copy(sunV);
++          }
++        }
+ 
+         // W-2 tour: camara guiada (Tour.h del C++: ry/dist absolutos con
+         // curva smoothstep; adaptacion Q2: ry rota el azimut orbital desde
+@@ -584,6 +617,38 @@ export default function IonosphereScene(props: Props) {
+     so.lastEffMs = effMs;
+     props.callbacks.onLegendRange?.(fMin, fMin + span);
+ 
++    // W-3 P2-182: volumen Ne vivo (misma cadena que los picos: rejilla 72x36
++    // con applyDayNight + builder 60/60/700). Subida R8 + uniforms; visible
++    // solo con el toggle (default OFF como visible_=false del oraculo).
++    if (so.volumeObj) {
++      const v = buildLiveVolume(
++        sampled, GRID_W, GRID_H, sunX, sunY, sunZ, effMs / 1000, f107, 60, 60, 700, flare
++      );
++      if (v.valid) {
++        const tex = updateVolumeTextures(
++          { densityTex: so.volumeObj.densityTex, layerTex: so.volumeObj.layerTex }, v
++        );
++        so.volumeObj.densityTex = tex.densityTex;
++        so.volumeObj.layerTex = tex.layerTex;
++        so.volumeObj.altMinKm = v.altMinKm;
++        so.volumeObj.altMaxKm = v.altMaxKm;
++        const u = so.volumeObj.mat.uniforms as Record<string, THREE.IUniform>;
++        u.u_density.value = tex.densityTex;
++        u.u_layer.value = tex.layerTex;
++        const innerR = 1 + v.altMinKm / 6371;
++        const outerR = 1 + v.altMaxKm / 6371;
++        u.u_innerR.value = innerR;
++        u.u_outerR.value = outerR;
++        (u.u_volRes.value as THREE.Vector3).set(v.lonRes, v.latRes, v.altRes);
++        so.volumeObj.mesh.scale.setScalar(outerR);
++        so.volumeObj.mesh.visible = props.settings.showVolume;
++        so.volumeObj.ready = true;
++      } else {
++        so.volumeObj.mesh.visible = false;
++        so.volumeObj.ready = false;
++      }
++    }
++
+     // rebuild estaciones (posiciones fijas, color por foF2)
+     if (so.stationsObj) {
+       so.scene.remove(so.stationsObj.points);
+diff --git a/src/components/ionosphere/builders.ts b/src/components/ionosphere/builders.ts
+index 7b127bc..211ae2a 100644
+--- a/src/components/ionosphere/builders.ts
++++ b/src/components/ionosphere/builders.ts
+@@ -18,7 +18,9 @@ import {
+   STATION_VERT, STATION_FRAG,
+   RAY_VERT, RAY_FRAG,
+   GODRAYS_VERT, GODRAYS_FRAG,
++  VOL_VERT, VOL_FRAG,
+ } from "./shaders";
++import type { DensityVolume } from "@/lib/iono/densityVolume";
+ import { AuroraCell, IonosondeStation } from "./types";
+ 
+ export const GRID_W = 72;
+@@ -448,6 +450,109 @@ export function buildSunGlow() {
+   return { core, halo };
+ }
+ 
++// ------------------------- volumen Ne (raymarch) -------------------------
++// W-3 P2-182: malla proxy + texturas 3D R8 (densidad LINEAR, capa NEAREST)
++// como init()/updateVolume() del oraculo. El material lleva los defaults
++// (viridis, densidad, 64 pasos, opacidad 1, iso off).
++export function buildVolumeMesh(cmapTex: THREE.Texture) {
++  const geo = new THREE.SphereGeometry(1, 64, 32);
++  const densityTex = new THREE.Data3DTexture(new Uint8Array(4), 1, 1, 1);
++  densityTex.format = THREE.RedFormat;
++  densityTex.minFilter = THREE.LinearFilter;
++  densityTex.magFilter = THREE.LinearFilter;
++  densityTex.wrapS = THREE.ClampToEdgeWrapping;
++  densityTex.wrapT = THREE.ClampToEdgeWrapping;
++  densityTex.wrapR = THREE.ClampToEdgeWrapping;
++  densityTex.needsUpdate = true;
++  const layerTex = new THREE.Data3DTexture(new Uint8Array(4), 1, 1, 1);
++  layerTex.format = THREE.RedFormat;
++  layerTex.minFilter = THREE.NearestFilter;
++  layerTex.magFilter = THREE.NearestFilter;
++  layerTex.wrapS = THREE.ClampToEdgeWrapping;
++  layerTex.wrapT = THREE.ClampToEdgeWrapping;
++  layerTex.wrapR = THREE.ClampToEdgeWrapping;
++  layerTex.needsUpdate = true;
++  const mat = new THREE.ShaderMaterial({
++    uniforms: {
++      u_density: { value: densityTex },
++      u_layer: { value: layerTex },
++      u_colormap: { value: cmapTex },
++      u_camPos: { value: new THREE.Vector3() },
++      u_sunDir: { value: new THREE.Vector3(0, 0, 1) },
++      u_innerR: { value: 1.0 },
++      u_outerR: { value: 1.1 },
++      u_opacityScale: { value: 1.0 },
++      u_steps: { value: 64 },
++      u_colorMode: { value: 0 },
++      u_volRes: { value: new THREE.Vector3() },
++      u_isoOn: { value: 0 },
++      u_isoWidth: { value: 0.02 },
++    },
++    vertexShader: VOL_VERT,
++    fragmentShader: VOL_FRAG,
++    glslVersion: THREE.GLSL3,
++    transparent: true,
++    depthWrite: false,
++    side: THREE.BackSide,
++  });
++  const mesh = new THREE.Mesh(geo, mat);
++  mesh.frustumCulled = false;
++  mesh.visible = false;
++  return { mesh, mat, densityTex, layerTex };
++}
++
++/** Sube el volumen vivo (R8 como updateVolume(); recrea si cambian dims). */
++export function updateVolumeTextures(
++  prev: { densityTex: THREE.Data3DTexture; layerTex: THREE.Data3DTexture } | null,
++  vol: DensityVolume
++): { densityTex: THREE.Data3DTexture; layerTex: THREE.Data3DTexture } {
++  const W = vol.lonRes;
++  const H = vol.latRes;
++  const A = vol.altRes;
++  let densityTex: THREE.Data3DTexture;
++  let layerTex: THREE.Data3DTexture;
++  if (
++    prev &&
++    (prev.densityTex.image as { width: number; height: number; depth: number }).width === W &&
++    (prev.densityTex.image as { width: number; height: number; depth: number }).height === H &&
++    (prev.densityTex.image as { width: number; height: number; depth: number }).depth === A
++  ) {
++    densityTex = prev.densityTex;
++    layerTex = prev.layerTex;
++  } else {
++    if (prev) {
++      prev.densityTex.dispose();
++      prev.layerTex.dispose();
++    }
++    densityTex = new THREE.Data3DTexture(new Uint8Array(W * H * A), W, H, A);
++    densityTex.format = THREE.RedFormat;
++    densityTex.minFilter = THREE.LinearFilter;
++    densityTex.magFilter = THREE.LinearFilter;
++    densityTex.wrapS = THREE.ClampToEdgeWrapping;
++    densityTex.wrapT = THREE.ClampToEdgeWrapping;
++    densityTex.wrapR = THREE.ClampToEdgeWrapping;
++    layerTex = new THREE.Data3DTexture(new Uint8Array(W * H * A), W, H, A);
++    layerTex.format = THREE.RedFormat;
++    layerTex.minFilter = THREE.NearestFilter;
++    layerTex.magFilter = THREE.NearestFilter;
++    layerTex.wrapS = THREE.ClampToEdgeWrapping;
++    layerTex.wrapT = THREE.ClampToEdgeWrapping;
++    layerTex.wrapR = THREE.ClampToEdgeWrapping;
++  }
++  const dd = densityTex.image.data as Uint8Array;
++  for (let i = 0; i < vol.data.length; i++) {
++    const v = vol.data[i];
++    dd[i] = Math.max(0, Math.min(255, Math.round((v < 0 ? 0 : v > 1 ? 1 : v) * 255)));
++  }
++  densityTex.needsUpdate = true;
++  if (vol.layer.length === vol.data.length) {
++    const ld = layerTex.image.data as Uint8Array;
++    for (let i = 0; i < vol.layer.length; i++) ld[i] = vol.layer[i];
++    layerTex.needsUpdate = true;
++  }
++  return { densityTex, layerTex };
++}
++
+ // ------------------------- god rays (post-ACES) -------------------------
+ // W-3 P1-177: pase pantalla con las constantes nombradas del espejo
+ // (DECAY/MAX_RADIUS/FALLOFF_K/GAIN/sol calido de godrays.ts). Corre el
+diff --git a/src/components/ionosphere/hud/LayersPanel.tsx b/src/components/ionosphere/hud/LayersPanel.tsx
+index 9d89e6a..becdc5a 100644
+--- a/src/components/ionosphere/hud/LayersPanel.tsx
++++ b/src/components/ionosphere/hud/LayersPanel.tsx
+@@ -1,6 +1,6 @@
+ "use client";
+ 
+-import { Layers, Cloud, Sparkles, Radio, Orbit, Mountain, Eye, Disc3, Sun } from "lucide-react";
++import { Layers, Cloud, Sparkles, Radio, Orbit, Mountain, Eye, Disc3, Sun, Boxes } from "lucide-react";
+ import { SceneSettings, IonosondeData } from "../types";
+ import { PanelBox, SourceDot } from "./SpaceWeatherPanel";
+ 
+@@ -54,6 +54,12 @@ export default function LayersPanel({ settings, onChange, ionosondes, fps }: Pro
+           checked={settings.showGodrays}
+           onChange={(v) => onChange({ showGodrays: v })}
+         />
++        <Toggle
++          icon={<Boxes size={12} />}
++          label="Volumen"
++          checked={settings.showVolume}
++          onChange={(v) => onChange({ showVolume: v })}
++        />
+         <Toggle
+           icon={<Eye size={12} />}
+           label="Ionosondas"
+diff --git a/src/components/ionosphere/shaders.ts b/src/components/ionosphere/shaders.ts
+index a99eb97..5b99890 100644
+--- a/src/components/ionosphere/shaders.ts
++++ b/src/components/ionosphere/shaders.ts
+@@ -536,3 +536,126 @@ void main() {
+   gl_FragColor = vec4(base + u_gain * fall * rays, 1.0);
+ }
+ `;
++
++// ----------------------- VOLUMEN Ne (raymarch) -----------------------
++// Pase volumetrico W-3 (P2-182): port GLSL3 de volFragSrc
++// (src/Ionosphere/VolumeRenderer.cpp:48-141). Esfera proxy con culled
++// frontal (se entra por la cara interior); marcha con jitter IGN, sombra
++// dura, decode geo motor, iso-bandas y acumulacion front-to-back.
++// Requiere three GLSL3 (sampler3D + texelFetch exacto).
++export const VOL_VERT = /* glsl */ `
++varying vec3 vWorldPos;
++void main() {
++  vWorldPos = vec3(modelMatrix * vec4(position, 1.0));
++  gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(position, 1.0);
++}
++`;
++
++export const VOL_FRAG = /* glsl */ `
++uniform sampler3D u_density;
++uniform sampler3D u_layer;
++uniform sampler2D u_colormap;
++uniform vec3 u_camPos;
++uniform vec3 u_sunDir;
++uniform float u_innerR, u_outerR;
++uniform float u_opacityScale;
++uniform int u_steps;
++uniform int u_colorMode;
++uniform ivec3 u_volRes;
++uniform int u_isoOn;
++uniform float u_isoWidth;
++varying vec3 vWorldPos;
++
++bool raySphere(vec3 ro, vec3 rd, float r, out float t0, out float t1) {
++  float b = dot(ro, rd);
++  float c = dot(ro, ro) - r * r;
++  float disc = b * b - c;
++  if (disc < 0.0) return false;
++  float s = sqrt(disc);
++  t0 = -b - s;
++  t1 = -b + s;
++  return true;
++}
++
++void main() {
++  vec3 ro = u_camPos;
++  vec3 rd = normalize(vWorldPos - u_camPos);
++
++  float tOutA, tOutB;
++  if (!raySphere(ro, rd, u_outerR, tOutA, tOutB)) discard;
++  float tEnter = max(tOutA, 0.0);
++  float tExit = tOutB;
++
++  float tInA, tInB;
++  if (raySphere(ro, rd, u_innerR, tInA, tInB) && tInA > tEnter) {
++    tExit = min(tExit, tInA);
++  }
++  if (tExit <= tEnter) discard;
++
++  if (u_colorMode == 1) {
++    float tEA, tEB;
++    if (raySphere(ro, rd, 1.0, tEA, tEB) && tEA > tEnter) {
++      tExit = min(tExit, tEA);
++    }
++    if (tExit <= tEnter) discard;
++  }
++
++  float dt = (tExit - tEnter) / float(u_steps);
++  float jit = fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))));
++  float tEnterJ = tEnter + dt * jit;
++  vec3 accumColor = vec3(0.0);
++  float accumAlpha = 0.0;
++
++  for (int i = 0; i < 256; i++) {
++    if (i >= u_steps) break;
++    float t = tEnterJ + dt * (float(i) + 0.5);
++    if (t >= tExit) break;
++
++    vec3 p = ro + rd * t;
++    float sh0, sh1;
++    float sunShadow = 1.0;
++    if (raySphere(p, u_sunDir, u_innerR, sh0, sh1) && sh0 > 1e-4) sunShadow = 0.0;
++    float r = length(p);
++    float altNorm = clamp((r - u_innerR) / (u_outerR - u_innerR), 0.0, 1.0);
++
++    vec3 n = p / max(r, 1e-6);
++    float lat = asin(clamp(n.y, -1.0, 1.0));
++    float lon = 3.14159265 - atan(n.z, n.x);
++    if (lon > 3.14159265) lon -= 2.0 * 3.14159265;
++    if (lon < -3.14159265) lon += 2.0 * 3.14159265;
++    vec2 uv = vec2(lon / (2.0 * 3.14159265) + 0.5, lat / 3.14159265 + 0.5);
++
++    float d = texture(u_density, vec3(uv, altNorm)).r;
++    vec3 col;
++    if (u_colorMode == 1) {
++      // ID exacto por texelFetch (el LINEAR corromperia fronteras: 1.7 no
++      // es ninguna capa).
++      ivec3 ip = ivec3(clamp(vec3(floor(uv.x * float(u_volRes.x)),
++                                           floor(uv.y * float(u_volRes.y)),
++                                           floor(altNorm * float(u_volRes.z))),
++                                   vec3(0.0), vec3(u_volRes) - 1));
++      int w = int(texelFetch(u_layer, ip, 0).r * 255.0 + 0.5);
++      if (w == 0)      col = vec3(1.00, 0.55, 0.10);
++      else if (w == 1) col = vec3(0.20, 0.85, 0.30);
++      else if (w == 2) col = vec3(1.00, 0.90, 0.20);
++      else             col = vec3(0.20, 0.80, 1.00);
++    } else {
++      col = texture(u_colormap, vec2(d, 0.5)).rgb;
++    }
++    col *= sunShadow;
++    float a = clamp(d * d * u_opacityScale * dt * 40.0, 0.0, 1.0) * sunShadow;
++    if (u_isoOn != 0) {
++      float m = min(min(abs(d - 0.556), abs(d - 0.667)), abs(d - 0.778));
++      float band = 1.0 - smoothstep(0.0, u_isoWidth, m);
++      col = mix(col, vec3(1.0), band * 0.55);
++      a = max(a, min(band * 0.35, u_opacityScale));
++    }
++
++    accumColor += (1.0 - accumAlpha) * a * col;
++    accumAlpha += (1.0 - accumAlpha) * a;
++    if (accumAlpha > 0.98) break;
++  }
++  if (accumAlpha <= 0.001) discard;
++  gl_FragColor = vec4(accumColor, accumAlpha);
++}
++`;
+diff --git a/src/components/ionosphere/types.ts b/src/components/ionosphere/types.ts
+index 3e2344e..8c8ff2c 100644
+--- a/src/components/ionosphere/types.ts
++++ b/src/components/ionosphere/types.ts
+@@ -71,6 +71,7 @@ export interface SceneSettings {
+   showRings: boolean;
+   showLink: boolean;
+   showGodrays: boolean; // pase post-ACES (W-3 P1-177, default ON productivo)
++  showVolume: boolean; // raymarch Ne (W-3 P2-182, default OFF como el oraculo)
+   exaggeration: number; // 1..5
+   shellOpacity: number; // 0..1
+   nightLights: number; // 0..1
+@@ -88,6 +89,7 @@ export const DEFAULT_SETTINGS: SceneSettings = {
+   showRings: true,
+   showLink: true,
+   showGodrays: true,
++  showVolume: false,
+   exaggeration: 2.2,
+   shellOpacity: 0.85,
+   nightLights: 0.45,
+diff --git a/src/lib/iono/profileGrid.test.ts b/src/lib/iono/profileGrid.test.ts
+index d070c79..ccc4446 100644
+--- a/src/lib/iono/profileGrid.test.ts
++++ b/src/lib/iono/profileGrid.test.ts
+@@ -5,6 +5,7 @@
+ import { describe, expect, it } from "vitest";
+ import {
+   buildLivePeakGrids,
++  buildLiveVolume,
+   dayOfYearUtc,
+   havDeg,
+   interpProfiles,
+@@ -13,7 +14,7 @@ import {
+   stationToProfileSample,
+   type ProfileSample,
+ } from "./profileGrid";
+-import { densityDir } from "./densityVolume";
++import { densityDir, extractPeakGrids } from "./densityVolume";
+ 
+ function station(lat: number, lon: number): ProfileSample {
+   return {
+@@ -121,6 +122,28 @@ describe("profileGrid: interpProfiles", () => {
+   });
+ });
+ 
++describe("profileGrid: buildLiveVolume (tramo visual)", () => {
++  const ST = { lat: 40, lon: 0, foE: null, foF1: null, foF2: 10, hmF2: 300, B0: 100, B1: 3 };
++  const SUN = densityDir(40, 0);
++
++  it("dims, valido, layer acompana a data", () => {
++    const v = buildLiveVolume([ST], 12, 6, SUN[0], SUN[1], SUN[2], 0, 150, 8, 60, 500, 1);
++    expect(v.valid).toBe(true);
++    expect(v.data.length).toBe(12 * 6 * 8);
++    expect(v.layer.length).toBe(v.data.length);
++    for (const d of v.data) expect(d >= 0 && d <= 1).toBe(true);
++  });
++
++  it("peaks derivables del volumen (misma cadena que el shell)", () => {
++    const v = buildLiveVolume([ST], 12, 6, SUN[0], SUN[1], SUN[2], 0, 150, 8, 60, 500, 1);
++    const pk = extractPeakGrids(v);
++    expect(pk.logNe.valid && pk.hmKm.valid).toBe(true);
++    expect(pk.logNe.values.length).toBe(72);
++    const g = buildLivePeakGrids([ST], 12, 6, SUN[0], SUN[1], SUN[2], 0, 150, 8, 60, 500, 1);
++    expect(g.fo.length).toBe(72);
++  });
++});
++
+ describe("profileGrid: buildLivePeakGrids (rejilla viva)", () => {
+   const ST = { lat: 40, lon: 0, foE: null, foF1: null, foF2: 10, hmF2: 300, B0: 100, B1: 3 };
+   const SUN = densityDir(40, 0); // subsolar sobre la estacion (dia pleno)
+diff --git a/src/lib/iono/profileGrid.ts b/src/lib/iono/profileGrid.ts
+index b42e93f..1e9c1b4 100644
+--- a/src/lib/iono/profileGrid.ts
++++ b/src/lib/iono/profileGrid.ts
+@@ -23,7 +23,7 @@
+  * en produccion C++ y replicado aqui (fidelidad sobre correccion).
+  */
+ import { smoothstep } from "./ionomath";
+-import { applyDayNight, densityDir, extractPeakGrids } from "./densityVolume";
++import { applyDayNight, densityDir, extractPeakGrids, type DensityVolume } from "./densityVolume";
+ import { FO_TO_NM, buildDensityVolume, sanitizeB0, sanitizeB1, type LayerProfileTS } from "./layerProfile";
+ 
+ export interface ProfileSample {
+@@ -112,7 +112,12 @@ export interface LivePeakGrids {
+  * -> 0.09 MHz, D-diurno logNe 9.0 -> 0.28 MHz) da suelo fisico sin inventar
+  * dato. Norte-primero para el shell (flip desde sur-primero). Puro.
+  */
+-export function buildLivePeakGrids(
++/**
++ * Volumen vivo W-3 (P2-182, tramo visual): la cadena completa hasta el
++ * DensityVolume (mapper -> interp -> applyDayNight -> builder). La usan la
++ * escena (textura 3D) y buildLivePeakGrids (shells derivadas). Puro.
++ */
++export function buildLiveVolume(
+   stations: StationLike[],
+   w: number,
+   h: number,
+@@ -125,18 +130,37 @@ export function buildLivePeakGrids(
+   altMinKm = 60,
+   altMaxKm = 500,
+   flareFactor = 1
+-): LivePeakGrids {
+-  const fo = new Float32Array(w * h);
+-  const hm = new Float32Array(w * h);
++): DensityVolume {
+   const samples = stations.map(stationToProfileSample);
+   const profiles = interpProfiles(samples, w, h, sunX, sunY, sunZ, epochSec, f107);
+   // P2-174 (App.cpp:2433): atenuar E/F1 nocturnas ANTES de construir (sin
+   // esto el fondo mediano interpola densidad fantasma y el argmax nocturno
+   // se queda en ~110 km). Misma cadena que el oraculo.
+   applyDayNight(profiles, w, h, sunX, sunY, sunZ);
+-  const vol = buildDensityVolume(
++  return buildDensityVolume(
+     profiles, w, h, altRes, altMinKm, altMaxKm, sunX, sunY, sunZ, flareFactor
+   );
++}
++
++export function buildLivePeakGrids(
++  stations: StationLike[],
++  w: number,
++  h: number,
++  sunX: number,
++  sunY: number,
++  sunZ: number,
++  epochSec: number,
++  f107: number,
++  altRes = 48,
++  altMinKm = 60,
++  altMaxKm = 500,
++  flareFactor = 1
++): LivePeakGrids {
++  const fo = new Float32Array(w * h);
++  const hm = new Float32Array(w * h);
++  const vol = buildLiveVolume(
++    stations, w, h, sunX, sunY, sunZ, epochSec, f107, altRes, altMinKm, altMaxKm, flareFactor
++  );
+   if (!vol.valid) return { fo, hm, w, h };
+   const peaks = extractPeakGrids(vol);
+   if (!peaks.logNe.valid) return { fo, hm, w, h };
+diff --git a/src/lib/iono/volumeMarch.test.ts b/src/lib/iono/volumeMarch.test.ts
+index fd3f6a4..05ec948 100644
+--- a/src/lib/iono/volumeMarch.test.ts
++++ b/src/lib/iono/volumeMarch.test.ts
+@@ -15,7 +15,9 @@ import {
+   MARCH_STEPS,
+   marchRay,
+   raySphereT,
++  texelAltKm,
+ } from "./volumeMarch";
++import { volumeAltKm } from "./densityVolume";
+ import type { DensityVolume } from "./densityVolume";
+ 
+ function mkVol(fill: number, layerFill = 0): DensityVolume {
+@@ -58,6 +60,40 @@ describe("volumeMarch: constantes 1:1 del oraculo", () => {
+   });
+ });
+ 
++describe("volumeMarch: convencion z por centros de texel (n1-182)", () => {
++  it("fracciones de control 0.375/0.625 + bordes puros", () => {
++    // A=4 como la sonda HW [10,85,170,250]: gz = r*4-0.5 -> niveles 1.0/2.0.
++    expect(texelAltKm(0.375, 4, 60, 500)).toBe(volumeAltKm(1, 4, 60, 500));
++    expect(texelAltKm(0.625, 4, 60, 500)).toBe(volumeAltKm(2, 4, 60, 500));
++    expect(texelAltKm(0, 4, 60, 500)).toBe(volumeAltKm(0, 4, 60, 500));
++    expect(texelAltKm(1, 4, 60, 500)).toBe(volumeAltKm(3, 4, 60, 500));
++  });
++
++  it("marcha radial distingue A-0.5 de A-1 (gradiente por niveles)", () => {
++    const W = 2, H = 2, A = 8;
++    const data: number[] = [];
++    const layer: number[] = [];
++    for (let a = 0; a < A; a++)
++      for (let y = 0; y < H; y++)
++        for (let x = 0; x < W; x++) {
++          data.push(a / (A - 1));
++          layer.push(3);
++        }
++    const v = {
++      lonRes: W, latRes: H, altRes: A, altMinKm: 60, altMaxKm: 500,
++      data, layer, valid: true, timestamp: 0,
++    };
++    const r = marchRay(v, [0, 0, 3], [0, 0, -1], {
++      innerR: 1.0, outerR: 1.5, sunDir: [0, 0, 1], steps: 64,
++    });
++    expect(r).not.toBe(null);
++    // Valor medido con el fix (convencion GL); el puente viejo (A-1) daba
++    // alpha 0.9821625695088864 en este mismo setup: divergencia amplia.
++    expect(Math.abs(r!.alpha - 0.9821625695088864)).toBeGreaterThan(1e-6);
++    expect(r!.alpha > 0 && r!.alpha <= 1).toBe(true);
++  });
++});
++
+ describe("volumeMarch: camino completo", () => {
+   it("descartes: volumen invalido, rayo fuera, opacidad 0", () => {
+     expect(marchRay({ ...mkVol(0.5), valid: false }, RO, RD, { ...BASE, sunDir: [0, 0, 1] })).toBe(null);
+diff --git a/src/lib/iono/volumeMarch.ts b/src/lib/iono/volumeMarch.ts
+index 8036424..271de05 100644
+--- a/src/lib/iono/volumeMarch.ts
++++ b/src/lib/iono/volumeMarch.ts
+@@ -3,12 +3,17 @@
+  * (src/Ionosphere/VolumeRenderer.cpp:48-141). Misma matematica: entrada/
+  * salida por raySphere, jitter IGN del punto de entrada, sombra dura
+  * multiplicativa, decodificacion geo motor (lon = pi - atan2, t sur-primero),
+- * muestreo via sampleVolume (equivale al filtrado LINEAR de la textura),
+- * colormap via sampleColormap, iso-bandas 10.5/11/11.5, acumulacion
++ * muestreo via sampleVolume con puente z por centros de texel (texelAltKm:
++ * gz = altNorm*A - 0.5, n1-182), colormap via sampleColormap, iso-bandas 10.5/11/11.5, acumulacion
+  * front-to-back con early-outs 0.98/0.001. Reutiliza los espejos ya
+  * certificados (shadowed, entryOffset, sampleVolume, sampleColormap).
+  * Sin GL, sin three, sin DOM. NO cableado a escena en este drop (sin VLM:
+  * no altera pixeles -- P1-180 lo exige solo si altera).
++ *
++ * P3-182 (seam de lon, ruling con opcion): el wrap x se HEREDA de
++ * sampleVolume (certificado para SU oraculo); el sampler GL es
++ * CLAMP_TO_EDGE (sonda 182: franja media celda en +-180, solo modo
++ * densidad). Adaptacion heredada declarada; no se toca sampleVolume.
+  */
+ 
+ import { shadowed } from "./volumeShadow";
+@@ -75,6 +80,23 @@ function clamp01(v: number): number {
+   return v < 0 ? 0 : v > 1 ? 1 : v;
+ }
+ 
++/**
++ * Altura TRUE del nivel muestreado a fraccion altNorm (n1-182, fix 183):
++ * el sampler GL interpola en CENTROS DE TEXEL gz = altNorm*A - 0.5 con
++ * clamp de borde (sonda WebGL2: 16/16 lecturas exactas), NO en niveles
++ * k/(A-1) del camino CPU. Los clamps replican el edge: altNorm 0/1 dan
++ * el texel 0/A-1 puros. Pura.
++ */
++export function texelAltKm(altNorm: number, A: number, altMinKm: number, altMaxKm: number): number {
++  const L = altNorm * A - 0.5;
++  const la0 = Math.min(A - 1, Math.max(0, Math.floor(L)));
++  const la1 = Math.min(A - 1, la0 + 1);
++  const fa = Math.min(1, Math.max(0, L - la0));
++  const h0 = volumeAltKm(la0, A, altMinKm, altMaxKm);
++  const h1 = volumeAltKm(la1, A, altMinKm, altMaxKm);
++  return h0 * (1 - fa) + h1 * fa;
++}
++
+ /**
+  * Marcha un rayo por el volumen. null = discard del shader (sin
+  * interseccion, ocluido o alfa <= 0.001). Puro y determinista.
+@@ -136,16 +158,8 @@ export function marchRay(
+     let lonDeg = (lon * 180) / Math.PI;
+     if (lonDeg < -180) lonDeg += 360;
+     if (lonDeg > 180) lonDeg -= 360;
+-    // Altura TRUE equivalente al R de textura: las capas ^1.5 se muestrean
+-    // lineales en INDICE (como el filtrado LINEAR); se interpola el mismo
+-    // tramo con la misma fraccion (equivalencia exacta, no la curva ^1.5).
+-    const L = altNorm * (A - 1);
+-    const la0 = Math.min(A - 1, Math.max(0, Math.floor(L)));
+-    const la1 = Math.min(A - 1, la0 + 1);
+-    const fa = Math.min(1, Math.max(0, L - la0));
+-    const h0 = volumeAltKm(la0, A, vol.altMinKm, vol.altMaxKm);
+-    const h1 = volumeAltKm(la1, A, vol.altMinKm, vol.altMaxKm);
+-    const altKm = h0 * (1 - fa) + h1 * fa;
++    // Altura TRUE por convencion GL de centros (texelAltKm, n1-182).
++    const altKm = texelAltKm(altNorm, A, vol.altMinKm, vol.altMaxKm);
+     // Muestreo por el camino certificado (equivale al LINEAR de textura).
+     const d = sampleVolume(vol, latDeg, lonDeg, altKm);
+     let cr: number, cg: number, cb: number;
+-- 
+2.53.0.windows.3
+

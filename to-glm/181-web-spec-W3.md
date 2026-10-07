@@ -23,7 +23,7 @@ dueno. Paridad exigible = TU de espejos + paridad VISUAL a igual epoch
 | Density | DensityVolume.h puro: layout, alt ^1.5, dir, daynight, peaks, TEC, sample | densityVolume.ts | 11/11 propios | 72x72x48, 2/27, Lagrange, TEC 0.0044 | 165/166 |
 | Perfil | LayerProfile.h: chapman, sanitize, profileFromFo, f2Floor, evalNeTotal+winner | layerProfile.ts (+memo 124§2) | 16/16 (= test_layer_winner) | 110/-1/167, REAL 145/155/136, winners, invariante | 167/168 |
 | Rejilla | App.cpp:676 interpLayerProfiles + havDeg/modelos | profileGrid.ts (+mapper, livePeaks) | 7/7 + 2 + 2 | haversine, day 12.65, esquina, mapper, antipoda | 169/170, 173/174 |
-| March | VolumeRenderer.cpp:48 loop (entry/jitter/shadow/geo/sample/colormap/iso/acum) | volumeMarch.ts (reusa 4 espejos) | 7/7 | consts, raySphere, descartes, saturacion, dia/noche, determinismo, capas, iso | 181/182 |
+| March | VolumeRenderer.cpp:48 loop (entry/jitter/shadow/geo/sample/colormap/iso/acum) | volumeMarch.ts (reusa 4 espejos) | 7/7 + 2 (convencion z) | consts, raySphere, descartes, saturacion, dia/noche, determinismo, capas, iso + texelAltKm (gz=r*A-0.5, n1-182) | 181/182, 183/184 |
 
 ## 2. Wiring (escena/datos) — CERRADO salvo raymarch visual
 
