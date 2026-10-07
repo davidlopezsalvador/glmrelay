@@ -1,0 +1,357 @@
+From e18ab3b0b8a673670406a737c6ff430bb39aeac4 Mon Sep 17 00:00:00 2001
+From: t <t@t>
+Date: Wed, 7 Oct 2026 13:07:01 +0200
+Subject: [PATCH] w177
+
+---
+ src/components/ionosphere/IonosphereScene.tsx | 39 +++++++++++
+ src/components/ionosphere/builders.ts         | 31 +++++++++
+ src/components/ionosphere/hud/LayersPanel.tsx |  8 ++-
+ src/components/ionosphere/shaders.ts          | 65 +++++++++++++++++++
+ src/components/ionosphere/types.ts            |  2 +
+ src/lib/iono/godrays.test.ts                  | 22 +++++++
+ src/lib/iono/godrays.ts                       | 25 +++++++
+ 7 files changed, 191 insertions(+), 1 deletion(-)
+
+diff --git a/src/components/ionosphere/IonosphereScene.tsx b/src/components/ionosphere/IonosphereScene.tsx
+index 08a8acb..6e045b6 100644
+--- a/src/components/ionosphere/IonosphereScene.tsx
++++ b/src/components/ionosphere/IonosphereScene.tsx
+@@ -12,10 +12,12 @@ import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer
+ import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
+ import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
+ import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
++import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass.js";
+ 
+ import { getSunInfo } from "@/lib/iono/solar";
+ import { sampleGrid, GRID_W, GRID_H } from "@/lib/iono/ionomath";
+ import { buildLivePeakGrids } from "@/lib/iono/profileGrid";
++import { godraysPassState, mat4Mul, type Mat4 } from "@/lib/iono/godrays";
+ import { buildPngName, gridCsv } from "@/lib/iono/export";
+ import { computeLink, LinkResult } from "@/lib/iono/hf";
+ import { latLonToVec3 } from "@/lib/iono/geo";
+@@ -33,6 +35,7 @@ import {
+   buildLinkTube,
+   buildRefRings,
+   buildSunGlow,
++  buildGodRaysPass,
+ } from "./builders";
+ import {
+   SpaceWeatherData,
+@@ -79,6 +82,7 @@ export default function IonosphereScene(props: Props) {
+     controls: OrbitControls;
+     composer: EffectComposer;
+     bloom: UnrealBloomPass;
++    godRays: ShaderPass;
+     earthMat?: THREE.ShaderMaterial;
+     atmoMat?: THREE.ShaderMaterial;
+     shellObj?: { mesh: THREE.Mesh; mat: THREE.ShaderMaterial; foTex: THREE.DataTexture; hmTex: THREE.DataTexture };
+@@ -156,6 +160,10 @@ export default function IonosphereScene(props: Props) {
+       const bloom = new UnrealBloomPass(new THREE.Vector2(size.x, size.y), 0.55, 0.5, 0.72);
+       composer.addPass(bloom);
+       composer.addPass(new OutputPass());
++      // W-3 god rays (P1-177): ultimo pase = post-ACES por construccion
++      // (el composer vuelca a pantalla el ultimo pase activo). GAIN display.
++      const godRays = buildGodRaysPass();
++      composer.addPass(godRays);
+ 
+       // objetos
+       const stars = buildStars(Math.min(window.devicePixelRatio, 2));
+@@ -179,6 +187,7 @@ export default function IonosphereScene(props: Props) {
+         controls,
+         composer,
+         bloom,
++        godRays,
+         earthMat: earth.mat,
+         atmoMat: atmo.mat,
+         shellObj: shell,
+@@ -431,6 +440,32 @@ export default function IonosphereScene(props: Props) {
+           controls.autoRotate = propsRef.current.settings.cinema;
+         }
+         controls.update();
++        // W-3 god rays (P1-177): puerta CPU + uniforms por frame con el
++        // espejo (projectSun/gateSkip/rayHitsEarth). El sol es el MISMO
++        // vector del sprite (motor-consistente con uSunDir): el pase se
++        // alinea con el sol visual. Flare/xray NO entran aqui (el oraculo
++        // modula D, no el pase). Aspecto del canvas real.
++        const gp = S.current?.godRays;
++        if (gp) {
++          let show = propsRef.current.settings.showGodrays;
++          if (show) {
++            camera.updateMatrixWorld();
++            const vp = mat4Mul(
++              camera.projectionMatrix.elements as unknown as Mat4,
++              camera.matrixWorldInverse.elements as unknown as Mat4
++            );
++            const st = godraysPassState(vp, [camera.position.x, camera.position.y, camera.position.z], [sunV.x, sunV.y, sunV.z]);
++            show = st.visible;
++            if (st.visible) {
++              const u = (gp as unknown as { uniforms: Record<string, THREE.IUniform> }).uniforms;
++              (u.u_sunUV.value as THREE.Vector2).set(st.sunUV[0], st.sunUV[1]);
++              u.u_aspect.value = mount.clientWidth / Math.max(1, mount.clientHeight);
++              (u.u_invViewProj.value as THREE.Matrix4).multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
++              (u.u_camPos.value as THREE.Vector3).copy(camera.position);
++            }
++          }
++          gp.enabled = show;
++        }
+         composer.render();
+         // W-2 export: captura sincrona en el mismo frame (buffer valido).
+         const sox = S.current;
+@@ -498,6 +533,10 @@ export default function IonosphereScene(props: Props) {
+   // stationToProfileSample -> interpProfiles -> buildDensityVolume ->
+   // extractPeakGrids. Corre en useEffect por publicacion de datos, no por
+   // frame. Quirk esquinas-vs-centros del oraculo preservado (NO corregir).
++  // P5-176 (declarado, sin cambio): gridState (ahora derivado) tambien lo
++  // muestrea el enlace HF (computeLink via foAt/hmAt); xray.now no esta en
++  // las deps: el flare se cuantiza a la cadencia de publicacion de
++  // ionosondas (el oraculo reconstruye cada 5 s).
+   useEffect(() => {
+     const so = S.current;
+     if (!so || !props.ionosondes) return;
+diff --git a/src/components/ionosphere/builders.ts b/src/components/ionosphere/builders.ts
+index 4d50f0b..7b127bc 100644
+--- a/src/components/ionosphere/builders.ts
++++ b/src/components/ionosphere/builders.ts
+@@ -5,8 +5,10 @@
+  */
+ 
+ import * as THREE from "three";
++import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass.js";
+ import { latLonToVec3 } from "@/lib/iono/geo";
+ import { buildPalette, ColormapName } from "@/lib/iono/colormaps";
++import { DECAY, FALLOFF_K, GAIN, MAX_RADIUS, SUN_B, SUN_G, SUN_R } from "@/lib/iono/godrays";
+ import {
+   EARTH_VERT, EARTH_FRAG,
+   ATMO_VERT, ATMO_FRAG,
+@@ -15,6 +17,7 @@ import {
+   STAR_VERT, STAR_FRAG,
+   STATION_VERT, STATION_FRAG,
+   RAY_VERT, RAY_FRAG,
++  GODRAYS_VERT, GODRAYS_FRAG,
+ } from "./shaders";
+ import { AuroraCell, IonosondeStation } from "./types";
+ 
+@@ -444,3 +447,31 @@ export function buildSunGlow() {
+   halo.scale.setScalar(1.7);
+   return { core, halo };
+ }
++
++// ------------------------- god rays (post-ACES) -------------------------
++// W-3 P1-177: pase pantalla con las constantes nombradas del espejo
++// (DECAY/MAX_RADIUS/FALLOFF_K/GAIN/sol calido de godrays.ts). Corre el
++// ultimo (tras OutputPass): GAIN post-ACES por construccion. La puerta CPU
++// (projectSun + gateSkip) la evalua la escena por frame con el mirror.
++export function buildGodRaysPass() {
++  const pass = new ShaderPass(
++    {
++      uniforms: {
++        tDiffuse: { value: null },
++        u_sunUV: { value: new THREE.Vector2(0.5, 0.5) },
++        u_sunColor: { value: new THREE.Color(SUN_R, SUN_G, SUN_B) },
++        u_gain: { value: GAIN },
++        u_decay: { value: DECAY },
++        u_radius: { value: MAX_RADIUS },
++        u_falloffK: { value: FALLOFF_K },
++        u_aspect: { value: 16 / 9 },
++        u_invViewProj: { value: new THREE.Matrix4() },
++        u_camPos: { value: new THREE.Vector3() },
++      },
++      vertexShader: GODRAYS_VERT,
++      fragmentShader: GODRAYS_FRAG,
++    },
++    "tDiffuse"
++  );
++  return pass;
++}
+diff --git a/src/components/ionosphere/hud/LayersPanel.tsx b/src/components/ionosphere/hud/LayersPanel.tsx
+index 6eb9267..9d89e6a 100644
+--- a/src/components/ionosphere/hud/LayersPanel.tsx
++++ b/src/components/ionosphere/hud/LayersPanel.tsx
+@@ -1,6 +1,6 @@
+ "use client";
+ 
+-import { Layers, Cloud, Sparkles, Radio, Orbit, Mountain, Eye, Disc3 } from "lucide-react";
++import { Layers, Cloud, Sparkles, Radio, Orbit, Mountain, Eye, Disc3, Sun } from "lucide-react";
+ import { SceneSettings, IonosondeData } from "../types";
+ import { PanelBox, SourceDot } from "./SpaceWeatherPanel";
+ 
+@@ -48,6 +48,12 @@ export default function LayersPanel({ settings, onChange, ionosondes, fps }: Pro
+           checked={settings.showShell}
+           onChange={(v) => onChange({ showShell: v })}
+         />
++        <Toggle
++          icon={<Sun size={12} />}
++          label="God rays"
++          checked={settings.showGodrays}
++          onChange={(v) => onChange({ showGodrays: v })}
++        />
+         <Toggle
+           icon={<Eye size={12} />}
+           label="Ionosondas"
+diff --git a/src/components/ionosphere/shaders.ts b/src/components/ionosphere/shaders.ts
+index ba28029..a99eb97 100644
+--- a/src/components/ionosphere/shaders.ts
++++ b/src/components/ionosphere/shaders.ts
+@@ -471,3 +471,68 @@ void main() {
+   gl_FragColor = vec4(col * (base + pulse), 0.9);
+ }
+ `;
++
++// ----------------------- GOD RAYS (post-ACES) -----------------------
++// Pase pantalla de god rays (W-3 P1-177): port GLSL1 de shaders/godrays.frag
++// del oraculo (12 taps radiales al sol con aspecto, pesos decay^i, mascara
++// analitica opcion B, puerta CPU fuera). Corre TRAS OutputPass (post-ACES,
++// display): lee el color resuelto y suma el aporte. Sin componente temporal.
++export const GODRAYS_VERT = /* glsl */ `
++varying vec2 vUv;
++void main() {
++  vUv = uv;
++  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
++}
++`;
++
++export const GODRAYS_FRAG = /* glsl */ `
++uniform sampler2D tDiffuse;
++uniform vec2 u_sunUV;
++uniform vec3 u_sunColor;
++uniform float u_gain;
++uniform float u_decay;
++uniform float u_radius;
++uniform float u_falloffK;
++uniform float u_aspect;
++uniform mat4 u_invViewProj;
++uniform vec3 u_camPos;
++varying vec2 vUv;
++
++bool raySphere(vec3 ro, vec3 rd, float r, out float t0, out float t1) {
++  float b = dot(ro, rd);
++  float c = dot(ro, ro) - r * r;
++  float disc = b * b - c;
++  if (disc < 0.0) return false;
++  float s = sqrt(disc);
++  t0 = -b - s;
++  t1 = -b + s;
++  return true;
++}
++
++void main() {
++  vec3 base = texture2D(tDiffuse, vUv).rgb;
++  vec2 auv = vec2(vUv.x * u_aspect, vUv.y);
++  vec2 asun = vec2(u_sunUV.x * u_aspect, u_sunUV.y);
++  vec2 d = asun - auv;
++  float L = length(d);
++  float fall = 1.0 / (1.0 + u_falloffK * L);
++  vec3 rays = vec3(0.0);
++  if (L > 1e-5) {
++    vec2 dir = d / L;
++    float stepLen = min(L, u_radius) / 11.0;
++    for (int i = 0; i < 12; i++) {
++      vec2 auvTap = auv + dir * (stepLen * float(i));
++      vec2 tapUV = vec2(auvTap.x / u_aspect, auvTap.y);
++      vec4 clip = vec4(tapUV * 2.0 - 1.0, 1.0, 1.0);
++      vec4 world = u_invViewProj * clip;
++      vec3 tdir = normalize(world.xyz / world.w - u_camPos);
++      float t0, t1;
++      float mask = 1.0;
++      if (raySphere(u_camPos, tdir, 1.0, t0, t1) && t1 > 1e-4) mask = 0.0;
++      float w = pow(u_decay, float(i));
++      rays += u_sunColor * (w * mask);
++    }
++  }
++  gl_FragColor = vec4(base + u_gain * fall * rays, 1.0);
++}
++`;
+diff --git a/src/components/ionosphere/types.ts b/src/components/ionosphere/types.ts
+index 678c6af..3e2344e 100644
+--- a/src/components/ionosphere/types.ts
++++ b/src/components/ionosphere/types.ts
+@@ -70,6 +70,7 @@ export interface SceneSettings {
+   showStations: boolean;
+   showRings: boolean;
+   showLink: boolean;
++  showGodrays: boolean; // pase post-ACES (W-3 P1-177, default ON productivo)
+   exaggeration: number; // 1..5
+   shellOpacity: number; // 0..1
+   nightLights: number; // 0..1
+@@ -86,6 +87,7 @@ export const DEFAULT_SETTINGS: SceneSettings = {
+   showStations: true,
+   showRings: true,
+   showLink: true,
++  showGodrays: true,
+   exaggeration: 2.2,
+   shellOpacity: 0.85,
+   nightLights: 0.45,
+diff --git a/src/lib/iono/godrays.test.ts b/src/lib/iono/godrays.test.ts
+index f14435d..8951e82 100644
+--- a/src/lib/iono/godrays.test.ts
++++ b/src/lib/iono/godrays.test.ts
+@@ -17,6 +17,7 @@ import {
+   SUN_R,
+   falloff,
+   gateSkip,
++  godraysPassState,
+   mat4LookAt,
+   mat4Mul,
+   mat4Perspective,
+@@ -114,3 +115,24 @@ describe("godrays: constantes nombradas de la spec", () => {
+     expect([SUN_R, SUN_G, SUN_B]).toEqual([1, 0.9, 0.75]);
+   });
+ });
++
++describe("godrays: godraysPassState (puerta por frame)", () => {
++  it("sol de frente lateral (no ocluido) -> visible con UV en [0,1]", () => {
++    const { vp, cam } = setup();
++    // Sol al frente-lateral: en frustum y sin la Tierra en medio (desde
++    // (0,0,3) el sol tras la Tierra se apaga por puerta de limbo, como manda).
++    const st = godraysPassState(vp, cam, vec3Normalize([0.5, 0.15, -1]));
++    expect(st.visible).toBe(true);
++    expect(st.sunUV[0] >= 0 && st.sunUV[0] <= 1 && st.sunUV[1] >= 0 && st.sunUV[1] <= 1).toBe(true);
++  });
++
++  it("sol detras o fuera o tras limbo -> apagado", () => {
++    const { vp, cam } = setup();
++    expect(godraysPassState(vp, cam, [0, 0, 1]).visible).toBe(false);
++    expect(godraysPassState(vp, cam, vec3Normalize([0.2, 3, -1])).visible).toBe(false);
++    // Camara mirando al sol con la Tierra en medio (limbo): el rayo
++    // camara->sol cruza la Tierra -> puerta por oclusion.
++    const limb = godraysPassState(vp, [0, 0, 3], vec3Normalize([-1, 0, -2.9]));
++    expect(limb.visible).toBe(false);
++  });
++});
+diff --git a/src/lib/iono/godrays.ts b/src/lib/iono/godrays.ts
+index c898c58..ed41854 100644
+--- a/src/lib/iono/godrays.ts
++++ b/src/lib/iono/godrays.ts
+@@ -165,3 +165,28 @@ export function tapUV(i: number, uv: Vec2, sunUV: Vec2, aspect: number): Vec2 {
+ export function gateSkip(s: SunProj, sunBehindLimb: boolean): boolean {
+   return s.behind || s.offscreen || sunBehindLimb;
+ }
++
++export interface PassState {
++  /** false = pase apagado (puerta CPU). */
++  visible: boolean;
++  /** Sol en UV 0..1 (solo valido si visible). */
++  sunUV: [number, number];
++}
++
++/**
++ * Estado del pase por frame (P1-176): proyecta el sol visual (mismo vector
++ * que el sprite: motor-consistente con uSunDir), aplica la puerta CPU y
++ * devuelve el UV. El drape corregido no interviene: el pase trabaja en
++ * pantalla, no en datos. Puro.
++ */
++export function godraysPassState(
++  viewProj: Mat4,
++  camPos: Vec3,
++  sunDir: Vec3
++): PassState {
++  const s = projectSun(viewProj, camPos, sunDir);
++  const n = vec3Normalize(sunDir);
++  const behindLimb = rayHitsEarth(camPos, n);
++  if (gateSkip(s, behindLimb)) return { visible: false, sunUV: [0, 0] };
++  return { visible: true, sunUV: [s.x * 0.5 + 0.5, s.y * 0.5 + 0.5] };
++}
+-- 
+2.53.0.windows.3
+
