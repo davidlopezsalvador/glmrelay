@@ -1,0 +1,332 @@
+From 4b05f2e607fb131f6a5e3d7e6beab010227359d5 Mon Sep 17 00:00:00 2001
+From: t <t@t>
+Date: Wed, 7 Oct 2026 19:30:41 +0200
+Subject: [PATCH] w181
+
+---
+ src/app/page.tsx                 |   4 +-
+ src/lib/iono/volumeMarch.test.ts |  98 ++++++++++++++++
+ src/lib/iono/volumeMarch.ts      | 191 +++++++++++++++++++++++++++++++
+ 3 files changed, 291 insertions(+), 2 deletions(-)
+ create mode 100644 src/lib/iono/volumeMarch.test.ts
+ create mode 100644 src/lib/iono/volumeMarch.ts
+
+diff --git a/src/app/page.tsx b/src/app/page.tsx
+index 31988b1..782d043 100644
+--- a/src/app/page.tsx
++++ b/src/app/page.tsx
+@@ -207,8 +207,8 @@ export default function Home() {
+               <span className="font-mono tabular-nums">{now.toISOString().slice(11, 19)} UTC</span>
+               <span className="w-1 h-1 rounded-full bg-cyan-400/60" />
+               <span className="font-mono">
+-                subsolar {subsolar(now).lat.toFixed(0)}° {subsolar(now).lon >= 0 ? "E" : "W"}{" "}
+-                {Math.abs(subsolar(now).lon).toFixed(0)}°
++                subsolar {subsolar(new Date(effSec * 1000)).lat.toFixed(0)}{"\u00B0"} {subsolar(new Date(effSec * 1000)).lon >= 0 ? "E" : "W"}{" "}
++                {Math.abs(subsolar(new Date(effSec * 1000)).lon).toFixed(0)}{"\u00B0"}
+               </span>
+             </p>
+           </div>
+diff --git a/src/lib/iono/volumeMarch.test.ts b/src/lib/iono/volumeMarch.test.ts
+new file mode 100644
+index 0000000..fd3f6a4
+--- /dev/null
++++ b/src/lib/iono/volumeMarch.test.ts
+@@ -0,0 +1,98 @@
++/**
++ * TU W-3 march CPU (spec 181 P1): paridad del camino completo contra la
++ * estructura del oraculo (volFragSrc, norma 144; sin TU C++ dedicado para
++ * este modulo). Pines estructurales + contraste dia/noche + convergencia.
++ * Vitest.
++ */
++import { describe, expect, it } from "vitest";
++import {
++  MARCH_EARLY_ALPHA,
++  MARCH_ISO,
++  MARCH_ISO_WIDTH,
++  MARCH_LAYER_COLORS,
++  MARCH_MIN_ALPHA,
++  MARCH_OPACITY_SCALE,
++  MARCH_STEPS,
++  marchRay,
++  raySphereT,
++} from "./volumeMarch";
++import type { DensityVolume } from "./densityVolume";
++
++function mkVol(fill: number, layerFill = 0): DensityVolume {
++  const W = 4, H = 4, A = 4;
++  return {
++    lonRes: W,
++    latRes: H,
++    altRes: A,
++    altMinKm: 60,
++    altMaxKm: 500,
++    data: new Array(W * H * A).fill(fill),
++    layer: new Array(W * H * A).fill(layerFill),
++    valid: true,
++    timestamp: 0,
++  };
++}
++
++// Rayo fijo del TU: (0,0,3) -> (0,0,-1), inner 1.0, outer 1.5.
++const RO: [number, number, number] = [0, 0, 3];
++const RD: [number, number, number] = [0, 0, -1];
++const BASE = { innerR: 1.0, outerR: 1.5 };
++
++describe("volumeMarch: constantes 1:1 del oraculo", () => {
++  it("defaults del header + iso + capas + early-outs", () => {
++    expect(MARCH_STEPS).toBe(64);
++    expect(MARCH_OPACITY_SCALE).toBe(1);
++    expect(MARCH_ISO_WIDTH).toBe(0.02);
++    expect(MARCH_EARLY_ALPHA).toBe(0.98);
++    expect(MARCH_MIN_ALPHA).toBe(0.001);
++    expect([...MARCH_ISO]).toEqual([0.556, 0.667, 0.778]);
++    expect(MARCH_LAYER_COLORS[3]).toEqual([0.2, 0.8, 1.0]);
++  });
++
++  it("raySphereT en eje: t0/t1 exactos + miss", () => {
++    const s = raySphereT(0, 0, 3, 0, 0, -1, 1);
++    expect(s.hit).toBe(true);
++    expect(s.t0).toBe(2);
++    expect(s.t1).toBe(4);
++    expect(raySphereT(0, 0, 3, 0, 1, 0, 1).hit).toBe(false);
++  });
++});
++
++describe("volumeMarch: camino completo", () => {
++  it("descartes: volumen invalido, rayo fuera, opacidad 0", () => {
++    expect(marchRay({ ...mkVol(0.5), valid: false }, RO, RD, { ...BASE, sunDir: [0, 0, 1] })).toBe(null);
++    expect(marchRay(mkVol(0.5), [0, 0, 3], [0, 1, 0], { ...BASE, sunDir: [0, 0, 1] })).toBe(null);
++    expect(marchRay(mkVol(0.5), RO, RD, { ...BASE, sunDir: [0, 0, 1], opacityScale: 0 })).toBe(null);
++  });
++
++  it("saturacion densa: alfa > 0.98 con hue viridis", () => {
++    const r = marchRay(mkVol(1), RO, RD, { ...BASE, sunDir: [0, 0, 1] });
++    expect(r).not.toBe(null);
++    expect(r!.alpha).toBeGreaterThan(0.98);
++    expect(r!.color[0] > r!.color[1] && r!.color[1] > r!.color[2]).toBe(true);
++  });
++
++  it("sombra dia/noche: mismo rayo, sol invertido -> null", () => {
++    const day = marchRay(mkVol(0.5), RO, RD, { ...BASE, sunDir: [0, 0, 1] });
++    expect(day).not.toBe(null);
++    expect(day!.alpha).toBeGreaterThan(0);
++    const night = marchRay(mkVol(0.5), RO, RD, { ...BASE, sunDir: [0, 0, -1] });
++    expect(night).toBe(null);
++  });
++
++  it("determinista: misma llamada, mismo resultado", () => {
++    const o = { ...BASE, sunDir: [0, 0, 1] as [number, number, number], px: 7, py: 13 };
++    expect(marchRay(mkVol(0.5), RO, RD, o)).toEqual(marchRay(mkVol(0.5), RO, RD, o));
++  });
++
++  it("modo capas: hue cian F2 + iso ilumina", () => {
++    const lay = marchRay(mkVol(0.5, 3), RO, RD, { ...BASE, sunDir: [0, 0, 1], colorMode: 1 });
++    expect(lay).not.toBe(null);
++    expect(lay!.color[2] > lay!.color[1] && lay!.color[1] > lay!.color[0]).toBe(true);
++    const off = marchRay(mkVol(0.667), RO, RD, { ...BASE, sunDir: [0, 0, 1] });
++    const on = marchRay(mkVol(0.667), RO, RD, { ...BASE, sunDir: [0, 0, 1], isoOn: true });
++    expect(off && on).toBeTruthy();
++    const sum = (c: readonly number[]) => c[0] + c[1] + c[2];
++    expect(sum(on!.color) > sum(off!.color)).toBe(true);
++  });
++});
+diff --git a/src/lib/iono/volumeMarch.ts b/src/lib/iono/volumeMarch.ts
+new file mode 100644
+index 0000000..8036424
+--- /dev/null
++++ b/src/lib/iono/volumeMarch.ts
+@@ -0,0 +1,191 @@
++/**
++ * March CPU W-3 (spec 181 P1): espejo puro del loop de volFragSrc
++ * (src/Ionosphere/VolumeRenderer.cpp:48-141). Misma matematica: entrada/
++ * salida por raySphere, jitter IGN del punto de entrada, sombra dura
++ * multiplicativa, decodificacion geo motor (lon = pi - atan2, t sur-primero),
++ * muestreo via sampleVolume (equivale al filtrado LINEAR de la textura),
++ * colormap via sampleColormap, iso-bandas 10.5/11/11.5, acumulacion
++ * front-to-back con early-outs 0.98/0.001. Reutiliza los espejos ya
++ * certificados (shadowed, entryOffset, sampleVolume, sampleColormap).
++ * Sin GL, sin three, sin DOM. NO cableado a escena en este drop (sin VLM:
++ * no altera pixeles -- P1-180 lo exige solo si altera).
++ */
++
++import { shadowed } from "./volumeShadow";
++import { entryOffset } from "./volumeJitter";
++import { sampleVolume, volumeAltKm, type DensityVolume } from "./densityVolume";
++import { sampleColormap, type ColormapName } from "./colormaps";
++
++// Defaults del oraculo (VolumeRenderer.h + render(): steps_=64,
++// opacityScale_=1.0, isoOn_=false, u_isoWidth 0.02, early-outs del frag).
++export const MARCH_STEPS = 64;
++export const MARCH_OPACITY_SCALE = 1;
++export const MARCH_ISO_WIDTH = 0.02;
++export const MARCH_EARLY_ALPHA = 0.98;
++export const MARCH_MIN_ALPHA = 0.001;
++// Iso-bandas logNe 10.5/11/11.5 en normalizado (frag: 0.556/0.667/0.778).
++export const MARCH_ISO = [0.556, 0.667, 0.778] as const;
++// Capas fijas modo 1 (frag: D=naranja, E=verde, F1=amarillo, F2=cian).
++export const MARCH_LAYER_COLORS = [
++  [1.0, 0.55, 0.1],
++  [0.2, 0.85, 0.3],
++  [1.0, 0.9, 0.2],
++  [0.2, 0.8, 1.0],
++] as const;
++
++export type V3 = [number, number, number];
++
++export interface MarchOpts {
++  innerR: number;
++  outerR: number;
++  /** Direccion solar UNITARIA (marco del motor, como u_sunDir). */
++  sunDir: V3;
++  steps?: number; // clamp 16..256 como setStepCount
++  opacityScale?: number;
++  isoOn?: boolean;
++  isoWidth?: number;
++  /** 0 = densidad (colormap), 1 = capas fijas. */
++  colorMode?: number;
++  cmap?: ColormapName;
++  /** Pixel para el jitter IGN (gl_FragCoord.xy). */
++  px?: number;
++  py?: number;
++}
++
++export interface MarchHit {
++  color: V3;
++  alpha: number;
++}
++
++/** raySphere completo (t0 = near, t1 = far). Misma matematica que el frag. */
++export function raySphereT(
++  rox: number, roy: number, roz: number,
++  rdx: number, rdy: number, rdz: number,
++  r: number
++): { hit: boolean; t0: number; t1: number } {
++  const b = rox * rdx + roy * rdy + roz * rdz;
++  const c = rox * rox + roy * roy + roz * roz - r * r;
++  const disc = b * b - c;
++  if (disc < 0) return { hit: false, t0: 0, t1: 0 };
++  const s = Math.sqrt(disc);
++  return { hit: true, t0: -b - s, t1: -b + s };
++}
++
++function clamp01(v: number): number {
++  return v < 0 ? 0 : v > 1 ? 1 : v;
++}
++
++/**
++ * Marcha un rayo por el volumen. null = discard del shader (sin
++ * interseccion, ocluido o alfa <= 0.001). Puro y determinista.
++ */
++export function marchRay(
++  vol: DensityVolume,
++  ro: V3,
++  rd: V3,
++  o: MarchOpts
++): MarchHit | null {
++  if (!vol.valid || vol.data.length === 0) return null;
++  const steps = Math.min(256, Math.max(16, o.steps ?? MARCH_STEPS));
++  const opacityScale = o.opacityScale ?? MARCH_OPACITY_SCALE;
++  const isoWidth = o.isoWidth ?? MARCH_ISO_WIDTH;
++  const colorMode = o.colorMode ?? 0;
++  const cmap = o.cmap ?? "viridis";
++  const outer = raySphereT(ro[0], ro[1], ro[2], rd[0], rd[1], rd[2], o.outerR);
++  if (!outer.hit) return null;
++  let tEnter = Math.max(outer.t0, 0);
++  let tExit = outer.t1;
++  const inner = raySphereT(ro[0], ro[1], ro[2], rd[0], rd[1], rd[2], o.innerR);
++  if (inner.hit && inner.t0 > tEnter) {
++    tExit = Math.min(tExit, inner.t0); // no ver a traves del planeta
++  }
++  if (tExit <= tEnter) return null;
++  if (colorMode === 1) {
++    // Oclusion terrestre analitica (radio 1.0), modo categorico.
++    const e = raySphereT(ro[0], ro[1], ro[2], rd[0], rd[1], rd[2], 1);
++    if (e.hit && e.t0 > tEnter) {
++      tExit = Math.min(tExit, e.t0);
++    }
++    if (tExit <= tEnter) return null;
++  }
++  const dt = (tExit - tEnter) / steps;
++  const jit = entryOffset(o.px ?? 0, o.py ?? 0);
++  const tEnterJ = tEnter + dt * jit;
++  let accumR = 0, accumG = 0, accumB = 0, accumAlpha = 0;
++  const W = vol.lonRes, H = vol.latRes, A = vol.altRes;
++  for (let i = 0; i < 256; i++) {
++    if (i >= steps) break;
++    const t = tEnterJ + dt * (i + 0.5);
++    if (t >= tExit) break;
++    const px = ro[0] + rd[0] * t;
++    const py = ro[1] + rd[1] * t;
++    const pz = ro[2] + rd[2] * t;
++    const sunShadow = shadowed(px, py, pz, o.sunDir[0], o.sunDir[1], o.sunDir[2], o.innerR) ? 0 : 1;
++    const r = Math.sqrt(px * px + py * py + pz * pz);
++    const altNorm = Math.min(1, Math.max(0, (r - o.innerR) / (o.outerR - o.innerR)));
++    const n = r > 0 ? 1 / r : 0;
++    const nx = px * n, ny = py * n, nz = pz * n;
++    const lat = Math.asin(Math.min(1, Math.max(-1, ny)));
++    // t=0 es el SUR; lon = pi - atan2 (convencion del motor, NO ingenua).
++    let lon = Math.PI - Math.atan2(nz, nx);
++    if (lon > Math.PI) lon -= 2 * Math.PI;
++    if (lon < -Math.PI) lon += 2 * Math.PI;
++    const uvx = lon / (2 * Math.PI) + 0.5;
++    const uvy = lat / Math.PI + 0.5;
++    const latDeg = (lat * 180) / Math.PI;
++    let lonDeg = (lon * 180) / Math.PI;
++    if (lonDeg < -180) lonDeg += 360;
++    if (lonDeg > 180) lonDeg -= 360;
++    // Altura TRUE equivalente al R de textura: las capas ^1.5 se muestrean
++    // lineales en INDICE (como el filtrado LINEAR); se interpola el mismo
++    // tramo con la misma fraccion (equivalencia exacta, no la curva ^1.5).
++    const L = altNorm * (A - 1);
++    const la0 = Math.min(A - 1, Math.max(0, Math.floor(L)));
++    const la1 = Math.min(A - 1, la0 + 1);
++    const fa = Math.min(1, Math.max(0, L - la0));
++    const h0 = volumeAltKm(la0, A, vol.altMinKm, vol.altMaxKm);
++    const h1 = volumeAltKm(la1, A, vol.altMinKm, vol.altMaxKm);
++    const altKm = h0 * (1 - fa) + h1 * fa;
++    // Muestreo por el camino certificado (equivale al LINEAR de textura).
++    const d = sampleVolume(vol, latDeg, lonDeg, altKm);
++    let cr: number, cg: number, cb: number;
++    if (colorMode === 1) {
++      // ID exacto por vecino mas cercano (el LINEAR corromperia fronteras).
++      const ix = Math.min(W - 1, Math.max(0, Math.floor(uvx * W)));
++      const iy = Math.min(H - 1, Math.max(0, Math.floor(uvy * H)));
++      const ia = Math.min(A - 1, Math.max(0, Math.floor(altNorm * A)));
++      const wgt = vol.layer.length === vol.data.length ? vol.layer[(ia * H + iy) * W + ix] : 3;
++      const c = MARCH_LAYER_COLORS[wgt < 0 ? 0 : wgt > 3 ? 3 : wgt];
++      cr = c[0];
++      cg = c[1];
++      cb = c[2];
++    } else {
++      const s = sampleColormap(cmap, d);
++      cr = s[0];
++      cg = s[1];
++      cb = s[2];
++    }
++    cr *= sunShadow;
++    cg *= sunShadow;
++    cb *= sunShadow;
++    let a = Math.min(1, Math.max(0, d * d * opacityScale * dt * 40)) * sunShadow;
++    if (o.isoOn) {
++      const m = Math.min(Math.abs(d - MARCH_ISO[0]), Math.abs(d - MARCH_ISO[1]), Math.abs(d - MARCH_ISO[2]));
++      let tt = m / isoWidth;
++      tt = tt < 0 ? 0 : tt > 1 ? 1 : tt;
++      const band = 1 - tt * tt * (3 - 2 * tt);
++      cr = cr + (1 - cr) * band * 0.55;
++      cg = cg + (1 - cg) * band * 0.55;
++      cb = cb + (1 - cb) * band * 0.55;
++      const am = band * 0.35;
++      a = Math.max(a, Math.min(am, opacityScale));
++    }
++    accumR += (1 - accumAlpha) * a * cr;
++    accumG += (1 - accumAlpha) * a * cg;
++    accumB += (1 - accumAlpha) * a * cb;
++    accumAlpha += (1 - accumAlpha) * a;
++    if (accumAlpha > MARCH_EARLY_ALPHA) break;
++  }
++  if (accumAlpha <= MARCH_MIN_ALPHA) return null;
++  return { color: [accumR, accumG, accumB], alpha: accumAlpha };
++}
+-- 
+2.53.0.windows.3
+
