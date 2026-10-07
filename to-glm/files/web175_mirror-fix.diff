@@ -1,0 +1,318 @@
+From c9ac0f6108d2f71b7f04f4af1bcbf52a5957b014 Mon Sep 17 00:00:00 2001
+From: t <t@t>
+Date: Wed, 7 Oct 2026 04:50:48 +0200
+Subject: [PATCH] w175
+
+---
+ src/app/page.tsx                              | 13 +++---
+ src/components/ionosphere/IonosphereScene.tsx | 13 ++++--
+ src/components/ionosphere/shaders.ts          | 12 ++++--
+ src/lib/iono/profileGrid.test.ts              | 25 ++++++++++++
+ src/lib/iono/profileGrid.ts                   | 18 +++++----
+ src/lib/iono/solar.test.ts                    | 40 +++++++++++++++++++
+ src/lib/iono/solar.ts                         | 35 +++++++++++-----
+ 7 files changed, 123 insertions(+), 33 deletions(-)
+ create mode 100644 src/lib/iono/solar.test.ts
+
+diff --git a/src/app/page.tsx b/src/app/page.tsx
+index 0ac182e..31988b1 100644
+--- a/src/app/page.tsx
++++ b/src/app/page.tsx
+@@ -21,6 +21,7 @@ import {
+ import { LinkResult } from "@/lib/iono/hf";
+ import { AlertEngine, buildAlertInput, type AlertSnapshot } from "@/lib/iono/alerts";
+ import { tourCount, tourKey } from "@/lib/iono/tour";
++import { getSunInfo } from "@/lib/iono/solar";
+ 
+ async function fetchJson<T>(url: string, timeoutMs = 30000): Promise<T | null> {
+   try {
+@@ -406,14 +407,10 @@ function StatusChip({ ok, label }: { ok: boolean; label: string }) {
+ }
+ 
+ function subsolar(now: Date) {
+-  // aproximación rápida para el HUD (el shader usa Meeus exacto)
+-  const doy = Math.floor((now.getTime() - Date.UTC(now.getUTCFullYear(), 0, 0)) / 86400000);
+-  const decl = 23.44 * Math.sin((2 * Math.PI * (doy - 81)) / 365);
+-  const utcH = now.getUTCHours() + now.getUTCMinutes() / 60;
+-  let lon = (12 - utcH) * 15;
+-  if (lon > 180) lon -= 360;
+-  if (lon < -180) lon += 360;
+-  return { lat: decl, lon };
++  // Unificado con getSunInfo (ruling 174 n1, fix 175): una sola fuente para
++  // el punto subsolar (antes: aproximacion propia que contradecia al decode).
++  const s = getSunInfo(now.getTime() / 1000);
++  return { lat: s.subsolarLat, lon: s.subsolarLon };
+ }
+ 
+ /** En móvil: paneles en pestañas colapsables */
+diff --git a/src/components/ionosphere/IonosphereScene.tsx b/src/components/ionosphere/IonosphereScene.tsx
+index 0db722e..08a8acb 100644
+--- a/src/components/ionosphere/IonosphereScene.tsx
++++ b/src/components/ionosphere/IonosphereScene.tsx
+@@ -16,7 +16,6 @@ import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
+ import { getSunInfo } from "@/lib/iono/solar";
+ import { sampleGrid, GRID_W, GRID_H } from "@/lib/iono/ionomath";
+ import { buildLivePeakGrids } from "@/lib/iono/profileGrid";
+-import { densityDir } from "@/lib/iono/densityVolume";
+ import { buildPngName, gridCsv } from "@/lib/iono/export";
+ import { computeLink, LinkResult } from "@/lib/iono/hf";
+ import { latLonToVec3 } from "@/lib/iono/geo";
+@@ -511,14 +510,20 @@ export default function IonosphereScene(props: Props) {
+       foF2: sampleStationAt(s, effMs),
+     }));
+ 
+-    // sol en el marco del motor (subsolar -> densityDir, como el C++)
++    // sol en el marco del motor (ruling 174 n1, fix 175): sun.dir YA ES el
++    // vector motor del oraculo (paridad <=4.6e-7 con getDirection); se pasa
++    // directo, sin decodificar subsolar (la decodificacion escena sumaba 180
++    // y el drape lo compensaba: doble espejo cancelado en el render).
++    // uSunDir de los shaders se deja INTACTO (invariancia del ruling).
+     const sun = getSunInfo(effMs / 1000);
+-    const [sunX, sunY, sunZ] = densityDir(sun.subsolarLat, sun.subsolarLon);
++    const [sunX, sunY, sunZ] = sun.dir;
+     const f107 = props.spaceWeather?.f107.now ?? 110;
+     const xray = props.spaceWeather?.xray.now ?? 0;
+     const flare = Math.max(1, 1 + 20 * Math.log10(Math.max(xray, 1e-9) / 1e-6));
++    // P3-174: dims del oraculo en produccion (App.cpp:2437 60/60/700,
++    // plan 158 sec.5bis: en tormenta la hmF2 supera 500 km).
+     const peaks = buildLivePeakGrids(
+-      sampled, GRID_W, GRID_H, sunX, sunY, sunZ, effMs / 1000, f107, 48, 60, 500, flare
++      sampled, GRID_W, GRID_H, sunX, sunY, sunZ, effMs / 1000, f107, 60, 60, 700, flare
+     );
+     const foGrid = { values: peaks.fo };
+     const hmGrid = { values: peaks.hm };
+diff --git a/src/components/ionosphere/shaders.ts b/src/components/ionosphere/shaders.ts
+index 4e1e023..ba28029 100644
+--- a/src/components/ionosphere/shaders.ts
++++ b/src/components/ionosphere/shaders.ts
+@@ -1,8 +1,9 @@
+ /**
+  * Shaders GLSL para Ionosphere Live 3D — Web Explorer.
+  *
+- * Convención esférica (idéntica al C++): lon 0 -> +X, lon 90E -> -Z, +Y norte.
+- * UV equirectangular: u = phi/(2π)+0.5 (phi = atan(z, -x)), v = 0.5 + lat/π.
++ * Convencion esferica: lon 0 -> +X, lon 90E -> -Z, +Y norte.
++ * UV equirectangular del shell: u = phi/(2pi) (phi = atan(z, -x)) tras el
++ * fix 175 (antes +0.5: drape a lon+180, cancelado con datos espejados).
+  */
+ 
+ // ─────────────────────────── TIERRA ───────────────────────────
+@@ -220,9 +221,12 @@ varying vec2 vGridUv;        // uv del grid (para foF2)
+ varying float vHm;
+ void main() {
+   vec3 dir = normalize(position);
+-  // phi = atan(z, -x); u = phi/(2π)+0.5; v = 0.5 + asin(y)/π
++  // phi = atan(z, -x); u = phi/(2pi) SIN +0.5 (ruling 174 n1: el +0.5
++  // desplazaba cada columna a lon+180 de su lon de datos; con datos del
++  // lado verdadero el drape debe ser identidad: u(col c) = lon(c)).
++  // v = 0.5 + asin(y)/pi (con el flip 1-v al muestrear, como el fo).
+   float phi = atan(dir.z, -dir.x);
+-  float uu = fract(phi / 6.28318530718 + 0.5);
++  float uu = fract(phi / 6.28318530718);
+   float vv = clamp(0.5 + asin(clamp(dir.y, -1.0, 1.0)) / 3.14159265359, 0.0, 1.0);
+   vGridUv = vec2(uu, vv);
+   float hm = texture2D(uHmF2, vec2(uu, 1.0 - vv)).r * 400.0; // decodificado a km
+diff --git a/src/lib/iono/profileGrid.test.ts b/src/lib/iono/profileGrid.test.ts
+index 44bde0f..d070c79 100644
+--- a/src/lib/iono/profileGrid.test.ts
++++ b/src/lib/iono/profileGrid.test.ts
+@@ -152,4 +152,29 @@ describe("profileGrid: buildLivePeakGrids (rejilla viva)", () => {
+     expect(g.hm[mi]).toBeGreaterThan(150);
+     expect(g.hm[mi]).toBeLessThan(500);
+   });
++
++  it("P2-174: muerte nocturna de E (antipoda con F2 de modelo, no ~110)", () => {
++    const day = { lat: 0, lon: 0, foE: 3.2, foF1: null, foF2: 8, hmF2: 280, B0: 80, B1: 3 };
++    const S = densityDir(0, 0); // subsolar sobre la estacion (dia pleno)
++    const g = buildLivePeakGrids([day], 12, 6, S[0], S[1], S[2], 0, 150);
++    // Celda mas nocturna (min cosChi): sin applyDayNight el argmax se
++    // quedaria en el pico E contaminante (~110 km); con el paso (App 2433)
++    // la E muere y manda la F2 del modelo (~270-300 km).
++    let best = 2;
++    let bestChi = Infinity;
++    for (let y = 0; y < 6; y++) {
++      for (let x = 0; x < 12; x++) {
++        const latG = -90 + 30 * y;
++        const lonG = -180 + 30 * x;
++        const [cx, cy, cz] = densityDir(latG, lonG);
++        const c = cx * S[0] + cy * S[1] + cz * S[2];
++        if (c < bestChi) {
++          bestChi = c;
++          best = (6 - 1 - y) * 12 + x; // norte-primero
++        }
++      }
++    }
++    expect(bestChi).toBeLessThan(-0.9);
++    expect(g.hm[best]).toBeGreaterThan(200);
++  });
+ });
+diff --git a/src/lib/iono/profileGrid.ts b/src/lib/iono/profileGrid.ts
+index 7a89507..b42e93f 100644
+--- a/src/lib/iono/profileGrid.ts
++++ b/src/lib/iono/profileGrid.ts
+@@ -23,8 +23,8 @@
+  * en produccion C++ y replicado aqui (fidelidad sobre correccion).
+  */
+ import { smoothstep } from "./ionomath";
+-import { densityDir, extractPeakGrids } from "./densityVolume";
+-import { buildDensityVolume, sanitizeB0, sanitizeB1, type LayerProfileTS } from "./layerProfile";
++import { applyDayNight, densityDir, extractPeakGrids } from "./densityVolume";
++import { FO_TO_NM, buildDensityVolume, sanitizeB0, sanitizeB1, type LayerProfileTS } from "./layerProfile";
+ 
+ export interface ProfileSample {
+   latDeg: number;
+@@ -104,15 +104,13 @@ export interface LivePeakGrids {
+   h: number;
+ }
+ 
+-const FO_TO_NM_LIVE = 1.24e10;
+-
+ /**
+  * Rejilla viva W-3 (P1-172, primer tramo visual): estaciones ->
+  * stationToProfileSample -> interpProfiles -> buildDensityVolume ->
+  * extractPeakGrids -> grids DERIVADAS del volumen (pin 158 sec.5.4).
+- * foF2 = sqrt(Ne_pico / 1.24e10) con Ne = 10^logNe; el hueco (logNe 8.0)
+- * da el suelo nocturno fisico (~2.8 MHz), sin inventar dato. Norte-primero
+- * para el shell (flip N/S desde el sur-primero del volumen). Puro.
++ * foF2 = sqrt(Ne_pico / 1.24e10) con Ne = 10^logNe; el hueco (logNe 8.0
++ * -> 0.09 MHz, D-diurno logNe 9.0 -> 0.28 MHz) da suelo fisico sin inventar
++ * dato. Norte-primero para el shell (flip desde sur-primero). Puro.
+  */
+ export function buildLivePeakGrids(
+   stations: StationLike[],
+@@ -132,6 +130,10 @@ export function buildLivePeakGrids(
+   const hm = new Float32Array(w * h);
+   const samples = stations.map(stationToProfileSample);
+   const profiles = interpProfiles(samples, w, h, sunX, sunY, sunZ, epochSec, f107);
++  // P2-174 (App.cpp:2433): atenuar E/F1 nocturnas ANTES de construir (sin
++  // esto el fondo mediano interpola densidad fantasma y el argmax nocturno
++  // se queda en ~110 km). Misma cadena que el oraculo.
++  applyDayNight(profiles, w, h, sunX, sunY, sunZ);
+   const vol = buildDensityVolume(
+     profiles, w, h, altRes, altMinKm, altMaxKm, sunX, sunY, sunZ, flareFactor
+   );
+@@ -141,7 +143,7 @@ export function buildLivePeakGrids(
+   for (let y = 0; y < h; y++) {
+     for (let x = 0; x < w; x++) {
+       const logNe = peaks.logNe.values[y * w + x];
+-      const f = Math.sqrt(Math.pow(10, logNe) / FO_TO_NM_LIVE);
++      const f = Math.sqrt(Math.pow(10, logNe) / FO_TO_NM);
+       const row = h - 1 - y; // sur-primero -> norte-primero
+       fo[row * w + x] = f;
+       hm[row * w + x] = peaks.hmKm.values[y * w + x];
+diff --git a/src/lib/iono/solar.test.ts b/src/lib/iono/solar.test.ts
+new file mode 100644
+index 0000000..3f461ee
+--- /dev/null
++++ b/src/lib/iono/solar.test.ts
+@@ -0,0 +1,40 @@
++/**
++ * TU geografico W-3 (ruling 174 P1): el subsolar decodificado en marco
++ * motor, cenit ~0 en el subsolar y mediodia del lado verdadero. Vitest.
++ * Ancla: 2026-10-07T12:00Z -> verdad (-5.79, -3.07) del oraculo compilado.
++ */
++import { describe, expect, it } from "vitest";
++import { densityDir } from "./densityVolume";
++import { getSunInfo, motorToLatLon, solarZenithDeg } from "./solar";
++
++const EPOCH_12Z = Date.UTC(2026, 9, 7, 12, 0, 0) / 1000; // 1791374400
++
++describe("solar: marco motor", () => {
++  it("subsolar 12:00Z en lon 0+-6 (verdad -3.07)", () => {
++    const s = getSunInfo(EPOCH_12Z);
++    expect(Math.abs(s.subsolarLon)).toBeLessThan(6);
++    expect(s.subsolarLon).toBeCloseTo(-3.07, 1);
++    expect(s.subsolarLat).toBeCloseTo(-5.79, 1);
++  });
++
++  it("motorToLatLon invierte densityDir", () => {
++    for (const [la, lo] of [[0, 0], [40, -3], [-30, 150], [80, 45]] as const) {
++      const [x, y, z] = densityDir(la, lo);
++      const g = motorToLatLon(x, y, z);
++      expect(g.lat).toBeCloseTo(la, 9);
++      expect(g.lon).toBeCloseTo(lo, 9);
++    }
++  });
++
++  it("cosChi ~1 en la celda subsolar (mismo marco ambos lados)", () => {
++    const s = getSunInfo(EPOCH_12Z);
++    const [cx, cy, cz] = densityDir(s.subsolarLat, s.subsolarLon);
++    const dot = cx * s.dir[0] + cy * s.dir[1] + cz * s.dir[2];
++    expect(dot).toBeGreaterThan(0.999);
++  });
++
++  it("mediodia del modelo del lado verdadero (cenit ~0 en subsolar)", () => {
++    const s = getSunInfo(EPOCH_12Z);
++    expect(solarZenithDeg(s.subsolarLat, s.subsolarLon, EPOCH_12Z)).toBeLessThan(5);
++  });
++});
+diff --git a/src/lib/iono/solar.ts b/src/lib/iono/solar.ts
+index cffac92..b6865e2 100644
+--- a/src/lib/iono/solar.ts
++++ b/src/lib/iono/solar.ts
+@@ -1,9 +1,17 @@
+ /**
+  * Posición solar (Meeus de baja precisión) — port de src/Utils/SolarPosition.cpp
+  * Devuelve dirección unitaria del sol y punto subsolar (lat, lon).
++ *
++ * MARCOS (ruling 174 n1, fix coordinado 175): dir vive en el marco MOTOR
++ * (token-identico a SolarPosition::getDirection, paridad <=4.6e-7); el
++ * subsolar se decodifica con la inversa MOTOR (motorToLatLon), NO con
++ * vec3ToLatLon (inversa escena: daba verdad+180). uSunDir de los shaders
++ * se deja INTACTO a proposito (criterio de invariancia del ruling: el fix
++ * no debe cambiar el render; el alumbrado queda declarado latente).
+  */
+ 
+-import { DEG, RAD, vec3ToLatLon } from "./geo";
++import { DEG, RAD } from "./geo";
++import { densityDir } from "./densityVolume";
+ 
+ export interface SunInfo {
+   dir: [number, number, number];
+@@ -38,10 +46,24 @@ export function getSunInfo(utcSeconds: number): SunInfo {
+   const fy = -x * Math.sin(rotation) + y * Math.cos(rotation);
+ 
+   const dir: [number, number, number] = normalize([-fx, z, fy]);
+-  const { lat, lon } = vec3ToLatLon(dir[0], dir[1], dir[2]);
++  const { lat, lon } = motorToLatLon(dir[0], dir[1], dir[2]);
+   return { dir, subsolarLat: lat, subsolarLon: lon };
+ }
+ 
++/**
++ * Inversa de densityDir (marco motor -> geografico). Verifica:
++ * motorToLatLon(densityDir(la, lo)) == (la, lo). NO usar vec3ToLatLon aqui
++ * (convencion opuesta +X=lon0: desplazaba el subsolar +180, n1 de 174).
++ */
++export function motorToLatLon(x: number, y: number, z: number): { lat: number; lon: number } {
++  const r = Math.sqrt(x * x + y * y + z * z) || 1;
++  const lat = Math.asin(y / r) * RAD;
++  let lon = 180 - (Math.atan2(z, x) * RAD);
++  if (lon < -180) lon += 360;
++  if (lon > 180) lon -= 360;
++  return { lat, lon };
++}
++
+ function normalize(v: [number, number, number]): [number, number, number] {
+   const m = Math.hypot(v[0], v[1], v[2]) || 1;
+   return [v[0] / m, v[1] / m, v[2] / m];
+@@ -51,15 +73,10 @@ function mod(a: number, b: number): number {
+   return ((a % b) + b) % b;
+ }
+ 
+-/** Ángulo cenital solar (grados) para un punto dado */
++/** Angulo cenital solar (grados) para un punto dado (marco motor: punto y sol) */
+ export function solarZenithDeg(latDeg: number, lonDeg: number, utcSeconds: number): number {
+   const { dir } = getSunInfo(utcSeconds);
+-  const DEG2 = Math.PI / 180;
+-  const lat = latDeg * DEG2;
+-  const phi = (lonDeg + 180) * DEG2;
+-  const px = -Math.cos(phi) * Math.cos(lat);
+-  const py = Math.sin(lat);
+-  const pz = Math.sin(phi) * Math.cos(lat);
++  const [px, py, pz] = densityDir(latDeg, lonDeg);
+   const d = px * dir[0] + py * dir[1] + pz * dir[2];
+   return Math.acos(Math.max(-1, Math.min(1, d))) * RAD;
+ }
+-- 
+2.53.0.windows.3
+
