@@ -13,7 +13,8 @@
 
 ## P2 — VLM con criterio ACOTADO (pre-publicado aqui antes de capturar)
 - Criterio CORREGIDO antes de shippear (pesca propia al releer el frag: el velo NO es <=2 LSB): el pase es puramente aditivo (base intacta + GAIN*fall*rays; Σdecay = 7.18, velo global ~0.13 en cielo con sol visible, identico oraculo). Invariancia GEOMETRICA garantizada por construccion (sin vertices: imposible desplazar); con showGodrays=false la cadena es BIT la pre-177 (el composer salta pases apagados: Render->Bloom->Output a pantalla, identico). OFF/ON difieren en velo calido global + glow (diseno, no defecto).
-- OFF/ON web + app<->web ON al mismo epoch PENDIENTES de captura (sandbox sin canvas: 0 elementos canvas, sin requests de texturas, UI viva sin errores —bloqueo ambiental documentado con ~20 sondas; procedimiento: ventana tranquila + texturas locales throwaway para montar escena; app sin CLI: replay manual + E).
+- OFF/ON web EJECUTADO (Playwright+Chromium propios, prod build — el dev no hidrata aqui; backend congelado 1 hit/endpoint, cine OFF, misma camara/epoch): mean 0.339, mediana 0, p99 3, 1.12% >2 LSB, 0.71% >8, 0.12% >32; lift ON-OFF +139405 (el glow suma). `vlm179_web-ON.png` vs `vlm179_web-OFF.png`. (Intento previo con cine ON descartado: autorrotaba entre tomas.)
+- App<->web EJECUTADO (cualitativo): app 12:35:04Z DATA 12:31:50Z (glow derecha) vs web replay 12:34Z (`vlm179_web-replay-123150Z.png`, glow arriba-izda. en su vista, slider replay verificado en captura): mismo dayside + glow presente en ambos; camaras distintas (declarado). PASS cualitativo. Causa del bloqueo anterior cazada: dev+Turbopack no hidrata en este sandbox (prod si); texturas ausentes del ZIP (throwaway locales, borradas).
 
 ## P5 — declaraciones consumidas (n5-174 cerrada).
 
