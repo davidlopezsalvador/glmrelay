@@ -25,7 +25,7 @@ dueno. Paridad exigible = TU de espejos + paridad VISUAL a igual epoch
 | Rejilla | App.cpp:676 interpLayerProfiles + havDeg/modelos | profileGrid.ts (+mapper, livePeaks) | 7/7 + 2 + 2 | haversine, day 12.65, esquina, mapper, antipoda | 169/170, 173/174 |
 | March | VolumeRenderer.cpp:48 loop (entry/jitter/shadow/geo/sample/colormap/iso/acum) | volumeMarch.ts (reusa 4 espejos) | 7/7 + 2 (convencion z) | consts, raySphere, descartes, saturacion, dia/noche, determinismo, capas, iso + texelAltKm (gz=r*A-0.5, n1-182) | 181/182, 183/184 |
 
-## 2. Wiring (escena/datos) — CERRADO salvo raymarch visual
+## 2. Wiring (escena/datos) — CERRADO (raymarch visual cerrado en 185)
 
 | Pieza | Estado | Evidencia |
 |-------|--------|-----------|
@@ -37,7 +37,7 @@ dueno. Paridad exigible = TU de espejos + paridad VISUAL a igual epoch
 | Ruling doble espejo + HUD unificado + zenith motor | CERRADA | 175/176 |
 | applyDayNight en cadena + dims 60/60/700 | CERRADA | 175/176 |
 | API extra (12 anclas, TTL 60) + mapper | CERRADA | 171/172 |
-| Raymarch VISUAL (marchRay a escena/GLSL) | ABIERTA | espejo 181; P5-180 la aplaza tras P1/P2 |
+| Raymarch VISUAL (marchRay a escena/GLSL) | CERRADA en 185 | wiring 183 + fix invVP + par OFF/ON desde trial |
 | sampleVolume directo a visual | ABIERTA | vive dentro del march; sin uso propio |
 | buildPalette a aurora/materiales extra | ABIERTA | shell+LUT hechos; resto diferido declarado |
 | RefShells | NO-ESPEJABLE | clase GL pura; web tiene buildRefRings |
@@ -51,7 +51,7 @@ dueno. Paridad exigible = TU de espejos + paridad VISUAL a igual epoch
 | Invariancia espejo (mecanico) | SALDADO | fondo bit-exacto + reubico -170/+15 (175/176) |
 | God-rays OFF/ON web | SALDADO | 7 metricas exactas + lift +139405 (177/179/180) |
 | Replay 12:34Z <-> app 12:35:04Z | SALDADO | cualitativo, discriminante N.America (179/180) |
-| Raymarch visual | PENDIENTE | con su wiring |
+| Raymarch visual OFF/ON (trial tree) | SALDADO en 185 | estados por clase, consola sin errores shader, metricas +lift |
 | Shell app<->web camaras igualadas | PENDIENTE | cualitativo hecho; exacto opcional |
 
 ## 4. Decisiones Q1/Q2 registradas (vinculantes)
