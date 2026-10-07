@@ -1,0 +1,225 @@
+From 410f7d40336497caa9f891157c974a59ceaf2241 Mon Sep 17 00:00:00 2001
+From: t <t@t>
+Date: Wed, 7 Oct 2026 03:07:58 +0200
+Subject: [PATCH] w173
+
+---
+ src/components/ionosphere/IonosphereScene.tsx | 33 ++++++-----
+ src/components/ionosphere/builders.ts         |  4 +-
+ src/lib/iono/profileGrid.test.ts              | 35 +++++++++++
+ src/lib/iono/profileGrid.ts                   | 59 ++++++++++++++++++-
+ 4 files changed, 113 insertions(+), 18 deletions(-)
+
+diff --git a/src/components/ionosphere/IonosphereScene.tsx b/src/components/ionosphere/IonosphereScene.tsx
+index ee3775f..0db722e 100644
+--- a/src/components/ionosphere/IonosphereScene.tsx
++++ b/src/components/ionosphere/IonosphereScene.tsx
+@@ -14,9 +14,10 @@ import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPa
+ import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
+ 
+ import { getSunInfo } from "@/lib/iono/solar";
+-import { buildFoF2Grid, buildHmF2Grid, sampleGrid, GRID_W, GRID_H } from "@/lib/iono/ionomath";
++import { sampleGrid, GRID_W, GRID_H } from "@/lib/iono/ionomath";
++import { buildLivePeakGrids } from "@/lib/iono/profileGrid";
++import { densityDir } from "@/lib/iono/densityVolume";
+ import { buildPngName, gridCsv } from "@/lib/iono/export";
+-import type { StationDatum } from "@/lib/iono/ionomath";
+ import { computeLink, LinkResult } from "@/lib/iono/hf";
+ import { latLonToVec3 } from "@/lib/iono/geo";
+ import { tourAdvance, tourEval } from "@/lib/iono/tour";
+@@ -492,7 +493,12 @@ export default function IonosphereScene(props: Props) {
+     
+   }, []);
+ 
+-  // ───────── datos: ionosondas → grids + puntos ─────────
++  // ----- datos: ionosondas -> rejilla viva -> shell derivada -----
++  // W-3 (P1-172): el shell ya no se alimenta de la era (buildFoF2Grid), sino
++  // de picos DERIVADOS del volumen (pin 158 sec.5.4): estaciones ->
++  // stationToProfileSample -> interpProfiles -> buildDensityVolume ->
++  // extractPeakGrids. Corre en useEffect por publicacion de datos, no por
++  // frame. Quirk esquinas-vs-centros del oraculo preservado (NO corregir).
+   useEffect(() => {
+     const so = S.current;
+     if (!so || !props.ionosondes) return;
+@@ -504,19 +510,18 @@ export default function IonosphereScene(props: Props) {
+       ...s,
+       foF2: sampleStationAt(s, effMs),
+     }));
+-    // Baseline W-1: StationDatum admite undefined, no null; el mapper
+-    // convierte una vez (?? trata ambos como ausente: identico runtime).
+-    const gridIn: StationDatum[] = sampled.map((s) => ({
+-      code: s.code,
+-      name: s.name,
+-      lat: s.lat,
+-      lon: s.lon,
+-      foF2: s.foF2 ?? undefined,
+-    }));
+ 
++    // sol en el marco del motor (subsolar -> densityDir, como el C++)
++    const sun = getSunInfo(effMs / 1000);
++    const [sunX, sunY, sunZ] = densityDir(sun.subsolarLat, sun.subsolarLon);
+     const f107 = props.spaceWeather?.f107.now ?? 110;
+-    const foGrid = buildFoF2Grid(gridIn, effMs / 1000, f107, true);
+-    const hmGrid = buildHmF2Grid(gridIn, effMs / 1000);
++    const xray = props.spaceWeather?.xray.now ?? 0;
++    const flare = Math.max(1, 1 + 20 * Math.log10(Math.max(xray, 1e-9) / 1e-6));
++    const peaks = buildLivePeakGrids(
++      sampled, GRID_W, GRID_H, sunX, sunY, sunZ, effMs / 1000, f107, 48, 60, 500, flare
++    );
++    const foGrid = { values: peaks.fo };
++    const hmGrid = { values: peaks.hm };
+ 
+     // rango robusto (percentiles para no romper el colormap con outliers)
+     const sorted = [...foGrid.values].sort((a, b) => a - b);
+diff --git a/src/components/ionosphere/builders.ts b/src/components/ionosphere/builders.ts
+index e9e7f4d..4d50f0b 100644
+--- a/src/components/ionosphere/builders.ts
++++ b/src/components/ionosphere/builders.ts
+@@ -136,8 +136,8 @@ export function buildAtmosphere() {
+ // ───────────────────────── colormap LUT ─────────────────────────
+ // W-3 primer wiring visual (P1-170): la LUT se construye con buildPalette
+ // (via certificada del oraculo Colormap.h) en vez de muestreo por punto;
+-// ambas vistas son el mismo dato (consistencia < 1e-9 pineada en el TU,
+-// difiere como mucho 1 LSB por redondeo en texeles a caballo).
++// ambas vistas son el mismo dato (bit-identica 0/256 en 5/5 paletas,
++// veredicto 172: el render no cambia ni 1 LSB).
+ export function buildColormapTexture(name: ColormapName): THREE.DataTexture {
+   const pal = buildPalette(name, 256);
+   const data = new Uint8Array(256 * 4);
+diff --git a/src/lib/iono/profileGrid.test.ts b/src/lib/iono/profileGrid.test.ts
+index 971c7f3..44bde0f 100644
+--- a/src/lib/iono/profileGrid.test.ts
++++ b/src/lib/iono/profileGrid.test.ts
+@@ -4,6 +4,7 @@
+  */
+ import { describe, expect, it } from "vitest";
+ import {
++  buildLivePeakGrids,
+   dayOfYearUtc,
+   havDeg,
+   interpProfiles,
+@@ -12,6 +13,7 @@ import {
+   stationToProfileSample,
+   type ProfileSample,
+ } from "./profileGrid";
++import { densityDir } from "./densityVolume";
+ 
+ function station(lat: number, lon: number): ProfileSample {
+   return {
+@@ -118,3 +120,36 @@ describe("profileGrid: interpProfiles", () => {
+     expect(far.hmF2).toBe(modelHmF2Core(1, 0));
+   });
+ });
++
++describe("profileGrid: buildLivePeakGrids (rejilla viva)", () => {
++  const ST = { lat: 40, lon: 0, foE: null, foF1: null, foF2: 10, hmF2: 300, B0: 100, B1: 3 };
++  const SUN = densityDir(40, 0); // subsolar sobre la estacion (dia pleno)
++
++  it("vacia -> suelo fisico finito con dims; determinista", () => {
++    const a = buildLivePeakGrids([], 12, 6, SUN[0], SUN[1], SUN[2], 0, 150);
++    expect(a.w).toBe(12);
++    expect(a.fo.length).toBe(72);
++    for (const v of a.fo) expect(isFinite(v) && v >= 0).toBe(true);
++    const b = buildLivePeakGrids([ST], 12, 6, SUN[0], SUN[1], SUN[2], 0, 150);
++    const c = buildLivePeakGrids([ST], 12, 6, SUN[0], SUN[1], SUN[2], 0, 150);
++    expect(b.fo).toEqual(c.fo);
++  });
++
++  it("pico diurno cerca de la estacion, suelo fisico lejos, norte arriba", () => {
++    const g = buildLivePeakGrids([ST], 12, 6, SUN[0], SUN[1], SUN[2], 0, 150);
++    let mx = 0;
++    let mi = 0;
++    for (let i = 0; i < g.fo.length; i++) {
++      expect(isFinite(g.fo[i]) && isFinite(g.hm[i])).toBe(true);
++      if (g.fo[i] > mx) {
++        mx = g.fo[i];
++        mi = i;
++      }
++    }
++    expect(mx).toBeGreaterThan(5); // F2 medida cerca
++    const row = Math.floor(mi / 12);
++    expect(row < 3).toBe(true); // estacion norte -> pico en filas norte
++    expect(g.hm[mi]).toBeGreaterThan(150);
++    expect(g.hm[mi]).toBeLessThan(500);
++  });
++});
+diff --git a/src/lib/iono/profileGrid.ts b/src/lib/iono/profileGrid.ts
+index 4afe3dd..7a89507 100644
+--- a/src/lib/iono/profileGrid.ts
++++ b/src/lib/iono/profileGrid.ts
+@@ -23,8 +23,8 @@
+  * en produccion C++ y replicado aqui (fidelidad sobre correccion).
+  */
+ import { smoothstep } from "./ionomath";
+-import { densityDir } from "./densityVolume";
+-import { sanitizeB0, sanitizeB1, type LayerProfileTS } from "./layerProfile";
++import { densityDir, extractPeakGrids } from "./densityVolume";
++import { buildDensityVolume, sanitizeB0, sanitizeB1, type LayerProfileTS } from "./layerProfile";
+ 
+ export interface ProfileSample {
+   latDeg: number;
+@@ -95,6 +95,61 @@ export function stationToProfileSample(s: StationLike): ProfileSample {
+   };
+ }
+ 
++export interface LivePeakGrids {
++  /** foF2 derivado del pico (MHz), norte-primero como el shell. */
++  fo: Float32Array;
++  /** hmF2 derivado (km, hueco = 0), norte-primero. */
++  hm: Float32Array;
++  w: number;
++  h: number;
++}
++
++const FO_TO_NM_LIVE = 1.24e10;
++
++/**
++ * Rejilla viva W-3 (P1-172, primer tramo visual): estaciones ->
++ * stationToProfileSample -> interpProfiles -> buildDensityVolume ->
++ * extractPeakGrids -> grids DERIVADAS del volumen (pin 158 sec.5.4).
++ * foF2 = sqrt(Ne_pico / 1.24e10) con Ne = 10^logNe; el hueco (logNe 8.0)
++ * da el suelo nocturno fisico (~2.8 MHz), sin inventar dato. Norte-primero
++ * para el shell (flip N/S desde el sur-primero del volumen). Puro.
++ */
++export function buildLivePeakGrids(
++  stations: StationLike[],
++  w: number,
++  h: number,
++  sunX: number,
++  sunY: number,
++  sunZ: number,
++  epochSec: number,
++  f107: number,
++  altRes = 48,
++  altMinKm = 60,
++  altMaxKm = 500,
++  flareFactor = 1
++): LivePeakGrids {
++  const fo = new Float32Array(w * h);
++  const hm = new Float32Array(w * h);
++  const samples = stations.map(stationToProfileSample);
++  const profiles = interpProfiles(samples, w, h, sunX, sunY, sunZ, epochSec, f107);
++  const vol = buildDensityVolume(
++    profiles, w, h, altRes, altMinKm, altMaxKm, sunX, sunY, sunZ, flareFactor
++  );
++  if (!vol.valid) return { fo, hm, w, h };
++  const peaks = extractPeakGrids(vol);
++  if (!peaks.logNe.valid) return { fo, hm, w, h };
++  for (let y = 0; y < h; y++) {
++    for (let x = 0; x < w; x++) {
++      const logNe = peaks.logNe.values[y * w + x];
++      const f = Math.sqrt(Math.pow(10, logNe) / FO_TO_NM_LIVE);
++      const row = h - 1 - y; // sur-primero -> norte-primero
++      fo[row * w + x] = f;
++      hm[row * w + x] = peaks.hmKm.values[y * w + x];
++    }
++  }
++  return { fo, hm, w, h };
++}
++
+ // foF2 climatologico (MHz): nucleo con cosChi precalculado por el caller
+ // con la MISMA expresion que applyDayNight (P1 corregido por MUSE en C++).
+ export function modelFoF2Core(cosChi: number, latDeg: number, doy: number, f107: number): number {
+-- 
+2.53.0.windows.3
+
