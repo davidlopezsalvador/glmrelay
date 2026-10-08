@@ -1,0 +1,85 @@
+From t <t@t> Mon Oct 12 00:00:00 2026 +0200
+From: t <t@t>
+Date: Mon, 12 Oct 2026 00:00:00 +0200
+Subject: [PATCH] w205-b1tail (fixed en A + defaults app)
+
+---
+ {a => b}/src/components/ionosphere/hud/RadioPanel.tsx | 2 +-
+ {a => b}/src/components/ionosphere/types.ts           | 8 ++++----
+ {a => b}/src/lib/iono/slice.test.ts                   | 5 ++---
+ {a => b}/src/lib/iono/slice.ts                        | 8 ++++----
+ 4 files changed, 11 insertions(+), 12 deletions(-)
+
+diff --git a/src/components/ionosphere/hud/RadioPanel.tsx b/src/components/ionosphere/hud/RadioPanel.tsx
+index eae8afd..a9d1144 100644
+--- a/src/components/ionosphere/hud/RadioPanel.tsx
++++ b/src/components/ionosphere/hud/RadioPanel.tsx
+@@ -185,7 +185,7 @@ function SliceSection({
+               {num("B lon", settings.sliceLonB, "sliceLonB", -180, 180)}
+             </div>
+           )}
+-          {settings.sliceSrc !== "manual" && !hasLink && (
++          {settings.sliceSrc === "link" && !hasLink && (
+             <div className="text-[10px] text-slate-500">Necesita enlace TX→RX (o usa Manual A/B).</div>
+           )}
+         </div>
+diff --git a/src/components/ionosphere/types.ts b/src/components/ionosphere/types.ts
+index a07bccb..a083251 100644
+--- a/src/components/ionosphere/types.ts
++++ b/src/components/ionosphere/types.ts
+@@ -105,10 +105,10 @@ export const DEFAULT_SETTINGS: SceneSettings = {
+   replayMinutes: 0,
+   showSlice: false,
+   sliceSrc: "link",
+-  sliceLatA: 40.8,
+-  sliceLonA: 0.5,
+-  sliceLatB: 51.6,
+-  sliceLonB: -1.3,
++  sliceLatA: 40,
++  sliceLonA: -4,
++  sliceLatB: 40,
++  sliceLonB: -100,
+ };
+ 
+ /** Muestrear la historia de una estación en un instante (lerp como sampleHistoryAt del C++) */
+diff --git a/src/lib/iono/slice.test.ts b/src/lib/iono/slice.test.ts
+index cfe3fa4..cac4d48 100644
+--- a/src/lib/iono/slice.test.ts
++++ b/src/lib/iono/slice.test.ts
+@@ -49,15 +49,14 @@ describe("slice: endpoints por modo", () => {
+     const ep = resolveSliceEndpoints("manual", null, null, manA, manB);
+     expect(ep).toEqual({ latA: 40, lonA: -3, latB: 51, lonB: 0 });
+   });
+-  it("fixed +-2 en TX", () => {
+-    const ep = resolveSliceEndpoints("fixed", manA, manB, { lat: 0, lon: 0 }, { lat: 1, lon: 1 });
++  it("fixed +-2 en A editable (veredicto 202 o2)", () => {
++    const ep = resolveSliceEndpoints("fixed", null, null, manA, manB);
+     expect(ep).toEqual({ latA: 40, lonA: -5, latB: 40, lonB: -1 });
+   });
+   it("no-ops: sin A, sin B, A==B", () => {
+     expect(resolveSliceEndpoints("link", null, manB, manA, manB)).toBeNull();
+     expect(resolveSliceEndpoints("link", manA, null, manA, manB)).toBeNull();
+     expect(resolveSliceEndpoints("link", manA, manA, manA, manB)).toBeNull();
+-    expect(resolveSliceEndpoints("fixed", null, manB, manA, manB)).toBeNull();
+   });
+ });
+ 
+diff --git a/src/lib/iono/slice.ts b/src/lib/iono/slice.ts
+index 11d4def..e4e64d4 100644
+--- a/src/lib/iono/slice.ts
++++ b/src/lib/iono/slice.ts
+@@ -43,10 +43,10 @@ export function resolveSliceEndpoints(
+     a = manA;
+     b = manB;
+   } else {
+-    // Fixed+-2°: ancla en TX (como App.cpp sliceLatA/LonA fijos).
+-    if (!linkA) return null;
+-    a = { lat: linkA.lat, lon: linkA.lon - 2 };
+-    b = { lat: linkA.lat, lon: linkA.lon + 2 };
++    // Fixed+-2°: ancla en la coordenada A editable (como App.cpp
++    // sliceLatA/LonA; sin necesidad de enlace). Veredicto 202 o2.
++    a = { lat: manA.lat, lon: manA.lon - 2 };
++    b = { lat: manA.lat, lon: manA.lon + 2 };
+   }
+   if (!a || !b) return null;
+   if (a.lat === b.lat && a.lon === b.lon) return null;
