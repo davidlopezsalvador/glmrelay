@@ -1,0 +1,45 @@
+From t <t@t> Mon Oct 12 00:00:00 2026 +0200
+From: t <t@t>
+Date: Mon, 12 Oct 2026 00:00:00 +0200
+Subject: [PATCH] w209-n1 (label fijo = centro)
+
+---
+ {a => b}/src/components/ionosphere/IonosphereScene.tsx | 8 +++++---
+ {a => b}/src/lib/iono/slice.test.ts                    | 5 +++++
+ 2 files changed, 10 insertions(+), 3 deletions(-)
+
+diff --git a/src/components/ionosphere/IonosphereScene.tsx b/src/components/ionosphere/IonosphereScene.tsx
+index 2e2ea51..264f7f8 100644
+--- a/src/components/ionosphere/IonosphereScene.tsx
++++ b/src/components/ionosphere/IonosphereScene.tsx
+@@ -771,9 +771,11 @@ export default function IonosphereScene(props: Props) {
+     const codeA = st.sliceSrc === "link" && props.txCode ? props.txCode : "A";
+     const codeB = st.sliceSrc === "link" && props.rxCode ? props.rxCode : "B";
+     // o4(e): en manual/fijo el oraculo muestra coordenadas, no codigos.
+-    const coords = st.sliceSrc === "link" || !ep ? null : {
+-      latA: ep.latA, lonA: ep.lonA, latB: ep.latB, lonB: ep.lonB,
+-    };
++    // n1-208: en fijo el app muestra el CENTRO en ambos lados (:3146).
++    const center = { lat: st.sliceLatA, lon: st.sliceLonA };
++    const coords = st.sliceSrc === "link" || !ep ? null : st.sliceSrc === "fixed"
++      ? { latA: center.lat, lonA: center.lon, latB: center.lat, lonB: center.lon }
++      : { latA: ep.latA, lonA: ep.lonA, latB: ep.latB, lonB: ep.lonB };
+     props.callbacks.onSlicePeak?.(sliceLabel(codeA, codeB, grid.peakLog, coords));
+   }, [props.ionosondes, props.spaceWeather?.f107.now, props.settings.timeMode, props.settings.replayMinutes,
+     props.settings.showSlice, props.settings.sliceSrc, props.settings.sliceLatA, props.settings.sliceLonA,
+diff --git a/src/lib/iono/slice.test.ts b/src/lib/iono/slice.test.ts
+index ef2fa38..d3a1315 100644
+--- a/src/lib/iono/slice.test.ts
++++ b/src/lib/iono/slice.test.ts
+@@ -112,6 +112,11 @@ describe("slice: rejilla y muestreo", () => {
+       "40.0,-4→40.0,-100 pk 11.2",
+     );
+   });
++  it("label fijo muestra el centro en ambos lados (n1-208)", () => {
++    expect(sliceLabel("A", "B", 11.24, { latA: 40, lonA: -4, latB: 40, lonB: -4 })).toBe(
++      "40.0,-4→40.0,-4 pk 11.2",
++    );
++  });
+   it("antipodal: fallback lerp sin NaN (o4a)", () => {
+     const ep = { latA: 0, lonA: 0, latB: 0, lonB: 180 };
+     const g = buildSliceGrid(rampVolume(), ep, 0);
