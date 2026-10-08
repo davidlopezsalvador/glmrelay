@@ -1,0 +1,655 @@
+From t <t@t> Mon Oct 12 00:00:00 2026 +0200
+From: t <t@t>
+Date: Mon, 12 Oct 2026 00:00:00 +0200
+Subject: [PATCH] w201-slice (cortina QTH-DX clase B1)
+
+---
+ {a => b}/src/app/page.tsx                          |  11 +-
+ .../src/components/ionosphere/IonosphereScene.tsx  | 107 +++++++++++++++
+ .../src/components/ionosphere/hud/RadioPanel.tsx   |  85 +++++++++++-
+ {a => b}/src/components/ionosphere/types.ts        |  13 ++
+ /dev/null => b/src/lib/iono/slice.test.ts          | 100 ++++++++++++++
+ /dev/null => b/src/lib/iono/slice.ts               | 143 +++++++++++++++++++++
+ 6 files changed, 456 insertions(+), 3 deletions(-)
+
+diff --git a/src/app/page.tsx b/src/app/page.tsx
+index 1a511a9..a594a52 100644
+--- a/src/app/page.tsx
++++ b/src/app/page.tsx
+@@ -56,6 +56,8 @@ export default function Home() {
+   const alertsRef = useRef<AlertEngine | null>(null);
+   if (!alertsRef.current) alertsRef.current = new AlertEngine();
+   const [alertSnap, setAlertSnap] = useState<AlertSnapshot | null>(null);
++  // W-4 B1 slice: readout "A->B pk X.X" desde la escena.
++  const [slicePeak, setSlicePeak] = useState<string | null>(null);
+ 
+   // W-2 tour: toggle T con reinicio a t=0 (la escena resetea su reloj al
+   // activar); cualquier click en el canvas aborta sin salto de camara.
+@@ -187,6 +189,7 @@ export default function Home() {
+           onTourIndex: setTourIdx,
+           onTourDone: () => setTourOn(false),
+           onTourAbort: () => setTourOn(false),
++          onSlicePeak: setSlicePeak,
+         }}
+       />
+ 
+@@ -241,7 +244,7 @@ export default function Home() {
+       </div>
+       <div className="absolute right-4 top-20 z-10 w-64 pointer-events-none space-y-3 hidden md:block">
+         <LayersPanel settings={settings} onChange={onSettingsChange} ionosondes={ionos} fps={fps} />
+-        <RadioPanel link={link} tx={tx} rx={rx} freq={linkFreq} onFreq={setLinkFreq} sw={sw ? { kp: sw.kp.now, xray: sw.xray.now } : null} utcSec={effSec} />
++        <RadioPanel link={link} tx={tx} rx={rx} freq={linkFreq} onFreq={setLinkFreq} sw={sw ? { kp: sw.kp.now, xray: sw.xray.now } : null} utcSec={effSec} settings={settings} onSettings={onSettingsChange} slicePeak={slicePeak} />
+       </div>
+ 
+       {/* móvil: paneles compactos colapsables */}
+@@ -258,6 +261,7 @@ export default function Home() {
+         onFreq={setLinkFreq}
+         effSec={effSec}
+         alerts={alertSnap}
++        slicePeak={slicePeak}
+       />
+ 
+       {/* barra de tiempo inferior */}
+@@ -427,6 +431,7 @@ function MobilePanels({
+   onFreq,
+   effSec,
+   alerts,
++  slicePeak,
+ }: {
+   sw: SpaceWeatherData | null;
+   settings: SceneSettings;
+@@ -440,6 +445,7 @@ function MobilePanels({
+   onFreq: (f: number) => void;
+   effSec: number;
+   alerts: AlertSnapshot | null;
++  slicePeak: string | null;
+ }) {
+   const [tab, setTab] = useState<"wx" | "radio" | "layers" | null>(null);
+   return (
+@@ -475,6 +481,9 @@ function MobilePanels({
+           onFreq={onFreq}
+           sw={sw ? { kp: sw.kp.now, xray: sw.xray.now } : null}
+           utcSec={effSec}
++          settings={settings}
++          onSettings={onChange}
++          slicePeak={slicePeak}
+         />
+       )}
+       {tab === "layers" && (
+diff --git a/src/components/ionosphere/IonosphereScene.tsx b/src/components/ionosphere/IonosphereScene.tsx
+index 147c64f..640b6a0 100644
+--- a/src/components/ionosphere/IonosphereScene.tsx
++++ b/src/components/ionosphere/IonosphereScene.tsx
+@@ -20,6 +20,15 @@ import { buildLivePeakGrids, buildLiveVolume } from "@/lib/iono/profileGrid";
+ import { godraysPassState, mat4Mul, type Mat4 } from "@/lib/iono/godrays";
+ import { buildPngName, gridCsv } from "@/lib/iono/export";
+ import { computeLink, LinkResult } from "@/lib/iono/hf";
++import {
++  buildSliceGrid,
++  resolveSliceEndpoints,
++  sliceLabel,
++  slicePositions,
++  SLICE_SEG,
++  SLICE_LVL,
++} from "@/lib/iono/slice";
++import type { DensityVolume } from "@/lib/iono/densityVolume";
+ import { latLonToVec3 } from "@/lib/iono/geo";
+ import { tourAdvance, tourEval } from "@/lib/iono/tour";
+ 
+@@ -57,6 +66,8 @@ export interface SceneCallbacks {
+   onTourIndex?: (index: number) => void;
+   onTourDone?: () => void;
+   onTourAbort?: () => void;
++  // W-4 B1 slice: readout "A->B pk X.X" (null = cortina apagada).
++  onSlicePeak?: (label: string | null) => void;
+ }
+ 
+ interface Props {
+@@ -103,6 +114,10 @@ export default function IonosphereScene(props: Props) {
+     sunGlow?: { core: THREE.Sprite; halo: THREE.Sprite };
+     starMat?: THREE.ShaderMaterial;
+     linkObj?: { mesh: THREE.Mesh; mat: THREE.ShaderMaterial };
++    // W-4 B1 slice: cortina QTH-DX (rebuild por clave endpoints+stamp).
++    sliceObj?: { mesh: THREE.Mesh; mat: THREE.MeshBasicMaterial; tex: THREE.DataTexture };
++    sliceKey: string;
++    lastVolume: DensityVolume | null;
+     raycaster: THREE.Raycaster;
+     gridState: {
+       fo: Float32Array;
+@@ -225,6 +240,8 @@ export default function IonosphereScene(props: Props) {
+         lastFoGrid: null,
+         lastEffMs: 0,
+         exportReq: false,
++        sliceKey: "",
++        lastVolume: null,
+       };
+ 
+       // resize
+@@ -556,6 +573,13 @@ export default function IonosphereScene(props: Props) {
+         so.auroraObj?.mat.dispose();
+         so.linkObj?.mesh.geometry.dispose();
+         so.linkObj?.mat.dispose();
++        if (so.sliceObj) {
++          so.scene.remove(so.sliceObj.mesh);
++          so.sliceObj.mesh.geometry.dispose();
++          so.sliceObj.mat.dispose();
++          so.sliceObj.tex.dispose();
++          so.sliceObj = undefined;
++        }
+         so.renderer.dispose();
+         so.renderer.domElement.remove();
+         S.current = null;
+@@ -625,6 +649,8 @@ export default function IonosphereScene(props: Props) {
+         sampled, GRID_W, GRID_H, sunX, sunY, sunZ, effMs / 1000, f107, 60, 60, 700, flare
+       );
+       if (v.valid) {
++        // W-4 B1: retener el volumen para la cortina slice (no solo texturas).
++        so.lastVolume = v;
+         const tex = updateVolumeTextures(
+           { densityTex: so.volumeObj.densityTex, layerTex: so.volumeObj.layerTex }, v
+         );
+@@ -646,6 +672,7 @@ export default function IonosphereScene(props: Props) {
+       } else {
+         so.volumeObj.mesh.visible = false;
+         so.volumeObj.ready = false;
++        so.lastVolume = null;
+       }
+     }
+ 
+@@ -664,6 +691,86 @@ export default function IonosphereScene(props: Props) {
+     so.stationsObj = st;
+     so.lastGridStamp = so.gridState.stamp;
+   }, [props.ionosondes, props.spaceWeather?.f107.now, props.settings.timeMode, props.settings.replayMinutes]);
++
++  // ───────── W-4 B1 slice QTH-DX: cortina Ne(h) ─────────
++  // Espejo SliceLayer (SEG 64 x LVL 20, slerp A->B, viridis + alfa d*1.2).
++  // Rebuild por clave endpoints+stamp (early-out como App.cpp:3160/3166);
++  // declarado DESPUES del efecto de datos para ver el volumen fresco.
++  useEffect(() => {
++    const so = S.current;
++    if (!so || !props.ionosondes) return;
++    const st = props.settings;
++    const stations = props.ionosondes.stations;
++    const tx = props.txCode ? stations.find((s) => s.code === props.txCode) ?? null : null;
++    const rx = props.rxCode ? stations.find((s) => s.code === props.rxCode) ?? null : null;
++    const drop = () => {
++      if (so.sliceObj) {
++        so.scene.remove(so.sliceObj.mesh);
++        so.sliceObj.mesh.geometry.dispose();
++        so.sliceObj.mat.dispose();
++        so.sliceObj.tex.dispose();
++        so.sliceObj = undefined;
++      }
++      so.sliceKey = "";
++      props.callbacks.onSlicePeak?.(null);
++    };
++    if (!st.showSlice || !so.lastVolume) {
++      drop();
++      return;
++    }
++    const ep = resolveSliceEndpoints(
++      st.sliceSrc,
++      tx ? { lat: tx.lat, lon: tx.lon } : null,
++      rx ? { lat: rx.lat, lon: rx.lon } : null,
++      { lat: st.sliceLatA, lon: st.sliceLonA },
++      { lat: st.sliceLatB, lon: st.sliceLonB },
++    );
++    const stamp = so.lastVolume.timestamp;
++    const grid = buildSliceGrid(so.lastVolume, ep, stamp);
++    if (!grid || !ep) {
++      drop();
++      return;
++    }
++    if (grid.key === so.sliceKey && so.sliceObj) return; // early-out
++    drop();
++    const pos = slicePositions(ep, st.exaggeration);
++    const uv = new Float32Array(SLICE_SEG * SLICE_LVL * 2);
++    const idx: number[] = [];
++    for (let j = 0; j < SLICE_LVL; j++)
++      for (let i = 0; i < SLICE_SEG; i++) {
++        const k = j * SLICE_SEG + i;
++        uv[k * 2] = SLICE_SEG <= 1 ? 0 : i / (SLICE_SEG - 1);
++        uv[k * 2 + 1] = SLICE_LVL <= 1 ? 0 : j / (SLICE_LVL - 1);
++        if (i + 1 < SLICE_SEG && j + 1 < SLICE_LVL) {
++          const a = k, b = k + 1, c = k + SLICE_SEG, d = k + SLICE_SEG + 1;
++          idx.push(a, c, b, b, c, d);
++        }
++      }
++    const geo = new THREE.BufferGeometry();
++    geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
++    geo.setAttribute("uv", new THREE.BufferAttribute(uv, 2));
++    geo.setIndex(idx);
++    const tex = new THREE.DataTexture(grid.rgba, SLICE_SEG, SLICE_LVL, THREE.RGBAFormat);
++    tex.needsUpdate = true;
++    tex.colorSpace = THREE.SRGBColorSpace;
++    const mat = new THREE.MeshBasicMaterial({
++      map: tex,
++      transparent: true,
++      side: THREE.DoubleSide,
++      depthWrite: false,
++    });
++    const mesh = new THREE.Mesh(geo, mat);
++    mesh.frustumCulled = false;
++    so.scene.add(mesh);
++    so.sliceObj = { mesh, mat, tex };
++    so.sliceKey = grid.key;
++    const codeA = st.sliceSrc === "link" && props.txCode ? props.txCode : "A";
++    const codeB = st.sliceSrc === "link" && props.rxCode ? props.rxCode : "B";
++    props.callbacks.onSlicePeak?.(sliceLabel(codeA, codeB, grid.peakLog));
++  }, [props.ionosondes, props.spaceWeather?.f107.now, props.settings.timeMode, props.settings.replayMinutes,
++    props.settings.showSlice, props.settings.sliceSrc, props.settings.sliceLatA, props.settings.sliceLonA,
++    props.settings.sliceLatB, props.settings.sliceLonB, props.settings.exaggeration, props.txCode, props.rxCode]);
++
+   // ───────── datos: aurora → instancias ─────────
+   useEffect(() => {
+     const so = S.current;
+diff --git a/src/components/ionosphere/hud/RadioPanel.tsx b/src/components/ionosphere/hud/RadioPanel.tsx
+index f780d04..eae8afd 100644
+--- a/src/components/ionosphere/hud/RadioPanel.tsx
++++ b/src/components/ionosphere/hud/RadioPanel.tsx
+@@ -2,7 +2,7 @@
+ 
+ import { Radio, ArrowRight, Info } from "lucide-react";
+ import { LinkResult, HF_BANDS, bandStatus } from "@/lib/iono/hf";
+-import { IonosondeStation } from "../types";
++import { IonosondeStation, SceneSettings } from "../types";
+ import { PanelBox } from "./SpaceWeatherPanel";
+ import { dRegionAbsorptionDb, lufEstimate } from "@/lib/iono/ionomath";
+ import { solarZenithDeg } from "@/lib/iono/solar";
+@@ -15,10 +15,16 @@ interface Props {
+   onFreq: (f: number) => void;
+   sw: { kp: number; xray: number } | null;
+   utcSec: number;
++  settings: SceneSettings;
++  onSettings: (p: Partial<SceneSettings>) => void;
++  slicePeak: string | null;
+ }
+ 
+ /** Panel de radio: enlace TX→RX con MUF/LUF/FOT y matriz de bandas */
+-export default function RadioPanel({ link, tx, rx, freq, onFreq, sw, utcSec }: Props) {
++export default function RadioPanel({ link, tx, rx, freq, onFreq, sw, utcSec, settings, onSettings, slicePeak }: Props) {
++  const slice = (
++    <SliceSection settings={settings} onSettings={onSettings} slicePeak={slicePeak} hasLink={!!(tx && rx)} />
++  );
+   if (!tx || !rx || !link) {
+     return (
+       <PanelBox title="Radio · enlace HF">
+@@ -29,6 +35,7 @@ export default function RadioPanel({ link, tx, rx, freq, onFreq, sw, utcSec }: P
+           (1ª = <span className="text-cyan-300">TX</span>, 2ª ={" "}
+           <span className="text-amber-300">RX</span>) para trazar el circuito.
+         </div>
++        {slice}
+       </PanelBox>
+     );
+   }
+@@ -109,10 +116,84 @@ export default function RadioPanel({ link, tx, rx, freq, onFreq, sw, utcSec }: P
+         Rumbo {link.bearingAB}° / retorno {link.bearingBA}° · h′ virtual {link.virtualHeight.toFixed(0)} km ·
+         MUF/Dudeney M(D)=1490/(hmF2+216)·(D/3000)^0.24 · FOT = 0.85·MUF
+       </div>
++      {slice}
+     </PanelBox>
+   );
+ }
+ 
++/** W-4 B1: cortina slice QTH-DX (espejo App.cpp:4245-4260). */
++function SliceSection({
++  settings,
++  onSettings,
++  slicePeak,
++  hasLink,
++}: {
++  settings: SceneSettings;
++  onSettings: (p: Partial<SceneSettings>) => void;
++  slicePeak: string | null;
++  hasLink: boolean;
++}) {
++  const num = (label: string, value: number, key: "sliceLatA" | "sliceLonA" | "sliceLatB" | "sliceLonB", min: number, max: number) => (
++    <label className="flex items-center gap-1 text-[10px] text-slate-400">
++      {label}
++      <input
++        type="number"
++        min={min}
++        max={max}
++        step={0.5}
++        value={value}
++        onChange={(e) => onSettings({ [key]: parseFloat(e.target.value) } as Partial<SceneSettings>)}
++        className="w-16 bg-white/5 rounded px-1 py-0.5 text-slate-200 font-mono"
++      />
++    </label>
++  );
++  return (
++    <div className="mt-2 pt-1.5 border-t border-white/10">
++      <label className="flex items-center gap-1.5 text-xs text-slate-200 cursor-pointer">
++        <input
++          type="checkbox"
++          checked={settings.showSlice}
++          onChange={(e) => onSettings({ showSlice: e.target.checked })}
++          className="accent-cyan-400"
++        />
++        Path slice
++        {slicePeak && <span className="ml-auto font-mono text-[10px] text-cyan-300">{slicePeak}</span>}
++      </label>
++      {settings.showSlice && (
++        <div className="mt-1.5 flex flex-col gap-1.5">
++          <div className="flex gap-1">
++            {(["link", "manual", "fixed"] as const).map((m) => (
++              <button
++                key={m}
++                onClick={() => onSettings({ sliceSrc: m })}
++                disabled={m !== "manual" && m !== "fixed" && !hasLink}
++                className={`text-[10px] px-2 py-1 rounded-md ring-1 transition-colors ${
++                  settings.sliceSrc === m
++                    ? "bg-cyan-500/20 text-cyan-200 ring-cyan-400/40"
++                    : "bg-white/5 text-slate-400 ring-transparent hover:bg-white/10"
++                }`}
++              >
++                {m === "link" ? "Enlace" : m === "manual" ? "Manual A/B" : "Fijo ±2°"}
++              </button>
++            ))}
++          </div>
++          {settings.sliceSrc === "manual" && (
++            <div className="flex flex-wrap gap-x-3 gap-y-1">
++              {num("A lat", settings.sliceLatA, "sliceLatA", -90, 90)}
++              {num("A lon", settings.sliceLonA, "sliceLonA", -180, 180)}
++              {num("B lat", settings.sliceLatB, "sliceLatB", -90, 90)}
++              {num("B lon", settings.sliceLonB, "sliceLonB", -180, 180)}
++            </div>
++          )}
++          {settings.sliceSrc !== "manual" && !hasLink && (
++            <div className="text-[10px] text-slate-500">Necesita enlace TX→RX (o usa Manual A/B).</div>
++          )}
++        </div>
++      )}
++    </div>
++  );
++}
++
+ function Metric({
+   label,
+   value,
+diff --git a/src/components/ionosphere/types.ts b/src/components/ionosphere/types.ts
+index 8c8ff2c..a07bccb 100644
+--- a/src/components/ionosphere/types.ts
++++ b/src/components/ionosphere/types.ts
+@@ -78,6 +78,13 @@ export interface SceneSettings {
+   cinema: boolean;
+   timeMode: "live" | "replay";
+   replayMinutes: number; // 0..360 (6h de historia GIRO)
++  // W-4 B1 slice QTH-DX: cortina Ne(h) (espejo SliceLayer + App.cpp:4245).
++  showSlice: boolean;
++  sliceSrc: "link" | "manual" | "fixed";
++  sliceLatA: number;
++  sliceLonA: number;
++  sliceLatB: number;
++  sliceLonB: number;
+ }
+ 
+ export const DEFAULT_SETTINGS: SceneSettings = {
+@@ -96,6 +103,12 @@ export const DEFAULT_SETTINGS: SceneSettings = {
+   cinema: true,
+   timeMode: "live",
+   replayMinutes: 0,
++  showSlice: false,
++  sliceSrc: "link",
++  sliceLatA: 40.8,
++  sliceLonA: 0.5,
++  sliceLatB: 51.6,
++  sliceLonB: -1.3,
+ };
+ 
+ /** Muestrear la historia de una estación en un instante (lerp como sampleHistoryAt del C++) */
+diff --git b/src/lib/iono/slice.test.ts b/src/lib/iono/slice.test.ts
+new file mode 100644
+index 0000000..078d796
+--- /dev/null
++++ b/src/lib/iono/slice.test.ts
+@@ -0,0 +1,100 @@
++/**
++ * TU W-4 slice QTH-DX (clase B1): espejo de SliceLayer + App.cpp:3131-3195.
++ * Pines: endpoints por modo (link/manual/fixed + no-ops), slerp sobre el
++ * circulo maximo (extremos exactos, punto medio sobre el arco), dims
++ * 64x20, muestreo contra volumen sintetico y pico logNe. Vitest.
++ */
++import { describe, expect, it } from "vitest";
++import {
++  SLICE_LVL,
++  SLICE_SEG,
++  buildSliceGrid,
++  resolveSliceEndpoints,
++  sliceLabel,
++  slicePositions,
++} from "./slice";
++import type { DensityVolume } from "./densityVolume";
++
++/** Volumen sintetico: Ne 0..1 = rampa con la altura (pico arriba). */
++function rampVolume(): DensityVolume {
++  const lonRes = 72;
++  const latRes = 36;
++  const altRes = 60;
++  const data = new Array(lonRes * latRes * altRes);
++  for (let a = 0; a < altRes; a++)
++    for (let la = 0; la < latRes; la++)
++      for (let lo = 0; lo < lonRes; lo++)
++        data[(a * latRes + la) * lonRes + lo] = a / (altRes - 1);
++  return {
++    lonRes,
++    latRes,
++    altRes,
++    altMinKm: 60,
++    altMaxKm: 700,
++    data,
++    layer: new Array(lonRes * latRes * altRes).fill(3),
++    timestamp: 0,
++    valid: true,
++  };
++}
++
++describe("slice: endpoints por modo", () => {
++  const manA = { lat: 40, lon: -3 };
++  const manB = { lat: 51, lon: 0 };
++  it("link usa TX/RX", () => {
++    const ep = resolveSliceEndpoints("link", manA, manB, { lat: 0, lon: 0 }, { lat: 1, lon: 1 });
++    expect(ep).toEqual({ latA: 40, lonA: -3, latB: 51, lonB: 0 });
++  });
++  it("manual usa A/B", () => {
++    const ep = resolveSliceEndpoints("manual", null, null, manA, manB);
++    expect(ep).toEqual({ latA: 40, lonA: -3, latB: 51, lonB: 0 });
++  });
++  it("fixed +-2 en TX", () => {
++    const ep = resolveSliceEndpoints("fixed", manA, manB, { lat: 0, lon: 0 }, { lat: 1, lon: 1 });
++    expect(ep).toEqual({ latA: 40, lonA: -5, latB: 40, lonB: -1 });
++  });
++  it("no-ops: sin A, sin B, A==B", () => {
++    expect(resolveSliceEndpoints("link", null, manB, manA, manB)).toBeNull();
++    expect(resolveSliceEndpoints("link", manA, null, manA, manB)).toBeNull();
++    expect(resolveSliceEndpoints("link", manA, manA, manA, manB)).toBeNull();
++    expect(resolveSliceEndpoints("fixed", null, manB, manA, manB)).toBeNull();
++  });
++});
++
++describe("slice: rejilla y muestreo", () => {
++  const ep = { latA: 40, lonA: -3, latB: 51, lonB: 0 };
++  it("dims 64x20 y clave", () => {
++    const g = buildSliceGrid(rampVolume(), ep, 123);
++    expect(g).not.toBeNull();
++    expect(g!.rgba.length).toBe(SLICE_SEG * SLICE_LVL * 4);
++    expect(g!.key).toBe("40|-3|51|0|123");
++  });
++  it("pico arriba (rampa) -> peakLog 12.5", () => {
++    const g = buildSliceGrid(rampVolume(), ep, 0);
++    expect(g!.peakLog).toBeCloseTo(12.5, 9);
++  });
++  it("volumen invalido -> null", () => {
++    const v = rampVolume();
++    v.valid = false;
++    expect(buildSliceGrid(v, ep, 0)).toBeNull();
++    expect(buildSliceGrid(rampVolume(), null, 0)).toBeNull();
++  });
++  it("alfa = d*1.2 clamp + RGBA opaco arriba", () => {
++    const g = buildSliceGrid(rampVolume(), ep, 0);
++    const top = ((SLICE_LVL - 1) * SLICE_SEG + 0) * 4;
++    expect(g!.rgba[top + 3]).toBe(255);
++    const bot = 3;
++    expect(g!.rgba[bot]).toBeLessThan(30);
++  });
++  it("posiciones: 64x20 xyz, radio exagerado", () => {
++    const p = slicePositions(ep, 2.2);
++    expect(p.length).toBe(SLICE_SEG * SLICE_LVL * 3);
++    const r0 = Math.hypot(p[0], p[1], p[2]);
++    const rTop = Math.hypot(p[(SLICE_LVL - 1) * SLICE_SEG * 3], p[(SLICE_LVL - 1) * SLICE_SEG * 3 + 1], p[(SLICE_LVL - 1) * SLICE_SEG * 3 + 2]);
++    expect(r0).toBeCloseTo(1 + (60 / 6371) * 2.2, 5);
++    expect(rTop).toBeCloseTo(1 + (700 / 6371) * 2.2, 4);
++  });
++  it("label A->B pk", () => {
++    expect(sliceLabel("EB040", "TR169", 11.24)).toBe("EB040\u2192TR169 pk 11.2");
++  });
++});
+diff --git b/src/lib/iono/slice.ts b/src/lib/iono/slice.ts
+new file mode 100644
+index 0000000..e7546e9
+--- /dev/null
++++ b/src/lib/iono/slice.ts
+@@ -0,0 +1,143 @@
++/**
++ * Cortina slice QTH-DX W-4 (clase B1): espejo de SliceLayer + App.cpp:3131-3195.
++ *
++ * Rejilla SEG x LVL (64x20) sobre el circulo maximo A->B (slerp con fallback
++ * lerp), alturas 60-700 km con espaciado ^1.5 (volumeAltKm, como el volumen),
++ * muestreo trilinear via sampleVolume (0..1 = logNe normalizado) y horneado
++ * CPU a RGBA con la paleta viridis + alfa d*1.2 (SliceLayer.cpp:109-119).
++ * Pico: peakLog = 8+4.5*peak (App.cpp:3195) para el readout "A->B pk X.X".
++ * Puera, sin GL, sin red. TU: slice.test.ts.
++ */
++import { sampleVolume, volumeAltKm, type DensityVolume } from "./densityVolume";
++import { buildPalette } from "./colormaps";
++import { latLonToVec3, vec3ToLatLon } from "./geo";
++
++export const SLICE_SEG = 64;
++export const SLICE_LVL = 20;
++export const SLICE_ALT_MIN = 60;
++export const SLICE_ALT_MAX = 700;
++
++export type SliceSrc = "link" | "manual" | "fixed";
++
++export interface SliceEndpoints {
++  latA: number;
++  lonA: number;
++  latB: number;
++  lonB: number;
++}
++
++/** Resuelve endpoints por modo. null = no-op (sin A, sin B o A==B). */
++export function resolveSliceEndpoints(
++  src: SliceSrc,
++  linkA: { lat: number; lon: number } | null,
++  linkB: { lat: number; lon: number } | null,
++  manA: { lat: number; lon: number },
++  manB: { lat: number; lon: number },
++): SliceEndpoints | null {
++  let a: { lat: number; lon: number } | null = null;
++  let b: { lat: number; lon: number } | null = null;
++  if (src === "link") {
++    a = linkA;
++    b = linkB;
++  } else if (src === "manual") {
++    a = manA;
++    b = manB;
++  } else {
++    // Fixed+-2°: ancla en TX (como App.cpp sliceLatA/LonA fijos).
++    if (!linkA) return null;
++    a = { lat: linkA.lat, lon: linkA.lon - 2 };
++    b = { lat: linkA.lat, lon: linkA.lon + 2 };
++  }
++  if (!a || !b) return null;
++  if (a.lat === b.lat && a.lon === b.lon) return null;
++  return { latA: a.lat, lonA: a.lon, latB: b.lat, lonB: b.lon };
++}
++
++function slerpLatLon(
++  latA: number, lonA: number, latB: number, lonB: number, t: number,
++): { lat: number; lon: number } {
++  // Vectores unitarios geograficos (convencion geo: latLonToVec3).
++  const [ax, ay, az] = latLonToVec3(latA, lonA, 1);
++  const [bx, by, bz] = latLonToVec3(latB, lonB, 1);
++  let dot = ax * bx + ay * by + az * bz;
++  dot = Math.min(1, Math.max(-1, dot));
++  if (dot > 0.999999) {
++    return { lat: latA + (latB - latA) * t, lon: lonA + (lonB - lonA) * t };
++  }
++  const omega = Math.acos(dot);
++  const s = Math.sin(omega);
++  const ka = Math.sin((1 - t) * omega) / s;
++  const kb = Math.sin(t * omega) / s;
++  const x = ka * ax + kb * bx;
++  const y = ka * ay + kb * by;
++  const z = ka * az + kb * bz;
++  // Inversa exacta de latLonToVec3 (misma convencion que el resto).
++  return vec3ToLatLon(x, y, z);
++}
++
++export interface SliceGrid {
++  /** RGBA por vertice, fila-major LVL x SEG (v=0 abajo). */
++  rgba: Uint8Array;
++  /** Pico logNe (8+4.5*peak) para el readout. */
++  peakLog: number;
++  /** Clave de rebuild (endpoints + stamp del volumen). */
++  key: string;
++}
++
++/** Muestrea la cortina sobre el volumen. null si endpoints no-op o !vol.valid. */
++export function buildSliceGrid(
++  vol: DensityVolume,
++  ep: SliceEndpoints | null,
++  volStamp: number,
++): SliceGrid | null {
++  if (!ep || !vol.valid) return null;
++  const pal = buildPalette("viridis", 256);
++  const rgba = new Uint8Array(SLICE_SEG * SLICE_LVL * 4);
++  let peak = 0;
++  for (let j = 0; j < SLICE_LVL; j++) {
++    const alt = volumeAltKm(j, SLICE_LVL, SLICE_ALT_MIN, SLICE_ALT_MAX);
++    for (let i = 0; i < SLICE_SEG; i++) {
++      const t = SLICE_SEG <= 1 ? 0 : i / (SLICE_SEG - 1);
++      const { lat, lon } = slerpLatLon(ep.latA, ep.lonA, ep.latB, ep.lonB, t);
++      const d = Math.min(1, Math.max(0, sampleVolume(vol, lat, lon, alt)));
++      if (d > peak) peak = d;
++      const pi = Math.min(255, Math.max(0, Math.round(d * 255)));
++      const o = (j * SLICE_SEG + i) * 4;
++      rgba[o] = pal[pi * 3];
++      rgba[o + 1] = pal[pi * 3 + 1];
++      rgba[o + 2] = pal[pi * 3 + 2];
++      rgba[o + 3] = Math.min(255, Math.round(d * 1.2 * 255));
++    }
++  }
++  const key = `${ep.latA}|${ep.lonA}|${ep.latB}|${ep.lonB}|${volStamp}`;
++  return { rgba, peakLog: 8 + 4.5 * peak, key };
++}
++
++/** Posiciones de la cortina (radio exagerado como los tubos). */
++export function slicePositions(
++  ep: SliceEndpoints,
++  exaggeration: number,
++): Float32Array {
++  const pos = new Float32Array(SLICE_SEG * SLICE_LVL * 3);
++  for (let j = 0; j < SLICE_LVL; j++) {
++    const alt = volumeAltKm(j, SLICE_LVL, SLICE_ALT_MIN, SLICE_ALT_MAX);
++    const r = 1 + (alt / 6371) * exaggeration;
++    for (let i = 0; i < SLICE_SEG; i++) {
++      const t = SLICE_SEG <= 1 ? 0 : i / (SLICE_SEG - 1);
++      const { lat, lon } = slerpLatLon(ep.latA, ep.lonA, ep.latB, ep.lonB, t);
++      const [x, y, z] = latLonToVec3(lat, lon, r);
++      const o = (j * SLICE_SEG + i) * 3;
++      pos[o] = x;
++      pos[o + 1] = y;
++      pos[o + 2] = z;
++    }
++  }
++  return pos;
++}
++
++/** Etiqueta "A->B pk X.X" (App.cpp:4264). */
++export function sliceLabel(
++  codeA: string, codeB: string, peakLog: number,
++): string {
++  return `${codeA}\u2192${codeB} pk ${peakLog.toFixed(1)}`;
++}
