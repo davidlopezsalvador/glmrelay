@@ -1,0 +1,233 @@
+From t <t@t> Mon Oct 12 00:00:00 2026 +0200
+From: t <t@t>
+Date: Mon, 12 Oct 2026 00:00:00 +0200
+Subject: [PATCH] w215-c2 (replay play/speed/loop)
+
+---
+ {a => b}/src/app/api/ionosondes/route.ts           | 11 +++---
+ {a => b}/src/app/page.tsx                          | 12 +++++++
+ {a => b}/src/components/ionosphere/hud/TimeBar.tsx | 39 ++++++++++++++++++++--
+ {a => b}/src/components/ionosphere/types.ts        | 22 ++++++++++++
+ {a => b}/src/lib/iono/replay.test.ts               | 20 +++++++++++
+ 5 files changed, 98 insertions(+), 6 deletions(-)
+
+diff --git a/src/app/api/ionosondes/route.ts b/src/app/api/ionosondes/route.ts
+index 81f9b51..50e77eb 100644
+--- a/src/app/api/ionosondes/route.ts
++++ b/src/app/api/ionosondes/route.ts
+@@ -19,7 +19,7 @@ const UA = "IonosphereLive3D-Web/1.0 (exploration demo)";
+ const CATALOG_URL = "https://lgdc.uml.edu/common/DIDBFastStationList?orderByField=ursiCode";
+ const GETBEST = "https://lgdc.uml.edu/fastchar/getbest";
+ 
+-/** 51 estaciones verificadas del catálogo GIRO (cobertura global, EB040 incluida) */
++/** 50 estaciones verificadas del catálogo GIRO (cobertura global, EB040 incluida) */
+ const CORE_STATIONS = [
+   "EB040", // Roquetes, España (¡la del autor!)
+   "EA036", // El Arenosillo, España
+@@ -58,7 +58,7 @@ interface StationData {
+  * ESTRATEGIA DECLARADA de caracteristicas extra (P1-170): el endpoint
+  * getbest acepta UN solo charName por llamada y LGDC limita agresivo (429
+  * verificado en vivo) -> por-parametro, NO charName multiple. Para no
+- * multiplicar x6 el ciclo de 51 estaciones: 12 ANCLAS fijas (determinista;
++ * multiplicar x6 el ciclo de 50 estaciones: 12 ANCLAS fijas (determinista;
+  * la cobertura la completan el IDW-50 grados + fondo de modelo del oraculo)
+  * con TTL propio de 60 min (E/F1/B0/B1 evolucionan lento; en estable el
+  * coste extra es 0) y ventana corta (65 min, ~13 filas). El refresco horario
+@@ -138,7 +138,9 @@ function parseGetBest(text: string): StationData | null {
+     }
+   }
+   if (!code) return null;
+-  return { code, foF2, muf3000, history: history.slice(-72), foE: null, foF1: null, hmF2: null, B0: null, B1: null }; // 6 h @ 5 min
++  // W-4 C1: ventana 168 h (app kIrtamReplayWindowSec); LGDC devuelve serie
++  // dispersa (~15 ionogramas/día), no cadencia fija: cap 2500 de sobra.
++  return { code, foF2, muf3000, history: history.slice(-2500), foE: null, foF1: null, hmF2: null, B0: null, B1: null };
+ }
+ 
+ /**
+@@ -193,7 +195,8 @@ async function fetchChar(
+ }
+ 
+ async function fetchStation(code: string, now: Date): Promise<StationData | null> {
+-  const from = new Date(now.getTime() - 6 * 3600_000);
++  // W-4 C1: 168 h de historia (era 6 h) para el replay largo del app.
++  const from = new Date(now.getTime() - 168 * 3600_000);
+   const fmt = (d: Date) =>
+     `${d.getUTCFullYear()}.${String(d.getUTCMonth() + 1).padStart(2, "0")}.${String(
+       d.getUTCDate()
+diff --git a/src/app/page.tsx b/src/app/page.tsx
+index 9798df0..e45355c 100644
+--- a/src/app/page.tsx
++++ b/src/app/page.tsx
+@@ -17,6 +17,7 @@ import {
+   IonosondeData,
+   SceneSettings,
+   DEFAULT_SETTINGS,
++  replayAdvance,
+ } from "@/components/ionosphere/types";
+ import { LinkResult } from "@/lib/iono/hf";
+ import { AlertEngine, buildAlertInput, type AlertSnapshot } from "@/lib/iono/alerts";
+@@ -136,6 +137,17 @@ export default function Home() {
+     return () => clearInterval(t);
+   }, []);
+ 
++  // W-4 C2: avance automático del replay (espejo App.cpp:2139-2141).
++  useEffect(() => {
++    if (settings.timeMode !== "replay" || !settings.replayPlaying) return;
++    const t = setInterval(() => {
++      onSettingsChange({
++        replayMinutes: replayAdvance(settings.replayMinutes, settings.replaySpeed, 0.5, 10080, settings.replayLoop),
++      });
++    }, 500);
++    return () => clearInterval(t);
++  }, [settings.timeMode, settings.replayPlaying, settings.replaySpeed, settings.replayLoop, settings.replayMinutes]);
++
+   // ─── selección de estaciones: 1º TX, 2º RX, 3º reset ───
+   const onStationPick = useCallback(
+     (code: string | null) => {
+diff --git a/src/components/ionosphere/hud/TimeBar.tsx b/src/components/ionosphere/hud/TimeBar.tsx
+index 35c940f..98879f9 100644
+--- a/src/components/ionosphere/hud/TimeBar.tsx
++++ b/src/components/ionosphere/hud/TimeBar.tsx
+@@ -1,16 +1,18 @@
+ "use client";
+ 
+ import { useState } from "react";
+-import { Clock, Play, Pause, RotateCcw } from "lucide-react";
++import { Clock, Play, Pause, RotateCcw, Repeat } from "lucide-react";
+ import { SceneSettings } from "../types";
+ 
++const SPEEDS = [0.5, 1, 2, 4, 8];
++
+ interface Props {
+   settings: SceneSettings;
+   onChange: (patch: Partial<SceneSettings>) => void;
+   maxReplayMin: number;
+ }
+ 
+-/** Barra de tiempo: LIVE vs REPLAY (historia GIRO 6 h) */
++/** Barra de tiempo: LIVE vs REPLAY (historia GIRO 168 h, W-4 C1) */
+ export default function TimeBar({ settings, onChange, maxReplayMin }: Props) {
+   const [scrubbing, setScrubbing] = useState(false);
+   const replay = settings.timeMode === "replay";
+@@ -77,6 +79,39 @@ export default function TimeBar({ settings, onChange, maxReplayMin }: Props) {
+         </button>
+       )}
+ 
++      {/* W-4 C2: reproducción automática (espejo replayPlaying/Speed/loop). */}
++      {replay && (
++        <>
++          <button
++            onClick={() => onChange({ replayPlaying: !settings.replayPlaying })}
++            className={`transition-colors ${
++              settings.replayPlaying ? "text-amber-300 hover:text-amber-200" : "text-slate-400 hover:text-cyan-300"
++            }`}
++            title={settings.replayPlaying ? "Pausar" : "Reproducir"}
++          >
++            {settings.replayPlaying ? <Pause size={13} /> : <Play size={13} />}
++          </button>
++          <button
++            onClick={() => {
++              const i = SPEEDS.indexOf(settings.replaySpeed);
++              onChange({ replaySpeed: SPEEDS[(i + 1) % SPEEDS.length] });
++            }}
++            className="font-mono text-[10px] text-slate-400 hover:text-cyan-300 transition-colors"
++            title="Velocidad (x20 min/s a 1x)"
++          >
++            {settings.replaySpeed}x
++          </button>
++          <button
++            onClick={() => onChange({ replayLoop: !settings.replayLoop })}
++            className={`transition-colors ${
++              settings.replayLoop ? "text-cyan-300 hover:text-cyan-200" : "text-slate-600 hover:text-slate-400"
++            }`}
++            title="Bucle 168 h"
++          >
++            <Repeat size={13} />
++          </button>
++        </>
++      )}
+     </div>
+   );
+ }
+diff --git a/src/components/ionosphere/types.ts b/src/components/ionosphere/types.ts
+index ef97006..62a5e8e 100644
+--- a/src/components/ionosphere/types.ts
++++ b/src/components/ionosphere/types.ts
+@@ -78,6 +78,10 @@ export interface SceneSettings {
+   cinema: boolean;
+   timeMode: "live" | "replay";
+   replayMinutes: number; // 0..10080 (168 h de historia GIRO, W-4 C1)
++  // W-4 C2: reproducción automática (espejo replayPlaying/Speed/loop).
++  replayPlaying: boolean;
++  replaySpeed: number; // 0.5..8 (x20 min/s a 1x, como App.cpp +dt*speed*1200s)
++  replayLoop: boolean; // al llegar al presente, salto a -168 h
+   // W-4 B1 slice QTH-DX: cortina Ne(h) (espejo SliceLayer + App.cpp:4245).
+   showSlice: boolean;
+   sliceSrc: "link" | "manual" | "fixed";
+@@ -103,6 +107,9 @@ export const DEFAULT_SETTINGS: SceneSettings = {
+   cinema: true,
+   timeMode: "live",
+   replayMinutes: 0,
++  replayPlaying: false,
++  replaySpeed: 1,
++  replayLoop: true,
+   showSlice: false,
+   sliceSrc: "link",
+   sliceLatA: 40,
+@@ -111,6 +118,21 @@ export const DEFAULT_SETTINGS: SceneSettings = {
+   sliceLonB: -100,
+ };
+ 
++/** Avance de replay en minutos-atrás (espejo App.cpp:2139-2141).
++ * 0 = presente; avanza el epoch (+dt*speed*1200 s) y envuelve al fondo
++ * con loop, o fija en 0 sin loop. Puro. TU: replay.test.ts. */
++export function replayAdvance(
++  minutesBack: number,
++  speed: number,
++  dtSec: number,
++  maxMin: number,
++  loop: boolean,
++): number {
++  const next = minutesBack - dtSec * speed * 20;
++  if (next <= 0) return loop ? maxMin : 0;
++  return Math.min(maxMin, next);
++}
++
+ /** Muestrear la historia de una estación en un instante (lerp como sampleHistoryAt del C++) */
+ export function sampleStationAt(
+   s: IonosondeStation,
+diff --git a/src/lib/iono/replay.test.ts b/src/lib/iono/replay.test.ts
+index 6d54e46..05eea9a 100644
+--- a/src/lib/iono/replay.test.ts
++++ b/src/lib/iono/replay.test.ts
+@@ -6,6 +6,7 @@
+ import { describe, expect, it } from "vitest";
+ import {
+   sampleStationAt,
++  replayAdvance,
+   type IonosondeStation,
+ } from "../../components/ionosphere/types";
+ 
+@@ -61,3 +62,22 @@ describe("replay: historia dispersa 168h", () => {
+     expect(sampleStationAt(z, T0 + 5 * H)).toBe(8);
+   });
+ });
++
++describe("replay: avance automatico (App.cpp:2139-2141)", () => {
++  // 1x = 20 min/s: 0.5 s -> 10 min.
++  it("avanza 10 min por tick a 1x", () => {
++    expect(replayAdvance(1000, 1, 0.5, 10080, true)).toBe(990);
++  });
++  it("velocidad escala (4x -> 40 min)", () => {
++    expect(replayAdvance(1000, 4, 0.5, 10080, true)).toBe(960);
++  });
++  it("con loop envuelve al fondo", () => {
++    expect(replayAdvance(5, 1, 0.5, 10080, true)).toBe(10080);
++  });
++  it("sin loop fija en 0 (presente)", () => {
++    expect(replayAdvance(5, 1, 0.5, 10080, false)).toBe(0);
++  });
++  it("clamp superior", () => {
++    expect(replayAdvance(20000, 1, 0.5, 10080, true)).toBe(10080);
++  });
++});
