@@ -1,0 +1,132 @@
+From t <t@t> Mon Oct 12 00:00:00 2026 +0200
+From: t <t@t>
+Date: Mon, 12 Oct 2026 00:00:00 +0200
+Subject: [PATCH] w213-c1 (ventana replay 168h)
+
+---
+ {a => b}/src/app/api/ionosondes/route.ts    |  7 +++-
+ {a => b}/src/app/page.tsx                   |  2 +-
+ {a => b}/src/components/ionosphere/types.ts |  2 +-
+ /dev/null => b/src/lib/iono/replay.test.ts  | 63 +++++++++++++++++++++++++++++
+ 4 files changed, 70 insertions(+), 4 deletions(-)
+
+diff --git a/src/app/api/ionosondes/route.ts b/src/app/api/ionosondes/route.ts
+index 81f9b51..4946957 100644
+--- a/src/app/api/ionosondes/route.ts
++++ b/src/app/api/ionosondes/route.ts
+@@ -138,7 +138,9 @@ function parseGetBest(text: string): StationData | null {
+     }
+   }
+   if (!code) return null;
+-  return { code, foF2, muf3000, history: history.slice(-72), foE: null, foF1: null, hmF2: null, B0: null, B1: null }; // 6 h @ 5 min
++  // W-4 C1: ventana 168 h (app kIrtamReplayWindowSec); LGDC devuelve serie
++  // dispersa (~15 ionogramas/día), no cadencia fija: cap 2500 de sobra.
++  return { code, foF2, muf3000, history: history.slice(-2500), foE: null, foF1: null, hmF2: null, B0: null, B1: null };
+ }
+ 
+ /**
+@@ -193,7 +195,8 @@ async function fetchChar(
+ }
+ 
+ async function fetchStation(code: string, now: Date): Promise<StationData | null> {
+-  const from = new Date(now.getTime() - 6 * 3600_000);
++  // W-4 C1: 168 h de historia (era 6 h) para el replay largo del app.
++  const from = new Date(now.getTime() - 168 * 3600_000);
+   const fmt = (d: Date) =>
+     `${d.getUTCFullYear()}.${String(d.getUTCMonth() + 1).padStart(2, "0")}.${String(
+       d.getUTCDate()
+diff --git a/src/app/page.tsx b/src/app/page.tsx
+index a594a52..9798df0 100644
+--- a/src/app/page.tsx
++++ b/src/app/page.tsx
+@@ -266,7 +266,7 @@ export default function Home() {
+ 
+       {/* barra de tiempo inferior */}
+       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10">
+-        <TimeBar settings={settings} onChange={onSettingsChange} maxReplayMin={360} />
++        <TimeBar settings={settings} onChange={onSettingsChange} maxReplayMin={10080} />
+       </div>
+ 
+       {/* leyenda */}
+diff --git a/src/components/ionosphere/types.ts b/src/components/ionosphere/types.ts
+index a083251..ef97006 100644
+--- a/src/components/ionosphere/types.ts
++++ b/src/components/ionosphere/types.ts
+@@ -77,7 +77,7 @@ export interface SceneSettings {
+   nightLights: number; // 0..1
+   cinema: boolean;
+   timeMode: "live" | "replay";
+-  replayMinutes: number; // 0..360 (6h de historia GIRO)
++  replayMinutes: number; // 0..10080 (168 h de historia GIRO, W-4 C1)
+   // W-4 B1 slice QTH-DX: cortina Ne(h) (espejo SliceLayer + App.cpp:4245).
+   showSlice: boolean;
+   sliceSrc: "link" | "manual" | "fixed";
+diff --git b/src/lib/iono/replay.test.ts b/src/lib/iono/replay.test.ts
+new file mode 100644
+index 0000000..6d54e46
+--- /dev/null
++++ b/src/lib/iono/replay.test.ts
+@@ -0,0 +1,63 @@
++/**
++ * TU W-4 replay largo (clase C1): sampleStationAt sobre historia dispersa
++ * 168 h (serie LGDC por ionograma, no cadencia fija). Pines: clamp en
++ * extremos, lerp en huecos grandes, fallback a foF2 sin historia. Vitest.
++ */
++import { describe, expect, it } from "vitest";
++import {
++  sampleStationAt,
++  type IonosondeStation,
++} from "../../components/ionosphere/types";
++
++const T0 = Date.parse("2026-10-05T12:00:00Z");
++const H = 3600_000;
++
++function station(history: { dtH: number; foF2: number }[], foF2: number | null = 7): IonosondeStation {
++  return {
++    code: "EB040",
++    name: "ROQUETES",
++    lat: 40.8,
++    lon: 0.5,
++    foF2,
++    muf3000: null,
++    history: history.map((p) => ({
++      t: new Date(T0 + p.dtH * H).toISOString().replace(".000Z", "Z"),
++      foF2: p.foF2,
++    })),
++    foE: null,
++    foF1: null,
++    hmF2: null,
++    B0: null,
++    B1: null,
++  };
++}
++
++describe("replay: historia dispersa 168h", () => {
++  // ~15 ionogramas/día: huecos de varias horas.
++  const s = station([
++    { dtH: 0, foF2: 6 },
++    { dtH: 9, foF2: 9 },
++    { dtH: 30, foF2: 5 },
++    { dtH: 150, foF2: 8 },
++  ]);
++  it("clamp antes del primero y despues del ultimo", () => {
++    expect(sampleStationAt(s, T0 - H)).toBe(6);
++    expect(sampleStationAt(s, T0 + 200 * H)).toBe(8);
++  });
++  it("lerp en hueco grande (9h->30h al 50%)", () => {
++    expect(sampleStationAt(s, T0 + 19.5 * H)).toBeCloseTo(7, 9);
++  });
++  it("valor exacto en ionograma", () => {
++    expect(sampleStationAt(s, T0 + 30 * H)).toBe(5);
++  });
++  it("sin historia -> foF2 actual", () => {
++    expect(sampleStationAt(station([], 7.5), T0 + 100 * H)).toBe(7.5);
++  });
++  it("hueco con cero -> toma el positivo", () => {
++    const z = station([
++      { dtH: 0, foF2: 0 },
++      { dtH: 10, foF2: 8 },
++    ]);
++    expect(sampleStationAt(z, T0 + 5 * H)).toBe(8);
++  });
++});
