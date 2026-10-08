@@ -1,0 +1,46 @@
+From t <t@t> Mon Oct 12 00:00:00 2026 +0200
+From: t <t@t>
+Date: Mon, 12 Oct 2026 00:00:00 +0200
+Subject: [PATCH] w217-p3 (default speed 2)
+
+---
+ {a => b}/src/components/ionosphere/types.ts | 2 +-
+ {a => b}/src/lib/iono/replay.test.ts        | 5 +++++
+ 2 files changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/src/components/ionosphere/types.ts b/src/components/ionosphere/types.ts
+index 62a5e8e..94c53ad 100644
+--- a/src/components/ionosphere/types.ts
++++ b/src/components/ionosphere/types.ts
+@@ -108,7 +108,7 @@ export const DEFAULT_SETTINGS: SceneSettings = {
+   timeMode: "live",
+   replayMinutes: 0,
+   replayPlaying: false,
+-  replaySpeed: 1,
++  replaySpeed: 2,
+   replayLoop: true,
+   showSlice: false,
+   sliceSrc: "link",
+diff --git a/src/lib/iono/replay.test.ts b/src/lib/iono/replay.test.ts
+index 05eea9a..174864e 100644
+--- a/src/lib/iono/replay.test.ts
++++ b/src/lib/iono/replay.test.ts
+@@ -7,6 +7,7 @@ import { describe, expect, it } from "vitest";
+ import {
+   sampleStationAt,
+   replayAdvance,
++  DEFAULT_SETTINGS,
+   type IonosondeStation,
+ } from "../../components/ionosphere/types";
+ 
+@@ -64,6 +65,10 @@ describe("replay: historia dispersa 168h", () => {
+ });
+ 
+ describe("replay: avance automatico (App.cpp:2139-2141)", () => {
++  // p3-216: default speed 2 == App.cpp:284.
++  it("default speed 2", () => {
++    expect(DEFAULT_SETTINGS.replaySpeed).toBe(2);
++  });
+   // 1x = 20 min/s: 0.5 s -> 10 min.
+   it("avanza 10 min por tick a 1x", () => {
+     expect(replayAdvance(1000, 1, 0.5, 10080, true)).toBe(990);
