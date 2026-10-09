@@ -1,0 +1,187 @@
+From t <t@t> Mon Oct 12 00:00:00 2026 +0200
+From: t <t@t>
+Date: Mon, 12 Oct 2026 00:00:00 +0200
+Subject: [PATCH] w223-f2 (Chapman + opacidad)
+
+---
+ .../src/components/ionosphere/IonosphereScene.tsx  |  7 ++++++
+ .../src/components/ionosphere/hud/LayersPanel.tsx  | 28 ++++++++++++++++++++++
+ {a => b}/src/components/ionosphere/types.ts        |  5 ++++
+ {a => b}/src/lib/iono/densityVolume.test.ts        | 25 +++++++++++++++++++
+ {a => b}/src/lib/iono/densityVolume.ts             | 27 +++++++++++++++++++++
+ 5 files changed, 92 insertions(+)
+
+diff --git a/src/components/ionosphere/IonosphereScene.tsx b/src/components/ionosphere/IonosphereScene.tsx
+index 55eda60..977d40b 100644
+--- a/src/components/ionosphere/IonosphereScene.tsx
++++ b/src/components/ionosphere/IonosphereScene.tsx
+@@ -34,6 +34,10 @@ import {
+   refAltitudes,
+   refKey,
+ } from "@/lib/iono/refshells";
++import {
++  volumeModeIndex,
++  volumeOpacityClamp,
++} from "@/lib/iono/densityVolume";
+ import type { DensityVolume } from "@/lib/iono/densityVolume";
+ import { latLonToVec3, vec3ToLatLon } from "@/lib/iono/geo";
+ import { tourAdvance, tourEval } from "@/lib/iono/tour";
+@@ -524,11 +528,14 @@ export default function IonosphereScene(props: Props) {
+           S.current.rings.visible = propsRef.current.settings.showRings;
+         }
+         // W-4 F1: iso-bands del volumen (u_isoOn, como VolumeRenderer).
++        // W-4 F2: modo Chapman + escala de opacidad (App.cpp:4219-4227).
+         {
+           const st = propsRef.current.settings;
+           const vm = S.current?.volumeObj?.mat.uniforms as unknown as
+             Record<string, THREE.IUniform> | undefined;
+           if (vm && vm.u_isoOn) vm.u_isoOn.value = st.showIso ? 1 : 0;
++          if (vm && vm.u_colorMode) vm.u_colorMode.value = volumeModeIndex(st.volumeMode);
++          if (vm && vm.u_opacityScale) vm.u_opacityScale.value = volumeOpacityClamp(st.volumeOpacity);
+         }
+         // W-4 F1: overlay de etiquetas (App.cpp:5470-5525).
+         updateLabels();
+diff --git a/src/components/ionosphere/hud/LayersPanel.tsx b/src/components/ionosphere/hud/LayersPanel.tsx
+index 11c9fdd..29f4e55 100644
+--- a/src/components/ionosphere/hud/LayersPanel.tsx
++++ b/src/components/ionosphere/hud/LayersPanel.tsx
+@@ -114,6 +114,34 @@ export default function LayersPanel({ settings, onChange, ionosondes, fps }: Pro
+           {withData}/{n}
+         </span>
+       </div>
++
++      {/* W-4 F2: modo Chapman + escala de opacidad (App.cpp:4219-4227). */}
++      <div className="mt-2 pt-2 border-t border-white/10 flex items-center gap-1">
++        {(["density", "chapman"] as const).map((m) => (
++          <button
++            key={m}
++            onClick={() => onChange({ volumeMode: m })}
++            className={`text-[10px] px-2 py-1 rounded-md ring-1 transition-colors ${
++              settings.volumeMode === m
++                ? "bg-cyan-500/20 text-cyan-200 ring-cyan-400/40"
++                : "bg-white/5 text-slate-400 ring-transparent hover:bg-white/10"
++            }`}
++          >
++            {m === "density" ? "Density" : "Chapman"}
++          </button>
++        ))}
++      </div>
++
++      <Slider
++        icon={<Boxes size={12} />}
++        label="Opacidad volumen"
++        value={settings.volumeOpacity}
++        min={0}
++        max={2.5}
++        step={0.1}
++        format={(v) => `${v.toFixed(1)}x`}
++        onChange={(v) => onChange({ volumeOpacity: v })}
++      />
+     </PanelBox>
+   );
+ }
+diff --git a/src/components/ionosphere/types.ts b/src/components/ionosphere/types.ts
+index 00dfd14..0860b8e 100644
+--- a/src/components/ionosphere/types.ts
++++ b/src/components/ionosphere/types.ts
+@@ -92,6 +92,9 @@ export interface SceneSettings {
+   // W-4 F1: iso-bands + etiquetas (espejo App.cpp:4230-4236).
+   showIso: boolean;
+   showLabels: boolean;
++  // W-4 F2: modo Chapman + escala de opacidad (App.cpp:4219-4227).
++  volumeMode: "density" | "chapman";
++  volumeOpacity: number; // 0..2.5 UI, clamp [0,3]
+ }
+ 
+ export const DEFAULT_SETTINGS: SceneSettings = {
+@@ -121,6 +124,8 @@ export const DEFAULT_SETTINGS: SceneSettings = {
+   sliceLonB: -100,
+   showIso: false,
+   showLabels: false,
++  volumeMode: "density",
++  volumeOpacity: 1.0,
+ };
+ 
+ /** Avance de replay en minutos-atrás (espejo App.cpp:2139-2141).
+diff --git a/src/lib/iono/densityVolume.test.ts b/src/lib/iono/densityVolume.test.ts
+index 78acbd1..da4fc84 100644
+--- a/src/lib/iono/densityVolume.test.ts
++++ b/src/lib/iono/densityVolume.test.ts
+@@ -14,6 +14,7 @@ import {
+   VOL_LOG_RANGE,
+   VOL_LON_RES,
+   VOL_PEAK_FLOOR,
++  CHAPMAN_WINNER_COLORS,
+   applyDayNight,
+   densityDir,
+   extractPeakGrids,
+@@ -21,6 +22,8 @@ import {
+   sampleVolume,
+   volumeAltKm,
+   volumeIndex,
++  volumeModeIndex,
++  volumeOpacityClamp,
+   type DensityVolume,
+ } from "./densityVolume";
+ 
+@@ -186,3 +189,25 @@ describe("densityVolume: integrateTEC y sampleVolume", () => {
+     expect(sampleVolume(blankVolume(), 0, 0, 200)).toBe(0);
+   });
+ });
++
++describe("densityVolume: params de render F2 (VolumeRenderer.h:31-37)", () => {
++  it("modo density->0, chapman->1", () => {
++    expect(volumeModeIndex("density")).toBe(0);
++    expect(volumeModeIndex("chapman")).toBe(1);
++  });
++  it("opacidad clamp [0,3]", () => {
++    expect(volumeOpacityClamp(-1)).toBe(0);
++    expect(volumeOpacityClamp(0)).toBe(0);
++    expect(volumeOpacityClamp(1)).toBe(1);
++    expect(volumeOpacityClamp(2.5)).toBe(2.5);
++    expect(volumeOpacityClamp(9)).toBe(3);
++  });
++  it("colores Chapman == VOL_FRAG (D/E/F1/F2)", () => {
++    expect(CHAPMAN_WINNER_COLORS).toEqual([
++      [1.0, 0.55, 0.1],
++      [0.2, 0.85, 0.3],
++      [1.0, 0.9, 0.2],
++      [0.2, 0.8, 1.0],
++    ]);
++  });
++});
+diff --git a/src/lib/iono/densityVolume.ts b/src/lib/iono/densityVolume.ts
+index 1d91668..63c16fd 100644
+--- a/src/lib/iono/densityVolume.ts
++++ b/src/lib/iono/densityVolume.ts
+@@ -231,3 +231,30 @@ export function sampleVolume(v: DensityVolume, latDeg: number, lonDeg: number, a
+     at(x0 + 1, y0 + 1, a1) * fx * fy;
+   return lo * (1 - fa) + hi * fa;
+ }
++
++// ---------------------------------------------------------------------------
++// W-4 F2: parámetros de render del volumen (espejo VolumeRenderer.h:31-37
++// + App.cpp:4219-4227: Combo Density/Chapman + escala de opacidad).
++// Colores ganadores D/E/F1/F2 byte-iguales a la rama Chapman de VOL_FRAG
++// (pin anti-deriva: el shader los lleva hardcodeados). TU: densityVolume.
++// ---------------------------------------------------------------------------
++
++/** Ganadores D/E/F1/F2 (mirror VOL_FRAG u_colorMode==1). */
++export const CHAPMAN_WINNER_COLORS: readonly (readonly [number, number, number])[] = [
++  [1.0, 0.55, 0.1],
++  [0.2, 0.85, 0.3],
++  [1.0, 0.9, 0.2],
++  [0.2, 0.8, 1.0],
++] as const;
++
++/** density->0, chapman->1 (u_colorMode). */
++export function volumeModeIndex(mode: "density" | "chapman"): 0 | 1 {
++  return mode === "chapman" ? 1 : 0;
++}
++
++/** Clamp [0,3] (setOpacityScale, VolumeRenderer.h:37). */
++export function volumeOpacityClamp(v: number): number {
++  if (!(v > 0)) return 0;
++  if (v > 3) return 3;
++  return v;
++}
