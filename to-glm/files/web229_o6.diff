@@ -1,0 +1,40 @@
+From t <t@t> Mon Oct 12 00:00:00 2026 +0200
+From: t <t@t>
+Date: Mon, 12 Oct 2026 00:00:00 +0200
+Subject: [PATCH] w229-o6 (2 its point-size)
+
+---
+ {a => b}/src/lib/iono/replay.test.ts | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+
+diff --git a/src/lib/iono/replay.test.ts b/src/lib/iono/replay.test.ts
+index 174864e..0ebbfb6 100644
+--- a/src/lib/iono/replay.test.ts
++++ b/src/lib/iono/replay.test.ts
+@@ -8,6 +8,8 @@ import {
+   sampleStationAt,
+   replayAdvance,
+   DEFAULT_SETTINGS,
++  STATION_POINT_REF,
++  stationPointSizeClamp,
+   type IonosondeStation,
+ } from "../../components/ionosphere/types";
+ 
+@@ -86,3 +88,17 @@ describe("replay: avance automatico (App.cpp:2139-2141)", () => {
+     expect(replayAdvance(20000, 1, 0.5, 10080, true)).toBe(10080);
+   });
+ });
++
++describe("settings E-tail o6: point-size (App.cpp:4293)", () => {
++  it("default 11 == base 140 del shader", () => {
++    expect(DEFAULT_SETTINGS.pointSize).toBe(11);
++    expect(STATION_POINT_REF).toBe(11);
++  });
++  it("clamp [2,30]", () => {
++    expect(stationPointSizeClamp(-5)).toBe(2);
++    expect(stationPointSizeClamp(0)).toBe(2);
++    expect(stationPointSizeClamp(11)).toBe(11);
++    expect(stationPointSizeClamp(30)).toBe(30);
++    expect(stationPointSizeClamp(99)).toBe(30);
++  });
++});
