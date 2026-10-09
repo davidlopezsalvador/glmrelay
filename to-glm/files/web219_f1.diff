@@ -1,0 +1,512 @@
+From t <t@t> Mon Oct 12 00:00:00 2026 +0200
+From: t <t@t>
+Date: Mon, 12 Oct 2026 00:00:00 +0200
+Subject: [PATCH] w219-f1 (ref-shells + iso + labels)
+
+---
+ .../src/components/ionosphere/IonosphereScene.tsx  | 160 ++++++++++++++++++---
+ {a => b}/src/components/ionosphere/builders.ts     |  64 +++++----
+ .../src/components/ionosphere/hud/LayersPanel.tsx  |  18 +++
+ {a => b}/src/components/ionosphere/types.ts        |   5 +
+ /dev/null => b/src/lib/iono/refshells.test.ts      |  67 +++++++++
+ /dev/null => b/src/lib/iono/refshells.ts           |  52 +++++++
+ 6 files changed, 321 insertions(+), 45 deletions(-)
+
+diff --git a/src/components/ionosphere/IonosphereScene.tsx b/src/components/ionosphere/IonosphereScene.tsx
+index 264f7f8..55eda60 100644
+--- a/src/components/ionosphere/IonosphereScene.tsx
++++ b/src/components/ionosphere/IonosphereScene.tsx
+@@ -28,8 +28,14 @@ import {
+   SLICE_SEG,
+   SLICE_LVL,
+ } from "@/lib/iono/slice";
++import {
++  labelCulled,
++  midnightLon,
++  refAltitudes,
++  refKey,
++} from "@/lib/iono/refshells";
+ import type { DensityVolume } from "@/lib/iono/densityVolume";
+-import { latLonToVec3 } from "@/lib/iono/geo";
++import { latLonToVec3, vec3ToLatLon } from "@/lib/iono/geo";
+ import { tourAdvance, tourEval } from "@/lib/iono/tour";
+ 
+ import {
+@@ -42,7 +48,7 @@ import {
+   buildAurora,
+   buildStations,
+   buildLinkTube,
+-  buildRefRings,
++  buildRefShells,
+   buildSunGlow,
+   buildGodRaysPass,
+   buildVolumeMesh,
+@@ -118,6 +124,10 @@ export default function IonosphereScene(props: Props) {
+     sliceObj?: { mesh: THREE.Mesh; mat: THREE.MeshBasicMaterial; tex: THREE.DataTexture };
+     sliceKey: string;
+     lastVolume: DensityVolume | null;
++    // W-4 F1: clave ref-shells + overlay de etiquetas imperativo.
++    refKey: string;
++    labelBox?: HTMLDivElement;
++    labelEls?: { el: HTMLDivElement; dot: HTMLSpanElement; text: HTMLSpanElement }[];
+     raycaster: THREE.Raycaster;
+     gridState: {
+       fo: Float32Array;
+@@ -204,7 +214,7 @@ export default function IonosphereScene(props: Props) {
+       // W-3 P2-182: volumen Ne (raymarch). Texturas reales al publicar datos.
+       const volume = buildVolumeMesh(cmapTex);
+       scene.add(volume.mesh);
+-      const rings = buildRefRings();
++      const rings = buildRefShells({ e: 110, f1: 200, f2: 300 }, 2.2);
+       scene.add(rings.group);
+       const sunGlow = buildSunGlow();
+       scene.add(sunGlow.core, sunGlow.halo);
+@@ -242,8 +252,33 @@ export default function IonosphereScene(props: Props) {
+         exportReq: false,
+         sliceKey: "",
+         lastVolume: null,
++        refKey: "",
+       };
+ 
++      // W-4 F1: overlay de etiquetas (3 divs imperativos, fuera de React).
++      {
++        const box = document.createElement("div");
++        box.style.cssText =
++          "position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:5;display:none;";
++        const els = [0, 1, 2].map(() => {
++          const el = document.createElement("div");
++          el.style.cssText =
++            "position:absolute;transform:translate(-50%,-50%);display:flex;align-items:center;gap:4px;";
++          const dot = document.createElement("span");
++          dot.style.cssText = "width:5px;height:5px;border-radius:50%;background:#fff;";
++          const text = document.createElement("span");
++          text.style.cssText =
++            "font:10px ui-monospace,monospace;color:#ffe050;text-shadow:0 0 4px #000;white-space:nowrap;";
++          el.appendChild(dot);
++          el.appendChild(text);
++          box.appendChild(el);
++          return { el, dot, text };
++        });
++        mount.appendChild(box);
++        S.current!.labelBox = box;
++        S.current!.labelEls = els;
++      }
++
+       // resize
+       const ro = new ResizeObserver(() => {
+         const w = mount.clientWidth,
+@@ -357,6 +392,71 @@ export default function IonosphereScene(props: Props) {
+       let tourLastIdx = -1;
+       let tourDoneFired = false;
+ 
++      // W-4 F1: etiquetas 3D (App.cpp:5470-5525: estacion F2, ovalo
++      // auroral, shell TEC; cull de dorso + NDC, offset +12,-26).
++      const updateLabels = () => {
++        const so = S.current;
++        if (!so || !so.labelBox || !so.labelEls) return;
++        const st = propsRef.current.settings;
++        const show = st.showLabels;
++        so.labelBox.style.display = show ? "block" : "none";
++        if (!show) return;
++        const W = mount.clientWidth || 1;
++        const H = mount.clientHeight || 1;
++        const stations = propsRef.current.ionosondes?.stations ?? [];
++        const tx = propsRef.current.txCode
++          ? stations.find((s) => s.code === propsRef.current.txCode) ?? null
++          : null;
++        const rx = propsRef.current.rxCode
++          ? stations.find((s) => s.code === propsRef.current.rxCode) ?? null
++          : null;
++        const pinned = tx ?? rx;
++        const sun = getSunInfo((so.lastEffMs || Date.now()) / 1000);
++        const mLon = midnightLon(sun.dir[0], sun.dir[1], sun.dir[2]);
++        const camLL = vec3ToLatLon(
++          so.camera.position.x, so.camera.position.y, so.camera.position.z,
++        );
++        const items: { lat: number; lon: number; alt: number; text: string; color: string }[] = [];
++        if (pinned) {
++          items.push({
++            lat: pinned.lat,
++            lon: pinned.lon,
++            alt: pinned.hmF2 ?? 300,
++            text: `${pinned.code} F2 ${(pinned.hmF2 ?? 300).toFixed(0)}km`,
++            color: "#ffdc50",
++          });
++        }
++        items.push({ lat: 67, lon: mLon, alt: 110, text: "Aurora oval", color: "#50ff88" });
++        items.push({ lat: camLL.lat, lon: camLL.lon, alt: 300, text: "TEC shell", color: "#50a0ff" });
++        const v = new THREE.Vector3();
++        const toCam = new THREE.Vector3();
++        const nrm = new THREE.Vector3();
++        for (let k = 0; k < 3; k++) {
++          const slot = so.labelEls[k];
++          const it = items[k];
++          if (!it) {
++            slot.el.style.display = "none";
++            continue;
++          }
++          const [x, y, z] = latLonToVec3(it.lat, it.lon, 1 + it.alt / 6371);
++          v.set(x, y, z);
++          nrm.set(x, y, z).normalize();
++          toCam.copy(so.camera.position).sub(v).normalize();
++          const facing = nrm.dot(toCam);
++          v.project(so.camera);
++          if (labelCulled(facing, v.x, v.y)) {
++            slot.el.style.display = "none";
++            continue;
++          }
++          slot.el.style.display = "flex";
++          slot.el.style.left = `${(v.x * 0.5 + 0.5) * W + 12}px`;
++          slot.el.style.top = `${(-v.y * 0.5 + 0.5) * H - 26}px`;
++          slot.dot.style.background = it.color;
++          slot.text.textContent = it.text;
++          slot.text.style.color = it.color;
++        }
++      };
++
+       const tick = () => {
+         raf = requestAnimationFrame(tick);
+         const now = performance.now();
+@@ -422,23 +522,16 @@ export default function IonosphereScene(props: Props) {
+         }
+         if (S.current?.rings) {
+           S.current.rings.visible = propsRef.current.settings.showRings;
+-          // anillos siguen la exageración
+-          const ex = propsRef.current.settings.exaggeration;
+-          const defs = [90, 110, 170, 300];
+-          let li = 0;
+-          for (const child of S.current.rings.children) {
+-            if ((child as THREE.Line).isLine) {
+-              const r = 1 + (defs[li] / 6371) * ex;
+-              const pos = (child as THREE.Line).geometry.attributes.position as THREE.BufferAttribute;
+-              for (let i = 0; i < pos.count; i++) {
+-                const [x, y, z] = latLonToVec3(0, (i / (pos.count - 1)) * 360 - 180, r);
+-                pos.setXYZ(i, x, y, z);
+-              }
+-              pos.needsUpdate = true;
+-              li++;
+-            }
+-          }
+         }
++        // W-4 F1: iso-bands del volumen (u_isoOn, como VolumeRenderer).
++        {
++          const st = propsRef.current.settings;
++          const vm = S.current?.volumeObj?.mat.uniforms as unknown as
++            Record<string, THREE.IUniform> | undefined;
++          if (vm && vm.u_isoOn) vm.u_isoOn.value = st.showIso ? 1 : 0;
++        }
++        // W-4 F1: overlay de etiquetas (App.cpp:5470-5525).
++        updateLabels();
+         // sol: sprites a 6.5 unidades
+         if (S.current?.sunGlow) {
+           const p = sunV.clone().multiplyScalar(6.5);
+@@ -569,6 +662,11 @@ export default function IonosphereScene(props: Props) {
+         });
+         so.stationsObj?.points.geometry.dispose();
+         so.stationsObj?.mat.dispose();
++        if (so.labelBox) {
++          so.labelBox.remove();
++          so.labelBox = undefined;
++          so.labelEls = undefined;
++        }
+         so.auroraObj?.mesh.geometry.dispose();
+         so.auroraObj?.mat.dispose();
+         so.linkObj?.mesh.geometry.dispose();
+@@ -690,6 +788,30 @@ export default function IonosphereScene(props: Props) {
+     so.scene.add(st.points);
+     so.stationsObj = st;
+     so.lastGridStamp = so.gridState.stamp;
++
++    // W-4 F1: ref-shells dinámicas (mediana hmF2, como App.cpp:2487).
++    {
++      const hms: number[] = [];
++      for (const s of sampled) if ((s.hmF2 ?? 0) > 0) hms.push(s.hmF2 as number);
++      const alts = refAltitudes(hms);
++      const key = alts ? refKey(alts, settings.exaggeration) : "";
++      if (key && key !== so.refKey) {
++        so.refKey = key;
++        if (so.rings) {
++          so.scene.remove(so.rings);
++          so.rings.traverse((o) => {
++            const line = o as unknown as THREE.Line;
++            if (line.isLine) {
++              line.geometry.dispose();
++              (line.material as THREE.Material).dispose();
++            }
++          });
++        }
++        const nb = buildRefShells(alts as { e: number; f1: number; f2: number }, settings.exaggeration);
++        so.scene.add(nb.group);
++        so.rings = nb.group;
++      }
++    }
+   }, [props.ionosondes, props.spaceWeather?.f107.now, props.settings.timeMode, props.settings.replayMinutes]);
+ 
+   // ───────── W-4 B1 slice QTH-DX: cortina Ne(h) ─────────
+diff --git a/src/components/ionosphere/builders.ts b/src/components/ionosphere/builders.ts
+index 0c78d41..50a8063 100644
+--- a/src/components/ionosphere/builders.ts
++++ b/src/components/ionosphere/builders.ts
+@@ -374,41 +374,53 @@ export function buildLinkTube(
+   return { mesh, mat };
+ }
+ 
+-// ───────────────────────── anillos de referencia ─────────────────────────
+-export function buildRefRings() {
++// ───────────────────────── cascaras de referencia E/F1/F2 ─────────────────────────
++// W-4 F1: esferas wireframe (ecuador + paralelos 0,±30,±60 N=72 +
++// 6 meridianos N=48, GL_LINES) con colores y altitudes del oraculo
++// (RefShells.h/.cpp: E110 verde, F1 dinámica amarilla, F2 dinámica
++// naranja; sin anillo D). Alturas y exageración por parámetros;
++// el rebuild por clave vive en la escena (como el slice).
++export function buildRefShells(
++  alts: { e: number; f1: number; f2: number },
++  exaggeration: number,
++) {
+   const group = new THREE.Group();
+-  const defs: { altKm: number; color: number; label: string }[] = [
+-    { altKm: 90, color: 0x4488ff, label: "D" },
+-    { altKm: 110, color: 0x55ffcc, label: "E" },
+-    { altKm: 170, color: 0xffdd55, label: "F1" },
+-    { altKm: 300, color: 0xff8855, label: "F2" },
++  const shells = [
++    { altKm: alts.e, color: new THREE.Color(0.1, 0.45, 0.2) },
++    { altKm: alts.f1, color: new THREE.Color(0.5, 0.42, 0.1) },
++    { altKm: alts.f2, color: new THREE.Color(0.5, 0.22, 0.07) },
+   ];
+-  for (const d of defs) {
+-    const r = 1 + d.altKm / 6371 * 2.2; // misma exageración por defecto
+-    const pts: THREE.Vector3[] = [];
+-    for (let i = 0; i <= 128; i++) {
+-      const [x, y, z] = latLonToVec3(0, (i / 128) * 360 - 180, r);
+-      pts.push(new THREE.Vector3(x, y, z));
+-    }
+-    const geo = new THREE.BufferGeometry().setFromPoints(pts);
++  for (const d of shells) {
++    const r = 1 + (d.altKm / 6371) * exaggeration;
+     const mat = new THREE.LineBasicMaterial({
+       color: d.color,
+       transparent: true,
+       opacity: 0.5,
+       depthWrite: false,
+     });
+-    const line = new THREE.Line(geo, mat);
+-    group.add(line);
+-    // marcador de etiqueta: pequeño punto en el anillo
+-    const [lx, ly, lz] = latLonToVec3(0, 20, r);
+-    const dot = new THREE.Mesh(
+-      new THREE.SphereGeometry(0.004, 6, 6),
+-      new THREE.MeshBasicMaterial({ color: d.color, transparent: true, opacity: 0.9 })
+-    );
+-    dot.position.set(lx, ly, lz);
+-    group.add(dot);
++    const addLine = (pts: THREE.Vector3[]) => {
++      const geo = new THREE.BufferGeometry().setFromPoints(pts);
++      group.add(new THREE.Line(geo, mat));
++    };
++    for (const lat of [0, 30, -30, 60, -60]) {
++      const pts: THREE.Vector3[] = [];
++      for (let i = 0; i <= 72; i++) {
++        const [x, y, z] = latLonToVec3(lat, (i / 72) * 360 - 180, r);
++        pts.push(new THREE.Vector3(x, y, z));
++      }
++      addLine(pts);
++    }
++    for (let m = 0; m < 6; m++) {
++      const lon = m * 60 - 180;
++      const pts: THREE.Vector3[] = [];
++      for (let i = 0; i <= 48; i++) {
++        const [x, y, z] = latLonToVec3(-90 + (i / 48) * 180, lon, r);
++        pts.push(new THREE.Vector3(x, y, z));
++      }
++      addLine(pts);
++    }
+   }
+-  return { group, defs };
++  return { group };
+ }
+ 
+ // ───────────────────────── glow del sol ─────────────────────────
+diff --git a/src/components/ionosphere/hud/LayersPanel.tsx b/src/components/ionosphere/hud/LayersPanel.tsx
+index becdc5a..11c9fdd 100644
+--- a/src/components/ionosphere/hud/LayersPanel.tsx
++++ b/src/components/ionosphere/hud/LayersPanel.tsx
+@@ -66,6 +66,24 @@ export default function LayersPanel({ settings, onChange, ionosondes, fps }: Pro
+           checked={settings.showStations}
+           onChange={(v) => onChange({ showStations: v })}
+         />
++        <Toggle
++          icon={<Orbit size={12} />}
++          label="Ref shells"
++          checked={settings.showRings}
++          onChange={(v) => onChange({ showRings: v })}
++        />
++        <Toggle
++          icon={<Layers size={12} />}
++          label="Iso bands"
++          checked={settings.showIso}
++          onChange={(v) => onChange({ showIso: v })}
++        />
++        <Toggle
++          icon={<Mountain size={12} />}
++          label="Etiquetas"
++          checked={settings.showLabels}
++          onChange={(v) => onChange({ showLabels: v })}
++        />
+       </div>
+ 
+       <Slider
+diff --git a/src/components/ionosphere/types.ts b/src/components/ionosphere/types.ts
+index 94c53ad..00dfd14 100644
+--- a/src/components/ionosphere/types.ts
++++ b/src/components/ionosphere/types.ts
+@@ -89,6 +89,9 @@ export interface SceneSettings {
+   sliceLonA: number;
+   sliceLatB: number;
+   sliceLonB: number;
++  // W-4 F1: iso-bands + etiquetas (espejo App.cpp:4230-4236).
++  showIso: boolean;
++  showLabels: boolean;
+ }
+ 
+ export const DEFAULT_SETTINGS: SceneSettings = {
+@@ -116,6 +119,8 @@ export const DEFAULT_SETTINGS: SceneSettings = {
+   sliceLonA: -4,
+   sliceLatB: 40,
+   sliceLonB: -100,
++  showIso: false,
++  showLabels: false,
+ };
+ 
+ /** Avance de replay en minutos-atrás (espejo App.cpp:2139-2141).
+diff --git b/src/lib/iono/refshells.test.ts b/src/lib/iono/refshells.test.ts
+new file mode 100644
+index 0000000..5c1747b
+--- /dev/null
++++ b/src/lib/iono/refshells.test.ts
+@@ -0,0 +1,67 @@
++/**
++ * TU W-4 ref-shells/iso/labels (clase F1): espejo RefShells.h/.cpp +
++ * VolumeRenderer iso + App.cpp:4230-4236/5470-5525. Vitest.
++ */
++import { describe, expect, it } from "vitest";
++import { vec3ToLatLon } from "./geo";
++import {
++  ISO_LEVELS,
++  ISO_WIDTH,
++  REF_COLORS,
++  labelCulled,
++  midnightLon,
++  refAltitudes,
++  refKey,
++} from "./refshells";
++
++describe("refshells: alturas dinámicas (App.cpp:2487)", () => {
++  it("E110 fijo, F1 max(150,0.8mh), F2 mh", () => {
++    expect(refAltitudes([280, 300, 320])).toEqual({ e: 110, f1: 240, f2: 300 });
++  });
++  it("F1 piso 150 con mh bajo (mediana superior)", () => {
++    expect(refAltitudes([150, 160])).toEqual({ e: 110, f1: 150, f2: 160 });
++  });
++  it("vacío o <0.5 -> null (guard)", () => {
++    expect(refAltitudes([])).toBeNull();
++    expect(refAltitudes([0, -3])).toBeNull();
++    expect(refAltitudes([0.2])).toBeNull();
++  });
++  it("clave incluye exageración", () => {
++    const a = refAltitudes([300])!;
++    expect(refKey(a, 2.2)).toBe("110|240|300|2.2");
++    expect(refKey(a, 2.2)).not.toBe(refKey(a, 5));
++  });
++});
++
++describe("refshells: constantes del oráculo", () => {
++  it("colores E/F1/F2", () => {
++    expect(REF_COLORS.e).toEqual([0.1, 0.45, 0.2]);
++    expect(REF_COLORS.f1).toEqual([0.5, 0.42, 0.1]);
++    expect(REF_COLORS.f2).toEqual([0.5, 0.22, 0.07]);
++  });
++  it("iso 10.5/11/11.5 ancho 0.02", () => {
++    expect(ISO_LEVELS).toEqual([10.5, 11, 11.5]);
++    expect(ISO_WIDTH).toBe(0.02);
++  });
++});
++
++describe("labels: cull y medianoche", () => {
++  it("dorso y fuera de NDC ocultan", () => {
++    expect(labelCulled(0.1, 0, 0)).toBe(true);
++    expect(labelCulled(0.5, 1.2, 0)).toBe(true);
++    expect(labelCulled(0.5, 0, -1.2)).toBe(true);
++    expect(labelCulled(0.5, 0.3, -0.4)).toBe(false);
++  });
++  it("medianoche == vec3ToLatLon del antisolar", () => {
++    const dirs = [
++      [-1, 0, 0],
++      [0.3, 0.5, -0.8],
++      [0.1, -0.9, 0.4],
++    ];
++    for (const [x, y, z] of dirs) {
++      const r = Math.hypot(x, y, z);
++      const inv = vec3ToLatLon(-x / r, -y / r, -z / r);
++      expect(midnightLon(x / r, y / r, z / r)).toBeCloseTo(inv.lon, 9);
++    }
++  });
++});
+diff --git b/src/lib/iono/refshells.ts b/src/lib/iono/refshells.ts
+new file mode 100644
+index 0000000..7c26a0e
+--- /dev/null
++++ b/src/lib/iono/refshells.ts
+@@ -0,0 +1,52 @@
++/**
++ * Ref-shells E/F1/F2 + iso-bands + labels W-4 (clase F1): espejo de
++ * RefShells.h/.cpp, VolumeRenderer iso (u_isoOn/u_isoWidth) y App.cpp
++ * :4230-4236/:5470-5525. Puro, sin GL, sin red. TU: refshells.test.ts.
++ */
++
++// Colores del oraculo (RefShells.cpp:71-78).
++export const REF_COLORS = {
++  e: [0.1, 0.45, 0.2],
++  f1: [0.5, 0.42, 0.1],
++  f2: [0.5, 0.22, 0.07],
++} as const;
++
++// Iso-bands logNe (VolumeRenderer.cpp:128-129, ancho :274).
++export const ISO_LEVELS = [10.5, 11, 11.5];
++export const ISO_WIDTH = 0.02;
++
++export interface RefAltitudes {
++  e: number;
++  f1: number;
++  f2: number;
++}
++
++/** Alturas E110 / F1-max(150,0.8mh) / F2-mh (App.cpp:2487).
++ *  null sin mediana (guard <0.5 km: RefShells.cpp:117-121). */
++export function refAltitudes(hmF2s: number[]): RefAltitudes | null {
++  const vs = hmF2s.filter((v) => v > 0).sort((a, b) => a - b);
++  if (!vs.length) return null;
++  const mh = vs[vs.length >> 1];
++  if (mh < 0.5) return null;
++  return { e: 110, f1: Math.max(150, 0.8 * mh), f2: mh };
++}
++
++/** Clave de rebuild (alturas + exageración). */
++export function refKey(a: RefAltitudes, exaggeration: number): string {
++  return `${a.e}|${a.f1}|${a.f2}|${exaggeration}`;
++}
++
++/** Cull de etiqueta (App.cpp:5471-5479): dorso o fuera de NDC. */
++export function labelCulled(facing: number, ndcX: number, ndcY: number): boolean {
++  return facing < 0.15 || Math.abs(ndcX) > 1.1 || Math.abs(ndcY) > 1.1;
++}
++
++/** Longitud del meridiano de medianoche desde el vector solar unitario.
++ *  Replica vec3ToLatLon(-dir): phi=atan2(-sz, sx), lon=phi-180. */
++export function midnightLon(sunX: number, _sunY: number, sunZ: number): number {
++  const phi = Math.atan2(-sunZ, sunX);
++  let lon = (phi * 180) / Math.PI - 180;
++  if (lon < -180) lon += 360;
++  if (lon > 180) lon -= 360;
++  return lon;
++}
