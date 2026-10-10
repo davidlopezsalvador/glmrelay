@@ -1,0 +1,60 @@
+From t <t@t> Mon Oct 12 00:00:00 2026 +0200
+From: t <t@t>
+Date: Mon, 12 Oct 2026 00:00:00 +0200
+Subject: [PATCH] w231-psfix (techo 35px + slider 3-15)
+
+---
+ {a => b}/src/components/ionosphere/hud/LayersPanel.tsx | 4 +++-
+ {a => b}/src/components/ionosphere/shaders.ts          | 4 +++-
+ {a => b}/src/components/ionosphere/types.ts            | 3 ++-
+ 3 files changed, 8 insertions(+), 3 deletions(-)
+
+diff --git a/src/components/ionosphere/hud/LayersPanel.tsx b/src/components/ionosphere/hud/LayersPanel.tsx
+index 8b38fd3..9650edf 100644
+--- a/src/components/ionosphere/hud/LayersPanel.tsx
++++ b/src/components/ionosphere/hud/LayersPanel.tsx
+@@ -116,12 +116,14 @@ export default function LayersPanel({ settings, onChange, ionosondes, fps }: Pro
+       </div>
+ 
+       {/* W-4 E-tail o6: tamaño de punto (App.cpp:4293 SliderFloat 3-30). */}
++      {/* W-4 E-tail o6: tamaño de punto (rango útil 3-15; más allá
++          satura el techo y no cambia nada). */}
+       <Slider
+         icon={<Circle size={12} />}
+         label="Point size"
+         value={settings.pointSize}
+         min={3}
+-        max={30}
++        max={15}
+         step={1}
+         format={(v) => `${v.toFixed(0)}`}
+         onChange={(v) => onChange({ pointSize: v })}
+diff --git a/src/components/ionosphere/shaders.ts b/src/components/ionosphere/shaders.ts
+index 5402166..c94a6aa 100644
+--- a/src/components/ionosphere/shaders.ts
++++ b/src/components/ionosphere/shaders.ts
+@@ -416,7 +416,9 @@ void main() {
+   vec4 mv = viewMatrix * modelMatrix * vec4(position, 1.0);
+   gl_Position = projectionMatrix * mv;
+   float dist = -mv.z;
+-  gl_PointSize = clamp(140.0 * uPointSize / 11.0 / dist, 3.0, 26.0) * uPixelRatio;
++  // Techo escala con el setting hasta 35 px (a 11 == 26 px, look actual
++  // intacto; a 30 == 35 px, la mitad del exceso).
++  gl_PointSize = clamp(140.0 * uPointSize / 11.0 / dist, 3.0, min(26.0 * uPointSize / 11.0, 35.0)) * uPixelRatio;
+   vF = aFo;
+   // pulso suave de vida
+   vFade = 0.75 + 0.25 * sin(uTime * 2.2 + position.x * 40.0 + position.y * 33.0);
+diff --git a/src/components/ionosphere/types.ts b/src/components/ionosphere/types.ts
+index 5b05fbe..3bd771c 100644
+--- a/src/components/ionosphere/types.ts
++++ b/src/components/ionosphere/types.ts
+@@ -96,7 +96,8 @@ export interface SceneSettings {
+   volumeMode: "density" | "chapman";
+   volumeOpacity: number; // 0..2.5 UI, clamp [0,3]
+   // W-4 E-tail o6: tamaño de punto (App.cpp:4293 SliderFloat 3-30).
+-  pointSize: number; // 3..30, default 11
++  // Adaptación declarada: slider web 3-15 (más allá satura el techo GL).
++  pointSize: number; // 3..15 UI, default 11
+ }
+ 
+ export const DEFAULT_SETTINGS: SceneSettings = {
