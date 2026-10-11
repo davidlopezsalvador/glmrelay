@@ -1,0 +1,54 @@
+From faf03c4af72f891eb4ea1f09dee9f4beb33a5aa2 Mon Sep 17 00:00:00 2001
+From: David Lopez Salvador <davidlopezsalvador@users.noreply.github.com>
+Date: Sun, 11 Oct 2026 12:57:47 +0200
+Subject: [PATCH] Ruling-194: suspender render/present con iconified (swapchain
+ tras oclusion)
+
+---
+ src/App.cpp | 30 ++++++++++++++++++++----------
+ 1 file changed, 20 insertions(+), 10 deletions(-)
+
+diff --git a/src/App.cpp b/src/App.cpp
+index 0c91c72..ae27ef6 100644
+--- a/src/App.cpp
++++ b/src/App.cpp
+@@ -1885,16 +1885,26 @@ void App::run() {
+         glfwPollEvents();
+         processInput();
+         const double tPh1 = glfwGetTime();
+-        update(deltaTime);
+-        const double tPh2 = glfwGetTime();
+-        render();
+-        if (impl->exportReq) {
+-            impl->exportReq = false;
+-            doExportFrame(impl->mapVariable, impl->tecLayer.getGrid(), winW, winH);
+-        }
+-        const double tPh3 = glfwGetTime();
+-        glfwSwapBuffers(window);
+-        const double tPh4 = glfwGetTime();
++        update(deltaTime);
++        const double tPh2 = glfwGetTime();
++        // Ruling 194: con la ventana minimizada se suspende render/present
++        // (swapchain enferma tras oclusión; el pump, update e hilos siguen).
++        // Sleep para no girar en vacío; el watchdog sigue armado.
++        const bool iconicFrame = glfwGetWindowAttrib(window, GLFW_ICONIFIED) ? true : false;
++        double tPh3 = tPh2, tPh4 = tPh2;
++        if (!iconicFrame) {
++            render();
++            if (impl->exportReq) {
++                impl->exportReq = false;
++                doExportFrame(impl->mapVariable, impl->tecLayer.getGrid(), winW, winH);
++            }
++            tPh3 = glfwGetTime();
++            glfwSwapBuffers(window);
++            tPh4 = glfwGetTime();
++        } else {
++            std::this_thread::sleep_for(std::chrono::milliseconds(50));
++            tPh3 = tPh4 = glfwGetTime();
++        }
+         // UI-117C: watchdog de stalls >250 ms a stderr (tag propio, nunca [LGDC]).
+         const int focusedNow = glfwGetWindowAttrib(window, GLFW_FOCUSED) ? 1 : 0;
+         const int iconicNow = glfwGetWindowAttrib(window, GLFW_ICONIFIED) ? 1 : 0;
+-- 
+2.53.0.windows.3
+
