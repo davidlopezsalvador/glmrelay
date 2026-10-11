@@ -1,0 +1,649 @@
+From t <t@t> Mon Oct 12 00:00:00 2026 +0200
+From: t <t@t>
+Date: Mon, 12 Oct 2026 00:00:00 +0200
+Subject: [PATCH] w244-resiliencia (fail-fast + kc2g + cache honesta)
+
+---
+ {a => b}/src/app/api/ionosondes/route.ts           | 200 +++++++++++++++++----
+ {a => b}/src/app/page.tsx                          |   8 +-
+ .../ionosphere/hud/SpaceWeatherPanel.tsx           |  34 +++-
+ {a => b}/src/components/ionosphere/types.ts        |   2 +
+ /dev/null => b/src/lib/iono/fallback.test.ts       | 101 +++++++++++
+ /dev/null => b/src/lib/iono/fallback.ts            | 105 +++++++++++
+ {a => b}/src/lib/iono/profileGrid.ts               |   6 +-
+ {a => b}/src/lib/iono/replay.test.ts               |   1 +
+ 8 files changed, 410 insertions(+), 47 deletions(-)
+
+diff --git a/src/app/api/ionosondes/route.ts b/src/app/api/ionosondes/route.ts
+index 50e77eb..ffe59c7 100644
+--- a/src/app/api/ionosondes/route.ts
++++ b/src/app/api/ionosondes/route.ts
+@@ -1,4 +1,11 @@
+ import { NextResponse } from "next/server";
++import {
++  cacheable,
++  filterFresh,
++  parseKc2gRow,
++  resolveSource,
++  type Kc2gStation,
++} from "@/lib/iono/fallback";
+ 
+ /**
+  * GIRO/DIDBase: catálogo de estaciones + datos recientes por estación.
+@@ -10,7 +17,13 @@ import { NextResponse } from "next/server";
+  *      Consultamos en paralelo un subconjunto (~28 estaciones estratégicas globales)
+  *      con cadencia de 10 min en el server, incluyendo historia (para replay).
+  *
+- * Caché: 10 min. El cliente puede pedir ?full=1 para todas las estaciones con dato.
++ * W-4 244 (ruling 243, resiliencia): fail-fast + kc2g FAILOVER-ONLY +
++ * caché honesta. Precedencia live > kc2g > cache > model, declarada en
++ * el payload (source dinámico, nunca constante).
++ *
++ * Caché: 10 min (solo no-vacía). El cliente puede pedir ?full=1 para todas
++ * las estaciones con dato. Catálogo: TTL 24 h (antes nunca expiraba).
++ * Anti-rebaño: tras fallo total LGDC se sirve fallback 5 min sin reintentar.
+  */
+ 
+ export const revalidate = 0;
+@@ -73,8 +86,13 @@ const ANCHOR_STATIONS = [
+ const EXTRA_TTL_MS = 3600_000;
+ 
+ let stationCache: { data: unknown; ts: number } | null = null;
+-let catalogCache: StationInfo[] | null = null;
++let catalogCache: { data: StationInfo[]; ts: number } | null = null;
+ let extraCache: { data: Map<string, Record<string, number | null>>; ts: number } | null = null;
++// W-4 244: anti-rebaño LGDC (timestamp hasta el que se sirve fallback directo).
++let lgdcDownUntil = 0;
++const CATALOG_TTL_MS = 24 * 3600_000;
++const DOWN_TTL_MS = 5 * 60_000;
++const KC2G_URL = "https://prop.kc2g.com/api/stations.json";
+ 
+ function parseCatalog(html: string): StationInfo[] {
+   const out: StationInfo[] = [];
+@@ -93,7 +111,7 @@ function parseCatalog(html: string): StationInfo[] {
+ }
+ 
+ async function fetchCatalog(): Promise<StationInfo[]> {
+-  if (catalogCache) return catalogCache;
++  if (catalogCache && Date.now() - catalogCache.ts < CATALOG_TTL_MS) return catalogCache.data;
+   try {
+     const ctrl = new AbortController();
+     const timer = setTimeout(() => ctrl.abort(), 20000);
+@@ -104,8 +122,8 @@ async function fetchCatalog(): Promise<StationInfo[]> {
+     clearTimeout(timer);
+     if (!res.ok) return [];
+     const html = await res.text();
+-    catalogCache = parseCatalog(html);
+-    return catalogCache;
++    catalogCache = { data: parseCatalog(html), ts: Date.now() };
++    return catalogCache.data;
+   } catch {
+     return [];
+   }
+@@ -222,6 +240,31 @@ async function fetchStation(code: string, now: Date): Promise<StationData | null
+   }
+ }
+ 
++/** kc2g FAILOVER-ONLY (FASE A): 1 GET por ciclo, solo con ronda fallida. */
++async function fetchKc2g(now: Date): Promise<Kc2gStation[]> {
++  try {
++    const ctrl = new AbortController();
++    const timer = setTimeout(() => ctrl.abort(), 12000);
++    const res = await fetch(KC2G_URL, {
++      headers: { "User-Agent": UA },
++      signal: ctrl.signal,
++      next: { revalidate: 0 },
++    });
++    clearTimeout(timer);
++    if (!res.ok) return [];
++    const json: unknown = await res.json();
++    if (!Array.isArray(json)) return [];
++    const out: Kc2gStation[] = [];
++    for (const row of json) {
++      const s = parseKc2gRow(row);
++      if (s) out.push(s);
++    }
++    return out;
++  } catch {
++    return [];
++  }
++}
++
+ export async function GET(request: Request) {
+   const url = new URL(request.url);
+   const wantFull = url.searchParams.get("full") === "1";
+@@ -233,36 +276,63 @@ export async function GET(request: Request) {
+     });
+   }
+ 
+-  const catalog = await fetchCatalog();
+   const now = new Date();
++  const lgdcDown = Date.now() < lgdcDownUntil;
++  const catalog = lgdcDown ? [] : await fetchCatalog();
+ 
+-  // En modo full: todas las estaciones del catálogo (limitado a 80 para cortesía)
+-  const codes = wantFull
+-    ? catalog.slice(0, 80).map((s) => s.code)
+-    : uniq;
+-
+-  // Paralelo con límite de concurrencia (6) + pausa de cortesía entre peticiones
++  // Ronda LGDC con fail-fast: primera ola de 6; cero aciertos -> abortar
++  // resto + extras (respuesta en segundos, no minutos).
+   const results: StationData[] = [];
+-  const queue = [...codes];
+-  const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+-  async function worker() {
+-    while (queue.length) {
+-      const code = queue.shift()!;
+-      const d = await fetchStation(code, now);
+-      if (d && (d.foF2 !== null || d.history.length)) results.push(d);
+-      await sleep(250); // cortesía con LGDC (rate-limit 429)
++  let roundOk = false;
++  if (catalog.length && !wantFull) {
++    const codes = uniq;
++    const queue = [...codes];
++    const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
++    let hits = 0;
++    let processed = 0;
++    const firstWave = Math.min(6, queue.length);
++    async function worker() {
++      while (queue.length) {
++        // fail-fast: tras la primera ola sin aciertos, parar.
++        if (processed >= firstWave && hits === 0) return;
++        const code = queue.shift()!;
++        processed++;
++        const d = await fetchStation(code, now);
++        if (d && (d.foF2 !== null || d.history.length)) {
++          results.push(d);
++          hits++;
++        }
++        await sleep(250); // cortesía con LGDC (rate-limit 429)
++      }
++    }
++    await Promise.all(Array.from({ length: 6 }, () => worker()));
++    roundOk = hits > 0;
++  } else if (wantFull) {
++    const codes = catalog.slice(0, 80).map((s) => s.code);
++    const queue = [...codes];
++    const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
++    async function worker() {
++      while (queue.length) {
++        const code = queue.shift()!;
++        const d = await fetchStation(code, now);
++        if (d && (d.foF2 !== null || d.history.length)) results.push(d);
++        await sleep(250);
++      }
+     }
++    await Promise.all(Array.from({ length: 6 }, () => worker()));
++    roundOk = results.length > 0;
+   }
+-  await Promise.all(Array.from({ length: 6 }, () => worker()));
+ 
+   // Caracteristicas extra para anclas (TTL propio; best-effort con fallback
+-  // a la cache previa para no vaciar el ciclo si LGDC limita).
+-  if (!wantFull && (!extraCache || Date.now() - extraCache.ts >= EXTRA_TTL_MS)) {
++  // a la cache previa para no vaciar el ciclo si LGDC limita). Solo con
++  // ronda viva (con ronda cero no corren: fail-fast).
++  if (!wantFull && roundOk && (!extraCache || Date.now() - extraCache.ts >= EXTRA_TTL_MS)) {
+     try {
+       const fromX = new Date(now.getTime() - 65 * 60_000);
+       const xqueue: { code: string; char: string }[] = [];
+       for (const code of ANCHOR_STATIONS) for (const char of EXTRA_CHARS) xqueue.push({ code, char });
+       const xresults = new Map<string, Record<string, number | null>>();
++      const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+       async function xworker() {
+         while (xqueue.length) {
+           const job = xqueue.shift()!;
+@@ -287,10 +357,11 @@ export async function GET(request: Request) {
+   const extras = extraCache?.data ?? new Map<string, Record<string, number | null>>();
+ 
+   const byCode = new Map(catalog.map((s) => [s.code, s]));
+-  const stations = results
++  const live = results
+     .map((d) => {
+       const info = byCode.get(d.code);
+       const x = extras.get(d.code) ?? {};
++      const lastT = d.history.length ? d.history[d.history.length - 1].t : null;
+       return {
+         code: d.code,
+         name: info?.name ?? d.code,
+@@ -304,22 +375,83 @@ export async function GET(request: Request) {
+         hmF2: x.hmF2 ?? null,
+         B0: x.B0 ?? null,
+         B1: x.B1 ?? null,
++        // stale por edad (>6 h fuera de mapas); paneles intactos.
++        stale: lastT ? now.getTime() - Date.parse(lastT) > 6 * 3600_000 : false,
+       };
+     })
+     .filter((s) => s.lat !== 0 || s.lon !== 0 || s.foF2 !== null)
+     .sort((a, b) => a.code.localeCompare(b.code));
+ 
+-  const data = {
+-    updated: Date.now(),
+-    stations,
+-    total: stations.length,
+-    catalogSize: catalog.length,
+-    source: "GIRO DIDBase (live, getbest)",
+-  };
++  // Fallback kc2g (solo con ronda fallida): panel <=24 h, grids via stale.
++  let kc2gCount = 0;
++  let stations = live;
++  if (!wantFull && live.length === 0) {
++    const kc = await fetchKc2g(now);
++    const fresh24 = filterFresh(kc, now.getTime(), 24 * 3600_000);
++    kc2gCount = fresh24.length;
++    stations = fresh24
++      .map((s) => ({
++        code: s.code,
++        name: s.name,
++        lat: s.lat,
++        lon: s.lon,
++        foF2: s.foF2,
++        muf3000: s.mufd,
++        history: [] as { t: string; foF2: number }[],
++        foE: s.foE,
++        foF1: s.foF1,
++        hmF2: s.hmF2,
++        B0: 100,
++        B1: 3,
++        stale: now.getTime() - s.timeMs > 6 * 3600_000,
++      }))
++      .sort((a, b) => a.code.localeCompare(b.code));
++  }
++
++  // Precedencia + caché honesta (nunca vacío como bueno).
++  const cacheAgeMin =
++    stationCache && (stationCache.data as { stations?: unknown[] }).stations?.length
++      ? Math.round((Date.now() - stationCache.ts) / 60000)
++      : null;
++  const kind = resolveSource({ live: live.length, kc2g: kc2gCount, cacheAgeMin });
++  const source =
++    kind === "live"
++      ? "GIRO DIDBase (live, getbest)"
++      : kind === "kc2g"
++        ? "kc2g fallback"
++        : kind === "cache" && cacheAgeMin !== null
++          ? `cache +${cacheAgeMin}min`
++          : "model";
++
++  let data: unknown;
++  if (stations.length > 0) {
++    data = {
++      updated: Date.now(),
++      stations,
++      total: stations.length,
++      catalogSize: catalog.length,
++      source,
++    };
++  } else if (cacheAgeMin !== null && stationCache) {
++    data = stationCache.data;
++  } else {
++    data = {
++      updated: Date.now(),
++      stations: [],
++      total: 0,
++      catalogSize: catalog.length,
++      source: "model",
++    };
++  }
++
++  // Anti-rebaño: fallo total LGDC -> servir fallback 5 min sin reintentar.
++  if (!wantFull && !roundOk && catalog.length === 0) {
++    lgdcDownUntil = Date.now() + DOWN_TTL_MS;
++  }
+ 
+-  // no cachear el modo full tan agresivo (diagnóstico)
+-  if (!wantFull) {
+-    (stationCache as { data: unknown; ts: number }) = { data, ts: Date.now() };
++  // no cachear el modo full tan agresivo (diagnóstico); nunca vacío bueno.
++  if (!wantFull && cacheable(stations.length)) {
++    stationCache = { data, ts: Date.now() };
+   }
+   return NextResponse.json(data, { headers: { "Cache-Control": "no-store", "X-Cache": "miss" } });
+ }
+diff --git a/src/app/page.tsx b/src/app/page.tsx
+index e45355c..845a434 100644
+--- a/src/app/page.tsx
++++ b/src/app/page.tsx
+@@ -179,7 +179,9 @@ export default function Home() {
+   const tx = ionos?.stations.find((s) => s.code === txCode) ?? null;
+   const rx = ionos?.stations.find((s) => s.code === rxCode) ?? null;
+ 
+-  const dataOk = !!(sw && aurora && ionos);
++  // W-4 244 (ruling 243): render parcial — la escena tolera null; el
++  // overlay solo cuando no hay NADA cargado (no por clase pendiente).
++  const anyData = !!(sw || aurora || ionos);
+ 
+   return (
+     <main className="relative w-full h-screen overflow-hidden bg-[#02040a] select-none">
+@@ -378,8 +380,8 @@ export default function Home() {
+         </div>
+       )}
+ 
+-      {/* overlay de carga inicial */}
+-      {!dataOk && (
++      {/* overlay de carga inicial (solo sin ningún dato) */}
++      {!anyData && (
+         <div className="absolute inset-0 z-30 bg-[#02040a]/80 backdrop-blur-sm flex flex-col items-center justify-center gap-4">
+           <div className="relative w-16 h-16">
+             <div className="absolute inset-0 rounded-full border-2 border-cyan-400/20" />
+diff --git a/src/components/ionosphere/hud/SpaceWeatherPanel.tsx b/src/components/ionosphere/hud/SpaceWeatherPanel.tsx
+index dbf22cd..46a5e46 100644
+--- a/src/components/ionosphere/hud/SpaceWeatherPanel.tsx
++++ b/src/components/ionosphere/hud/SpaceWeatherPanel.tsx
+@@ -3,6 +3,7 @@
+ import { useState } from "react";
+ import { Activity, Sun, Wind, Zap, Globe2 } from "lucide-react";
+ import { SpaceWeatherData } from "../types";
++import { sourceBadge } from "@/lib/iono/fallback";
+ import Sparkline from "./Sparkline";
+ 
+ /** Panel de clima espacial: Kp, F10.7, viento solar, GOES X-ray + disco solar SDO */
+@@ -251,15 +252,32 @@ export function PanelBox({
+ }
+ 
+ export function SourceDot({ source }: { source: string }) {
+-  const live = source.toLowerCase().includes("live");
++  // W-4 244: 5 estados de fuente (ruling 243); mapeo puro en fallback.ts.
++  const b = sourceBadge(source);
++  const cls =
++    b.tone === "green"
++      ? "text-emerald-400"
++      : b.tone === "amber"
++        ? "text-amber-300"
++        : b.tone === "blue"
++          ? "text-sky-400"
++          : b.tone === "red"
++            ? "text-red-400"
++            : "text-slate-500";
++  const dot =
++    b.tone === "green"
++      ? "bg-emerald-400 animate-pulse"
++      : b.tone === "amber"
++        ? "bg-amber-300"
++        : b.tone === "blue"
++          ? "bg-sky-400"
++          : b.tone === "red"
++            ? "bg-red-400"
++            : "bg-slate-600";
+   return (
+-    <span
+-      className={`inline-flex items-center gap-1 text-[9px] uppercase tracking-wider ${
+-        live ? "text-emerald-400" : "text-slate-500"
+-      }`}
+-    >
+-      <span className={`w-1.5 h-1.5 rounded-full ${live ? "bg-emerald-400 animate-pulse" : "bg-slate-600"}`} />
+-      {live ? "live" : "off"}
++    <span className={`inline-flex items-center gap-1 text-[9px] uppercase tracking-wider ${cls}`}>
++      <span className={`w-1.5 h-1.5 rounded-full ${dot}`} />
++      {b.label}
+     </span>
+   );
+ }
+diff --git a/src/components/ionosphere/types.ts b/src/components/ionosphere/types.ts
+index 3bd771c..027217c 100644
+--- a/src/components/ionosphere/types.ts
++++ b/src/components/ionosphere/types.ts
+@@ -52,6 +52,8 @@ export interface IonosondeStation {
+   hmF2: number | null;
+   B0: number | null;
+   B1: number | null;
++  // W-4 244: stale declarado por la ruta (paneles intactos, grids excluyen).
++  stale: boolean;
+ }
+ 
+ export interface IonosondeData {
+diff --git a/src/lib/iono/fallback.test.ts b/src/lib/iono/fallback.test.ts
+new file mode 100644
+index 0000000..fec901e
+--- /dev/null
++++ b/src/lib/iono/fallback.test.ts
+@@ -0,0 +1,101 @@
++/**
++ * TU W-4 fallback kc2g (clase 244, ruling 243): parse, lon, EG931,
++ * frescura, precedencia, caché honesta, badge 5 estados. Vitest.
++ * Fixtures con la forma real verificada en vivo (stations.json).
++ */
++import { describe, expect, it } from "vitest";
++import {
++  cacheable,
++  filterFresh,
++  normalizeLon,
++  parseKc2gRow,
++  resolveSource,
++  sourceBadge,
++} from "./fallback";
++
++const NOW = Date.parse("2026-10-11T12:00:00Z");
++const H = 3600_000;
++
++function row(over: Record<string, unknown> = {}) {
++  return {
++    station: { code: "EA036", name: "El Arenosillo, Spain", longitude: "353.3", latitude: "37.1" },
++    fof2: 9.35,
++    hmf2: 243.234,
++    foe: 1.95,
++    fof1: null,
++    mufd: 32.753,
++    time: "2026-10-11T11:25:01",
++    ...over,
++  };
++}
++
++describe("fallback: parse kc2g", () => {
++  it("fila real completa", () => {
++    const s = parseKc2gRow(row())!;
++    expect(s.code).toBe("EA036");
++    expect(s.lat).toBeCloseTo(37.1, 9);
++    expect(s.lon).toBeCloseTo(-6.7, 9);
++    expect(s.foF2).toBe(9.35);
++    expect(s.hmF2).toBeCloseTo(243.234, 9);
++    expect(s.timeMs).toBe(Date.parse("2026-10-11T11:25:01Z"));
++  });
++  it("EG931 excluida siempre", () => {
++    expect(
++      parseKc2gRow(row({ station: { code: "EG931", name: "x", longitude: "0", latitude: "0" } })),
++    ).toBeNull();
++  });
++  it("filas rotas -> null (sin código, sin coords)", () => {
++    expect(parseKc2gRow(null)).toBeNull();
++    expect(parseKc2gRow({})).toBeNull();
++    expect(parseKc2gRow(row({ station: { code: "", name: "x", longitude: "0", latitude: "0" } }))).toBeNull();
++    expect(
++      parseKc2gRow(row({ station: { code: "EB040", name: "x", longitude: "no", latitude: "40" } })),
++    ).toBeNull();
++  });
++  it("lon normalize 0-360 -> -180..180", () => {
++    expect(normalizeLon("353.3")).toBeCloseTo(-6.7, 9);
++    expect(normalizeLon("0.5")).toBeCloseTo(0.5, 9);
++    expect(normalizeLon(262.3)).toBeCloseTo(-97.7, 9);
++    expect(normalizeLon("no")).toBeNaN();
++  });
++});
++
++describe("fallback: frescura y precedencia", () => {
++  const mk = (ageH: number, code = "EB040") => ({
++    code,
++    name: code,
++    lat: 0,
++    lon: 0,
++    foF2: 7,
++    hmF2: 300,
++    foE: null,
++    foF1: null,
++    mufd: null,
++    timeMs: NOW - ageH * H,
++  });
++  it("corte 6 h / 24 h (futuro = fresco)", () => {
++    const rows = [mk(1), mk(7), mk(30), { ...mk(1), timeMs: NOW + H }];
++    expect(filterFresh(rows, NOW, 6 * H).length).toBe(2);
++    expect(filterFresh(rows, NOW, 24 * H).length).toBe(3);
++  });
++  it("live > kc2g > cache > model", () => {
++    expect(resolveSource({ live: 5, kc2g: 3, cacheAgeMin: 10 })).toBe("live");
++    expect(resolveSource({ live: 0, kc2g: 3, cacheAgeMin: 10 })).toBe("kc2g");
++    expect(resolveSource({ live: 0, kc2g: 0, cacheAgeMin: 10 })).toBe("cache");
++    expect(resolveSource({ live: 0, kc2g: 0, cacheAgeMin: null })).toBe("model");
++  });
++  it("caché honesta: vacío nunca se guarda", () => {
++    expect(cacheable(0)).toBe(false);
++    expect(cacheable(7)).toBe(true);
++  });
++});
++
++describe("fallback: badge 5 estados", () => {
++  it("live/kc2g/cache/model/down", () => {
++    expect(sourceBadge("GIRO DIDBase (live, getbest)")).toEqual({ label: "live", tone: "green" });
++    expect(sourceBadge("kc2g fallback")).toEqual({ label: "kc2g", tone: "amber" });
++    expect(sourceBadge("cache +25min")).toEqual({ label: "cache", tone: "slate" });
++    expect(sourceBadge("model")).toEqual({ label: "model", tone: "blue" });
++    expect(sourceBadge("")).toEqual({ label: "down", tone: "red" });
++  });
++});
+diff --git a/src/lib/iono/fallback.ts b/src/lib/iono/fallback.ts
+new file mode 100644
+index 0000000..1cc934b
+--- /dev/null
++++ b/src/lib/iono/fallback.ts
+@@ -0,0 +1,105 @@
++/**
++ * Fallback kc2g FAILOVER-ONLY W-4 (clase 244, ruling 243): espejo FASE A
++ * (Kc2gAdapter.h:39-59). Solo se usa con la ronda LGDC fallida; jamás
++ * primario ni always-on (241 ratificado). Puro, sin red. TU: fallback.
++ *
++ * Esquema kc2g (stations.json, verificado en vivo): array de 101 filas
++ * {station:{code,name,longitude("0-360"),latitude},fof2,hmf2,foe,fof1,
++ * mufd,time("sin Z")}. Sin B0/B1 (sanitize 100/3) ni historia.
++ */
++export type DataSource = "live" | "kc2g" | "cache" | "model" | "down";
++
++export interface Kc2gStation {
++  code: string;
++  name: string;
++  lat: number;
++  lon: number; // -180..180 normalizada
++  foF2: number | null;
++  hmF2: number | null;
++  foE: number | null;
++  foF1: number | null;
++  mufd: number | null;
++  timeMs: number; // NaN si ilegible
++}
++
++// EG931 excluida (regla kc2g del oráculo).
++const EXCLUDED = new Set(["EG931"]);
++
++/** lon 0-360 (string|number) -> -180..180. NaN si ilegible. */
++export function normalizeLon(v: unknown): number {
++  const n = typeof v === "string" ? parseFloat(v) : typeof v === "number" ? v : NaN;
++  if (!isFinite(n)) return NaN;
++  return ((n + 540) % 360) - 180;
++}
++
++function num(v: unknown): number | null {
++  const n = typeof v === "number" ? v : typeof v === "string" ? parseFloat(v) : NaN;
++  return isFinite(n) && n !== null ? (n as number) : null;
++}
++
++function timeMs(v: unknown): number {
++  if (typeof v !== "string") return NaN;
++  const t = Date.parse(v.endsWith("Z") ? v : v + "Z");
++  return isFinite(t) ? t : NaN;
++}
++
++/** Parsea una fila kc2g. null si código/coords inutilizables o excluida. */
++export function parseKc2gRow(row: unknown): Kc2gStation | null {
++  if (!row || typeof row !== "object") return null;
++  const r = row as Record<string, unknown>;
++  const st = (r.station ?? {}) as Record<string, unknown>;
++  const code = typeof st.code === "string" ? st.code : "";
++  if (!code || EXCLUDED.has(code)) return null;
++  const lat = num(st.latitude);
++  const lon = normalizeLon(st.longitude);
++  if (lat === null || !isFinite(lon)) return null;
++  return {
++    code,
++    name: typeof st.name === "string" ? st.name : code,
++    lat,
++    lon,
++    foF2: num(r.fof2),
++    hmF2: num(r.hmf2),
++    foE: num(r.foe),
++    foF1: num(r.fof1),
++    mufd: num(r.mufd),
++    timeMs: timeMs(r.time),
++  };
++}
++
++/** Filtra por frescura (edad máxima en ms; futuro = fresco). */
++export function filterFresh(rows: Kc2gStation[], nowMs: number, maxAgeMs: number): Kc2gStation[] {
++  return rows.filter((s) => isFinite(s.timeMs) && nowMs - s.timeMs <= maxAgeMs);
++}
++
++/** Precedencia declarada: live > kc2g > cache > model (ruling 243). */
++export function resolveSource(args: {
++  live: number;
++  kc2g: number;
++  cacheAgeMin: number | null;
++}): DataSource {
++  if (args.live > 0) return "live";
++  if (args.kc2g > 0) return "kc2g";
++  if (args.cacheAgeMin !== null) return "cache";
++  return "model";
++}
++
++/** Regla de caché honesta: nunca guardar vacío como bueno. */
++export function cacheable(stationCount: number): boolean {
++  return stationCount > 0;
++}
++
++export interface SourceBadge {
++  label: string;
++  tone: "green" | "amber" | "slate" | "blue" | "red";
++}
++
++/** Badge de fuente, 5 estados (ruling 243). Puro para TU. */
++export function sourceBadge(source: string): SourceBadge {
++  const s = source.toLowerCase();
++  if (s.includes("live")) return { label: "live", tone: "green" };
++  if (s.includes("kc2g") || s.includes("fallback")) return { label: "kc2g", tone: "amber" };
++  if (s.includes("cache")) return { label: "cache", tone: "slate" };
++  if (s.includes("model")) return { label: "model", tone: "blue" };
++  return { label: "down", tone: "red" };
++}
+diff --git a/src/lib/iono/profileGrid.ts b/src/lib/iono/profileGrid.ts
+index 459888f..73207e8 100644
+--- a/src/lib/iono/profileGrid.ts
++++ b/src/lib/iono/profileGrid.ts
+@@ -73,6 +73,8 @@ export interface StationLike {
+   B0: number | null;
+   B1: number | null;
+   history?: { t: string; foF2: number }[];
++  // Stale declarado por la fuente (ruta); si ausente se calcula por edad.
++  stale?: boolean;
+ }
+ 
+ // Banner del oraculo: muestra >6 h fuera de mapas (App.cpp:4326).
+@@ -105,8 +107,8 @@ export function stationToProfileSample(s: StationLike, nowMs: number = Date.now(
+     B0: s.B0 ?? 0,
+     B1: s.B1 ?? 0,
+     valid: s.foF2 != null,
+-    // o5: stale por edad (>6 h fuera de mapas); paneles intactos.
+-    stale: isStaleSample(s.history, nowMs),
++    // o5: stale declarado por la ruta, o por edad (>6 h fuera de mapas).
++    stale: s.stale ?? isStaleSample(s.history, nowMs),
+   };
+ }
+ 
+diff --git a/src/lib/iono/replay.test.ts b/src/lib/iono/replay.test.ts
+index 0ebbfb6..0c307fc 100644
+--- a/src/lib/iono/replay.test.ts
++++ b/src/lib/iono/replay.test.ts
+@@ -33,6 +33,7 @@ function station(history: { dtH: number; foF2: number }[], foF2: number | null =
+     hmF2: null,
+     B0: null,
+     B1: null,
++    stale: false,
+   };
+ }
+ 
