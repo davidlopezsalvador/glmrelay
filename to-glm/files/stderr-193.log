@@ -1,0 +1,42 @@
+Framebuffer (MSAA 4x) incomplete
+Framebuffer: MSAA 4x no soportado, cayendo a 0x
+[WATCHDOG] stall 625ms (poll 2 update 190 render 423 swap 10) focused=1 iconified=0 vol=171ms bundles=2
+[LGDC 2026-10-11T08:10:29.989Z] launch catalog
+[GiroAdapter] Could not fetch station catalog
+[LGDC 2026-10-11T08:10:31.759Z] gate-consult deny gambit foF2 2026.10.07T18:15 ms-since-last=1770
+[LGDC 2026-10-11T08:10:50.622Z] launch catalog
+[GiroAdapter] Could not fetch station catalog
+[LGDC 2026-10-11T08:10:51.079Z] gate-consult deny gambit foF2 2026.10.07T18:15 ms-since-last=457
+[LGDC 2026-10-11T08:11:12.914Z] launch catalog
+[GiroAdapter] Could not fetch station catalog
+[LGDC 2026-10-11T08:11:25.033Z] result fail gambit foF2 2026.10.07T18:15 red/pre-gate
+[WATCHDOG] stall 305ms (poll 0 update 275 render 5 swap 26) focused=1 iconified=0 vol=271ms bundles=0
+[LGDC 2026-10-11T08:12:03.367Z] result fail gambit foF2 2026.10.07T18:15 red/pre-gate
+[LGDC 2026-10-11T08:12:39.490Z] result fail gambit foF2 2026.10.07T18:15 red/pre-gate
+[WATCHDOG] stall 319ms (poll 0 update 277 render 37 swap 5) focused=1 iconified=1 vol=275ms bundles=0
+[WATCHDOG] stall 512ms (poll 0 update 279 render 222 swap 11) focused=1 iconified=1 vol=0ms bundles=0
+[LGDC 2026-10-11T08:13:22.357Z] result fail gambit foF2 2026.10.07T18:15 red/pre-gate
+[WATCHDOG] stall 28743ms (poll 2 update 2 render 12 swap 28727) focused=1 iconified=0 vol=0ms bundles=0
+[WATCHDOG] focus lost (iconified=1)
+[WATCHDOG] stall 267ms (poll 39 update 225 render 3 swap 0) focused=0 iconified=1 vol=218ms bundles=0
+[WATCHDOG] stall 655ms (poll 0 update 0 render 654 swap 0) focused=0 iconified=1 vol=0ms bundles=0
+[LGDC 2026-10-11T08:13:59.038Z] result fail gambit foF2 2026.10.07T18:15 red/pre-gate
+[WATCHDOG] stall 263ms (poll 0 update 1 render 254 swap 8) focused=0 iconified=1 vol=0ms bundles=0
+[WATCHDOG] stall 424ms (poll 0 update 1 render 400 swap 23) focused=0 iconified=1 vol=0ms bundles=0
+[WATCHDOG] stall 255ms (poll 0 update 6 render 224 swap 25) focused=0 iconified=1 vol=0ms bundles=0
+[WATCHDOG] stall 295ms (poll 0 update 266 render 25 swap 4) focused=0 iconified=1 vol=260ms bundles=0
+[WATCHDOG] focus gained (iconified=0)
+[LGDC 2026-10-11T08:14:41.533Z] result fail gambit foF2 2026.10.07T18:15 red/pre-gate
+[WATCHDOG] stall 30144ms (poll 3 update 1 render 13 swap 30127) focused=1 iconified=0 vol=0ms bundles=0
+[WATCHDOG] focus lost (iconified=1)
+[LGDC 2026-10-11T08:15:14.979Z] result fail gambit foF2 2026.10.07T18:15 red/pre-gate
+[WATCHDOG] stall 471ms (poll 0 update 1 render 462 swap 8) focused=0 iconified=1 vol=0ms bundles=0
+[WATCHDOG] stall 315ms (poll 0 update 276 render 31 swap 9) focused=0 iconified=1 vol=274ms bundles=0
+[WATCHDOG] focus gained (iconified=0)
+[LGDC 2026-10-11T08:15:53.955Z] result fail gambit foF2 2026.10.07T18:15 red/pre-gate
+[WATCHDOG] stall 31623ms (poll 1 update 2 render 16 swap 31603) focused=1 iconified=0 vol=0ms bundles=0
+[WATCHDOG] stall 436ms (poll 0 update 0 render 1 swap 435) focused=1 iconified=0 vol=0ms bundles=0
+[WATCHDOG] stall 434ms (poll 0 update 0 render 1 swap 433) focused=1 iconified=0 vol=0ms bundles=0
+[LGDC 2026-10-11T08:16:30.937Z] result fail gambit foF2 2026.10.07T18:15 red/pre-gate
+[LGDC 2026-10-11T08:17:06.542Z] result fail gambit foF2 2026.10.07T18:15 red/pre-gate
+[LGDC 2026-10-11T08:17:38.588Z] result fail gambit foF2 2026.10.07T18:15 red/pre-gate
