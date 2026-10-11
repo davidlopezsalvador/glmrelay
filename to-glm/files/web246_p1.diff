@@ -1,0 +1,120 @@
+From t <t@t> Mon Oct 12 00:00:00 2026 +0200
+From: t <t@t>
+Date: Mon, 12 Oct 2026 00:00:00 +0200
+Subject: [PATCH] w246-p1 (atribucion + cache wiring)
+
+---
+ {a => b}/src/app/api/ionosondes/route.ts |  6 ++++--
+ {a => b}/src/app/page.tsx                |  4 ++--
+ {a => b}/src/lib/iono/fallback.test.ts   | 10 ++++++++++
+ {a => b}/src/lib/iono/fallback.ts        | 12 ++++++++++--
+ 4 files changed, 26 insertions(+), 6 deletions(-)
+
+diff --git a/src/app/api/ionosondes/route.ts b/src/app/api/ionosondes/route.ts
+index ffe59c7..076f1b4 100644
+--- a/src/app/api/ionosondes/route.ts
++++ b/src/app/api/ionosondes/route.ts
+@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
+ import {
+   cacheable,
+   filterFresh,
++  isCacheUsable,
+   parseKc2gRow,
+   resolveSource,
+   type Kc2gStation,
+@@ -432,8 +433,9 @@ export async function GET(request: Request) {
+       catalogSize: catalog.length,
+       source,
+     };
+-  } else if (cacheAgeMin !== null && stationCache) {
+-    data = stationCache.data;
++  } else if (isCacheUsable(cacheAgeMin) && stationCache) {
++    // P1-245b: el payload caché porta el source NUEVO (no el viejo).
++    data = { ...(stationCache.data as Record<string, unknown>), source };
+   } else {
+     data = {
+       updated: Date.now(),
+diff --git a/src/app/page.tsx b/src/app/page.tsx
+index 845a434..cd23ad3 100644
+--- a/src/app/page.tsx
++++ b/src/app/page.tsx
+@@ -401,11 +401,11 @@ export default function Home() {
+ 
+       <IdeasPanel open={ideasOpen} onClose={() => setIdeasOpen(false)} />
+ 
+-      {/* pie: fuentes */}
++      {/* pie: fuentes (P1-245a: atribución kc2g GIRO/WWROF/eSWua) */}
+       <footer className="absolute bottom-4 left-4 z-10 text-[9px] text-slate-600 pointer-events-none hidden lg:block leading-relaxed">
+         NOAA SWPC · GIRO DIDBase (CC BY-NC-SA 4.0) · SDO (NASA/SDO &amp; AIA, HMI consortium)
+         <br />
+-        Exploración derivada del repositorio C++ ionosphere-live-3d
++        Fallback kc2g (GIRO/WWROF/eSWua) · Exploración derivada del repositorio C++ ionosphere-live-3d
+       </footer>
+     </main>
+   );
+diff --git a/src/lib/iono/fallback.test.ts b/src/lib/iono/fallback.test.ts
+index fec901e..c1392cf 100644
+--- a/src/lib/iono/fallback.test.ts
++++ b/src/lib/iono/fallback.test.ts
+@@ -6,7 +6,9 @@
+ import { describe, expect, it } from "vitest";
+ import {
+   cacheable,
++  CACHE_MAX_AGE_MIN,
+   filterFresh,
++  isCacheUsable,
+   normalizeLon,
+   parseKc2gRow,
+   resolveSource,
+@@ -88,6 +90,14 @@ describe("fallback: frescura y precedencia", () => {
+     expect(cacheable(0)).toBe(false);
+     expect(cacheable(7)).toBe(true);
+   });
++  it("techo 24 h (P2-245): vieja -> model", () => {
++    expect(CACHE_MAX_AGE_MIN).toBe(1440);
++    expect(isCacheUsable(10)).toBe(true);
++    expect(isCacheUsable(1440)).toBe(true);
++    expect(isCacheUsable(1441)).toBe(false);
++    expect(isCacheUsable(null)).toBe(false);
++    expect(resolveSource({ live: 0, kc2g: 0, cacheAgeMin: 1500 })).toBe("model");
++  });
+ });
+ 
+ describe("fallback: badge 5 estados", () => {
+diff --git a/src/lib/iono/fallback.ts b/src/lib/iono/fallback.ts
+index 1cc934b..c276f74 100644
+--- a/src/lib/iono/fallback.ts
++++ b/src/lib/iono/fallback.ts
+@@ -72,7 +72,7 @@ export function filterFresh(rows: Kc2gStation[], nowMs: number, maxAgeMs: number
+   return rows.filter((s) => isFinite(s.timeMs) && nowMs - s.timeMs <= maxAgeMs);
+ }
+ 
+-/** Precedencia declarada: live > kc2g > cache > model (ruling 243). */
++/** Precedencia declarada: live > kc2g > cache (con techo) > model. */
+ export function resolveSource(args: {
+   live: number;
+   kc2g: number;
+@@ -80,7 +80,7 @@ export function resolveSource(args: {
+ }): DataSource {
+   if (args.live > 0) return "live";
+   if (args.kc2g > 0) return "kc2g";
+-  if (args.cacheAgeMin !== null) return "cache";
++  if (isCacheUsable(args.cacheAgeMin)) return "cache";
+   return "model";
+ }
+ 
+@@ -89,6 +89,14 @@ export function cacheable(stationCount: number): boolean {
+   return stationCount > 0;
+ }
+ 
++// Techo de edad de caché (P2-245): más allá, model (ventana panel 24 h).
++export const CACHE_MAX_AGE_MIN = 24 * 60;
++
++/** Caché utilizable: existe edad y no supera el techo. */
++export function isCacheUsable(cacheAgeMin: number | null): boolean {
++  return cacheAgeMin !== null && cacheAgeMin <= CACHE_MAX_AGE_MIN;
++}
++
+ export interface SourceBadge {
+   label: string;
+   tone: "green" | "amber" | "slate" | "blue" | "red";
