@@ -1,0 +1,492 @@
+From t <t@t> Mon Oct 12 00:00:00 2026 +0200
+From: t <t@t>
+Date: Mon, 12 Oct 2026 00:00:00 +0200
+Subject: [PATCH] w261-greyline (terminator+band+panel)
+
+---
+ src/app/page.tsx                                  |   5 +
+ .../src/components/ionosphere/IonosphereScene.tsx |  76 +++++++++++++
+ .../src/components/ionosphere/hud/GreyPanel.tsx   |  63 +++++++++++
+ .../src/components/ionosphere/hud/LayersPanel.tsx |   8 +-
+ src/components/ionosphere/types.ts                |   3 +
+ src/lib/iono/greyline.test.ts                     |  82 ++++++++++++++
+ src/lib/iono/greyline.ts                          | 123 +++++++++++++++++++++
+ 7 files changed, 359 insertions(+), 1 deletion(-)
+
+diff --git a/src/app/page.tsx b/src/app/page.tsx
+index 459004e..1293823 100644
+--- a/src/app/page.tsx
++++ b/src/app/page.tsx
+@@ -8,6 +8,7 @@ import SpaceWeatherPanel from "@/components/ionosphere/hud/SpaceWeatherPanel";
+ import CmePanel from "@/components/ionosphere/hud/CmePanel";
+ import FlarePanel from "@/components/ionosphere/hud/FlarePanel";
+ import WsprPanel from "@/components/ionosphere/hud/WsprPanel";
++import GreyPanel from "@/components/ionosphere/hud/GreyPanel";
+ import LayersPanel from "@/components/ionosphere/hud/LayersPanel";
+ import RadioPanel from "@/components/ionosphere/hud/RadioPanel";
+ import TimeBar from "@/components/ionosphere/hud/TimeBar";
+@@ -304,6 +305,7 @@ export default function Home() {
+         <CmePanel cme={cme} epochMs={cmeEpoch} />
+         <FlarePanel sw={sw} flares={flares} epochMs={cmeEpoch} />
+         <WsprPanel wspr={wspr} epochMs={cmeEpoch} />
++        <GreyPanel wspr={wspr} epochMs={cmeEpoch} />
+       </div>
+       <div className="absolute right-4 top-20 z-10 w-64 pointer-events-none space-y-3 hidden md:block">
+         <LayersPanel settings={settings} onChange={onSettingsChange} ionosondes={ionos} fps={fps} sw={sw ? sw.wind : null} />
+@@ -558,6 +560,9 @@ function MobilePanels({
+           <div className="mt-2">
+             <WsprPanel wspr={wspr} epochMs={cmeEpoch} />
+           </div>
++          <div className="mt-2">
++            <GreyPanel wspr={wspr} epochMs={cmeEpoch} />
++          </div>
+         </>
+       )}
+       {tab === "radio" && (
+diff --git a/src/components/ionosphere/IonosphereScene.tsx b/src/components/ionosphere/IonosphereScene.tsx
+index 6905a96..dacd099 100644
+--- a/src/components/ionosphere/IonosphereScene.tsx
++++ b/src/components/ionosphere/IonosphereScene.tsx
+@@ -44,6 +44,7 @@ import {
+ import { cmeArrived, cmeEffectiveDp } from "@/lib/iono/cme";
+ import { flareState } from "@/lib/iono/flare";
+ import { bandColor } from "@/lib/iono/wspr";
++import { greyRibbon, greylineLoop } from "@/lib/iono/greyline";
+ import {
+   volumeModeIndex,
+   volumeOpacityClamp,
+@@ -161,6 +162,8 @@ export default function IonosphereScene(props: Props) {
+     };
+     // W-4 #5 WSPRnet (ruling 252): arcos TX->RX (rebuild por fetchedAt).
+     wspr?: { group: THREE.Group; key: string };
++    // W-4 #6 grey line (ruling 252): terminator overlay (rebuild/min).
++    grey?: { group: THREE.Group; key: string };
+     raycaster: THREE.Raycaster;
+     gridState: {
+       fo: Float32Array;
+@@ -314,6 +317,12 @@ export default function IonosphereScene(props: Props) {
+       wsprGroup.visible = false;
+       scene.add(wsprGroup);
+ 
++      // W-4 #6: overlay de linea gris (banda + terminador; el shader
++      // sol/noche NO se toca — O6.2).
++      const greyGroup = new THREE.Group();
++      greyGroup.visible = false;
++      scene.add(greyGroup);
++
+       S.current = {
+         renderer,
+         scene,
+@@ -346,6 +355,7 @@ export default function IonosphereScene(props: Props) {
+           key: "",
+         },
+         wspr: { group: wsprGroup, key: "" },
++        grey: { group: greyGroup, key: "" },
+         raycaster: new THREE.Raycaster(),
+         gridState: { fo: new Float32Array(GRID_W * GRID_H), hm: new Float32Array(GRID_W * GRID_H), fMin: 2, fMax: 10, stamp: 0 },
+         disposables: [dayTex, nightTex, cmapTex, earth.mesh.geometry, earth.mat, atmo.mesh.geometry, atmo.mat, shell.mesh.geometry, shell.mat, shell.foTex, shell.hmTex, rings.group, stars.points.geometry, stars.mat],
+@@ -726,6 +736,72 @@ export default function IonosphereScene(props: Props) {
+           }
+         }
+ 
++        // W-4 #6: grey-line overlay — terminator loop + band ribbon from
++        // the program's own sun (O6.1, zero external sources). Rebuilt at
++        // most once per minute (the terminator drifts slowly); plain
++        // geometry, earth sun/night shader untouched (O6.2).
++        {
++          const gr = S.current?.grey;
++          if (gr) {
++            gr.group.visible = settings.showGreyline;
++            const key = `${Math.floor(effMs / 60000)}`;
++            if (gr.group.visible && key !== gr.key) {
++              gr.key = key;
++              for (const ch of [...gr.group.children]) {
++                gr.group.remove(ch);
++                const obj = ch as THREE.Line | THREE.Mesh;
++                obj.geometry.dispose();
++                (obj.material as THREE.Material).dispose();
++              }
++              const sec = effMs / 1000;
++              const R = 1.004;
++              // Band ribbon (triangle strip inner->outer).
++              const { inner, outer } = greyRibbon(sec);
++              const pos: number[] = [];
++              for (let i = 0; i <= inner.length; i++) {
++                const a = inner[i % inner.length];
++                const b = outer[i % outer.length];
++                pos.push(a[0] * R, a[1] * R, a[2] * R, b[0] * R, b[1] * R, b[2] * R);
++              }
++              const rg = new THREE.BufferGeometry();
++              rg.setAttribute("position", new THREE.BufferAttribute(new Float32Array(pos), 3));
++              const idx: number[] = [];
++              for (let i = 0; i < inner.length; i++) {
++                const k = i * 2;
++                idx.push(k, k + 1, k + 2, k + 1, k + 3, k + 2);
++              }
++              rg.setIndex(idx);
++              const rmat = new THREE.MeshBasicMaterial({
++                color: 0xffc861,
++                transparent: true,
++                opacity: 0.16,
++                side: THREE.DoubleSide,
++                depthWrite: false,
++                blending: THREE.AdditiveBlending,
++              });
++              const ribbon = new THREE.Mesh(rg, rmat);
++              ribbon.frustumCulled = false;
++              gr.group.add(ribbon);
++              // Crisp terminator line (closed loop).
++              const loop = greylineLoop(sec);
++              const lpts = loop.map((p) => {
++                const [x, y, z] = latLonToVec3(p.lat, p.lon, R);
++                return new THREE.Vector3(x, y, z);
++              });
++              lpts.push(lpts[0].clone());
++              const lmat = new THREE.LineBasicMaterial({
++                color: 0xffd9a0,
++                transparent: true,
++                opacity: 0.75,
++                depthWrite: false,
++              });
++              const tline = new THREE.Line(new THREE.BufferGeometry().setFromPoints(lpts), lmat);
++              tline.frustumCulled = false;
++              gr.group.add(tline);
++            }
++          }
++        }
++
+         // uniforms
+         if (S.current?.earthMat) {
+           const u = S.current.earthMat.uniforms;
+diff --git b/src/components/ionosphere/hud/GreyPanel.tsx b/src/components/ionosphere/hud/GreyPanel.tsx
+new file mode 100644
+index 0000000..49b3321
+--- /dev/null
++++ b/src/components/ionosphere/hud/GreyPanel.tsx
+@@ -0,0 +1,63 @@
++"use client";
++
++import { Sunrise } from "lucide-react";
++import { WsprData } from "../types";
++import { PanelBox } from "./SpaceWeatherPanel";
++import { filterGreySpots, GREY_HALF_WIDTH_DEG } from "@/lib/iono/greyline";
++import { getSunInfo } from "@/lib/iono/solar";
++import { bandOpening } from "@/lib/iono/wspr";
++
++/** W-4 #6: grey-line panel — propagation along the terminator.
++ * Zero external sources (O6.1): everything derives from the program's
++ * own sun. O6.3 superposition: WSPR spots inside the band, computed
++ * from the SAME shown list as the arcs (no separate model). */
++export default function GreyPanel({
++  wspr,
++  epochMs,
++}: {
++  wspr: WsprData | null;
++  epochMs: number;
++}) {
++  const sun = getSunInfo(epochMs / 1000);
++  const grey = wspr ? filterGreySpots(wspr.spots, epochMs / 1000) : [];
++  const bands = bandOpening(grey);
++
++  return (
++    <PanelBox
++      title="Grey line"
++      badge={<span className="text-[9px] uppercase tracking-wider text-slate-500">own ephemeris</span>}
++    >
++      <div className="flex items-center justify-between">
++        <span className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-slate-400">
++          <Sunrise size={12} /> Terminator band
++        </span>
++        <span className="text-[11px] text-slate-200 font-mono">
++          ±{GREY_HALF_WIDTH_DEG}°
++        </span>
++      </div>
++      <div className="text-[10px] text-slate-500 mt-0.5 font-mono">
++        subsolar {sun.subsolarLat.toFixed(1)}°, {sun.subsolarLon.toFixed(1)}°
++      </div>
++      <div className="flex items-center justify-between mt-1.5">
++        <span className="text-[11px] text-slate-400">WSPR in the band</span>
++        <span className="text-xs text-amber-200 font-semibold font-mono">
++          {wspr ? `${grey.length}/${wspr.spots.length}` : "—"}
++        </span>
++      </div>
++      {bands.length > 0 && (
++        <div className="text-[10px] text-slate-400 mt-0.5">
++          {bands.map((b) => `${b.band}×${b.count}`).join(" · ")}
++        </div>
++      )}
++      {!wspr && (
++        <div className="text-[10px] text-slate-600 mt-1">
++          Spot superposition appears once WSPR data loads.
++        </div>
++      )}
++      <p className="text-[10px] text-slate-500 leading-snug mt-2 pt-2 border-t border-white/10">
++        Own ephemeris only — no external sources. Overlay layer; the
++        sun/night render is untouched.
++      </p>
++    </PanelBox>
++  );
++}
+diff --git a/src/components/ionosphere/hud/LayersPanel.tsx b/src/components/ionosphere/hud/LayersPanel.tsx
+index fbe7336..0ced13b 100644
+--- a/src/components/ionosphere/hud/LayersPanel.tsx
++++ b/src/components/ionosphere/hud/LayersPanel.tsx
+@@ -1,6 +1,6 @@
+ "use client";
+ 
+-import { Layers, Cloud, Sparkles, Radio, Orbit, Mountain, Eye, Disc3, Sun, Boxes, Circle, Rocket, Zap } from "lucide-react";
++import { Layers, Cloud, Sparkles, Radio, Orbit, Mountain, Eye, Disc3, Sun, Boxes, Circle, Rocket, Zap, Sunrise } from "lucide-react";
+ import { SceneSettings, IonosondeData } from "../types";
+ import { dynamicPressure, shueR0, tailStretch } from "@/lib/iono/magnetosphere";
+ import { PanelBox, SourceDot } from "./SpaceWeatherPanel";
+@@ -131,6 +131,12 @@ export default function LayersPanel({ settings, onChange, ionosondes, fps, sw }:
+           checked={settings.showWspr}
+           onChange={(v) => onChange({ showWspr: v })}
+         />
++        <Toggle
++          icon={<Sunrise size={12} />}
++          label="Grey line"
++          checked={settings.showGreyline}
++          onChange={(v) => onChange({ showGreyline: v })}
++        />
+       </div>
+       {settings.showMagnetosphere && (
+         <div className="mt-1 text-[10px] font-mono text-slate-400">
+diff --git a/src/components/ionosphere/types.ts b/src/components/ionosphere/types.ts
+index 0749e88..47db368 100644
+--- a/src/components/ionosphere/types.ts
++++ b/src/components/ionosphere/types.ts
+@@ -170,6 +170,8 @@ export interface SceneSettings {
+   showFlare: boolean;
+   // W-4 #5 WSPRnet (ruling 252; default ON: arcos sutiles, techo 40).
+   showWspr: boolean;
++  // W-4 #6 grey line (ruling 252; default ON: subtle overlay).
++  showGreyline: boolean;
+   // W-4 E-tail o6: tamaño de punto (App.cpp:4293 SliderFloat 3-30).
+   // Adaptación declarada: slider web 3-15 (más allá satura el techo GL).
+   pointSize: number; // 3..15 UI, default 11
+@@ -209,6 +211,7 @@ export const DEFAULT_SETTINGS: SceneSettings = {
+   showCme: true,
+   showFlare: true,
+   showWspr: true,
++  showGreyline: true,
+ };
+ 
+ /** Avance de replay en minutos-atrás (espejo App.cpp:2139-2141).
+diff --git b/src/lib/iono/greyline.test.ts b/src/lib/iono/greyline.test.ts
+new file mode 100644
+index 0000000..710465d
+--- /dev/null
++++ b/src/lib/iono/greyline.test.ts
+@@ -0,0 +1,82 @@
++import { describe, expect, it } from "vitest";
++import {
++  terminatorLat,
++  greylineLoop,
++  greyRibbon,
++  countGreySpots,
++  GREY_HALF_WIDTH_DEG,
++  GREY_SAMPLES,
++} from "./greyline";
++import { solarZenithDeg, getSunInfo } from "./solar";
++import { vec3ToLatLon } from "./geo";
++
++const EPOCH = Date.parse("2026-10-14T12:00:00Z") / 1000;
++
++describe("greyline constants (declared display choices)", () => {
++  it("half-width and sample count", () => {
++    expect(GREY_HALF_WIDTH_DEG).toBe(7.5);
++    expect(GREY_SAMPLES).toBe(144);
++  });
++});
++
++describe("terminatorLat (O6.1 checkable geometry)", () => {
++  it("equinox noon: terminator through the poles", () => {
++    // subsolar (0, 0): at lon +/-90 the whole meridian is terminator.
++    expect(Math.abs(Math.abs(terminatorLat(90, 0, 0)) - 90)).toBeLessThan(1);
++    expect(Math.abs(Math.abs(terminatorLat(-90, 0, 0)) - 90)).toBeLessThan(1);
++  });
++  it("subsolar meridian is full day", () => {
++    expect(terminatorLat(0, 0, 0)).toBeCloseTo(-90, 0);
++  });
++  it("loop points sit ON the program terminator (zenith ~90)", () => {
++    const loop = greylineLoop(EPOCH);
++    expect(loop).toHaveLength(144);
++    let worst = 0;
++    for (const p of loop) {
++      const z = solarZenithDeg(p.lat, p.lon, EPOCH);
++      worst = Math.max(worst, Math.abs(z - 90));
++    }
++    // Independent check with the program's own sun: band is honest.
++    expect(worst).toBeLessThan(2.5);
++  });
++});
++
++describe("greyRibbon (O6.2 overlay geometry)", () => {
++  it("edges sit at +/- half-width from the terminator", () => {
++    const { inner, outer } = greyRibbon(EPOCH);
++    expect(inner).toHaveLength(144);
++    expect(outer).toHaveLength(144);
++    let worstR = 0;
++    let worstIn = 0;
++    let worstOut = 0;
++    for (let i = 0; i < 144; i += 4) {
++      for (const [v, tag] of [[inner[i], "in"], [outer[i], "out"]] as const) {
++        const r = Math.hypot(v[0], v[1], v[2]);
++        worstR = Math.max(worstR, Math.abs(r - 1));
++        const ll = vec3ToLatLon(v[0], v[1], v[2]);
++        const z = solarZenithDeg(ll.lat, ll.lon, EPOCH);
++        const d = Math.abs(Math.abs(z - 90) - GREY_HALF_WIDTH_DEG);
++        if (tag === "in") worstIn = Math.max(worstIn, d);
++        else worstOut = Math.max(worstOut, d);
++      }
++    }
++    expect(worstR).toBeLessThan(1e-9); // unit sphere preserved
++    expect(worstIn).toBeLessThan(2.5); // inner edge ~7.5 deg off terminator
++    expect(worstOut).toBeLessThan(2.5); // outer edge ~7.5 deg off terminator
++  });
++});
++
++describe("countGreySpots (O6.3 superposition)", () => {
++  it("counts only band midpoints", () => {
++    const s = getSunInfo(EPOCH);
++    // A spot straddling the subsolar point is full day, not grey.
++    const day = [{ txLat: s.subsolarLat, txLon: s.subsolarLon, rxLat: s.subsolarLat, rxLon: s.subsolarLon }];
++    expect(countGreySpots(day, EPOCH)).toBe(0);
++    // Antisolar midpoint is night, not grey.
++    const night = [{ txLat: -s.subsolarLat, txLon: s.subsolarLon + 180, rxLat: -s.subsolarLat, rxLon: s.subsolarLon + 180 }];
++    expect(countGreySpots(night, EPOCH)).toBe(0);
++  });
++  it("empty list -> 0", () => {
++    expect(countGreySpots([], EPOCH)).toBe(0);
++  });
++});
+diff --git b/src/lib/iono/greyline.ts b/src/lib/iono/greyline.ts
+new file mode 100644
+index 0000000..45ec5f5
+--- /dev/null
++++ b/src/lib/iono/greyline.ts
+@@ -0,0 +1,123 @@
++/**
++ * W-4 #6 grey line (ruling 252, oracles O6.1-O6.3). Pure: no DOM, no net.
++ *
++ * PINNED REFERENCE (rule 252, BEFORE code): zero external sources (O6.1).
++ * The terminator is derived from the program's own ephemeris —
++ * `getSunInfo`/`solarZenithDeg` in solar.ts (verified by solar.test.ts) —
++ * so the band is checkable against the program's own sun at any time.
++ * Display choices (declared, not physics): half-width 7.5 deg, 144 samples.
++ */
++
++import { getSunInfo, solarZenithDeg } from "./solar";
++import { latLonToVec3 } from "./geo";
++
++/** Grey band half-width in degrees (display choice, declared). */
++export const GREY_HALF_WIDTH_DEG = 7.5;
++/** Terminator loop samples (display choice, declared). */
++export const GREY_SAMPLES = 144;
++
++/** Terminator latitude at a given longitude (deg) for a subsolar point.
++ * Solved from cos(zenith) = 0: tan(phi) = -cos(d)*cos(H)/sin(d).
++ * atan2 form is exact at the poles and equinox (no special cases). */
++export function terminatorLat(lonDeg: number, subLat: number, subLon: number): number {
++  const d = (subLat * Math.PI) / 180;
++  const h = ((lonDeg - subLon) * Math.PI) / 180;
++  const phi = Math.atan2(-Math.cos(d) * Math.cos(h), Math.sin(d));
++  return (phi * 180) / Math.PI;
++}
++
++export interface GreyPoint {
++  lat: number;
++  lon: number;
++}
++
++/** Terminator loop (O6.1): n points around the globe at the epoch. */
++export function greylineLoop(epochSec: number, n = GREY_SAMPLES): GreyPoint[] {
++  const s = getSunInfo(epochSec);
++  const pts: GreyPoint[] = [];
++  for (let i = 0; i < n; i++) {
++    const lon = (i / n) * 360 - 180;
++    pts.push({ lat: terminatorLat(lon, s.subsolarLat, s.subsolarLon), lon });
++  }
++  return pts;
++}
++
++/** Unit sun direction in engine frame (same convention as the scene). */
++export function greySunDir(epochSec: number): [number, number, number] {
++  const s = getSunInfo(epochSec);
++  return latLonToVec3(s.subsolarLat, s.subsolarLon, 1);
++}
++
++/**
++ * Ribbon edges at +/- halfWidth degrees around the terminator (O6.2:
++ * plain geometry overlay — the earth sun/night shader is untouched).
++ * Offset along the local day-gradient (toward/away from the subsolar
++ * point), rotated exactly by halfWidth around the tangent axis. */
++export function greyRibbon(
++  epochSec: number,
++  halfWidthDeg = GREY_HALF_WIDTH_DEG,
++  n = GREY_SAMPLES
++): { inner: [number, number, number][]; outer: [number, number, number][] } {
++  const sun = greySunDir(epochSec);
++  const hw = (halfWidthDeg * Math.PI) / 180;
++  const inner: [number, number, number][] = [];
++  const outer: [number, number, number][] = [];
++  const loop = greylineLoop(epochSec, n);
++  for (const p of loop) {
++    const v = latLonToVec3(p.lat, p.lon, 1);
++    // Day-gradient direction in the tangent plane.
++    const dot = v[0] * sun[0] + v[1] * sun[1] + v[2] * sun[2];
++    let gx = sun[0] - dot * v[0];
++    let gy = sun[1] - dot * v[1];
++    let gz = sun[2] - dot * v[2];
++    const gl = Math.hypot(gx, gy, gz) || 1;
++    gx /= gl;
++    gy /= gl;
++    gz /= gl;
++    // Rotation axis = tangent perpendicular to the gradient.
++    const ax = v[1] * gz - v[2] * gy;
++    const ay = v[2] * gx - v[0] * gz;
++    const az = v[0] * gy - v[1] * gx;
++    for (const [sgn, dst] of [[1, outer], [-1, inner]] as [number, [number, number, number][]][]) {
++      const a = sgn * hw;
++      const c = Math.cos(a);
++      const si = Math.sin(a);
++      // Rodrigues rotation of v around axis a by angle a.
++      const d = v[0] * ax + v[1] * ay + v[2] * az;
++      dst.push([
++        v[0] * c + (ay * v[2] - az * v[1]) * si + ax * d * (1 - c),
++        v[1] * c + (az * v[0] - ax * v[2]) * si + ay * d * (1 - c),
++        v[2] * c + (ax * v[1] - ay * v[0]) * si + az * d * (1 - c),
++      ]);
++    }
++  }
++  return { inner, outer };
++}
++
++export interface GreySpot {
++  txLat: number;
++  txLon: number;
++  rxLat: number;
++  rxLon: number;
++}
++
++/**
++ * O6.3 superposition: WSPR spots whose midpoint path lies inside the
++ * grey band (the highway IN USE). Same zenith function as the scene.
++ */
++export function countGreySpots(spots: GreySpot[], epochSec: number): number {
++  return filterGreySpots(spots, epochSec).length;
++}
++
++function spotGrey(s: GreySpot, epochSec: number): boolean {
++  const midLat = (s.txLat + s.rxLat) / 2;
++  let midLon = (s.txLon + s.rxLon) / 2;
++  if (midLon > 180) midLon -= 360;
++  if (midLon < -180) midLon += 360;
++  const z = solarZenithDeg(midLat, midLon, epochSec);
++  return Math.abs(z - 90) <= GREY_HALF_WIDTH_DEG;
++}
++
++export function filterGreySpots<T extends GreySpot>(spots: T[], epochSec: number): T[] {
++  return spots.filter((s) => spotGrey(s, epochSec));
++}
