@@ -1,0 +1,84 @@
+From t <t@t> Mon Oct 12 00:00:00 2026 +0200
+From: t <t@t>
+Date: Mon, 12 Oct 2026 00:00:00 +0200
+Subject: [PATCH] w263-micro (j2000+p1-260)
+
+---
+ .../src/components/ionosphere/hud/FlarePanel.tsx |  4 ++--
+ src/lib/iono/solar.test.ts                       | 21 +++++++++++++++++----
+ src/lib/iono/solar.ts                            |  5 ++++-
+ 3 files changed, 23 insertions(+), 7 deletions(-)
+
+diff --git a/src/components/ionosphere/hud/FlarePanel.tsx b/src/components/ionosphere/hud/FlarePanel.tsx
+index fd9f7a4..dc63561 100644
+--- a/src/components/ionosphere/hud/FlarePanel.tsx
++++ b/src/components/ionosphere/hud/FlarePanel.tsx
+@@ -113,9 +113,9 @@ export default function FlarePanel({
+           <div className="text-[10px] text-slate-600">Sin flares DONKI en la ventana.</div>
+         )}
+       </div>
+-      {/* O3.5: cierre con #5 declarado pendiente */}
++      {/* O3.5: cierre con #5 (P1-260: #5 aterrizó en el 259). */}
+       <div className="text-[10px] text-slate-600 mt-1">
+-        Cierre con #5 (WSPRnet) pendiente de aterrizar — declarado.
++        Cierre con #5 (WSPRnet): activo — ver panel WSPRnet.
+       </div>
+     </PanelBox>
+   );
+diff --git a/src/lib/iono/solar.test.ts b/src/lib/iono/solar.test.ts
+index 3f461ee..36b9339 100644
+--- a/src/lib/iono/solar.test.ts
++++ b/src/lib/iono/solar.test.ts
+@@ -1,7 +1,9 @@
+ /**
+  * TU geografico W-3 (ruling 174 P1): el subsolar decodificado en marco
+  * motor, cenit ~0 en el subsolar y mediodia del lado verdadero. Vitest.
+- * Ancla: 2026-10-07T12:00Z -> verdad (-5.79, -3.07) del oraculo compilado.
++ * Ancla H1-261 (veredicto 262): 2026-10-07T12:00Z -> (-5.62, -3.04)
++ * (antes (-5.79, -3.07) con el signo J2000 erroneo; el valor nuevo esta
++ * anclado al J2000.0 absoluto de abajo, no al oraculo compilado).
+  */
+ import { describe, expect, it } from "vitest";
+ import { densityDir } from "./densityVolume";
+@@ -10,11 +12,22 @@ import { getSunInfo, motorToLatLon, solarZenithDeg } from "./solar";
+ const EPOCH_12Z = Date.UTC(2026, 9, 7, 12, 0, 0) / 1000; // 1791374400
+ 
+ describe("solar: marco motor", () => {
+-  it("subsolar 12:00Z en lon 0+-6 (verdad -3.07)", () => {
++  it("subsolar 12:00Z en lon 0+-6 (verdad -3.04)", () => {
+     const s = getSunInfo(EPOCH_12Z);
+     expect(Math.abs(s.subsolarLon)).toBeLessThan(6);
+-    expect(s.subsolarLon).toBeCloseTo(-3.07, 1);
+-    expect(s.subsolarLat).toBeCloseTo(-5.79, 1);
++    expect(s.subsolarLon).toBeCloseTo(-3.04, 1);
++    expect(s.subsolarLat).toBeCloseTo(-5.62, 1);
++  });
++
++  it("anclaje absoluto J2000.0 (H1-261): j2000 == 0", () => {
++    // Unix 946728000 == 2000-01-01T12:00Z == J2000.0 por definicion
++    // (GMST = 280.46061837 por IAU). Con el signo erroneo esto daba
++    // 21915.0 dias (60 anos julianos); corregido da el sol verdadero
++    // de perihelio: declinacion ~-23.03 (oblicuidad de enero) y lon
++    // ~+0.83 (EoT ~-3.5 min). Puerto Python independiente: exacto.
++    const s = getSunInfo(946728000);
++    expect(s.subsolarLat).toBeCloseTo(-23.03, 2);
++    expect(s.subsolarLon).toBeCloseTo(0.83, 2);
+   });
+ 
+   it("motorToLatLon invierte densityDir", () => {
+diff --git a/src/lib/iono/solar.ts b/src/lib/iono/solar.ts
+index b6865e2..b5e13b6 100644
+--- a/src/lib/iono/solar.ts
++++ b/src/lib/iono/solar.ts
+@@ -20,7 +20,10 @@ export interface SunInfo {
+ }
+ 
+ export function getSunInfo(utcSeconds: number): SunInfo {
+-  const j2000 = utcSeconds / 86400.0 + 10957.5; // días desde J2000.0
++  // H1-261: Unix->J2000 son MENOS 10957.5 dias (el + heredado del C++
++  // computaba el sol 60 anos julianos adelante; lambda y GMST se
++  // cancelaban en longitud pero la declinacion quedaba ~0.17 desviada).
++  const j2000 = utcSeconds / 86400.0 - 10957.5; // días desde J2000.0
+   const T = j2000 / 36525.0; // siglos
+ 
+   const L0 = mod(280.46646 + 36000.76983 * T + 0.0003032 * T * T, 360.0);
