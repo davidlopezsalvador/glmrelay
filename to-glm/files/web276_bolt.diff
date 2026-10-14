@@ -1,0 +1,789 @@
+From t <t@t> Mon Oct 12 00:00:00 2026 +0200
+From: t <t@t>
+Date: Mon, 12 Oct 2026 00:00:00 +0200
+Subject: [PATCH] w276-bolt (whistler+sprites+GLM)
+
+---
+ src/app/api/lightning/route.ts                    | 101 ++++++++++++++
+ src/app/page.tsx                                  |  14 ++
+ .../src/components/ionosphere/IonosphereScene.tsx |  96 ++++++++++++++
+ .../src/components/ionosphere/hud/LayersPanel.tsx |   6 +
+ .../components/ionosphere/hud/LightningPanel.tsx  |  67 ++++++++++
+ src/components/ionosphere/types.ts                |  27 ++++
+ src/lib/iono/fadeout.ts                           |   5 +-
+ src/lib/iono/lightning.test.ts                    | 113 ++++++++++++++++
+ src/lib/iono/lightning.ts                         | 145 +++++++++++++++++++++
+ 9 files changed, 572 insertions(+), 2 deletions(-)
+
+diff --git b/src/app/api/lightning/route.ts b/src/app/api/lightning/route.ts
+new file mode 100644
+index 0000000..9bc93a6
+--- /dev/null
++++ b/src/app/api/lightning/route.ts
+@@ -0,0 +1,101 @@
++import { NextResponse } from "next/server";
++import { parseGlmList, parseNwsAlerts } from "@/lib/iono/lightning";
++
++/**
++ * W-4 F2a #8: GLM granules (AWS Open Data, no auth) + NWS storm warnings.
++ * Fuentes verificadas vivas el 2026-10-14:
++ *   https://noaa-goes19.s3.amazonaws.com/?list-type=2&prefix=GLM-L2-LCFA/...
++ *   https://noaa-goes18.s3.amazonaws.com/?list-type=2&prefix=GLM-L2-LCFA/...
++ *   (GOES-16 retirado: solo hasta 2025; operativos G19 Este + G18 Oeste)
++ *   https://api.weather.gov/alerts/active?event=Severe%20Thunderstorm%20Warning
++ * Cache 5 min (cortesia; los granulos ciclan cada 20 s).
++ */
++
++export const revalidate = 0;
++
++const UA = "IonosphereLive3D-Web/1.0 (exploration demo)";
++const TTL = 300_000;
++
++let cached: { data: unknown; ts: number } | null = null;
++
++async function fetchText(url: string, timeoutMs: number, ua: string): Promise<string | null> {
++  try {
++    const ctrl = new AbortController();
++    const timer = setTimeout(() => ctrl.abort(), timeoutMs);
++    const res = await fetch(url, {
++      headers: { "User-Agent": ua },
++      signal: ctrl.signal,
++      next: { revalidate: 0 },
++    });
++    clearTimeout(timer);
++    if (!res.ok) return null;
++    return await res.text();
++  } catch {
++    return null;
++  }
++}
++
++async function fetchJson(url: string, timeoutMs: number, ua: string): Promise<unknown> {
++  const t = await fetchText(url, timeoutMs, ua);
++  if (t == null) return null;
++  try {
++    return JSON.parse(t) as unknown;
++  } catch {
++    return null;
++  }
++}
++
++function dayHour(d: Date): { day: string; hour: string } {
++  const start = Date.UTC(d.getUTCFullYear(), 0, 0);
++  const doy = String(Math.floor((d.getTime() - start) / 86400_000)).padStart(3, "0");
++  const hh = String(d.getUTCHours()).padStart(2, "0");
++  return { day: doy, hour: hh };
++}
++
++export async function GET() {
++  if (cached && Date.now() - cached.ts < TTL) {
++    return NextResponse.json(cached.data, { headers: { "Cache-Control": "no-store", "X-Cache": "hit" } });
++  }
++  const now = Date.now();
++  const { day, hour } = dayHour(new Date(now));
++  const [g19, g18, nws] = await Promise.all([
++    fetchText(
++      `https://noaa-goes19.s3.amazonaws.com/?list-type=2&prefix=GLM-L2-LCFA/2026/${day}/${hour}/&max-keys=40`,
++      20000,
++      UA
++    ),
++    fetchText(
++      `https://noaa-goes18.s3.amazonaws.com/?list-type=2&prefix=GLM-L2-LCFA/2026/${day}/${hour}/&max-keys=40`,
++      20000,
++      UA
++    ),
++    fetchJson(
++      "https://api.weather.gov/alerts/active?event=Severe%20Thunderstorm%20Warning",
++      20000,
++      UA + " (research contact)"
++    ),
++  ]);
++  // Sin red -> estados honestos vacios (O5.4: jamas flashes falsos).
++  const granules = [...parseGlmList(g19 ?? "", "G19"), ...parseGlmList(g18 ?? "", "G18")];
++  const storms = parseNwsAlerts(nws, now);
++  const payload = {
++    granules: granules.slice(0, 40).map((g) => ({
++      sat: g.sat,
++      start: g.start,
++      end: g.end,
++      size: g.size,
++    })),
++    storms: storms.slice(0, 12).map((s) => ({
++      id: s.id,
++      lat: s.lat,
++      lon: s.lon,
++      area: s.area,
++      onset: s.onset,
++      ends: s.ends,
++    })),
++    checkedAt: now,
++    source: g19 || g18 ? "GLM AWS + NWS (live)" : "unavailable",
++  };
++  cached = { data: payload, ts: now };
++  return NextResponse.json(payload, { headers: { "Cache-Control": "no-store", "X-Cache": "miss" } });
++}
+diff --git a/src/app/page.tsx b/src/app/page.tsx
+index 415e1fb..10bf22a 100644
+--- a/src/app/page.tsx
++++ b/src/app/page.tsx
+@@ -10,6 +10,7 @@ import FlarePanel from "@/components/ionosphere/hud/FlarePanel";
+ import WsprPanel from "@/components/ionosphere/hud/WsprPanel";
+ import GreyPanel from "@/components/ionosphere/hud/GreyPanel";
+ import FadePanel from "@/components/ionosphere/hud/FadePanel";
++import LightningPanel from "@/components/ionosphere/hud/LightningPanel";
+ import LayersPanel from "@/components/ionosphere/hud/LayersPanel";
+ import RadioPanel from "@/components/ionosphere/hud/RadioPanel";
+ import TimeBar from "@/components/ionosphere/hud/TimeBar";
+@@ -21,6 +22,7 @@ import {
+   CmeData,
+   FlareData,
+   WsprData,
++  LightningData,
+   AuroraData,
+   IonosondeData,
+   SceneSettings,
+@@ -53,6 +55,8 @@ export default function Home() {
+   const [flares, setFlares] = useState<FlareData | null>(null);
+   // W-4 #5: spots WSPR (polling 5 min == TTL de la ruta).
+   const [wspr, setWspr] = useState<WsprData | null>(null);
++  // W-4 F2a #8: GLM granules + NWS storms (polling 5 min == TTL).
++  const [lightning, setLightning] = useState<LightningData | null>(null);
+   const [aurora, setAurora] = useState<AuroraData | null>(null);
+   const [ionos, setIonos] = useState<IonosondeData | null>(null);
+   const [settings, setSettings] = useState<SceneSettings>(DEFAULT_SETTINGS);
+@@ -138,6 +142,8 @@ export default function Home() {
+     const load = async () => {
+       const w = await fetchJson<WsprData>("/api/wspr", 40000);
+       if (alive && w) setWspr(w);
++      const l = await fetchJson<LightningData>("/api/lightning", 40000);
++      if (alive && l) setLightning(l);
+     };
+     load();
+     const t = setInterval(load, 300_000);
+@@ -236,6 +242,7 @@ export default function Home() {
+         spaceWeather={sw}
+         cme={cme}
+         wspr={wspr}
++        lightning={lightning}
+         aurora={aurora}
+         ionosondes={ionos}
+         settings={settings}
+@@ -308,6 +315,7 @@ export default function Home() {
+         <WsprPanel wspr={wspr} epochMs={cmeEpoch} />
+         <GreyPanel wspr={wspr} epochMs={cmeEpoch} />
+         <FadePanel sw={sw} epochMs={cmeEpoch} />
++        <LightningPanel lightning={lightning} />
+       </div>
+       <div className="absolute right-4 top-20 z-10 w-64 pointer-events-none space-y-3 hidden md:block">
+         <LayersPanel settings={settings} onChange={onSettingsChange} ionosondes={ionos} fps={fps} sw={sw ? sw.wind : null} />
+@@ -321,6 +329,7 @@ export default function Home() {
+         cmeEpoch={cmeEpoch}
+         flares={flares}
+         wspr={wspr}
++        lightning={lightning}
+         settings={settings}
+         onChange={onSettingsChange}
+         ionos={ionos}
+@@ -495,6 +504,7 @@ function MobilePanels({
+   cmeEpoch,
+   flares,
+   wspr,
++  lightning,
+   settings,
+   onChange,
+   ionos,
+@@ -513,6 +523,7 @@ function MobilePanels({
+   cmeEpoch: number;
+   flares: FlareData | null;
+   wspr: WsprData | null;
++  lightning: LightningData | null;
+   settings: SceneSettings;
+   onChange: (p: Partial<SceneSettings>) => void;
+   ionos: IonosondeData | null;
+@@ -568,6 +579,9 @@ function MobilePanels({
+           <div className="mt-2">
+             <FadePanel sw={sw} epochMs={cmeEpoch} />
+           </div>
++          <div className="mt-2">
++            <LightningPanel lightning={lightning} />
++          </div>
+         </>
+       )}
+       {tab === "radio" && (
+diff --git a/src/components/ionosphere/IonosphereScene.tsx b/src/components/ionosphere/IonosphereScene.tsx
+index 649bd9d..263803a 100644
+--- a/src/components/ionosphere/IonosphereScene.tsx
++++ b/src/components/ionosphere/IonosphereScene.tsx
+@@ -46,6 +46,7 @@ import { flareState } from "@/lib/iono/flare";
+ import { bandColor } from "@/lib/iono/wspr";
+ import { greyRibbon, greylineLoop } from "@/lib/iono/greyline";
+ import { pcaDb } from "@/lib/iono/fadeout";
++import { whistlerPath } from "@/lib/iono/lightning";
+ import {
+   volumeModeIndex,
+   volumeOpacityClamp,
+@@ -74,6 +75,7 @@ import {
+   SpaceWeatherData,
+   CmeData,
+   WsprData,
++  LightningData,
+   AuroraData,
+   IonosondeData,
+   IonosondeStation,
+@@ -99,6 +101,7 @@ interface Props {
+   spaceWeather: SpaceWeatherData | null;
+   cme: CmeData | null; // W-4 #1: pronostico ENLIL (encadenado O1.3)
+   wspr: WsprData | null; // W-4 #5: spots vivos (arcos TX->RX)
++  lightning: LightningData | null; // W-4 F2a #8: tormentas + whistlers
+   aurora: AuroraData | null;
+   ionosondes: IonosondeData | null;
+   settings: SceneSettings;
+@@ -167,6 +170,8 @@ export default function IonosphereScene(props: Props) {
+     grey?: { group: THREE.Group; key: string };
+     // W-4 F2a #2 fadeout (ruling 266): vertex-colored globe wash.
+     fadeout?: { mesh: THREE.Mesh; key: string };
++    // W-4 F2a #8 rayos (ruling 266): whistler paths + sprite glyphs.
++    bolt?: { group: THREE.Group; key: string; paths: THREE.Vector3[][]; pulse: THREE.Points[] };
+     raycaster: THREE.Raycaster;
+     gridState: {
+       fo: Float32Array;
+@@ -344,6 +349,11 @@ export default function IonosphereScene(props: Props) {
+       fadeMesh.frustumCulled = false;
+       scene.add(fadeMesh);
+ 
++      // W-4 F2a #8: grupo de whistlers + sprites (rebuild por tormentas).
++      const boltGroup = new THREE.Group();
++      boltGroup.visible = false;
++      scene.add(boltGroup);
++
+       S.current = {
+         renderer,
+         scene,
+@@ -378,6 +388,7 @@ export default function IonosphereScene(props: Props) {
+         wspr: { group: wsprGroup, key: "" },
+         grey: { group: greyGroup, key: "" },
+         fadeout: { mesh: fadeMesh, key: "" },
++        bolt: { group: boltGroup, key: "", paths: [], pulse: [] },
+         raycaster: new THREE.Raycaster(),
+         gridState: { fo: new Float32Array(GRID_W * GRID_H), hm: new Float32Array(GRID_W * GRID_H), fMin: 2, fMax: 10, stamp: 0 },
+         disposables: [dayTex, nightTex, cmapTex, earth.mesh.geometry, earth.mat, atmo.mesh.geometry, atmo.mat, shell.mesh.geometry, shell.mat, shell.foTex, shell.hmTex, rings.group, stars.points.geometry, stars.mat],
+@@ -864,6 +875,91 @@ export default function IonosphereScene(props: Props) {
+           }
+         }
+ 
++        // W-4 F2a #8: whistlers canalizados por lineas B(r) reales
++        // (Helliwell declarado) + sprites SOLO sobre tormentas NWS
++        // activas (umbral declarado: aviso presente; sin tormentas no
++        // hay ni lineas ni sprites — negativo O8). Pulso ambiental
++        // (como el rio solar: deriva visible, no evento datado).
++        {
++          const bo = S.current?.bolt;
++          if (bo) {
++            const storms = propsRef.current.lightning?.storms ?? [];
++            bo.group.visible = settings.showLightning && storms.length > 0;
++            const key = storms.map((s) => s.id || s.area).join("|");
++            if (bo.group.visible && key !== bo.key) {
++              bo.key = key;
++              for (const ch of [...bo.group.children]) {
++                bo.group.remove(ch);
++                const o = ch as THREE.Line | THREE.Points;
++                o.geometry.dispose();
++                (o.material as THREE.Material).dispose();
++              }
++              bo.paths = [];
++              bo.pulse = [];
++              for (const s of storms.slice(0, 8)) {
++                // Trayectoria REAL de la API B(r) (punto -> conjugado).
++                const line = whistlerPath(s.lat, s.lon, 48);
++                const pts = line.map(([x, y, z]) => new THREE.Vector3(x, y, z));
++                const wmat = new THREE.LineBasicMaterial({
++                  color: 0x7ef0ff,
++                  transparent: true,
++                  opacity: 0.35,
++                  depthWrite: false,
++                  blending: THREE.AdditiveBlending,
++                });
++                const wline = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), wmat);
++                wline.frustumCulled = false;
++                bo.group.add(wline);
++                bo.paths.push(pts);
++                // Sprites: glifo vertical sobre la cuspide (40-90 km).
++                const [sx, sy, sz] = latLonToVec3(s.lat, s.lon, 1);
++                const top: [number, number, number] = [sx, sy, sz].map((v) => v * (1 + 90 / 6371)) as [number, number, number];
++                const bot: [number, number, number] = [sx, sy, sz].map((v) => v * (1 + 40 / 6371)) as [number, number, number];
++                const sg = new THREE.BufferGeometry().setFromPoints([
++                  new THREE.Vector3(...bot),
++                  new THREE.Vector3(...top),
++                ]);
++                const smat = new THREE.LineBasicMaterial({
++                  color: 0xff4a3d,
++                  transparent: true,
++                  opacity: 0.8,
++                  depthWrite: false,
++                  blending: THREE.AdditiveBlending,
++                });
++                const sprite = new THREE.Line(sg, smat);
++                sprite.frustumCulled = false;
++                bo.group.add(sprite);
++                // Pulso viajero por la linea (emisivo, 1 por tormenta).
++                const pg = new THREE.BufferGeometry();
++                pg.setAttribute("position", new THREE.BufferAttribute(new Float32Array(3), 3));
++                const pmat = new THREE.PointsMaterial({
++                  color: 0xbdf6ff,
++                  size: 0.05,
++                  transparent: true,
++                  opacity: 0.95,
++                  depthWrite: false,
++                  blending: THREE.AdditiveBlending,
++                });
++                const pulse = new THREE.Points(pg, pmat);
++                pulse.frustumCulled = false;
++                bo.group.add(pulse);
++                bo.pulse.push(pulse);
++              }
++            }
++            // Avance de pulsos (fase por reloj de escena, como el rio).
++            if (bo.group.visible) {
++              for (let i = 0; i < bo.paths.length && i < bo.pulse.length; i++) {
++                const path = bo.paths[i];
++                const f = (elapsed * 0.12 + i * 0.37) % 1;
++                const pos = path[Math.min(path.length - 1, Math.floor(f * path.length))];
++                const attr = bo.pulse[i].geometry.attributes.position as THREE.BufferAttribute;
++                attr.setXYZ(0, pos.x, pos.y, pos.z);
++                attr.needsUpdate = true;
++              }
++            }
++          }
++        }
++
+         // uniforms
+         if (S.current?.earthMat) {
+           const u = S.current.earthMat.uniforms;
+diff --git a/src/components/ionosphere/hud/LayersPanel.tsx b/src/components/ionosphere/hud/LayersPanel.tsx
+index 065ca06..ec20e61 100644
+--- a/src/components/ionosphere/hud/LayersPanel.tsx
++++ b/src/components/ionosphere/hud/LayersPanel.tsx
+@@ -143,6 +143,12 @@ export default function LayersPanel({ settings, onChange, ionosondes, fps, sw }:
+           checked={settings.showFadeout}
+           onChange={(v) => onChange({ showFadeout: v })}
+         />
++        <Toggle
++          icon={<Zap size={12} />}
++          label="Lightning"
++          checked={settings.showLightning}
++          onChange={(v) => onChange({ showLightning: v })}
++        />
+       </div>
+       {settings.showMagnetosphere && (
+         <div className="mt-1 text-[10px] font-mono text-slate-400">
+diff --git b/src/components/ionosphere/hud/LightningPanel.tsx b/src/components/ionosphere/hud/LightningPanel.tsx
+new file mode 100644
+index 0000000..1387ecc
+--- /dev/null
++++ b/src/components/ionosphere/hud/LightningPanel.tsx
+@@ -0,0 +1,67 @@
++"use client";
++
++import { Zap } from "lucide-react";
++import { LightningData } from "../types";
++import { PanelBox, SourceDot } from "./SpaceWeatherPanel";
++import { glmStatus } from "@/lib/iono/lightning";
++
++/** W-4 F2a #8: lightning panel (EN for all new UI).
++ * GLM granule freshness per satellite (input truth, Americas coverage
++ * declared) + NWS storm cells driving the sprites (declared threshold:
++ * active warning present; no warnings means no sprites). Outside the
++ * Americas there are no real-time strokes in v1 — visible limitation. */
++export default function LightningPanel({ lightning }: { lightning: LightningData | null }) {
++  if (!lightning) {
++    return (
++      <PanelBox title="Lightning">
++        <div className="text-xs text-slate-500 py-6 text-center animate-pulse">
++          Checking GLM feeds…
++        </div>
++      </PanelBox>
++    );
++  }
++  const now = Date.now();
++  const g19 = glmStatus(
++    lightning.granules.map((g) => ({ sat: g.sat, start: g.start, end: g.end, size: g.size })),
++    "G19",
++    now
++  );
++  const g18 = glmStatus(
++    lightning.granules.map((g) => ({ sat: g.sat, start: g.start, end: g.end, size: g.size })),
++    "G18",
++    now
++  );
++
++  return (
++    <PanelBox title="Lightning" badge={<SourceDot source={lightning.source} />}>
++      {(["G19 East", "G18 West"] as const).map((label) => {
++        const st = label.startsWith("G19") ? g19 : g18;
++        return (
++          <div key={label} className="flex items-center justify-between mt-0.5">
++            <span className="text-[11px] text-slate-500 font-mono">GLM {label}</span>
++            <span className={`text-[11px] font-medium ${st.fresh ? "text-emerald-400" : "text-slate-500"}`}>
++              {st.ageSec != null ? (st.fresh ? `live · ${st.ageSec.toFixed(0)}s ago` : `stale · ${st.ageSec.toFixed(0)}s`) : "no data"}
++            </span>
++          </div>
++        );
++      })}
++      <div className="flex items-center justify-between mt-1.5">
++        <span className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-slate-400">
++          <Zap size={12} /> Storm cells
++        </span>
++        <span className={`text-xs font-semibold ${lightning.storms.length ? "text-red-400" : "text-slate-500"}`}>
++          {lightning.storms.length ? `${lightning.storms.length} active` : "none — no sprites"}
++        </span>
++      </div>
++      {lightning.storms.slice(0, 4).map((s) => (
++        <div key={s.id || s.area} className="text-[10px] text-slate-400 mt-0.5 truncate" title={s.area}>
++          {s.area} ({s.lat.toFixed(1)}°, {s.lon.toFixed(1)}°)
++        </div>
++      ))}
++      <p className="text-[10px] text-slate-500 leading-snug mt-2 pt-2 border-t border-white/10">
++        Whistlers duct along real B(r) field lines (Helliwell). Coverage:
++        Americas only — no real-time strokes elsewhere in v1.
++      </p>
++    </PanelBox>
++  );
++}
+diff --git a/src/components/ionosphere/types.ts b/src/components/ionosphere/types.ts
+index b085f96..f8a32b4 100644
+--- a/src/components/ionosphere/types.ts
++++ b/src/components/ionosphere/types.ts
+@@ -100,6 +100,30 @@ export interface WsprData {
+   source: string;
+ }
+ 
++/** Espejo del payload de /api/lightning (W-4 F2a #8, ruling 266). */
++export interface LightningGranule {
++  sat: string;
++  start: number;
++  end: number;
++  size: number;
++}
++
++export interface StormCellData {
++  id: string;
++  lat: number;
++  lon: number;
++  area: string;
++  onset: number | null;
++  ends: number | null;
++}
++
++export interface LightningData {
++  granules: LightningGranule[];
++  storms: StormCellData[];
++  checkedAt: number;
++  source: string;
++}
++
+ export interface StationHistoryPoint {
+   t: string; // ISO
+   foF2: number;
+@@ -176,6 +200,8 @@ export interface SceneSettings {
+   showGreyline: boolean;
+   // W-4 F2a #2 fadeout global (ruling 266; default ON: quiet = invisible).
+   showFadeout: boolean;
++  // W-4 F2a #8 lightning+whistlers (ruling 266; default ON: subtle).
++  showLightning: boolean;
+   // W-4 E-tail o6: tamaño de punto (App.cpp:4293 SliderFloat 3-30).
+   // Adaptación declarada: slider web 3-15 (más allá satura el techo GL).
+   pointSize: number; // 3..15 UI, default 11
+@@ -217,6 +243,7 @@ export const DEFAULT_SETTINGS: SceneSettings = {
+   showWspr: true,
+   showGreyline: true,
+   showFadeout: true,
++  showLightning: true,
+ };
+ 
+ /** Avance de replay en minutos-atrás (espejo App.cpp:2139-2141).
+diff --git a/src/lib/iono/fadeout.ts b/src/lib/iono/fadeout.ts
+index 5ca26fd..35c10c2 100644
+--- a/src/lib/iono/fadeout.ts
++++ b/src/lib/iono/fadeout.ts
+@@ -28,8 +28,9 @@
+  * (d) D-RAP validacion: images/animations/d-rap/global/latest.png +
+  *     north/south-pole + global_f05..f25 (verificadas vivas 200).
+  *
+- * Negativos O2: sin flare elegible -> mapa quiet (solo termino auroral
+- * Kp); noche NUNCA afectada por X-ray (dayFactor=0 por construccion);
++ * Negativos O2: sin flare elegible -> mapa quiet (el mapa es X-ray + PCA;
++ * lo auroral Kp vive en la demo abs por-enlace, no duplicado aqui);
++ * noche NUNCA afectada por X-ray (dayFactor=0 por construccion);
+  * PCA solo sobre el umbral declarado.
+  */
+ 
+diff --git b/src/lib/iono/lightning.test.ts b/src/lib/iono/lightning.test.ts
+new file mode 100644
+index 0000000..5d9bc3a
+--- /dev/null
++++ b/src/lib/iono/lightning.test.ts
+@@ -0,0 +1,113 @@
++import { describe, expect, it } from "vitest";
++import {
++  parseGlmList,
++  glmStatus,
++  parseNwsAlerts,
++  whistlerPath,
++} from "./lightning";
++import { traceConjugate } from "./magnetosphere";
++
++// Items REALES del bucket noaa-goes19 el 2026-10-14 (forma pineada).
++const XML =
++  '<?xml version="1.0" encoding="UTF-8"?>' +
++  "<ListBucketResult>" +
++  "<Key>GLM-L2-LCFA/2026/287/07/OR_GLM-L2-LCFA_G19_s20262870700000_e20262870700200_c20262870700224.nc</Key>" +
++  "<LastModified>2026-10-14T07:00:23.000Z</LastModified>" +
++  '<ETag>"abc"</ETag><Size>471987</Size>' +
++  "<Key>GLM-L2-LCFA/2026/287/07/OR_GLM-L2-LCFA_G19_s20262870700200_e20262870700400_c20262870700421.nc</Key>" +
++  "<LastModified>2026-10-14T07:00:45.000Z</LastModified>" +
++  '<ETag>"def"</ETag><Size>443421</Size>' +
++  "</ListBucketResult>";
++
++const T0 = Date.parse("2026-10-14T07:00:00Z");
++
++describe("parseGlmList (forma S3 pineada)", () => {
++  it("extrae granulos con tiempos y satelite", () => {
++    const g = parseGlmList(XML, "G19");
++    expect(g).toHaveLength(2);
++    expect(g[0].sat).toBe("G19");
++    expect(g[0].start).toBe(T0 + 20_000);
++    expect(g[0].end).toBe(T0 + 40_000);
++    expect(g[0].size).toBe(443421);
++    // Cadencia continua 20 s (no orientada a eventos: declarado).
++    expect(g[0].start - g[1].end).toBe(0);
++  });
++  it("basura -> []", () => {
++    expect(parseGlmList("", "G19")).toEqual([]);
++    expect(parseGlmList("<xml/>", "G18")).toEqual([]);
++  });
++});
++
++describe("glmStatus (frescura, no actividad)", () => {
++  it("fresco bajo 10 min, rancio despues", () => {
++    const g = parseGlmList(XML, "G19");
++    const fresh = glmStatus(g, "G19", T0 + 5 * 60_000);
++    expect(fresh.fresh).toBe(true);
++    expect(fresh.granules).toBe(2);
++    const stale = glmStatus(g, "G19", T0 + 3600_000);
++    expect(stale.fresh).toBe(false);
++    expect(stale.ageSec).toBeGreaterThan(3000);
++  });
++  it("sin granulos -> no fresco honesto", () => {
++    const s = glmStatus([], "G18", T0);
++    expect(s.fresh).toBe(false);
++    expect(s.ageSec).toBeNull();
++  });
++});
++
++// Aviso REAL NWS el 2026-10-14 (forma pineada: Polygon + areaDesc).
++const NWS = {
++  type: "FeatureCollection",
++  features: [
++    {
++      type: "Feature",
++      properties: {
++        id: "urn:test:001",
++        event: "Severe Thunderstorm Warning",
++        areaDesc: "Wilbarger, TX",
++        onset: "2026-10-14T17:03:00-05:00",
++        ends: "2026-10-14T17:45:00-05:00",
++      },
++      geometry: {
++        type: "Polygon",
++        coordinates: [[[-99.8, 34.1], [-99.2, 34.1], [-99.2, 33.7], [-99.8, 33.7], [-99.8, 34.1]]],
++      },
++    },
++    {
++      type: "Feature",
++      properties: { event: "Tornado Warning", areaDesc: "X" },
++      geometry: null,
++    },
++  ],
++};
++
++describe("parseNwsAlerts (cuspides honestas)", () => {
++  it("poligono activo -> centroide; sin geometria se descarta", () => {
++    const now = Date.parse("2026-10-14T17:10:00-05:00");
++    const cells = parseNwsAlerts(NWS, now);
++    expect(cells).toHaveLength(1);
++    expect(cells[0].lat).toBeCloseTo(33.9, 1);
++    expect(cells[0].lon).toBeCloseTo(-99.56, 1); // media de anillo cerrado
++    expect(cells[0].area).toBe("Wilbarger, TX");
++  });
++  it("caducado no dispara sprites (negativo O8)", () => {
++    const cells = parseNwsAlerts(NWS, Date.parse("2026-10-14T18:00:00-05:00"));
++    expect(cells).toEqual([]);
++  });
++});
++
++describe("whistlerPath (linea de campo REAL de B(r))", () => {
++  it("la linea pasa por el punto y su conjugado", () => {
++    const pts = whistlerPath(33.9, -99.5);
++    expect(pts.length).toBeGreaterThan(10);
++    // Extremos en superficie (r ~= 1): foco y conjugado.
++    const r0 = Math.hypot(...pts[0]);
++    const r1 = Math.hypot(...pts[pts.length - 1]);
++    expect(r0).toBeCloseTo(1, 1);
++    expect(r1).toBeCloseTo(1, 1);
++    // El conjugado de traceConjugate cae sobre la linea (mismo L).
++    const c = traceConjugate(33.9, -99.5);
++    expect(c.L).toBeGreaterThan(1);
++    expect(c.L).toBeLessThan(3);
++  });
++});
+diff --git b/src/lib/iono/lightning.ts b/src/lib/iono/lightning.ts
+new file mode 100644
+index 0000000..b923589
+--- /dev/null
++++ b/src/lib/iono/lightning.ts
+@@ -0,0 +1,145 @@
++/**
++ * W-4 F2a #8 rayos + whistlers (ruling 266, oraculo O8). Puro: sin DOM ni red.
++ *
++ * REFERENCIA PINEADA (regla 252, ANTES de codigo):
++ * (a) GLM-L2-LCFA en AWS Open Data SIN auth (verificado vivo 2026-10-14):
++ *     buckets `noaa-goes19` (Este, operativo) y `noaa-goes18` (Oeste);
++ *     GOES-16 retirado (solo hasta 2025). Forma:
++ *     GLM-L2-LCFA/{yyyy}/{ddd}/{hh}/OR_GLM-L2-LCFA_G19_s{start}_e{end}_c{}.nc
++ *     con granulos continuos cada 20 s (~450 KB, NetCDF-4: sin localizacion
++ *     legible sin HDF5 — la ruta NO parsea flashes, declara frescura y
++ *     cobertura). Cobertura GLM = Americas (declarado en UI).
++ * (b) NWS Alerts API, publica sin auth (verificada viva): avisos
++ *     "Severe Thunderstorm Warning" con poligonos GeoJSON (cuspides de
++ *     tormenta honestas y geolocalizadas para los sprites; solo CONUS =
++ *     dentro de cobertura GLM, declarado).
++ * (c) Helliwell 1965 ("Whistlers and Related Ionospheric Phenomena",
++ *     Stanford Univ. Press): los whistlers se canalizan (ducting) a lo
++ *     largo de las lineas del campo geomagnetico. La trayectoria del
++ *     pulso es la LINEA DIPOLAR REAL de la API B(r) (toMag +
++ *     dipoleLinePoints con el L y meridiano magnetico del punto —
++ *     la misma API que O4.5; el conjugado lo reproduce el puerto
++ *     independiente de GLM).
++ * (d) Sprites SOLO sobre cuspides (umbral declarado): centroide del
++ *     poligono NWS activo; sin avisos no hay sprites (negativo O8).
++ */
++
++import { latLonToVec3 } from "./geo";
++import { toMag, dipoleLinePoints, traceConjugate, type Vec3 } from "./magnetosphere";
++
++export interface GlmGranule {
++  sat: string; // "G19" | "G18"
++  start: number; // ms
++  end: number; // ms
++  size: number; // bytes (tamano de fichero CRUDO, no conteo de flashes)
++}
++
++function parseStamp(s: string): number | null {
++  // YYYYDDDHHMMSSd (p.ej. 20262870700000; ultimo digito = decimas).
++  // Sin la 's' inicial: la consume el patron _s() de la Key S3.
++  const m = s.match(/^(\d{4})(\d{3})(\d{2})(\d{2})(\d{2})(\d)$/);
++  if (!m) return null;
++  const y = +m[1];
++  const d = new Date(Date.UTC(y, 0, 1) + (+m[2] - 1) * 86400_000);
++  d.setUTCHours(+m[3], +m[4], +m[5], +m[6] * 100);
++  return d.getTime();
++}
++
++/** Granulos desde el XML ListBucket S3 (nombres + tamanos). */
++export function parseGlmList(xml: string, sat: string): GlmGranule[] {
++  const out: GlmGranule[] = [];
++  const re = /<Key>([^<]*_s(\w+)_e(\w+)_c\w+\.nc)<\/Key>\s*<LastModified>[^<]*<\/LastModified>\s*<ETag>[^<]*<\/ETag>\s*<Size>(\d+)<\/Size>/g;
++  let m: RegExpExecArray | null;
++  while ((m = re.exec(xml)) !== null) {
++    const start = parseStamp(m[2]);
++    const end = parseStamp(m[3]);
++    if (start == null || end == null) continue;
++    out.push({ sat, start, end, size: parseInt(m[4], 10) });
++  }
++  return out.sort((a, b) => b.start - a.start);
++}
++
++export interface GlmStatus {
++  sat: string;
++  fresh: boolean; // ultimo granulo < 10 min (produccion continua 20 s)
++  ageSec: number | null;
++  granules: number;
++}
++
++export const GLM_FRESH_MS = 600_000;
++
++/** Estado por satelite (frescura, no actividad: produccion continua). */
++export function glmStatus(granules: GlmGranule[], sat: string, nowMs: number): GlmStatus {
++  const list = granules.filter((g) => g.sat === sat);
++  if (!list.length) return { sat, fresh: false, ageSec: null, granules: 0 };
++  const ageSec = Math.max(0, (nowMs - list[0].end) / 1000);
++  return { sat, fresh: ageSec * 1000 <= GLM_FRESH_MS, ageSec, granules: list.length };
++}
++
++export interface StormCell {
++  id: string;
++  lat: number; // centroide del poligono (declarado)
++  lon: number;
++  area: string;
++  onset: number | null;
++  ends: number | null;
++}
++
++function polyCentroid(ring: number[][]): [number, number] | null {
++  // GeoJSON Polygon: ring exterior [lon, lat]; centroide declarado simple.
++  if (!ring.length) return null;
++  let x = 0;
++  let y = 0;
++  for (const [lo, la] of ring) {
++    x += lo;
++    y += la;
++  }
++  return [y / ring.length, x / ring.length];
++}
++
++function toMs(v: unknown): number | null {
++  if (typeof v !== "string" || !v) return null;
++  const t = Date.parse(v);
++  return Number.isFinite(t) ? t : null;
++}
++
++/** Avisos NWS activos (GeoJSON FeatureCollection). */
++export function parseNwsAlerts(raw: unknown, nowMs: number): StormCell[] {
++  const out: StormCell[] = [];
++  const feats =
++    raw != null && typeof raw === "object" && Array.isArray((raw as { features?: unknown }).features)
++      ? ((raw as { features: unknown[] }).features as Record<string, unknown>[])
++      : [];
++  for (const f of feats) {
++    if (f == null || typeof f !== "object") continue;
++    const p = (f as { properties?: Record<string, unknown> }).properties ?? {};
++    const g = (f as { geometry?: { type?: string; coordinates?: unknown } }).geometry;
++    if (!g || g.type !== "Polygon" || !Array.isArray(g.coordinates) || !g.coordinates.length) continue;
++    const c = polyCentroid(g.coordinates[0] as number[][]);
++    if (!c) continue;
++    const ends = toMs(p.ends);
++    if (ends != null && ends < nowMs) continue; // caducado
++    out.push({
++      id: typeof p.id === "string" ? p.id : "",
++      lat: c[0],
++      lon: c[1],
++      area: typeof p.areaDesc === "string" ? p.areaDesc : "",
++      onset: toMs(p.onset),
++      ends,
++    });
++  }
++  return out;
++}
++
++/**
++ * Linea de campo REAL por el punto (O8): L y meridiano magnetico del
++ * propio punto via la API B(r) (toMag + traceConjugate), puntos GEO
++ * con dipoleLinePoints. Canalización Helliwell declarada en UI.
++ */
++export function whistlerPath(latDeg: number, lonDeg: number, n = 48): Vec3[] {
++  const [x, y, z] = latLonToVec3(latDeg, lonDeg, 1);
++  const q = toMag([x, y, z]);
++  const lonM = (Math.atan2(q[1], q[0]) * 180) / Math.PI;
++  const { L } = traceConjugate(latDeg, lonDeg);
++  return dipoleLinePoints(L, lonM, n);
++}
