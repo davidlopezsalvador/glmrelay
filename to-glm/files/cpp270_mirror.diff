@@ -1,0 +1,114 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 0bbc251..02f0d5e 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -224,6 +224,10 @@ target_include_directories(test_d_region PRIVATE src)
+ target_sources(test_d_region PRIVATE src/Data/RadioPropagationAdapter.cpp src/Utils/Igrf.cpp)  # M'-1: adapter usa igrf::
+ target_link_libraries(test_d_region PRIVATE CURL::libcurl)
+ add_test(NAME d_region COMMAND test_d_region)
++# Espejo C++ H1-261 (ruling 266 sec.4): TU de epoca solar.
++add_executable(test_solar_epoch tests/test_solar_epoch.cpp src/Utils/SolarPosition.cpp)
++target_include_directories(test_solar_epoch PRIVATE src libs/glad/include libs/glm)
++add_test(NAME solar_epoch COMMAND test_solar_epoch)
+ # M8 (plan 11): circuito HF — llama a PRODUCCION (namespace hfc inline en
+ # HFTraceLayer.h sobre HfMath.h), no replica. glm/glad: solo cabeceras
+ # via HFTraceLayer.h (patron model_foF2), sin link y sin std::thread.
+diff --git a/src/Utils/SolarPosition.cpp b/src/Utils/SolarPosition.cpp
+index c72fd24..1a32698 100644
+--- a/src/Utils/SolarPosition.cpp
++++ b/src/Utils/SolarPosition.cpp
+@@ -7,8 +7,12 @@ static const double PI = 3.14159265358979323846;
+ static const double DEG2RAD = PI / 180.0;
+ 
+ // Meeus compartido: longitud ecliptica aparente (rad, sin normalizar).
++// H1-261 (espejo web P1-261, veredicto 262): Unix->J2000 son MENOS
++// 10957.5 dias. El + computaba el sol 60 anos julianos adelante;
++// lambda y GMST se cancelaban en longitud pero la declinacion quedaba
++// ~0.17 desviada. Mismo fix en getDirection (ambos sitios).
+ static double eclipticLonRad(double utcSeconds) {
+-    double j2000 = utcSeconds / 86400.0 + 10957.5;
++    double j2000 = utcSeconds / 86400.0 - 10957.5;
+     double T = j2000 / 36525.0;
+     double L0 = fmod(280.46646 + 36000.76983 * T + 0.0003032 * T * T, 360.0);
+     double M = fmod(357.52911 + 35999.05029 * T - 0.0001537 * T * T, 360.0);
+@@ -27,8 +31,8 @@ double getApparentEclipticLonDeg(double utcSeconds) {
+ }
+ 
+ glm::vec3 getDirection(double utcSeconds) {
+-    // Day of year from J2000 epoch
+-    double j2000 = utcSeconds / 86400.0 + 10957.5; // days since J2000.0
++    // Day of year from J2000 epoch (H1-261 espejo: MENOS, ver arriba).
++    double j2000 = utcSeconds / 86400.0 - 10957.5; // days since J2000.0
+     double T = j2000 / 36525.0; // centuries
+ 
+     // Sun's ecliptic longitude (M11: helper compartido, mismo Meeus)
+diff --git a/tests/test_solar_epoch.cpp b/tests/test_solar_epoch.cpp
+new file mode 100644
+index 0000000..9eb09fa
+--- /dev/null
++++ b/tests/test_solar_epoch.cpp
+@@ -0,0 +1,64 @@
++// =============================================================================
++// test_solar_epoch - espejo C++ del fix J2000 (H1-261, ruling 266 sec.4).
++//
++// Test de logica pura: sin GL, sin red. Llama a PRODUCCION
++// (SolarPosition::getDirection) con el motor corregido (-10957.5).
++//
++// Pines (nota 263 sec.2 + puerto Python independiente, veredicto 262):
++//   J2000.0 (Unix 946728000): j2000 == 0.0 por definicion (GMST IAU
++//     280.46061837) -> subsolar (-23.03, +0.83) +-0.01 (declinacion de
++//     perihelio + EoT ~-3.5 min).
++//   EPOCH_12Z (2026-10-07T12:00Z = 1791374400): subsolar (-5.62, -3.04)
++//     +-0.05 (el valor viejo (-5.79, -3.07) era el bug por ambos lados).
++// Decodificacion subsolar: espejo de motorToLatLon (web solar.ts),
++// misma convencion que IonosondeLayer.cpp:249 (theta = pi - lon).
++// =============================================================================
++#include "Utils/SolarPosition.h"
++
++#include <cmath>
++#include <cstdio>
++
++static const double PI = 3.14159265358979323846;
++static const double RAD = 180.0 / PI;
++
++static int g_failures = 0;
++static int g_checks = 0;
++
++static void expectNear(const char* what, double got, double want, double tol) {
++    ++g_checks;
++    const bool ok = std::fabs(got - want) <= tol;
++    if (!ok) ++g_failures;
++    std::printf("  %-58s got=%+.4f want=%+.4f tol=%.3f [%s]\n",
++                what, got, want, tol, ok ? "OK" : "FAIL");
++}
++
++// Espejo motorToLatLon: dir unitario (marco motor) -> (lat, lon) grados.
++static void motorToLatLon(double x, double y, double z, double& lat, double& lon) {
++    const double r = std::sqrt(x * x + y * y + z * z);
++    lat = std::asin(y / r) * RAD;
++    lon = 180.0 - std::atan2(z, x) * RAD;
++    while (lon < -180.0) lon += 360.0;
++    while (lon > 180.0) lon -= 360.0;
++}
++
++int main() {
++    std::printf("== solar_epoch: anclaje J2000.0 + EPOCH_12Z ==\n");
++    {
++        // Ancla definicional: en J2000.0 el dia juliano es 0 por construccion
++        // (con el signo erroneo daba 21915.0 = 60 anos julianos exactos).
++        const glm::vec3 d = SolarPosition::getDirection(946728000.0);
++        double lat = 0.0, lon = 0.0;
++        motorToLatLon(d.x, d.y, d.z, lat, lon);
++        expectNear("J2000.0 subsolar lat", lat, -23.03, 0.01);
++        expectNear("J2000.0 subsolar lon", lon, 0.83, 0.01);
++    }
++    {
++        const glm::vec3 d = SolarPosition::getDirection(1791374400.0);
++        double lat = 0.0, lon = 0.0;
++        motorToLatLon(d.x, d.y, d.z, lat, lon);
++        expectNear("EPOCH_12Z subsolar lat", lat, -5.62, 0.05);
++        expectNear("EPOCH_12Z subsolar lon", lon, -3.04, 0.05);
++    }
++    std::printf("== solar_epoch: %d checks, %d failures ==\n", g_checks, g_failures);
++    return g_failures == 0 ? 0 : 1;
++}
