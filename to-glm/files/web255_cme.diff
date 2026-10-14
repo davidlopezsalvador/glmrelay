@@ -1,0 +1,989 @@
+From t <t@t> Mon Oct 12 00:00:00 2026 +0200
+From: t <t@t>
+Date: Mon, 12 Oct 2026 00:00:00 +0200
+Subject: [PATCH] w255-cme (ENLIL+tablero+encadenado)
+
+---
+ src/app/api/cme/route.ts                          | 101 +++++++++
+ src/app/page.tsx                                  |  37 +++-
+ .../src/components/ionosphere/IonosphereScene.tsx |  28 ++-
+ .../src/components/ionosphere/hud/CmePanel.tsx    | 186 ++++++++++++++++
+ .../src/components/ionosphere/hud/LayersPanel.tsx |   8 +-
+ src/components/ionosphere/types.ts                |  29 +++
+ src/lib/iono/cme.test.ts                          | 165 +++++++++++++++
+ src/lib/iono/cme.ts                               | 233 +++++++++++++++++++++
+ 8 files changed, 783 insertions(+), 4 deletions(-)
+
+diff --git b/src/app/api/cme/route.ts b/src/app/api/cme/route.ts
+new file mode 100644
+index 0000000..5d70c4b
+--- /dev/null
++++ b/src/app/api/cme/route.ts
+@@ -0,0 +1,101 @@
++import { NextResponse } from "next/server";
++import { parseEnlilSims, pickCmeEvent } from "@/lib/iono/cme";
++
++/**
++ * W-4 #1: ultimo pronostico WSA-Enlil del CCMC (DONKI).
++ * Endpoint verificado vivo el 2026-10-14 (la forma sin `/get/` da 404):
++ *   https://ccmc.gsfc.nasa.gov/DONKI-API/get/WSAEnlilSimulations
++ * La vieja api.nasa.gov/DONKI con DEMO_KEY esta saturada/migrada: NO usar.
++ * Cache 10 min (las sims completan en horas; cortesia con el CCMC).
++ */
++
++export const revalidate = 0;
++
++const UA = "IonosphereLive3D-Web/1.0 (exploration demo)";
++const BASE = "https://ccmc.gsfc.nasa.gov";
++const TTL = 600_000;
++const LOOKBACK_DAYS = 7;
++
++let cached: { data: unknown; ts: number } | null = null;
++
++function day(d: Date): string {
++  return d.toISOString().slice(0, 10);
++}
++
++export async function GET() {
++  if (cached && Date.now() - cached.ts < TTL) {
++    return NextResponse.json(cached.data, { headers: { "Cache-Control": "no-store", "X-Cache": "hit" } });
++  }
++  const now = Date.now();
++  const end = new Date(now + 24 * 3600_000);
++  const start = new Date(now - LOOKBACK_DAYS * 24 * 3600_000);
++  const url =
++    `${BASE}/DONKI-API/get/WSAEnlilSimulations` +
++    `?startDate=${day(start)}&endDate=${day(end)}`;
++  let data: unknown;
++  try {
++    const ctrl = new AbortController();
++    const timer = setTimeout(() => ctrl.abort(), 15000);
++    const res = await fetch(url, {
++      headers: { "User-Agent": UA, Accept: "application/json" },
++      signal: ctrl.signal,
++      next: { revalidate: 0 },
++    });
++    clearTimeout(timer);
++    if (!res.ok) throw new Error("upstream " + res.status);
++    data = await res.json();
++  } catch {
++    // O1.1 reposo honesto: sin red -> unknown, jamas CME ficticio.
++    data = { status: "unknown", event: null, modelTime: null, simCount: 0, checkedAt: now, source: "unavailable" };
++    cached = { data, ts: now };
++    return NextResponse.json(data, { headers: { "Cache-Control": "no-store", "X-Cache": "miss" } });
++  }
++  const sims = parseEnlilSims(data);
++  const sel = pickCmeEvent(sims);
++  const latest = sims.length
++    ? Math.max(...sims.map((s) => s.modelCompletionTime ?? 0))
++    : null;
++  const payload =
++    sel.status === "event"
++      ? {
++          status: "event",
++          event: {
++            simId: sel.simId,
++            modelTime: sel.modelTime,
++            start: sel.start,
++            arrival: sel.arrival,
++            durationH: sel.durationH,
++            earthGB: sel.earthGB,
++            speed: sel.speed,
++            halfAngle: sel.halfAngle,
++            srcLat: sel.srcLat,
++            srcLon: sel.srcLon,
++            cmeId: sel.cmeId,
++            kpMax: sel.kpMax,
++            link: sel.link,
++          },
++          modelTime: sel.modelTime,
++          simCount: sims.length,
++          checkedAt: now,
++          source: "CCMC DONKI ENLIL (live)",
++        }
++      : sel.status === "quiet"
++        ? {
++            status: "quiet",
++            event: null,
++            modelTime: sel.modelTime,
++            simCount: sims.length,
++            checkedAt: now,
++            source: "CCMC DONKI ENLIL (live)",
++          }
++        : {
++            status: "unknown",
++            event: null,
++            modelTime: latest && latest > 0 ? latest : null,
++            simCount: sims.length,
++            checkedAt: now,
++            source: "unavailable",
++          };
++  cached = { data: payload, ts: now };
++  return NextResponse.json(payload, { headers: { "Cache-Control": "no-store", "X-Cache": "miss" } });
++}
+diff --git a/src/app/page.tsx b/src/app/page.tsx
+index 4ee407f..5e64d71 100644
+--- a/src/app/page.tsx
++++ b/src/app/page.tsx
+@@ -5,6 +5,7 @@ import { RadioTower, FlaskConical, Github, X, Signal } from "lucide-react";
+ 
+ import IonosphereScene from "@/components/ionosphere/IonosphereScene";
+ import SpaceWeatherPanel from "@/components/ionosphere/hud/SpaceWeatherPanel";
++import CmePanel from "@/components/ionosphere/hud/CmePanel";
+ import LayersPanel from "@/components/ionosphere/hud/LayersPanel";
+ import RadioPanel from "@/components/ionosphere/hud/RadioPanel";
+ import TimeBar from "@/components/ionosphere/hud/TimeBar";
+@@ -13,6 +14,7 @@ import IdeasPanel from "@/components/ionosphere/hud/IdeasPanel";
+ 
+ import {
+   SpaceWeatherData,
++  CmeData,
+   AuroraData,
+   IonosondeData,
+   SceneSettings,
+@@ -39,6 +41,8 @@ async function fetchJson<T>(url: string, timeoutMs = 30000): Promise<T | null> {
+ 
+ export default function Home() {
+   const [sw, setSw] = useState<SpaceWeatherData | null>(null);
++  // W-4 #1: pronostico ENLIL (CCMC DONKI, polling 10 min: las sims tardan horas).
++  const [cme, setCme] = useState<CmeData | null>(null);
+   const [aurora, setAurora] = useState<AuroraData | null>(null);
+   const [ionos, setIonos] = useState<IonosondeData | null>(null);
+   const [settings, setSettings] = useState<SceneSettings>(DEFAULT_SETTINGS);
+@@ -103,6 +107,20 @@ export default function Home() {
+     };
+   }, []);
+ 
++  useEffect(() => {
++    let alive = true;
++    const load = async () => {
++      const c = await fetchJson<CmeData>("/api/cme", 40000);
++      if (alive && c) setCme(c);
++    };
++    load();
++    const t = setInterval(load, 600_000);
++    return () => {
++      alive = false;
++      clearInterval(t);
++    };
++  }, []);
++
+   useEffect(() => {
+     let alive = true;
+     const load = async () => {
+@@ -175,6 +193,8 @@ export default function Home() {
+     () => (Date.now() - (settings.timeMode === "replay" ? settings.replayMinutes * 60_000 : 0)) / 1000,
+     [settings.timeMode, settings.replayMinutes, now]
+   );
++  // W-4 #1: el tablero y la escena usan el mismo epoch (replay determinista).
++  const cmeEpoch = settings.timeMode === "replay" ? Date.now() - settings.replayMinutes * 60_000 : Date.now();
+ 
+   const tx = ionos?.stations.find((s) => s.code === txCode) ?? null;
+   const rx = ionos?.stations.find((s) => s.code === rxCode) ?? null;
+@@ -188,6 +208,7 @@ export default function Home() {
+       {/* escena 3D */}
+       <IonosphereScene
+         spaceWeather={sw}
++        cme={cme}
+         aurora={aurora}
+         ionosondes={ionos}
+         settings={settings}
+@@ -255,6 +276,7 @@ export default function Home() {
+       {/* paneles laterales */}
+       <div className="absolute left-4 top-20 z-10 w-60 pointer-events-none space-y-3 hidden md:block">
+         <SpaceWeatherPanel sw={sw} alerts={alertSnap} />
++        <CmePanel cme={cme} epochMs={cmeEpoch} />
+       </div>
+       <div className="absolute right-4 top-20 z-10 w-64 pointer-events-none space-y-3 hidden md:block">
+         <LayersPanel settings={settings} onChange={onSettingsChange} ionosondes={ionos} fps={fps} sw={sw ? sw.wind : null} />
+@@ -264,6 +286,8 @@ export default function Home() {
+       {/* móvil: paneles compactos colapsables */}
+       <MobilePanels
+         sw={sw}
++        cme={cme}
++        cmeEpoch={cmeEpoch}
+         settings={settings}
+         onChange={onSettingsChange}
+         ionos={ionos}
+@@ -434,6 +458,8 @@ function subsolar(now: Date) {
+ /** En móvil: paneles en pestañas colapsables */
+ function MobilePanels({
+   sw,
++  cme,
++  cmeEpoch,
+   settings,
+   onChange,
+   ionos,
+@@ -448,6 +474,8 @@ function MobilePanels({
+   slicePeak,
+ }: {
+   sw: SpaceWeatherData | null;
++  cme: CmeData | null;
++  cmeEpoch: number;
+   settings: SceneSettings;
+   onChange: (p: Partial<SceneSettings>) => void;
+   ionos: IonosondeData | null;
+@@ -485,7 +513,14 @@ function MobilePanels({
+           </button>
+         ))}
+       </div>
+-      {tab === "wx" && <SpaceWeatherPanel sw={sw} alerts={alerts} />}
++      {tab === "wx" && (
++        <>
++          <SpaceWeatherPanel sw={sw} alerts={alerts} />
++          <div className="mt-2">
++            <CmePanel cme={cme} epochMs={cmeEpoch} />
++          </div>
++        </>
++      )}
+       {tab === "radio" && (
+         <RadioPanel
+           link={link}
+diff --git a/src/components/ionosphere/IonosphereScene.tsx b/src/components/ionosphere/IonosphereScene.tsx
+index ff9ae9e..70b0ba0 100644
+--- a/src/components/ionosphere/IonosphereScene.tsx
++++ b/src/components/ionosphere/IonosphereScene.tsx
+@@ -41,6 +41,7 @@ import {
+   magnetopauseMesh,
+   shueRadius,
+ } from "@/lib/iono/magnetosphere";
++import { cmeArrived, cmeEffectiveDp } from "@/lib/iono/cme";
+ import {
+   volumeModeIndex,
+   volumeOpacityClamp,
+@@ -67,6 +68,7 @@ import {
+ } from "./builders";
+ import {
+   SpaceWeatherData,
++  CmeData,
+   AuroraData,
+   IonosondeData,
+   IonosondeStation,
+@@ -90,6 +92,7 @@ export interface SceneCallbacks {
+ 
+ interface Props {
+   spaceWeather: SpaceWeatherData | null;
++  cme: CmeData | null; // W-4 #1: pronostico ENLIL (encadenado O1.3)
+   aurora: AuroraData | null;
+   ionosondes: IonosondeData | null;
+   settings: SceneSettings;
+@@ -579,7 +582,19 @@ export default function IonosphereScene(props: Props) {
+               const Bz = w?.bz ?? 0;
+               const v = w && w.speed > 0 ? w.speed : 400;
+               const n = w && w.density > 0 ? w.density : 5;
+-              const Dp = dynamicPressure(n, v);
++              // W-4 #1: encadenado O1.3 — la llegada ENLIL geoefectiva
++              // comprime #4 con el factor demo DECLARADO x1.6 (el CCMC no
++              // publica Dp). El cambio de Dp re-talla la malla via
++              // magnetoKey en el mismo frame; determinista en replay
++              // porque effMs sigue a replayMinutes.
++              const cmeD = propsRef.current.cme;
++              const cmeE = cmeD?.status === "event" ? cmeD.event : null;
++              const cmeHit =
++                settings.showCme &&
++                cmeE != null &&
++                cmeE.earthGB &&
++                cmeArrived(cmeE.start, cmeE.arrival, effMs);
++              const Dp = cmeEffectiveDp(dynamicPressure(n, v), cmeHit, cmeE?.earthGB ?? false);
+               const key = magnetoKey(Bz, Dp);
+               if (key !== mg.key) {
+                 mg.key = key;
+@@ -677,7 +692,16 @@ export default function IonosphereScene(props: Props) {
+         if (S.current?.auroraObj) {
+           const u = S.current.auroraObj.mat.uniforms;
+           u.uTime.value = t;
+-          S.current.auroraObj.mesh.visible = propsRef.current.settings.showAurora;
++          // W-4 #1: la llegada ENLIL geoefectiva enciende el ovalo
++          // OVATION vivo (O1.3); el dato auroral sigue siendo el real.
++          const cmeS = propsRef.current.cme;
++          const cmeSE = cmeS?.status === "event" ? cmeS.event : null;
++          const cmeOval =
++            propsRef.current.settings.showCme &&
++            cmeSE != null &&
++            cmeSE.earthGB &&
++            cmeArrived(cmeSE.start, cmeSE.arrival, effMs);
++          S.current.auroraObj.mesh.visible = propsRef.current.settings.showAurora || cmeOval;
+         }
+         if (S.current?.stationsObj) {
+           S.current.stationsObj.mat.uniforms.uTime.value = t;
+diff --git b/src/components/ionosphere/hud/CmePanel.tsx b/src/components/ionosphere/hud/CmePanel.tsx
+new file mode 100644
+index 0000000..e3e1469
+--- /dev/null
++++ b/src/components/ionosphere/hud/CmePanel.tsx
+@@ -0,0 +1,186 @@
++"use client";
++
++import { useEffect, useRef, useState } from "react";
++import { Sun, Rocket, TriangleAlert } from "lucide-react";
++import { CmeData } from "../types";
++import { PanelBox, SourceDot } from "./SpaceWeatherPanel";
++import { cmeProgress, cmeArrived, cmeCountdown, lapseFactor } from "@/lib/iono/cme";
++
++const LASCO_C2 = "https://soho.nascom.nasa.gov/data/realtime/c2/512/latest.jpg";
++
++/** W-4 #1: tablero solar — frente CME con ETA ENLIL + encadenado O1.3.
++ * El frente vive AQUI (esquema Sol->Tierra), no en la escena 3D: la escala
++ * de 1 UA es incompatible con la vista en R_E — declarado (ver nota 255).
++ * El transito de 1-3 dias se muestra con barrido acelerado y factor VISIBLE
++ * (O1.5); el frente NO simula plasma (O1.2, texto exacto del ruling 252). */
++export default function CmePanel({ cme, epochMs }: { cme: CmeData | null; epochMs: number }) {
++  const [sweep, setSweep] = useState<number | null>(null);
++  const [lascoOk, setLascoOk] = useState(true);
++  const raf = useRef(0);
++
++  useEffect(() => {
++    setSweep(null);
++    return () => cancelAnimationFrame(raf.current);
++  }, [cme?.event?.simId]);
++
++  useEffect(() => () => cancelAnimationFrame(raf.current), []);
++
++  if (!cme) {
++    return (
++      <PanelBox title="Tablero solar">
++        <div className="text-xs text-slate-500 py-6 text-center animate-pulse">
++          Consultando al CCMC…
++        </div>
++      </PanelBox>
++    );
++  }
++
++  const startSweep = (target: number) => {
++    cancelAnimationFrame(raf.current);
++    const t0 = performance.now();
++    const dur = 8000;
++    const step = (t: number) => {
++      const f = Math.min(1, (t - t0) / dur);
++      setSweep(target * f);
++      if (f < 1) raf.current = requestAnimationFrame(step);
++    };
++    raf.current = requestAnimationFrame(step);
++  };
++
++  return (
++    <PanelBox title="Tablero solar" badge={<SourceDot source={cme.source} />}>
++      {cme.status === "unknown" && (
++        <div className="text-[11px] text-slate-500 py-3 text-center">
++          Sin datos ENLIL (CCMC no responde) — jamás se muestra un CME ficticio.
++        </div>
++      )}
++      {cme.status === "quiet" && (
++        <div className="text-[11px] text-slate-300 leading-snug">
++          <span className="text-emerald-400 font-medium">Sin evento geoefectivo.</span>
++          <div className="text-slate-500 mt-0.5">
++            Última sim {cme.modelTime ? new Date(cme.modelTime).toISOString().slice(0, 16).replace("T", " ") + "Z" : "—"}
++            {" · "}{cme.simCount} sims en ventana
++          </div>
++        </div>
++      )}
++      {cme.status === "event" && cme.event && (
++        <EventBody cme={cme} epochMs={epochMs} sweep={sweep} onSweep={startSweep} lascoOk={lascoOk} onLascoError={() => setLascoOk(false)} />
++      )}
++      {/* O1.2: declaracion ENLIL exacta del ruling 252, siempre visible */}
++      <p className="text-[10px] text-slate-500 leading-snug mt-2 pt-2 border-t border-white/10">
++        El frente visualiza el pronóstico ENLIL del CCMC; no es una simulación propia.
++      </p>
++    </PanelBox>
++  );
++}
++
++function EventBody({
++  cme, epochMs, sweep, onSweep, lascoOk, onLascoError,
++}: {
++  cme: CmeData;
++  epochMs: number;
++  sweep: number | null;
++  onSweep: (target: number) => void;
++  lascoOk: boolean;
++  onLascoError: () => void;
++}) {
++  const ev = cme.event!;
++  const live = cmeProgress(ev.start, ev.arrival, epochMs);
++  const disp = sweep ?? live;
++  const arrived = cmeArrived(ev.start, ev.arrival, epochMs);
++  const n = lapseFactor(ev.start, ev.arrival);
++  const geoCol = ev.earthGB ? (arrived ? "text-red-400" : "text-orange-300") : "text-slate-400";
++
++  return (
++    <div>
++      {/* esquema Sol -> frente -> Tierra */}
++      <div className="flex items-center gap-1.5 text-[10px] text-slate-400">
++        <span className="flex items-center gap-1 shrink-0"><Sun size={11} className="text-amber-300" /> SOL</span>
++        <div className="relative flex-1 h-1.5 rounded-full bg-white/10 overflow-visible">
++          <div className="absolute inset-y-0 left-0 rounded-full bg-orange-400/70" style={{ width: `${disp * 100}%` }} />
++          <div
++            className="absolute top-1/2 w-2.5 h-2.5 rounded-full bg-orange-300 ring-2 ring-orange-100/60"
++            style={{ left: `calc(${(disp * 100).toFixed(1)}% - 5px)`, transform: "translateY(-50%)" }}
++            title={`Frente al ${(disp * 100).toFixed(0)}% del tránsito`}
++          />
++        </div>
++        <span className="shrink-0 text-cyan-300">⊕ TIERRA</span>
++      </div>
++
++      <div className="flex items-center justify-between mt-1.5">
++        <span className={`text-xs font-semibold ${arrived && ev.earthGB ? "text-red-400" : "text-slate-200"}`}>
++          {arrived ? (ev.earthGB ? "LLEGADA ENLIL" : "Pasó de largo") : `ETA ${cmeCountdown(ev.arrival, epochMs)}`}
++        </span>
++        <button
++          onClick={() => onSweep(live)}
++          className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-slate-200 hover:bg-white/20"
++          title={`Comprime el tránsito real a 8 s (factor ×${n})`}
++        >
++          ▶ tránsito ×{n}
++        </button>
++      </div>
++      {sweep !== null && (
++        <div className="text-[10px] text-slate-500">tiempo ×{n} (barrido de 8 s, O1.5)</div>
++      )}
++
++      {/* parámetros ENLIL (O1.4: de la propia sim, entrada más exacta) */}
++      <div className="grid grid-cols-3 gap-x-2 gap-y-0.5 mt-1.5 text-[10px]">
++        <span className="text-slate-500">v</span>
++        <span className="col-span-2 text-slate-200 font-mono">{ev.speed != null ? `${ev.speed} km/s` : "—"}</span>
++        <span className="text-slate-500">ancho ½</span>
++        <span className="col-span-2 text-slate-200 font-mono">{ev.halfAngle != null ? `${ev.halfAngle}°` : "—"}</span>
++        <span className="text-slate-500">origen</span>
++        <span className="col-span-2 text-slate-200 font-mono">
++          {ev.srcLat != null ? `${ev.srcLat}°, ${ev.srcLon}°` : "—"}
++        </span>
++        {ev.kpMax != null && (
++          <>
++            <span className="text-slate-500">Kp ENLIL</span>
++            <span className="col-span-2 text-slate-200 font-mono">hasta {ev.kpMax}</span>
++          </>
++        )}
++      </div>
++
++      {/* O1.3: encadenado mínimo visible */}
++      {arrived && ev.earthGB && (
++        <div className="mt-1.5 flex items-start gap-1.5 text-[10px] text-red-300/90 leading-snug">
++          <TriangleAlert size={11} className="shrink-0 mt-0.5" />
++          <span>
++            Compresión #4 ×1.6 (demo declarada) · óvalo ON · el motor de alertas
++            (Kp/Bz vivos) dispara solo con la tormenta real.
++          </span>
++        </div>
++      )}
++      <div className="text-[10px] text-slate-600 mt-1">
++        Cadena futura F2 (declarada): fadeout #2 · Forbush #14 · Dst #18.
++      </div>
++
++      {/* O1.4: textura LASCO del momento, con fallback honesto */}
++      {lascoOk ? (
++        <img
++          src={LASCO_C2}
++          alt="LASCO C2 en tiempo real (SOHO)"
++          className="mt-1.5 w-full rounded-lg ring-1 ring-white/10"
++          loading="lazy"
++          onError={onLascoError}
++        />
++      ) : (
++        <div className="mt-1.5 text-[10px] text-slate-500">Sin imagen LASCO del momento.</div>
++      )}
++      <div className="flex items-center justify-between mt-1">
++        <span className={`text-[10px] font-mono ${geoCol}`}>
++          {ev.earthGB ? "geoefectiva" : "no geoefectiva"} · {ev.simId}
++        </span>
++        {ev.link && (
++          <a href={ev.link} target="_blank" rel="noreferrer" className="text-[10px] text-cyan-400/80 hover:text-cyan-300">
++            ver en CCMC
++          </a>
++        )}
++      </div>
++      <div className="text-[10px] text-slate-500 flex items-center gap-1 mt-0.5">
++        <Rocket size={10} /> inicio {ev.start ? new Date(ev.start).toISOString().slice(5, 16).replace("T", " ") + "Z" : "—"}
++        {" → "}llegada {new Date(ev.arrival).toISOString().slice(5, 16).replace("T", " ") + "Z"}
++      </div>
++    </div>
++  );
++}
+diff --git a/src/components/ionosphere/hud/LayersPanel.tsx b/src/components/ionosphere/hud/LayersPanel.tsx
+index 1120c35..a735f98 100644
+--- a/src/components/ionosphere/hud/LayersPanel.tsx
++++ b/src/components/ionosphere/hud/LayersPanel.tsx
+@@ -1,6 +1,6 @@
+ "use client";
+ 
+-import { Layers, Cloud, Sparkles, Radio, Orbit, Mountain, Eye, Disc3, Sun, Boxes, Circle } from "lucide-react";
++import { Layers, Cloud, Sparkles, Radio, Orbit, Mountain, Eye, Disc3, Sun, Boxes, Circle, Rocket } from "lucide-react";
+ import { SceneSettings, IonosondeData } from "../types";
+ import { dynamicPressure, shueR0, tailStretch } from "@/lib/iono/magnetosphere";
+ import { PanelBox, SourceDot } from "./SpaceWeatherPanel";
+@@ -113,6 +113,12 @@ export default function LayersPanel({ settings, onChange, ionosondes, fps, sw }:
+           checked={settings.showMagnetosphere}
+           onChange={(v) => onChange({ showMagnetosphere: v })}
+         />
++        <Toggle
++          icon={<Rocket size={12} />}
++          label="CME ENLIL"
++          checked={settings.showCme}
++          onChange={(v) => onChange({ showCme: v })}
++        />
+       </div>
+       {settings.showMagnetosphere && (
+         <div className="mt-1 text-[10px] font-mono text-slate-400">
+diff --git a/src/components/ionosphere/types.ts b/src/components/ionosphere/types.ts
+index edb7b7a..778a681 100644
+--- a/src/components/ionosphere/types.ts
++++ b/src/components/ionosphere/types.ts
+@@ -33,6 +33,32 @@ export interface AuroraData {
+   source: string;
+ }
+ 
++export interface CmeEventData {
++  simId: string;
++  modelTime: number | null;
++  start: number | null; // time21_5 (inicio del transito modelado)
++  arrival: number; // ETA ENLIL (ms)
++  durationH: number | null;
++  earthGB: boolean;
++  speed: number | null; // km/s (entrada isMostAccurate)
++  halfAngle: number | null; // grados
++  srcLat: number | null;
++  srcLon: number | null;
++  cmeId: string | null;
++  kpMax: number | null;
++  link: string | null;
++}
++
++/** Espejo del payload de /api/cme (W-4 #1, ruling 252). */
++export interface CmeData {
++  status: "event" | "quiet" | "unknown";
++  event: CmeEventData | null;
++  modelTime: number | null;
++  simCount: number;
++  checkedAt: number;
++  source: string;
++}
++
+ export interface StationHistoryPoint {
+   t: string; // ISO
+   foF2: number;
+@@ -99,6 +125,8 @@ export interface SceneSettings {
+   volumeOpacity: number; // 0..2.5 UI, clamp [0,3]
+   // W-4 #4 Magnetosfera v1 (ruling 252; default OFF: la burbuja enana el globo).
+   showMagnetosphere: boolean;
++  // W-4 #1 CME ENLIL (ruling 252; default ON: tablero + encadenado O1.3).
++  showCme: boolean;
+   // W-4 E-tail o6: tamaño de punto (App.cpp:4293 SliderFloat 3-30).
+   // Adaptación declarada: slider web 3-15 (más allá satura el techo GL).
+   pointSize: number; // 3..15 UI, default 11
+@@ -135,6 +163,7 @@ export const DEFAULT_SETTINGS: SceneSettings = {
+   volumeOpacity: 1.0,
+   pointSize: 11,
+   showMagnetosphere: false,
++  showCme: true,
+ };
+ 
+ /** Avance de replay en minutos-atrás (espejo App.cpp:2139-2141).
+diff --git b/src/lib/iono/cme.test.ts b/src/lib/iono/cme.test.ts
+new file mode 100644
+index 0000000..00d1e8f
+--- /dev/null
++++ b/src/lib/iono/cme.test.ts
+@@ -0,0 +1,165 @@
++import { describe, expect, it } from "vitest";
++import {
++  parseEnlilSims,
++  pickCmeEvent,
++  cmeProgress,
++  cmeArrived,
++  cmeCountdown,
++  lapseFactor,
++  cmeEffectiveDp,
++  CME_COMPRESSION_DEMO,
++} from "./cme";
++
++// Fixture REAL: respuesta del CCMC el 2026-10-14 (forma pineada en cme.ts).
++// WSA-ENLIL/49092/1: geoefectiva (isEarthGB), ETA 2026-10-14T11:30Z.
++const SIM_GB = {
++  simulationID: "WSA-ENLIL/49092/1",
++  modelCompletionTime: "2026-10-12T13:04Z",
++  au: 2.0,
++  cmeInputs: [
++    {
++      cmeStartTime: "2026-10-12T05:09Z",
++      latitude: -1.0,
++      longitude: -31.0,
++      speed: 741.0,
++      halfAngle: 27.0,
++      time21_5: "2026-10-12T09:12Z",
++      featureCode: "LE",
++      isMostAccurate: true,
++      levelOfData: 0,
++      ipsList: [],
++      CMEID: "2026-10-12T05:09:00-CME-001",
++    },
++  ],
++  estimatedShockArrivalTime: "2026-10-14T11:30Z",
++  isEarthGB: true,
++  isEarthMinorImpact: false,
++  rmin_re: null,
++  kp_18: null,
++  kp_90: 4,
++  kp_135: 5,
++  kp_180: 6,
++  estimatedDuration: null,
++  impactList: [],
++  link: "https://ccmc.gsfc.nasa.gov/DONKI/view/WSA-ENLIL/49092/-1",
++};
++
++// Misma ventana real: sin ETA (no geoefectiva / sin pronostico).
++const SIM_NOETA = {
++  simulationID: "WSA-ENLIL/49086/1",
++  modelCompletionTime: "2026-10-12T01:45Z",
++  cmeInputs: [
++    {
++      cmeStartTime: "2026-10-11T23:15Z",
++      latitude: -9.0,
++      longitude: 30.0,
++      speed: 457.0,
++      halfAngle: 10.0,
++      time21_5: "2026-10-12T04:25Z",
++      featureCode: "LE",
++      isMostAccurate: true,
++      CMEID: "2026-10-11T23:15:00-CME-001",
++    },
++  ],
++  estimatedShockArrivalTime: null,
++  isEarthGB: false,
++  kp_90: null,
++  kp_135: null,
++  kp_180: null,
++  estimatedDuration: null,
++  impactList: [{ location: "Solar Orbiter", arrivalTime: "2026-10-14T22:00Z" }],
++  link: "https://ccmc.gsfc.nasa.gov/DONKI/view/WSA-ENLIL/49086/-1",
++};
++
++const T0 = Date.parse("2026-10-12T09:12:00Z"); // time21_5 del fixture
++const TA = Date.parse("2026-10-14T11:30:00Z"); // ETA del fixture
++
++describe("parseEnlilSims (forma CCMC pineada)", () => {
++  it("parsea el fixture geoefectivo completo", () => {
++    const [s] = parseEnlilSims([SIM_GB]);
++    expect(s.simulationId).toBe("WSA-ENLIL/49092/1");
++    expect(s.estimatedShockArrivalTime).toBe(TA);
++    expect(s.isEarthGB).toBe(true);
++    expect(s.kpMax).toBe(6);
++    expect(s.inputs).toHaveLength(1);
++    expect(s.inputs[0].speed).toBe(741);
++    expect(s.inputs[0].halfAngle).toBe(27);
++    expect(s.inputs[0].time21_5).toBe(T0);
++    expect(s.inputs[0].isMostAccurate).toBe(true);
++  });
++  it("ETA null y kp nulos -> nulls honestos", () => {
++    const [s] = parseEnlilSims([SIM_NOETA]);
++    expect(s.estimatedShockArrivalTime).toBeNull();
++    expect(s.kpMax).toBeNull();
++    expect(s.isEarthGB).toBe(false);
++  });
++  it("basura defensiva -> [] (O1.1 reposo, jamas ficticio)", () => {
++    expect(parseEnlilSims(null)).toEqual([]);
++    expect(parseEnlilSims({})).toEqual([]);
++    expect(parseEnlilSims("WSA-ENLIL")).toEqual([]);
++    expect(parseEnlilSims([null, 42, "x"])).toEqual([]);
++  });
++});
++
++describe("pickCmeEvent (O1.1 sin hardcode)", () => {
++  it("elige la ultima CON ETA y extrae velocidad/direccion (O1.4)", () => {
++    const sel = pickCmeEvent(parseEnlilSims([SIM_NOETA, SIM_GB]));
++    expect(sel.status).toBe("event");
++    if (sel.status !== "event") return;
++    expect(sel.simId).toBe("WSA-ENLIL/49092/1");
++    expect(sel.arrival).toBe(TA);
++    expect(sel.start).toBe(T0);
++    expect(sel.earthGB).toBe(true);
++    expect(sel.speed).toBe(741);
++    expect(sel.halfAngle).toBe(27);
++    expect(sel.srcLat).toBe(-1);
++    expect(sel.srcLon).toBe(-31);
++    expect(sel.kpMax).toBe(6);
++  });
++  it("sin ETA en ninguna -> quiet con marca temporal", () => {
++    const sel = pickCmeEvent(parseEnlilSims([SIM_NOETA]));
++    expect(sel.status).toBe("quiet");
++    if (sel.status !== "quiet") return;
++    expect(sel.simCount).toBe(1);
++    expect(sel.modelTime).toBe(Date.parse("2026-10-12T01:45:00Z"));
++  });
++  it("vacio -> unknown", () => {
++    expect(pickCmeEvent([])).toEqual({ status: "unknown" });
++  });
++});
++
++describe("progreso y llegada (O1.3/O1.5)", () => {
++  it("progreso lineal 0..1 con clamps", () => {
++    expect(cmeProgress(T0, TA, T0 - 1000)).toBe(0);
++    expect(cmeProgress(T0, TA, TA + 1000)).toBe(1);
++    expect(cmeProgress(T0, TA, (T0 + TA) / 2)).toBeCloseTo(0.5, 10);
++  });
++  it("sin inicio -> binario declarado", () => {
++    expect(cmeProgress(null, TA, TA - 1)).toBe(0);
++    expect(cmeProgress(null, TA, TA)).toBe(1);
++  });
++  it("llegada consumada", () => {
++    expect(cmeArrived(T0, TA, TA - 1)).toBe(false);
++    expect(cmeArrived(T0, TA, TA)).toBe(true);
++  });
++  it("cuenta atras honesta", () => {
++    expect(cmeCountdown(TA, TA)).toBe("ahora");
++    expect(cmeCountdown(TA, TA - 30 * 60_000)).toBe("en 30 min");
++    expect(cmeCountdown(TA, TA - 50 * 3600_000)).toBe("en 2 d 2 h");
++    expect(cmeCountdown(TA, TA + 3 * 3600_000)).toBe("llego hace 3 h 0 min");
++  });
++  it("factor xN del barrido (O1.5)", () => {
++    // Transito del fixture: 50.3 h comprimidas a 8 s -> x22635.
++    expect(lapseFactor(T0, TA, 8000)).toBe(22635);
++    expect(lapseFactor(null, TA)).toBe(1);
++  });
++});
++
++describe("encadenado #4 (O1.3, factor demo declarado)", () => {
++  it("boost x1.6 solo con llegada geoefectiva", () => {
++    expect(CME_COMPRESSION_DEMO).toBe(1.6);
++    expect(cmeEffectiveDp(2, true, true)).toBeCloseTo(3.2, 10);
++    expect(cmeEffectiveDp(2, true, false)).toBe(2);
++    expect(cmeEffectiveDp(2, false, true)).toBe(2);
++  });
++});
+diff --git b/src/lib/iono/cme.ts b/src/lib/iono/cme.ts
+new file mode 100644
+index 0000000..0a33129
+--- /dev/null
++++ b/src/lib/iono/cme.ts
+@@ -0,0 +1,233 @@
++/**
++ * W-4 #1 CME con ETA ENLIL (ruling 252, oraculos O1.1-O1.5). Puro: sin DOM ni red.
++ *
++ * REFERENCIA PINEADA (regla 252, ANTES de codigo): la forma del dato es la
++ * respuesta real de `GET https://ccmc.gsfc.nasa.gov/DONKI-API/get/WSAEnlilSimulations`
++ * (verificada viva el 2026-10-14 desde el sandbox; la forma sin `/get/` da 404):
++ *   [{ simulationID, modelCompletionTime, au, cmeInputs: [{ cmeStartTime,
++ *      latitude, longitude, speed, halfAngle, time21_5, featureCode,
++ *      isMostAccurate, CMEID, ... }], estimatedShockArrivalTime|null,
++ *      estimatedDuration|null, isEarthGB, rmin_re, kp_90/135/180|null,
++ *      impactList|null, link }]
++ * La velocidad/direccion del evento (O1.4) salen de los cmeInputs de la
++ * propia simulacion (entrada isMostAccurate) — sin segundo fetch a
++ * CMEAnalysis: menos modos de fallo, misma fuente.
++ *
++ * Honestidad (O1.1): cero constantes de evento en el codigo; el reposo es
++ * la ultima simulacion disponible con su marca temporal, o "sin datos".
++ * El frente NO simula plasma: la posicion es el progreso lineal entre el
++ * inicio (time21_5) y el ETA publicado por el CCMC (O1.5: el transito de
++ * 1-3 dias se muestra acelerado con factor VISIBLE).
++ */
++
++export interface EnlilCmeInput {
++  cmeStartTime: number | null; // ms
++  time21_5: number | null; // ms (inicio del transito modelado)
++  speed: number | null; // km/s
++  halfAngle: number | null; // grados
++  latitude: number | null;
++  longitude: number | null;
++  isMostAccurate: boolean;
++  cmeId: string | null;
++}
++
++export interface EnlilSim {
++  simulationId: string;
++  modelCompletionTime: number | null; // ms
++  estimatedShockArrivalTime: number | null; // ms (ETA ENLIL)
++  estimatedDuration: number | null; // horas
++  isEarthGB: boolean;
++  kpMax: number | null; // max de kp_90/135/180 no nulos
++  link: string | null;
++  inputs: EnlilCmeInput[];
++}
++
++function toMs(v: unknown): number | null {
++  if (typeof v !== "string" || !v) return null;
++  // DONKI usa "2026-10-14T11:30Z" (sin segundos): Date lo acepta tal cual.
++  const t = Date.parse(v.length === 16 ? v + ":00Z" : v);
++  return Number.isFinite(t) ? t : null;
++}
++
++function num(v: unknown): number | null {
++  return typeof v === "number" && Number.isFinite(v) ? v : null;
++}
++
++function str(v: unknown): string | null {
++  return typeof v === "string" && v ? v : null;
++}
++
++/** Parseo defensivo de la respuesta DONKI (unknown -> []: O1.1 reposo). */
++export function parseEnlilSims(raw: unknown): EnlilSim[] {
++  if (!Array.isArray(raw)) return [];
++  const out: EnlilSim[] = [];
++  for (const s of raw) {
++    if (s == null || typeof s !== "object") continue;
++    const r = s as Record<string, unknown>;
++    const inputs: EnlilCmeInput[] = [];
++    if (Array.isArray(r.cmeInputs)) {
++      for (const c of r.cmeInputs) {
++        if (c == null || typeof c !== "object") continue;
++        const d = c as Record<string, unknown>;
++        inputs.push({
++          cmeStartTime: toMs(d.cmeStartTime),
++          time21_5: toMs(d.time21_5),
++          speed: num(d.speed),
++          halfAngle: num(d.halfAngle),
++          latitude: num(d.latitude),
++          longitude: num(d.longitude),
++          isMostAccurate: d.isMostAccurate === true,
++          cmeId: str(d.CMEID),
++        });
++      }
++    }
++    const kps = [num(r.kp_90), num(r.kp_135), num(r.kp_180)].filter(
++      (v): v is number => v != null
++    );
++    out.push({
++      simulationId: str(r.simulationID) ?? "",
++      modelCompletionTime: toMs(r.modelCompletionTime),
++      estimatedShockArrivalTime: toMs(r.estimatedShockArrivalTime),
++      estimatedDuration: num(r.estimatedDuration),
++      isEarthGB: r.isEarthGB === true,
++      kpMax: kps.length ? Math.max(...kps) : null,
++      link: str(r.link),
++      inputs,
++    });
++  }
++  return out;
++}
++
++export interface CmeEventSel {
++  status: "event";
++  simId: string;
++  modelTime: number | null;
++  start: number | null; // time21_5 de la entrada mas exacta (o cmeStartTime)
++  arrival: number; // ETA ENLIL (ms)
++  durationH: number | null;
++  earthGB: boolean;
++  speed: number | null;
++  halfAngle: number | null;
++  srcLat: number | null;
++  srcLon: number | null;
++  cmeId: string | null;
++  kpMax: number | null;
++  link: string | null;
++}
++
++export interface CmeQuietSel {
++  status: "quiet";
++  modelTime: number | null;
++  simCount: number;
++}
++
++export interface CmeUnknownSel {
++  status: "unknown";
++}
++
++export type CmeSelection = CmeEventSel | CmeQuietSel | CmeUnknownSel;
++
++/**
++ * Seleccion honesta (O1.1): la ultima simulacion (por modelCompletionTime)
++ * CON ETA publicado. Sin ETA en ninguna -> quiet con la marca temporal de
++ * la ultima disponible. Sin sims -> unknown (jamas evento ficticio).
++ */
++export function pickCmeEvent(sims: EnlilSim[]): CmeSelection {
++  if (!sims.length) return { status: "unknown" };
++  const byModel = [...sims].sort(
++    (a, b) => (b.modelCompletionTime ?? 0) - (a.modelCompletionTime ?? 0)
++  );
++  for (const s of byModel) {
++    if (s.estimatedShockArrivalTime == null) continue;
++    const best = s.inputs.find((i) => i.isMostAccurate) ?? s.inputs[0] ?? null;
++    return {
++      status: "event",
++      simId: s.simulationId,
++      modelTime: s.modelCompletionTime,
++      start: best?.time21_5 ?? best?.cmeStartTime ?? null,
++      arrival: s.estimatedShockArrivalTime,
++      durationH: s.estimatedDuration,
++      earthGB: s.isEarthGB,
++      speed: best?.speed ?? null,
++      halfAngle: best?.halfAngle ?? null,
++      srcLat: best?.latitude ?? null,
++      srcLon: best?.longitude ?? null,
++      cmeId: best?.cmeId ?? null,
++      kpMax: s.kpMax,
++      link: s.link,
++    };
++  }
++  return {
++    status: "quiet",
++    modelTime: byModel[0].modelCompletionTime,
++    simCount: sims.length,
++  };
++}
++
++/**
++ * Progreso del frente 0..1 (0 = Sol/inicio, 1 = Tierra/llegada). Sin
++ * inicio conocido -> binario (0 antes, 1 despues): declarado, no inventado.
++ */
++export function cmeProgress(
++  startMs: number | null,
++  arrivalMs: number,
++  nowMs: number
++): number {
++  if (startMs == null || !(arrivalMs > startMs)) return nowMs >= arrivalMs ? 1 : 0;
++  if (nowMs <= startMs) return 0;
++  if (nowMs >= arrivalMs) return 1;
++  return (nowMs - startMs) / (arrivalMs - startMs);
++}
++
++/** Llegada consumada (para el encadenado O1.3). Pura. */
++export function cmeArrived(
++  startMs: number | null,
++  arrivalMs: number,
++  nowMs: number
++): boolean {
++  return cmeProgress(startMs, arrivalMs, nowMs) >= 1;
++}
++
++/** Cuenta atras honesta en ASCII (doctrina del canal). */
++export function cmeCountdown(arrivalMs: number, nowMs: number): string {
++  const d = arrivalMs - nowMs;
++  if (Math.abs(d) < 60_000) return "ahora";
++  const past = d < 0;
++  const mins = Math.floor(Math.abs(d) / 60_000);
++  const dd = Math.floor(mins / 1440);
++  const hh = Math.floor((mins % 1440) / 60);
++  const mm = mins % 60;
++  const body =
++    dd > 0 ? `${dd} d ${hh} h` : hh > 0 ? `${hh} h ${mm} min` : `${mm} min`;
++  return past ? `llego hace ${body}` : `en ${body}`;
++}
++
++/**
++ * Factor de aceleracion VISIBLE del barrido del transito (O1.5):
++ * el transito real (start->arrival) comprimido a sweepMs milisegundos.
++ */
++export function lapseFactor(
++  startMs: number | null,
++  arrivalMs: number,
++  sweepMs = 8000
++): number {
++  if (startMs == null || !(arrivalMs > startMs) || !(sweepMs > 0)) return 1;
++  return Math.max(1, Math.round((arrivalMs - startMs) / sweepMs));
++}
++
++/**
++ * Factor de compresion de DEMOSTRACION sobre la magnetopausa de #4 a la
++ * llegada (O1.3). DECLARADO en UI y nota: el pronostico ENLIL no publica
++ * Dp, asi que el encadenado usa este factor fijo y visible — no una
++ * fisica simulada.
++ */
++export const CME_COMPRESSION_DEMO = 1.6;
++
++/** Dp efectiva para #4: boost solo si la llegada ENLIL es geoefectiva. */
++export function cmeEffectiveDp(
++  dp: number,
++  arrived: boolean,
++  earthGB: boolean
++): number {
++  return arrived && earthGB ? dp * CME_COMPRESSION_DEMO : dp;
++}
