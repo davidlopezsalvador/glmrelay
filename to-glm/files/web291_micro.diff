@@ -1,0 +1,202 @@
+From t <t@t> Mon Oct 12 00:00:00 2026 +0200
+From: t <t@t>
+Date: Mon, 12 Oct 2026 00:00:00 +0200
+Subject: [PATCH] w291-micro (P1-284+nodata)
+
+---
+ src/app/api/space-weather/route.ts                | 31 +++++++++++-----------
+ .../src/components/ionosphere/hud/ParkerPanel.tsx | 10 ++++---
+ src/lib/iono/parker.test.ts                       | 27 +++++++++++++++++--
+ src/lib/iono/parker.ts                            | 25 +++++++++++++++++
+ 4 files changed, 73 insertions(+), 20 deletions(-)
+
+diff --git a/src/app/api/space-weather/route.ts b/src/app/api/space-weather/route.ts
+index aeac783..de56407 100644
+--- a/src/app/api/space-weather/route.ts
++++ b/src/app/api/space-weather/route.ts
+@@ -1,4 +1,5 @@
+ import { NextResponse } from "next/server";
++import { selectMagSource } from "@/lib/iono/parker";
+ 
+ /**
+  * Agregador de clima espacial NOAA SWPC con caché en memoria (90 s).
+@@ -76,7 +77,7 @@ interface FRow { time_tag: string; flux: number }
+ interface WindSpeedRow { time_tag: string; proton_speed: number }
+ interface WindMagRow { time_tag: string; bt: number; bz_gsm: number }
+ interface WindDensityRow { time_tag: string; proton_density: number }
+-interface Mag1mRow { time_tag: string; bx_gse: number; bt: number }
++interface Mag1mRow { time_tag: string; bx_gse: number; bt: number; active: boolean }
+ interface XrayRow { time_tag: string; flux: number; energy: string }
+ interface ProtonRow { time_tag: string; satellite: number; flux: number; energy: string }
+ interface SunspotRow { time_tag: string; Region: number; Latitude: number; Longitude: number; Location?: string; Report_Location?: string }
+@@ -106,6 +107,17 @@ export async function GET() {
+ 
+   const now = Date.now();
+ 
++  // P1-284: fuente ACTIVA + extremo NUEVO (el feed es descendente y
++  // multi-nave; leer [length-1] daba la muestra más vieja de nave
++  // arbitraria). Serie ascendente de una sola fuente para los cruces.
++  const magRows = (mag1mArr ?? []).map((e) => ({
++    t: new Date(e.time_tag + "Z").getTime(),
++    bx: e.bx_gse ?? null,
++    active: e.active === true,
++  }));
++  const magSel = selectMagSource(magRows, 3, now);
++  const bxNow = magSel.length ? magSel[magSel.length - 1].bx : 0;
++
+   // Kp actual + serie (últimas 24 h remuestreada)
+   let kpNow = 0;
+   const kpSeries: { t: number; kp: number }[] = [];
+@@ -141,26 +153,15 @@ export async function GET() {
+     speed: windSpeed?.length ? windSpeed[windSpeed.length - 1].proton_speed ?? 0 : 0,
+     bt: windMag?.length ? windMag[windMag.length - 1].bt ?? 0 : 0,
+     bz: windMag?.length ? windMag[windMag.length - 1].bz_gsm ?? 0 : 0,
+-    bx:
+-      mag1mArr?.length && mag1mArr[mag1mArr.length - 1].bx_gse != null
+-        ? mag1mArr[mag1mArr.length - 1].bx_gse
+-        : 0,
++    bx: bxNow,
+     density: windDensity?.length
+       ? windDensity[windDensity.length - 1].proton_density ?? 0
+       : 0,
+     t: windMag?.length ? windMag[windMag.length - 1].time_tag : null,
+   };
+ 
+-  // Bx 1-min 3 h (polaridad de sector O12; cruces calculados en cliente).
+-  const magSeries: { t: number; bx: number }[] = [];
+-  if (mag1mArr) {
+-    const cut = now - 3 * 3600_000;
+-    for (const e of mag1mArr) {
+-      if (e.bx_gse == null) continue;
+-      const t = new Date(e.time_tag + "Z").getTime();
+-      if (t >= cut) magSeries.push({ t, bx: e.bx_gse });
+-    }
+-  }
++  // Bx 1-min 3 h de la fuente activa (polaridad de sector O12).
++  const magSeries = magSel.filter((_, i) => i % 5 === 0).slice(-216);
+ 
+   // X-ray GOES (serie 0.1-0.8nm + clase actual)
+   const xrSeries: { t: number; f: number }[] = [];
+diff --git a/src/components/ionosphere/hud/ParkerPanel.tsx b/src/components/ionosphere/hud/ParkerPanel.tsx
+index 082cd59..0165341 100644
+--- a/src/components/ionosphere/hud/ParkerPanel.tsx
++++ b/src/components/ionosphere/hud/ParkerPanel.tsx
+@@ -22,6 +22,9 @@ export default function ParkerPanel({ sw }: { sw: SpaceWeatherData | null }) {
+   }
+   const v = sw.wind.speed > 0 ? sw.wind.speed : 400;
+   const pts = spiralPoints(v, 48);
++  // Sin feed mag el Bx cae a 0 ("toward" por defecto): no mostrar
++  // polaridad como dato (observación menor del veredicto 290).
++  const magLive = sw.mag.source !== "unavailable" && sw.mag.series.length > 0;
+   const pol = sectorPolarity(sw.wind.bx);
+   const crossings = findCrossings(sw.mag.series.map((p) => ({ t: p.t, bx: p.bx })));
+   const recent = crossings.filter((t) => Date.now() - t < 6 * 3600_000);
+@@ -34,19 +37,20 @@ export default function ParkerPanel({ sw }: { sw: SpaceWeatherData | null }) {
+   const d = pts.map((p) => `${(cx + p.x * S).toFixed(1)},${(cy - p.y * S).toFixed(1)}`).join(" ");
+   const earthX = cx + 1 * S;
+   const polColor = pol === "toward" ? "#f87171" : "#60a5fa";
++  const armColor = magLive ? polColor : "#64748b";
+ 
+   return (
+     <PanelBox title="Parker spiral" badge={<SourceDot source={sw.wind.source} />}>
+       <svg viewBox="0 0 120 90" className="w-full rounded bg-white/5">
+         <circle cx={cx} cy={cy} r={4} fill="#fbbf24" />
+-        <polyline points={d} fill="none" stroke={polColor} strokeWidth={1.4} opacity={0.9} />
++        <polyline points={d} fill="none" stroke={armColor} strokeWidth={1.4} opacity={0.9} />
+         <circle cx={earthX} cy={cy} r={2.6} fill="#38bdf8" />
+         <text x={earthX + 4} y={cy + 3} fontSize={7} fill="#7dd3fc">Earth</text>
+       </svg>
+       <div className="flex items-center justify-between mt-1">
+         <span className="text-[11px] text-slate-400 font-mono">v {v} km/s · foot +{lag.toFixed(0)}°</span>
+-        <span className="text-[11px] font-medium" style={{ color: polColor }}>
+-          {pol}
++        <span className="text-[11px] font-medium" style={{ color: magLive ? polColor : "#64748b" }}>
++          {magLive ? pol : "no Bx data"}
+         </span>
+       </div>
+       {recent.length > 0 ? (
+diff --git a/src/lib/iono/parker.test.ts b/src/lib/iono/parker.test.ts
+index a6f5d91..8c7c1c5 100644
+--- a/src/lib/iono/parker.test.ts
++++ b/src/lib/iono/parker.test.ts
+@@ -4,6 +4,7 @@ import {
+   spiralPoints,
+   sectorPolarity,
+   findCrossings,
++  selectMagSource,
+   SIDEREAL_ROTATION_DAYS,
+ } from "./parker";
+ 
+@@ -31,8 +32,7 @@ describe("Parker 1958 (transcripcion exacta)", () => {
+   });
+ });
+ 
+-describe("sector Bx (convencion declarada +X GSE = toward)", () => {
+-  it("polaridad", () => {
++describe("sector Bx (convencion declarada +X GSE = toward)", () => {  it("polaridad", () => {
+     expect(sectorPolarity(4.47)).toBe("toward");
+     expect(sectorPolarity(-2.1)).toBe("away");
+     expect(sectorPolarity(0)).toBe("toward");
+@@ -49,3 +49,26 @@ describe("sector Bx (convencion declarada +X GSE = toward)", () => {
+     expect(findCrossings([{ t: 1, bx: 3 }, { t: 2, bx: 4 }])).toEqual([]);
+   });
+ });
++
++describe("selectMagSource (P1-284: feed descendente multi-nave)", () => {
++  // Feed como el real: descendente, SOLAR1 activa + ACE inactiva.
++  const T = 1_000_000_000;
++  const rows = [
++    { t: T + 300, bx: -9, active: false }, // ACE nueva (inactiva)
++    { t: T + 300, bx: 4.4, active: true }, // SOLAR1 nueva
++    { t: T + 200, bx: -8, active: false },
++    { t: T + 200, bx: 4.5, active: true },
++    { t: T + 100, bx: null, active: true },
++  ];
++  it("solo fuente activa, ascendente, Bx del extremo nuevo", () => {
++    const s = selectMagSource(rows, 3, T + 400);
++    expect(s).toHaveLength(2);
++    expect(s[0]).toEqual({ t: T + 200, bx: 4.5 });
++    expect(s[1]).toEqual({ t: T + 300, bx: 4.4 });
++    expect(findCrossings(s)).toEqual([]); // sin mezcla no hay cruces falsos
++  });
++  it("fallback a todas si ninguna activa (declarado)", () => {
++    const dead = rows.map((r) => ({ ...r, active: false }));
++    expect(selectMagSource(dead, 3, T + 400)).toHaveLength(4);
++  });
++});
+diff --git a/src/lib/iono/parker.ts b/src/lib/iono/parker.ts
+index 794dae1..6c47c30 100644
+--- a/src/lib/iono/parker.ts
++++ b/src/lib/iono/parker.ts
+@@ -60,6 +60,31 @@ export interface MagPt {
+   bx: number;
+ }
+ 
++export interface MagRow {
++  t: number;
++  bx: number | null;
++  active: boolean;
++}
++
++/**
++ * P1-284: el feed rtsw es DESCENDENTE y MULTI-NAVE (SOLAR1 activa +
++ * ACE/IMAP inactivas intercaladas). Selección honesta: filas de la
++ * fuente ACTIVA (fallback declarado a todas si ninguna lo es),
++ * ordenadas ASCENDENTES (la más nueva al final). De aquí salen tanto
++ * el Bx vigente (extremo nuevo) como la serie de cruces (con la
++ * serie ascendente de una sola fuente, recent[last] ya es el cruce
++ * más nuevo — el síntoma (c) se corrige solo).
++ */
++export function selectMagSource(rows: MagRow[], hoursBack = 3, nowMs = Date.now()): MagPt[] {
++  const act = rows.filter((r) => r.active);
++  const pool = act.length ? act : rows;
++  const cut = nowMs - hoursBack * 3600_000;
++  return pool
++    .filter((r) => r.bx != null && r.t >= cut)
++    .map((r) => ({ t: r.t, bx: r.bx as number }))
++    .sort((a, b) => a.t - b.t);
++}
++
+ /** Cruces de sector CALCULADOS del dato (cambios de signo adyacentes). */
+ export function findCrossings(series: MagPt[]): number[] {
+   const out: number[] = [];
