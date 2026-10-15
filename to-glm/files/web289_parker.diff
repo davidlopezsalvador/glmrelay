@@ -1,0 +1,336 @@
+From t <t@t> Mon Oct 12 00:00:00 2026 +0200
+From: t <t@t>
+Date: Mon, 12 Oct 2026 00:00:00 +0200
+Subject: [PATCH] w289-parker (spiral+sector+panel)
+
+---
+ src/app/api/space-weather/route.ts                | 24 ++++++-
+ src/app/page.tsx                                  |  5 ++
+ .../src/components/ionosphere/hud/ParkerPanel.tsx | 66 +++++++++++++++++++
+ src/components/ionosphere/types.ts                |  4 +-
+ src/lib/iono/parker.test.ts                       | 51 +++++++++++++++
+ src/lib/iono/parker.ts                            | 73 ++++++++++++++++++++++
+ 6 files changed, 221 insertions(+), 2 deletions(-)
+
+diff --git a/src/app/api/space-weather/route.ts b/src/app/api/space-weather/route.ts
+index d2ac3c7..aeac783 100644
+--- a/src/app/api/space-weather/route.ts
++++ b/src/app/api/space-weather/route.ts
+@@ -76,6 +76,7 @@ interface FRow { time_tag: string; flux: number }
+ interface WindSpeedRow { time_tag: string; proton_speed: number }
+ interface WindMagRow { time_tag: string; bt: number; bz_gsm: number }
+ interface WindDensityRow { time_tag: string; proton_density: number }
++interface Mag1mRow { time_tag: string; bx_gse: number; bt: number }
+ interface XrayRow { time_tag: string; flux: number; energy: string }
+ interface ProtonRow { time_tag: string; satellite: number; flux: number; energy: string }
+ interface SunspotRow { time_tag: string; Region: number; Latitude: number; Longitude: number; Location?: string; Report_Location?: string }
+@@ -86,7 +87,7 @@ export async function GET() {
+     return NextResponse.json(hit.data, { headers: { "Cache-Control": "no-store", "X-Cache": "hit" } });
+   }
+ 
+-  const [kpArr, f107Arr, windSpeed, windMag, windDensity, xrayArr, xrayDayArr, protonArr, sunspots, forecastTxt] = await Promise.all([
++  const [kpArr, f107Arr, windSpeed, windMag, windDensity, xrayArr, xrayDayArr, protonArr, mag1mArr, sunspots, forecastTxt] = await Promise.all([
+     fetchJson<KpRow[]>("/json/planetary_k_index_1m.json"),
+     fetchJson<FRow[]>("/json/f107_cm_flux.json"),
+     fetchJson<WindSpeedRow[]>("/products/summary/solar-wind-speed.json"),
+@@ -97,6 +98,8 @@ export async function GET() {
+     // W-4 F2a #2: XRS 1 día + protones integrales 1 día (verdad de entrada O2).
+     fetchJson<XrayRow[]>("/json/goes/primary/xrays-1-day.json"),
+     fetchJson<ProtonRow[]>("/json/goes/primary/integral-protons-1-day.json"),
++    // W-4 F2b #12: vector mag 1-min (Bx para polaridad de sector, O12).
++    fetchJson<Mag1mRow[]>("/json/rtsw/rtsw_mag_1m.json"),
+     fetchJson<SunspotRow[]>("/json/sunspot_report.json"),
+     fetchText("/text/3-day-forecast.txt"),
+   ]);
+@@ -138,12 +141,27 @@ export async function GET() {
+     speed: windSpeed?.length ? windSpeed[windSpeed.length - 1].proton_speed ?? 0 : 0,
+     bt: windMag?.length ? windMag[windMag.length - 1].bt ?? 0 : 0,
+     bz: windMag?.length ? windMag[windMag.length - 1].bz_gsm ?? 0 : 0,
++    bx:
++      mag1mArr?.length && mag1mArr[mag1mArr.length - 1].bx_gse != null
++        ? mag1mArr[mag1mArr.length - 1].bx_gse
++        : 0,
+     density: windDensity?.length
+       ? windDensity[windDensity.length - 1].proton_density ?? 0
+       : 0,
+     t: windMag?.length ? windMag[windMag.length - 1].time_tag : null,
+   };
+ 
++  // Bx 1-min 3 h (polaridad de sector O12; cruces calculados en cliente).
++  const magSeries: { t: number; bx: number }[] = [];
++  if (mag1mArr) {
++    const cut = now - 3 * 3600_000;
++    for (const e of mag1mArr) {
++      if (e.bx_gse == null) continue;
++      const t = new Date(e.time_tag + "Z").getTime();
++      if (t >= cut) magSeries.push({ t, bx: e.bx_gse });
++    }
++  }
++
+   // X-ray GOES (serie 0.1-0.8nm + clase actual)
+   const xrSeries: { t: number; f: number }[] = [];
+   let xrNow = 0;
+@@ -227,6 +245,10 @@ export async function GET() {
+       source: f107Arr ? "NOAA (live)" : "unavailable",
+     },
+     wind: { ...wind, source: windMag && windSpeed ? "NOAA DSCOVR (live)" : "unavailable" },
++    mag: {
++      series: magSeries.filter((_, i) => i % 5 === 0).slice(-216),
++      source: mag1mArr ? "DSCOVR mag 1-min (live)" : "unavailable",
++    },
+     xray: {
+       now: xrNow,
+       class: xrNow > 0 ? xrayClass(xrNow) : "—",
+diff --git a/src/app/page.tsx b/src/app/page.tsx
+index f291adf..cd1fa3c 100644
+--- a/src/app/page.tsx
++++ b/src/app/page.tsx
+@@ -14,6 +14,7 @@ import LightningPanel from "@/components/ionosphere/hud/LightningPanel";
+ import AePanel from "@/components/ionosphere/hud/AePanel";
+ import DstPanel from "@/components/ionosphere/hud/DstPanel";
+ import BeltsPanel from "@/components/ionosphere/hud/BeltsPanel";
++import ParkerPanel from "@/components/ionosphere/hud/ParkerPanel";
+ import LayersPanel from "@/components/ionosphere/hud/LayersPanel";
+ import RadioPanel from "@/components/ionosphere/hud/RadioPanel";
+ import TimeBar from "@/components/ionosphere/hud/TimeBar";
+@@ -346,6 +347,7 @@ export default function Home() {
+         <AePanel ae={ae} />
+         <DstPanel dst={dst} ae={ae} />
+         <BeltsPanel rbe={rbe} kp={sw ? sw.kp.now : 2} epochMs={cmeEpoch} />
++        <ParkerPanel sw={sw} />
+       </div>
+       <div className="absolute right-4 top-20 z-10 w-64 pointer-events-none space-y-3 hidden md:block">
+         <LayersPanel settings={settings} onChange={onSettingsChange} ionosondes={ionos} fps={fps} sw={sw ? sw.wind : null} />
+@@ -630,6 +632,9 @@ function MobilePanels({
+           <div className="mt-2">
+             <BeltsPanel rbe={rbe} kp={sw ? sw.kp.now : 2} epochMs={cmeEpoch} />
+           </div>
++          <div className="mt-2">
++            <ParkerPanel sw={sw} />
++          </div>
+         </>
+       )}
+       {tab === "radio" && (
+diff --git b/src/components/ionosphere/hud/ParkerPanel.tsx b/src/components/ionosphere/hud/ParkerPanel.tsx
+new file mode 100644
+index 0000000..082cd59
+--- /dev/null
++++ b/src/components/ionosphere/hud/ParkerPanel.tsx
+@@ -0,0 +1,66 @@
++"use client";
++
++import { Sun } from "lucide-react";
++import { SpaceWeatherData } from "../types";
++import { PanelBox, SourceDot } from "./SpaceWeatherPanel";
++import { spiralPoints, sectorPolarity, findCrossings, spiralLagDeg } from "@/lib/iono/parker";
++
++/** W-4 F2b #12: Parker spiral panel (EN for all new UI).
++ * Top-down ecliptic schematic from LIVE solar wind (O12): the arm
++ * through Earth with the real v_sw, polarity from real Bx, sector
++ * crossings CALCULATED from the data (notification only on a real
++ * recent crossing — no crossing means no notification). */
++export default function ParkerPanel({ sw }: { sw: SpaceWeatherData | null }) {
++  if (!sw) {
++    return (
++      <PanelBox title="Parker spiral">
++        <div className="text-xs text-slate-500 py-6 text-center animate-pulse">
++          Waiting for solar wind…
++        </div>
++      </PanelBox>
++    );
++  }
++  const v = sw.wind.speed > 0 ? sw.wind.speed : 400;
++  const pts = spiralPoints(v, 48);
++  const pol = sectorPolarity(sw.wind.bx);
++  const crossings = findCrossings(sw.mag.series.map((p) => ({ t: p.t, bx: p.bx })));
++  const recent = crossings.filter((t) => Date.now() - t < 6 * 3600_000);
++  const lag = spiralLagDeg(v, 1);
++
++  // SVG: 120x90, Sun at center-left, Earth at (86, 45), 1 AU = 56 px.
++  const S = 56 / 1.5;
++  const cx = 30;
++  const cy = 45;
++  const d = pts.map((p) => `${(cx + p.x * S).toFixed(1)},${(cy - p.y * S).toFixed(1)}`).join(" ");
++  const earthX = cx + 1 * S;
++  const polColor = pol === "toward" ? "#f87171" : "#60a5fa";
++
++  return (
++    <PanelBox title="Parker spiral" badge={<SourceDot source={sw.wind.source} />}>
++      <svg viewBox="0 0 120 90" className="w-full rounded bg-white/5">
++        <circle cx={cx} cy={cy} r={4} fill="#fbbf24" />
++        <polyline points={d} fill="none" stroke={polColor} strokeWidth={1.4} opacity={0.9} />
++        <circle cx={earthX} cy={cy} r={2.6} fill="#38bdf8" />
++        <text x={earthX + 4} y={cy + 3} fontSize={7} fill="#7dd3fc">Earth</text>
++      </svg>
++      <div className="flex items-center justify-between mt-1">
++        <span className="text-[11px] text-slate-400 font-mono">v {v} km/s · foot +{lag.toFixed(0)}°</span>
++        <span className="text-[11px] font-medium" style={{ color: polColor }}>
++          {pol}
++        </span>
++      </div>
++      {recent.length > 0 ? (
++        <div className="text-[10px] text-amber-200 mt-0.5">
++          Sector crossing {new Date(recent[recent.length - 1]).toISOString().slice(11, 16)}Z — real data.
++        </div>
++      ) : (
++        <div className="text-[10px] text-slate-600 mt-0.5">
++          No sector crossing in 6 h — no notification (O12 negative).
++        </div>
++      )}
++      <p className="text-[10px] text-slate-500 leading-snug mt-2 pt-2 border-t border-white/10">
++        Parker 1958 geometry from live wind — not a simulation. Snapshot at current v.
++      </p>
++    </PanelBox>
++  );
++}
+diff --git a/src/components/ionosphere/types.ts b/src/components/ionosphere/types.ts
+index 543f5e3..d7c7e21 100644
+--- a/src/components/ionosphere/types.ts
++++ b/src/components/ionosphere/types.ts
+@@ -10,7 +10,9 @@ export interface SpaceWeatherData {
+   utc: string;
+   kp: { now: number; gScale: number; series: KpPoint[]; source: string };
+   f107: { now: number; series: { t: number; f: number }[]; source: string };
+-  wind: { speed: number; bt: number; bz: number; density: number; t: string | null; source: string };
++  wind: { speed: number; bt: number; bz: number; bx: number; density: number; t: string | null; source: string };
++  // W-4 F2b #12: Bx 1-min 3 h (polaridad de sector, O12).
++  mag: { series: { t: number; bx: number }[]; source: string };
+   xray: { now: number; class: string; series: { t: number; f: number }[]; seriesDay: { t: number; f: number }[]; source: string };
+   // W-4 F2a #2: protones integrales GOES-18 (verdad de entrada PCA, O2).
+   protons: { now: number; series: { t: number; f: number }[]; satellite: number; source: string };
+diff --git b/src/lib/iono/parker.test.ts b/src/lib/iono/parker.test.ts
+new file mode 100644
+index 0000000..a6f5d91
+--- /dev/null
++++ b/src/lib/iono/parker.test.ts
+@@ -0,0 +1,51 @@
++import { describe, expect, it } from "vitest";
++import {
++  spiralLagDeg,
++  spiralPoints,
++  sectorPolarity,
++  findCrossings,
++  SIDEREAL_ROTATION_DAYS,
++} from "./parker";
++
++describe("Parker 1958 (transcripcion exacta)", () => {
++  it("rotacion sideral pineada 25.38 d", () => {
++    expect(SIDEREAL_ROTATION_DAYS).toBe(25.38);
++  });
++  it("angulo a 1 UA con 400 km/s ~= 61.4 grados", () => {
++    // Transito 1.496e8/400/86400 = 4.3287 d; 4.3287/25.38*360 = 61.41.
++    expect(spiralLagDeg(400, 1)).toBeCloseTo(61.4, 0);
++    expect(spiralLagDeg(800, 1)).toBeCloseTo(30.7, 0);
++  });
++  it("el brazo pasa por la Tierra y el pie queda a +lag", () => {
++    const pts = spiralPoints(400, 64);
++    expect(pts).toHaveLength(65);
++    const atEarth = pts.reduce((a, b) => (Math.abs(b.r - 1) < Math.abs(a.r - 1) ? b : a));
++    expect(Math.abs(atEarth.r - 1)).toBeLessThan(0.02);
++    expect(atEarth.phi).toBeCloseTo(0, 0); // muestra mas cercana a 1 UA
++    expect(pts[0].phi).toBeCloseTo(58.3, 0); // pie a 0.05 UA: lag(1)-lag(0.05)
++    expect(pts[0].r).toBeCloseTo(0.05, 6);
++  });
++  it("sin viento no hay espiral", () => {
++    expect(spiralLagDeg(0, 1)).toBe(0);
++    expect(spiralLagDeg(-5, 1)).toBe(0);
++  });
++});
++
++describe("sector Bx (convencion declarada +X GSE = toward)", () => {
++  it("polaridad", () => {
++    expect(sectorPolarity(4.47)).toBe("toward");
++    expect(sectorPolarity(-2.1)).toBe("away");
++    expect(sectorPolarity(0)).toBe("toward");
++  });
++  it("cruces calculados del dato (O12)", () => {
++    const s = [
++      { t: 1, bx: 3 },
++      { t: 2, bx: 2 },
++      { t: 3, bx: -1 },
++      { t: 4, bx: -2 },
++      { t: 5, bx: 1 },
++    ];
++    expect(findCrossings(s)).toEqual([3, 5]);
++    expect(findCrossings([{ t: 1, bx: 3 }, { t: 2, bx: 4 }])).toEqual([]);
++  });
++});
+diff --git b/src/lib/iono/parker.ts b/src/lib/iono/parker.ts
+new file mode 100644
+index 0000000..794dae1
+--- /dev/null
++++ b/src/lib/iono/parker.ts
+@@ -0,0 +1,73 @@
++/**
++ * W-4 F2b #12 Parker spiral (ruling 266/288, oraculo O12). Puro.
++ *
++ * REFERENCIA PINEADA (regla 252, ANTES de codigo): Parker 1958 —
++ * la espiral sale de rotacion solar + viento radial constante:
++ *   phi(r) = phi0 - OMEGA * (r - r0) / v_sw
++ * con OMEGA sideral = 2*pi/25.38 d (pineado) y v_sw REAL vivo.
++ * Polaridad de sector del Bx REAL (rtsw 1-min, ya consumido):
++ * Bx>=0 = toward (hacia el Sol, +X GSE), Bx<0 = away (declarado).
++ * Frontera de sector = cruce CALCULADO del dato (cambio de signo
++ * entre muestras adyacentes); notificacion SOLO en cruce real
++ * (negativo O12: sin cruce no hay notificacion).
++ * Display declarado: esquema 2D cenital en el panel (el frente #1
++ * sento el precedente: 1 UA no cabe en la vista R_E); la Tierra va
++ * fija en (1, 0) y la espiral es la foto instantanea con el v vivo.
++ */
++
++export const SIDEREAL_ROTATION_DAYS = 25.38; // pineado
++export const AU_KM = 1.496e8;
++
++/** Angulo de atraso (deg) a distancia r_au con viento v (Parker 1958). */
++export function spiralLagDeg(v_kms: number, r_au = 1): number {
++  if (!(v_kms > 0)) return 0;
++  const transitDays = ((r_au * AU_KM) / v_kms / 86400);
++  return (transitDays / SIDEREAL_ROTATION_DAYS) * 360;
++}
++
++export interface SpiralPt {
++  r: number; // AU
++  phi: number; // deg (0 = Tierra, negativo hacia el Sol-atrás)
++  x: number; // AU, plano ecliptico
++  y: number;
++}
++
++/** Brazo espiral Sol(0.05)->1.5 UA por la Tierra (foto instantanea).
++ * phi(r) = lag(1) - lag(r): en la Tierra phi=0; hacia dentro el pie
++ * queda a +lag (el Sol roto mientras viaja el plasma); hacia fuera
++ * atrasa. Convencion display: norte arriba, antihorario positivo. */
++export function spiralPoints(v_kms: number, n = 64): SpiralPt[] {
++  const pts: SpiralPt[] = [];
++  const lag1 = spiralLagDeg(v_kms, 1);
++  for (let i = 0; i <= n; i++) {
++    const r = 0.05 + ((1.5 - 0.05) * i) / n;
++    const ph = lag1 - spiralLagDeg(v_kms, r);
++    const rad = (ph * Math.PI) / 180;
++    pts.push({ r, phi: ph, x: r * Math.cos(rad), y: r * Math.sin(rad) });
++  }
++  return pts;
++}
++
++export type SectorPolarity = "toward" | "away";
++
++/** Polaridad del Bx REAL (convencion declarada: +X GSE = hacia el Sol). */
++export function sectorPolarity(bx: number): SectorPolarity {
++  return bx >= 0 ? "toward" : "away";
++}
++
++export interface MagPt {
++  t: number;
++  bx: number;
++}
++
++/** Cruces de sector CALCULADOS del dato (cambios de signo adyacentes). */
++export function findCrossings(series: MagPt[]): number[] {
++  const out: number[] = [];
++  for (let i = 1; i < series.length; i++) {
++    const a = series[i - 1].bx;
++    const b = series[i].bx;
++    if (a === 0 || b === 0) continue;
++    if ((a > 0) !== (b > 0)) out.push(series[i].t);
++  }
++  return out;
++}
