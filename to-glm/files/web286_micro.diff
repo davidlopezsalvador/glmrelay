@@ -1,0 +1,40 @@
+From t <t@t> Mon Oct 12 00:00:00 2026 +0200
+From: t <t@t>
+Date: Mon, 12 Oct 2026 00:00:00 +0200
+Subject: [PATCH] w286-micro (P1-282+errata)
+
+---
+ src/app/api/rbe/route.ts | 6 ++++--
+ src/app/page.tsx         | 2 +-
+ 2 files changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/src/app/api/rbe/route.ts b/src/app/api/rbe/route.ts
+index 7938339..4308a18 100644
+--- a/src/app/api/rbe/route.ts
++++ b/src/app/api/rbe/route.ts
+@@ -24,8 +24,10 @@ export async function GET() {
+     return NextResponse.json(cached.data, { headers: { "Cache-Control": "no-store", "X-Cache": "hit" } });
+   }
+   const now = Date.now();
+-  const end = new Date(now + 24 * 3600_000);
+-  const start = new Date(now - 60 * 86400_000);
++  // P1-282: DONKI rechaza rangos >60 dias (400 determinista). Ventana
++  // de 58 dias sin padding futuro (verificada 200 en la sonda).
++  const end = new Date(now);
++  const start = new Date(now - 58 * 86400_000);
+   const url =
+     `https://ccmc.gsfc.nasa.gov/DONKI-API/get/RBE` +
+     `?startDate=${day(start)}&endDate=${day(end)}`;
+diff --git a/src/app/page.tsx b/src/app/page.tsx
+index 67a8023..f291adf 100644
+--- a/src/app/page.tsx
++++ b/src/app/page.tsx
+@@ -67,7 +67,7 @@ export default function Home() {
+   const [ae, setAe] = useState<AeData | null>(null);
+   // W-4 F2a #18: Kyoto Dst + GST (polling 5 min; TTL de ruta 15 min, cache hits).
+   const [dst, setDst] = useState<DstData | null>(null);
+-  // W-4 F2a #19: DONKI RBE (polling 30 min == TTL de la ruta).
++  // W-4 F2a #19: DONKI RBE (polling 5 min; TTL de ruta 30 min, cache hits).
+   const [rbe, setRbe] = useState<RbeData | null>(null);
+   const [aurora, setAurora] = useState<AuroraData | null>(null);
+   const [ionos, setIonos] = useState<IonosondeData | null>(null);
