@@ -1,0 +1,628 @@
+From t <t@t> Mon Oct 12 00:00:00 2026 +0200
+From: t <t@t>
+Date: Mon, 12 Oct 2026 00:00:00 +0200
+Subject: [PATCH] w284-belts (belts+RBE+JSDoc)
+
+---
+ src/app/api/rbe/route.ts                          | 63 ++++++++++++++
+ src/app/page.tsx                                  | 14 ++++
+ .../src/components/ionosphere/IonosphereScene.tsx | 97 ++++++++++++++++++++++
+ .../src/components/ionosphere/hud/AePanel.tsx     |  4 +-
+ .../src/components/ionosphere/hud/BeltsPanel.tsx  | 67 +++++++++++++++
+ .../src/components/ionosphere/hud/LayersPanel.tsx |  8 +-
+ src/components/ionosphere/types.ts                | 17 ++++
+ src/lib/iono/belts.test.ts                        | 59 +++++++++++++
+ src/lib/iono/belts.ts                             | 71 ++++++++++++++++
+ 9 files changed, 397 insertions(+), 3 deletions(-)
+
+diff --git b/src/app/api/rbe/route.ts b/src/app/api/rbe/route.ts
+new file mode 100644
+index 0000000..7938339
+--- /dev/null
++++ b/src/app/api/rbe/route.ts
+@@ -0,0 +1,63 @@
++import { NextResponse } from "next/server";
++import { parseRbe } from "@/lib/iono/belts";
++
++/**
++ * W-4 F2a #19: eventos RBE del DONKI (radiation belt enhancements).
++ * Endpoint verificado vivo el 2026-10-15:
++ *   https://ccmc.gsfc.nasa.gov/DONKI-API/get/RBE
++ * Cache 30 min (los eventos son diarios/semanales, no minuto a minuto).
++ */
++
++export const revalidate = 0;
++
++const UA = "IonosphereLive3D-Web/1.0 (exploration demo)";
++const TTL = 1800_000;
++
++let cached: { data: unknown; ts: number } | null = null;
++
++function day(d: Date): string {
++  return d.toISOString().slice(0, 10);
++}
++
++export async function GET() {
++  if (cached && Date.now() - cached.ts < TTL) {
++    return NextResponse.json(cached.data, { headers: { "Cache-Control": "no-store", "X-Cache": "hit" } });
++  }
++  const now = Date.now();
++  const end = new Date(now + 24 * 3600_000);
++  const start = new Date(now - 60 * 86400_000);
++  const url =
++    `https://ccmc.gsfc.nasa.gov/DONKI-API/get/RBE` +
++    `?startDate=${day(start)}&endDate=${day(end)}`;
++  let raw: unknown = null;
++  let live = false;
++  try {
++    const ctrl = new AbortController();
++    const timer = setTimeout(() => ctrl.abort(), 15000);
++    const res = await fetch(url, {
++      headers: { "User-Agent": UA, Accept: "application/json" },
++      signal: ctrl.signal,
++      next: { revalidate: 0 },
++    });
++    clearTimeout(timer);
++    if (!res.ok) throw new Error("upstream " + res.status);
++    raw = await res.json();
++    live = true;
++  } catch {
++    live = false;
++  }
++  // Sin red -> lista vacia honesta (jamas eventos falsos).
++  const events = live ? parseRbe(raw) : [];
++  const payload = {
++    events: events.slice(0, 8).map((e) => ({
++      id: e.id,
++      time: e.time,
++      instrument: e.instrument,
++      link: e.link,
++    })),
++    checkedAt: now,
++    source: live ? "CCMC DONKI RBE (live)" : "unavailable",
++  };
++  cached = { data: payload, ts: now };
++  return NextResponse.json(payload, { headers: { "Cache-Control": "no-store", "X-Cache": "miss" } });
++}
+diff --git a/src/app/page.tsx b/src/app/page.tsx
+index da5321a..67a8023 100644
+--- a/src/app/page.tsx
++++ b/src/app/page.tsx
+@@ -13,6 +13,7 @@ import FadePanel from "@/components/ionosphere/hud/FadePanel";
+ import LightningPanel from "@/components/ionosphere/hud/LightningPanel";
+ import AePanel from "@/components/ionosphere/hud/AePanel";
+ import DstPanel from "@/components/ionosphere/hud/DstPanel";
++import BeltsPanel from "@/components/ionosphere/hud/BeltsPanel";
+ import LayersPanel from "@/components/ionosphere/hud/LayersPanel";
+ import RadioPanel from "@/components/ionosphere/hud/RadioPanel";
+ import TimeBar from "@/components/ionosphere/hud/TimeBar";
+@@ -27,6 +28,7 @@ import {
+   LightningData,
+   AeData,
+   DstData,
++  RbeData,
+   AuroraData,
+   IonosondeData,
+   SceneSettings,
+@@ -65,6 +67,8 @@ export default function Home() {
+   const [ae, setAe] = useState<AeData | null>(null);
+   // W-4 F2a #18: Kyoto Dst + GST (polling 5 min; TTL de ruta 15 min, cache hits).
+   const [dst, setDst] = useState<DstData | null>(null);
++  // W-4 F2a #19: DONKI RBE (polling 30 min == TTL de la ruta).
++  const [rbe, setRbe] = useState<RbeData | null>(null);
+   const [aurora, setAurora] = useState<AuroraData | null>(null);
+   const [ionos, setIonos] = useState<IonosondeData | null>(null);
+   const [settings, setSettings] = useState<SceneSettings>(DEFAULT_SETTINGS);
+@@ -159,6 +163,8 @@ export default function Home() {
+       if (alive && a) setAe(a);
+       const d = await fetchJson<DstData>("/api/dst", 40000);
+       if (alive && d) setDst(d);
++      const r = await fetchJson<RbeData>("/api/rbe", 40000);
++      if (alive && r) setRbe(r);
+     };
+     load();
+     const t = setInterval(load, 300_000);
+@@ -263,6 +269,7 @@ export default function Home() {
+         lightning={lightning}
+         ae={ae}
+         dst={dst}
++        rbe={rbe}
+         aurora={aurora}
+         ionosondes={ionos}
+         settings={settings}
+@@ -338,6 +345,7 @@ export default function Home() {
+         <LightningPanel lightning={lightning} />
+         <AePanel ae={ae} />
+         <DstPanel dst={dst} ae={ae} />
++        <BeltsPanel rbe={rbe} kp={sw ? sw.kp.now : 2} epochMs={cmeEpoch} />
+       </div>
+       <div className="absolute right-4 top-20 z-10 w-64 pointer-events-none space-y-3 hidden md:block">
+         <LayersPanel settings={settings} onChange={onSettingsChange} ionosondes={ionos} fps={fps} sw={sw ? sw.wind : null} />
+@@ -354,6 +362,7 @@ export default function Home() {
+         lightning={lightning}
+         ae={ae}
+         dst={dst}
++        rbe={rbe}
+         settings={settings}
+         onChange={onSettingsChange}
+         ionos={ionos}
+@@ -531,6 +540,7 @@ function MobilePanels({
+   lightning,
+   ae,
+   dst,
++  rbe,
+   settings,
+   onChange,
+   ionos,
+@@ -552,6 +562,7 @@ function MobilePanels({
+   lightning: LightningData | null;
+   ae: AeData | null;
+   dst: DstData | null;
++  rbe: RbeData | null;
+   settings: SceneSettings;
+   onChange: (p: Partial<SceneSettings>) => void;
+   ionos: IonosondeData | null;
+@@ -616,6 +627,9 @@ function MobilePanels({
+           <div className="mt-2">
+             <DstPanel dst={dst} ae={ae} />
+           </div>
++          <div className="mt-2">
++            <BeltsPanel rbe={rbe} kp={sw ? sw.kp.now : 2} epochMs={cmeEpoch} />
++          </div>
+         </>
+       )}
+       {tab === "radio" && (
+diff --git a/src/components/ionosphere/IonosphereScene.tsx b/src/components/ionosphere/IonosphereScene.tsx
+index 0ce36ff..4dd74d9 100644
+--- a/src/components/ionosphere/IonosphereScene.tsx
++++ b/src/components/ionosphere/IonosphereScene.tsx
+@@ -36,6 +36,7 @@ import {
+ } from "@/lib/iono/refshells";
+ import {
+   dipoleLinePoints,
++  dipoleMoment,
+   dynamicPressure,
+   fromMag,
+   magnetoKey,
+@@ -50,6 +51,7 @@ import { pcaDb } from "@/lib/iono/fadeout";
+ import { whistlerPath } from "@/lib/iono/lightning";
+ import { aeColor, ELECTROJET_MAGLAT } from "@/lib/iono/electrojets";
+ import { dstColor, dstRadius } from "@/lib/iono/dst";
++import { BELT_INNER_L, beltOuterL, driftAngle, rbeGlow } from "@/lib/iono/belts";
+ import {
+   volumeModeIndex,
+   volumeOpacityClamp,
+@@ -81,6 +83,7 @@ import {
+   LightningData,
+   AeData,
+   DstData,
++  RbeData,
+   AuroraData,
+   IonosondeData,
+   IonosondeStation,
+@@ -109,6 +112,7 @@ interface Props {
+   lightning: LightningData | null; // W-4 F2a #8: tormentas + whistlers
+   ae: AeData | null; // W-4 F2a #17: electrojets (filamento AE)
+   dst: DstData | null; // W-4 F2a #18: anillo Dst real
++  rbe: RbeData | null; // W-4 F2a #19: eventos RBE (brillo externo)
+   aurora: AuroraData | null;
+   ionosondes: IonosondeData | null;
+   settings: SceneSettings;
+@@ -183,6 +187,14 @@ export default function IonosphereScene(props: Props) {
+     aejet?: { line: THREE.Line; built: boolean };
+     // W-4 F2a #18 Dst ring (ruling 266): equatorial loop, Dst radius.
+     dstloop?: { line: THREE.Line; key: string };
++    // W-4 F2a #19 Van Allen (ruling 266): twin tori + drifters.
++    belts?: {
++      group: THREE.Group;
++      key: string;
++      outer: THREE.Mesh;
++      protons: THREE.Points;
++      electrons: THREE.Points;
++    };
+     raycaster: THREE.Raycaster;
+     gridState: {
+       fo: Float32Array;
+@@ -409,6 +421,55 @@ export default function IonosphereScene(props: Props) {
+       dstLine.frustumCulled = false;
+       scene.add(dstLine);
+ 
++      // W-4 F2a #19: toros Van Allen en el ecuador DIPOLAR (grupo
++      // inclinado al momento) + derivantes (protones dentro,
++      // electrones fuera). parametrico v1 por Kp (declarado).
++      const beltsGroup = new THREE.Group();
++      {
++        const [mx, my, mz] = dipoleMoment();
++        beltsGroup.quaternion.setFromUnitVectors(
++          new THREE.Vector3(0, 1, 0),
++          new THREE.Vector3(mx, my, mz).normalize()
++        );
++      }
++      const mkTorus = (r: number, tube: number, color: number, opacity: number) => {
++        const g = new THREE.TorusGeometry(r, tube, 10, 96);
++        g.rotateX(Math.PI / 2);
++        const m = new THREE.MeshBasicMaterial({
++          color,
++          transparent: true,
++          opacity,
++          depthWrite: false,
++          blending: THREE.AdditiveBlending,
++        });
++        const mesh = new THREE.Mesh(g, m);
++        mesh.frustumCulled = false;
++        return mesh;
++      };
++      const innerTorus = mkTorus(BELT_INNER_L, 0.05, 0xc0c8d8, 0.35);
++      const outerTorus = mkTorus(4.5, 0.14, 0xffb020, 0.3);
++      beltsGroup.add(innerTorus, outerTorus);
++      const mkDrifters = (n: number, color: number) => {
++        const g = new THREE.BufferGeometry();
++        g.setAttribute("position", new THREE.BufferAttribute(new Float32Array(n * 3), 3));
++        const m = new THREE.PointsMaterial({
++          color,
++          size: 0.06,
++          transparent: true,
++          opacity: 0.9,
++          depthWrite: false,
++          blending: THREE.AdditiveBlending,
++        });
++        const p = new THREE.Points(g, m);
++        p.frustumCulled = false;
++        return p;
++      };
++      const protons = mkDrifters(48, 0xd8e2ff);
++      const electrons = mkDrifters(64, 0xffc860);
++      beltsGroup.add(protons, electrons);
++      beltsGroup.visible = false;
++      scene.add(beltsGroup);
++
+       S.current = {
+         renderer,
+         scene,
+@@ -446,6 +507,7 @@ export default function IonosphereScene(props: Props) {
+         bolt: { group: boltGroup, key: "", paths: [], pulse: [] },
+         aejet: { line: aeLine, built: true },
+         dstloop: { line: dstLine, key: "" },
++        belts: { group: beltsGroup, key: "", outer: outerTorus, protons, electrons },
+         raycaster: new THREE.Raycaster(),
+         gridState: { fo: new Float32Array(GRID_W * GRID_H), hm: new Float32Array(GRID_W * GRID_H), fMin: 2, fMax: 10, stamp: 0 },
+         disposables: [dayTex, nightTex, cmapTex, earth.mesh.geometry, earth.mat, atmo.mesh.geometry, atmo.mat, shell.mesh.geometry, shell.mat, shell.foTex, shell.hmTex, rings.group, stars.points.geometry, stars.mat],
+@@ -1055,6 +1117,41 @@ export default function IonosphereScene(props: Props) {
+           }
+         }
+ 
++        // W-4 F2a #19: toros vivos por Kp + brillo RBE + deriva con
++        // direccion fisica (O19: protones oeste, electrones este).
++        {
++          const bl = S.current?.belts;
++          if (bl) {
++            const kp = propsRef.current.spaceWeather?.kp.now ?? 2;
++            const rbeT = propsRef.current.rbe?.events[0]?.time ?? null;
++            const glow = rbeGlow(rbeT, effMs);
++            bl.group.visible = settings.showBelts;
++            const key = `${Math.round(kp * 2)}|${Math.round(glow * 10)}`;
++            if (bl.group.visible && key !== bl.key) {
++              bl.key = key;
++              const lOut = beltOuterL(kp);
++              bl.outer.geometry.dispose();
++              const ng = new THREE.TorusGeometry(lOut, 0.14, 10, 96);
++              ng.rotateX(Math.PI / 2);
++              bl.outer.geometry = ng;
++              (bl.outer.material as THREE.MeshBasicMaterial).opacity = 0.22 + 0.45 * glow;
++            }
++            if (bl.group.visible) {
++              const lOut = beltOuterL(kp);
++              const setDrift = (pts: THREE.Points, n: number, r: number, species: "protons" | "electrons") => {
++                const attr = pts.geometry.attributes.position as THREE.BufferAttribute;
++                for (let i = 0; i < n; i++) {
++                  const a = (i / n) * Math.PI * 2 + driftAngle(elapsed, species);
++                  attr.setXYZ(i, Math.cos(a) * r, 0, Math.sin(a) * r);
++                }
++                attr.needsUpdate = true;
++              };
++              setDrift(bl.protons, 48, BELT_INNER_L, "protons");
++              setDrift(bl.electrons, 64, lOut, "electrons");
++            }
++          }
++        }
++
+         // uniforms
+         if (S.current?.earthMat) {
+           const u = S.current.earthMat.uniforms;
+diff --git a/src/components/ionosphere/hud/AePanel.tsx b/src/components/ionosphere/hud/AePanel.tsx
+index 5318be3..d549293 100644
+--- a/src/components/ionosphere/hud/AePanel.tsx
++++ b/src/components/ionosphere/hud/AePanel.tsx
+@@ -8,8 +8,8 @@ import Sparkline from "./Sparkline";
+ 
+ /** W-4 F2a #17: electrojet panel (EN for all new UI).
+  * Live AE from Kyoto WDC (non-commercial, citation required — see
+- * footer). Substorm correlation view with #18 arrives with #18
+- * (declared, O17). */
++ * footer). Substorm correlation view lives in the Dst panel
++ * (arrived with #18, O17). */
+ export default function AePanel({ ae }: { ae: AeData | null }) {
+   if (!ae) {
+     return (
+diff --git b/src/components/ionosphere/hud/BeltsPanel.tsx b/src/components/ionosphere/hud/BeltsPanel.tsx
+new file mode 100644
+index 0000000..7df869f
+--- /dev/null
++++ b/src/components/ionosphere/hud/BeltsPanel.tsx
+@@ -0,0 +1,67 @@
++"use client";
++
++import { Donut } from "lucide-react";
++import { RbeData } from "../types";
++import { PanelBox, SourceDot } from "./SpaceWeatherPanel";
++import { beltOuterL, rbeGlow, BELT_INNER_L } from "@/lib/iono/belts";
++
++/** W-4 F2a #19: Van Allen panel (EN for all new UI).
++ * Parametric v1 by Kp (declared; AE9/AP9 is v2, not F2) + REAL RBE
++ * events from DONKI driving the outer-belt glow with the feed date. */
++export default function BeltsPanel({
++  rbe,
++  kp,
++  epochMs,
++}: {
++  rbe: RbeData | null;
++  kp: number;
++  epochMs: number;
++}) {
++  if (!rbe) {
++    return (
++      <PanelBox title="Belts">
++        <div className="text-xs text-slate-500 py-6 text-center animate-pulse">
++          Checking DONKI RBE…
++        </div>
++      </PanelBox>
++    );
++  }
++  const latest = rbe.events[0] ?? null;
++  const glow = rbeGlow(latest?.time ?? null, epochMs);
++
++  return (
++    <PanelBox title="Belts" badge={<SourceDot source={rbe.source} />}>
++      <div className="flex items-center justify-between">
++        <span className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-slate-400">
++          <Donut size={12} /> Inner / outer
++        </span>
++        <span className="text-[11px] font-mono text-slate-200">
++          L {BELT_INNER_L.toFixed(1)} Ag · L {beltOuterL(kp).toFixed(1)} Au
++        </span>
++      </div>
++      <div className="text-[10px] text-slate-500 mt-0.5">
++        protons drift west · electrons drift east (deterministic)
++      </div>
++      <div className="mt-1.5 pt-1.5 border-t border-white/10">
++        <div className="text-[10px] uppercase tracking-wider text-slate-500">
++          Latest RBE {latest ? "" : "(none in window)"}
++        </div>
++        {latest && (
++          <div className="flex items-center justify-between mt-0.5">
++            <span className="text-[10px] text-slate-300 font-mono">
++              {latest.time ? new Date(latest.time).toISOString().slice(0, 10) : "—"} · glow {glow.toFixed(2)}
++            </span>
++            {latest.link && (
++              <a href={latest.link} target="_blank" rel="noreferrer" className="text-[10px] text-cyan-400/80 hover:text-cyan-300">
++                CCMC
++              </a>
++            )}
++          </div>
++        )}
++      </div>
++      <p className="text-[10px] text-slate-500 leading-snug mt-2 pt-2 border-t border-white/10">
++        Parametric v1 by Kp — RBE: DONKI/CCMC. Outer glow follows the feed date.
++      </p>
++    </PanelBox>
++  );
++}
+diff --git a/src/components/ionosphere/hud/LayersPanel.tsx b/src/components/ionosphere/hud/LayersPanel.tsx
+index 058f7f0..89ba4e2 100644
+--- a/src/components/ionosphere/hud/LayersPanel.tsx
++++ b/src/components/ionosphere/hud/LayersPanel.tsx
+@@ -1,6 +1,6 @@
+ "use client";
+ 
+-import { Layers, Cloud, Sparkles, Radio, Orbit, Mountain, Eye, Disc3, Sun, Boxes, Circle, Rocket, Zap, Sunrise, CloudRainWind, Activity } from "lucide-react";
++import { Layers, Cloud, Sparkles, Radio, Orbit, Mountain, Eye, Disc3, Sun, Boxes, Circle, Rocket, Zap, Sunrise, CloudRainWind, Activity, Donut } from "lucide-react";
+ import { SceneSettings, IonosondeData } from "../types";
+ import { dynamicPressure, shueR0, tailStretch } from "@/lib/iono/magnetosphere";
+ import { PanelBox, SourceDot } from "./SpaceWeatherPanel";
+@@ -161,6 +161,12 @@ export default function LayersPanel({ settings, onChange, ionosondes, fps, sw }:
+           checked={settings.showDst}
+           onChange={(v) => onChange({ showDst: v })}
+         />
++        <Toggle
++          icon={<Donut size={12} />}
++          label="Belts"
++          checked={settings.showBelts}
++          onChange={(v) => onChange({ showBelts: v })}
++        />
+       </div>
+       {settings.showMagnetosphere && (
+         <div className="mt-1 text-[10px] font-mono text-slate-400">
+diff --git a/src/components/ionosphere/types.ts b/src/components/ionosphere/types.ts
+index 1c3bb31..543f5e3 100644
+--- a/src/components/ionosphere/types.ts
++++ b/src/components/ionosphere/types.ts
+@@ -155,6 +155,20 @@ export interface DstData {
+   source: string;
+ }
+ 
++/** Espejo del payload de /api/rbe (W-4 F2a #19, ruling 266). */
++export interface RbeEventData {
++  id: string;
++  time: number | null;
++  instrument: string | null;
++  link: string | null;
++}
++
++export interface RbeData {
++  events: RbeEventData[];
++  checkedAt: number;
++  source: string;
++}
++
+ export interface StationHistoryPoint {
+   t: string; // ISO
+   foF2: number;
+@@ -237,6 +251,8 @@ export interface SceneSettings {
+   showAe: boolean;
+   // W-4 F2a #18 Dst ring (ruling 266; default ON: quiet = dim).
+   showDst: boolean;
++  // W-4 F2a #19 Van Allen (ruling 266; default ON: subtle tori).
++  showBelts: boolean;
+   // W-4 E-tail o6: tamaño de punto (App.cpp:4293 SliderFloat 3-30).
+   // Adaptación declarada: slider web 3-15 (más allá satura el techo GL).
+   pointSize: number; // 3..15 UI, default 11
+@@ -281,6 +297,7 @@ export const DEFAULT_SETTINGS: SceneSettings = {
+   showLightning: true,
+   showAe: true,
+   showDst: true,
++  showBelts: true,
+ };
+ 
+ /** Avance de replay en minutos-atrás (espejo App.cpp:2139-2141).
+diff --git b/src/lib/iono/belts.test.ts b/src/lib/iono/belts.test.ts
+new file mode 100644
+index 0000000..1dec4a1
+--- /dev/null
++++ b/src/lib/iono/belts.test.ts
+@@ -0,0 +1,59 @@
++import { describe, expect, it } from "vitest";
++import {
++  parseRbe,
++  beltOuterL,
++  rbeGlow,
++  driftAngle,
++  BELT_INNER_L,
++} from "./belts";
++
++// Evento REAL DONKI el 2026-10-10 (forma pineada).
++const RBE = [
++  {
++    rbeID: "2026-10-10T14:35:00-RBE-001",
++    eventTime: "2026-10-10T14:35Z",
++    instruments: [{ displayName: "GOES-P: SEISS >2MeV" }],
++    link: "https://ccmc.gsfc.nasa.gov/DONKI/view/RBE/49055/-1",
++    linkedEvents: [{ activityID: "2026-10-10T14:30:00-HSS-001" }],
++    sentNotifications: [],
++    submissionTime: "2026-10-10T15:05Z",
++    versionId: 1,
++  },
++];
++
++describe("parseRbe (forma DONKI pineada)", () => {
++  it("evento con instrumento y link", () => {
++    const [e] = parseRbe(RBE);
++    expect(e.id).toBe("2026-10-10T14:35:00-RBE-001");
++    expect(e.time).toBe(Date.parse("2026-10-10T14:35:00Z"));
++    expect(e.instrument).toBe("GOES-P: SEISS >2MeV");
++    expect(e.link).toContain("ccmc.gsfc.nasa.gov/DONKI/view/RBE");
++  });
++  it("basura -> []", () => {
++    expect(parseRbe(null)).toEqual([]);
++    expect(parseRbe([null, 7])).toHaveLength(0);
++  });
++});
++
++describe("cinturones parametricos (declarados O19)", () => {
++  it("interno estable L 1.5, externo 4.2+0.08*Kp", () => {
++    expect(BELT_INNER_L).toBe(1.5);
++    expect(beltOuterL(0)).toBe(4.2);
++    expect(beltOuterL(9)).toBeCloseTo(4.92, 10);
++  });
++  it("brillo RBE decae en ~14 dias", () => {
++    const t0 = Date.parse("2026-10-10T14:35:00Z");
++    expect(rbeGlow(t0, t0)).toBe(1);
++    expect(rbeGlow(t0, t0 + 14 * 86400_000)).toBeCloseTo(Math.exp(-1), 10);
++    expect(rbeGlow(null, t0)).toBe(0);
++  });
++});
++
++describe("deriva (direccion fisica O19)", () => {
++  it("protones oeste (-), electrones este (+)", () => {
++    expect(driftAngle(100, "protons")).toBeLessThan(0);
++    expect(driftAngle(100, "electrons")).toBeGreaterThan(0);
++    expect(driftAngle(0, "protons")).toBeCloseTo(0, 10); // -0 === 0 aqui
++    expect(driftAngle(100, "protons")).toBe(-driftAngle(100, "electrons"));
++  });
++});
+diff --git b/src/lib/iono/belts.ts b/src/lib/iono/belts.ts
+new file mode 100644
+index 0000000..0b5558a
+--- /dev/null
++++ b/src/lib/iono/belts.ts
+@@ -0,0 +1,71 @@
++/**
++ * W-4 F2a #19 Van Allen (ruling 266, oraculo O19). Puro: sin DOM ni red.
++ *
++ * REFERENCIA PINEADA (regla 252, ANTES de codigo):
++ * DONKI /get/RBE verificado vivo 2026-10-15 (4 eventos 23-sep/26-sep/
++ * 5-oct/10-oct): {rbeID, eventTime, instruments[] ("GOES-P: SEISS
++ * >2MeV"), link, linkedEvents[], sentNotifications[]}.
++ * v1 PARAMETRICO por Kp DECLARADO (AE9/AP9 queda para v2, no F2):
++ * toro interno plateado estable (L 1.5, protones) + externo ambar
++ * vivo (L 4.2+0.08*Kp, electrones) + brillo externo por RBE reciente.
++ * DERIVA con direccion fisica correcta (determinista, el oraculo la
++ * comprueba): protones hacia el OESTE, electrones hacia el ESTE.
++ */
++
++export interface RbeEvent {
++  id: string;
++  time: number | null;
++  instrument: string | null;
++  link: string | null;
++}
++
++function toMs(v: unknown): number | null {
++  if (typeof v !== "string" || !v) return null;
++  const t = Date.parse(v.length === 16 ? v + ":00Z" : v);
++  return Number.isFinite(t) ? t : null;
++}
++
++/** Eventos RBE del DONKI (ordenados nuevos primero). */
++export function parseRbe(raw: unknown): RbeEvent[] {
++  if (!Array.isArray(raw)) return [];
++  const out: RbeEvent[] = [];
++  for (const e of raw) {
++    if (e == null || typeof e !== "object") continue;
++    const r = e as Record<string, unknown>;
++    const inst = Array.isArray(r.instruments) ? r.instruments[0] as { displayName?: unknown } : null;
++    out.push({
++      id: typeof r.rbeID === "string" ? r.rbeID : "",
++      time: toMs(r.eventTime),
++      instrument: inst && typeof inst.displayName === "string" ? inst.displayName : null,
++      link: typeof r.link === "string" ? r.link : null,
++    });
++  }
++  return out
++    .filter((e) => e.time != null)
++    .sort((a, b) => (b.time as number) - (a.time as number));
++}
++
++/** L del toro interno (estable, protones) y externo (Kp, electrones). */
++export const BELT_INNER_L = 1.5;
++export function beltOuterL(kp: number): number {
++  const k = Math.max(0, Math.min(9, kp));
++  return 4.2 + 0.08 * k;
++}
++
++/** Brillo externo por RBE reciente (0..1, decae en 14 dias; declarado). */
++export function rbeGlow(eventMs: number | null, nowMs: number): number {
++  if (eventMs == null) return 0;
++  const days = (nowMs - eventMs) / 86400_000;
++  if (days < 0) return 0;
++  return Math.exp(-days / 14);
++}
++
++export type DriftSpecies = "protons" | "electrons";
++
++/**
++ * Angulo de deriva (rad) a tiempo t: protones OESTE (signo -),
++ * electrones ESTE (signo +). Determinista; el oraculo comprueba signos.
++ */
++export function driftAngle(tSec: number, species: DriftSpecies, rate = 0.05): number {
++  return (species === "protons" ? -1 : 1) * rate * tSec;
++}
