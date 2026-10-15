@@ -1,0 +1,23 @@
+From t <t@t> Mon Oct 12 00:00:00 2026 +0200
+From: t <t@t>
+Date: Mon, 12 Oct 2026 00:00:00 +0200
+Subject: [PATCH] w297-micro (no-cache-null)
+
+---
+ src/app/api/voyager/route.ts | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/src/app/api/voyager/route.ts b/src/app/api/voyager/route.ts
+index af99636..79ed20a 100644
+--- a/src/app/api/voyager/route.ts
++++ b/src/app/api/voyager/route.ts
+@@ -73,6 +73,8 @@ export async function GET() {
+         checkedAt: now,
+         source: "unavailable",
+       };
+-  cached = { data: payload, ts: now };
++  // Observación 293 §5.3: el fallback honesto NO se cachea (un throttle
++  // transitorio no congela 'unavailable' 6 h; reintenta en cada llamada).
++  if (fix) cached = { data: payload, ts: now };
+   return NextResponse.json(payload, { headers: { "Cache-Control": "no-store", "X-Cache": "miss" } });
+ }
