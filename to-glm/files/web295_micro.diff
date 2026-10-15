@@ -1,0 +1,155 @@
+From t <t@t> Mon Oct 12 00:00:00 2026 +0200
+From: t <t@t>
+Date: Mon, 12 Oct 2026 00:00:00 +0200
+Subject: [PATCH] w295-micro (P1-285+P1-286)
+
+---
+ src/app/api/voyager/route.ts                       |  5 ++--
+ src/app/page.tsx                                   |  3 --
+ .../src/components/ionosphere/hud/VoyagerPanel.tsx |  2 +-
+ src/lib/iono/voyager.test.ts                       | 32 ++++++++++++++++------
+ src/lib/iono/voyager.ts                            | 28 +++++++++++++++----
+ 5 files changed, 50 insertions(+), 20 deletions(-)
+
+diff --git a/src/app/api/voyager/route.ts b/src/app/api/voyager/route.ts
+index a56cbd0..af99636 100644
+--- a/src/app/api/voyager/route.ts
++++ b/src/app/api/voyager/route.ts
+@@ -1,5 +1,5 @@
+ import { NextResponse } from "next/server";
+-import { parseHorizons, friisReceivedW, lightTimeSec } from "@/lib/iono/voyager";
++import { parseHorizons, pickCurrentRow, friisReceivedW, lightTimeSec } from "@/lib/iono/voyager";
+ 
+ /**
+  * W-4 F2b #7: rango Voyager 1 fresco (JPL Horizons, O7).
+@@ -54,7 +54,8 @@ export async function GET() {
+     text = null;
+   }
+   // Sin red -> honesto sin rango (jamas rango ficticio).
+-  const fix = text ? parseHorizons(text) : null;
++  // P1-286: fila pasada mas cercana (nunca la futura de la ventana).
++  const fix = text ? pickCurrentRow(parseHorizons(text), now) : null;
+   const payload = fix
+     ? {
+         au: fix.au,
+diff --git a/src/app/page.tsx b/src/app/page.tsx
+index ce971f1..e58b156 100644
+--- a/src/app/page.tsx
++++ b/src/app/page.tsx
+@@ -657,9 +657,6 @@ function MobilePanels({
+           <div className="mt-2">
+             <ParkerPanel sw={sw} />
+           </div>
+-          <div className="mt-2">
+-            <ParkerPanel sw={sw} />
+-          </div>
+           <div className="mt-2">
+             <VoyagerPanel voyager={voyager} />
+           </div>
+diff --git a/src/components/ionosphere/hud/VoyagerPanel.tsx b/src/components/ionosphere/hud/VoyagerPanel.tsx
+index fe76dda..56f52a7 100644
+--- a/src/components/ionosphere/hud/VoyagerPanel.tsx
++++ b/src/components/ionosphere/hud/VoyagerPanel.tsx
+@@ -51,7 +51,7 @@ export default function VoyagerPanel({ voyager }: { voyager: VoyagerData | null
+         <span className="text-xs font-mono text-slate-200">{voyager.au.toFixed(3)} AU</span>
+       </div>
+       <div className="text-[10px] text-slate-500 font-mono">
+-        one-way light {voyager.lightHours.toFixed(1)} h · whisper {voyager.prW.toExponential(2)} W
++        {voyager.date} · one-way light {voyager.lightHours.toFixed(1)} h · whisper {voyager.prW.toExponential(2)} W
+       </div>
+       {/* Pulse schematic Earth -> spacecraft (declared acceleration). */}
+       <div className="flex items-center gap-1.5 mt-1.5 text-[10px] text-slate-400">
+diff --git a/src/lib/iono/voyager.test.ts b/src/lib/iono/voyager.test.ts
+index 873763e..e318fa1 100644
+--- a/src/lib/iono/voyager.test.ts
++++ b/src/lib/iono/voyager.test.ts
+@@ -4,6 +4,7 @@ import {
+   lightTimeSec,
+   pulseLapse,
+   parseHorizons,
++  pickCurrentRow,
+ } from "./voyager";
+ 
+ // Respuesta REAL de Horizons el 2026-10-15 (forma pineada).
+@@ -14,14 +15,29 @@ const HOR = ` Date__(UT)__HR:MN                delta      deldot
+ 
+ describe("parseHorizons (forma JPL pineada)", () => {
+   it("rango fresco (no el pin eterno del catalogo)", () => {
+-    const f = parseHorizons(HOR);
+-    expect(f).not.toBeNull();
+-    expect(f!.au).toBeCloseTo(172.5293, 3);
+-    expect(f!.au).toBeGreaterThan(172.48); // deriva real desde el 14-oct
+-  });
+-  it("basura -> null", () => {
+-    expect(parseHorizons("")).toBeNull();
+-    expect(parseHorizons("no data")).toBeNull();
++    const rows = parseHorizons(HOR);
++    expect(rows).toHaveLength(2);
++    expect(rows[1].au).toBeCloseTo(172.5293, 3);
++    expect(rows[1].au).toBeGreaterThan(172.48); // deriva real desde el 14-oct
++    expect(rows[0].t).toBeLessThan(rows[1].t);
++  });
++  it("basura -> []", () => {
++    expect(parseHorizons("")).toEqual([]);
++    expect(parseHorizons("no data")).toEqual([]);
++  });
++});
++
++describe("pickCurrentRow (P1-286: nunca futura)", () => {
++  const rows = parseHorizons(HOR);
++  const t15 = Date.parse("15 Oct 2026 12:00 UTC");
++  const t16 = Date.parse("16 Oct 2026 12:00 UTC");
++  it("elige la pasada mas cercana", () => {
++    expect(pickCurrentRow(rows, t15)!.au).toBeCloseTo(172.5082, 3);
++    expect(pickCurrentRow(rows, t16)!.au).toBeCloseTo(172.5293, 3);
++  });
++  it("vacio -> null; todo futuro -> primera (declarado)", () => {
++    expect(pickCurrentRow([], t15)).toBeNull();
++    expect(pickCurrentRow(rows, Date.parse("14 Oct 2026 00:00 UTC"))!.au).toBeCloseTo(172.5082, 3);
+   });
+ });
+ 
+diff --git a/src/lib/iono/voyager.ts b/src/lib/iono/voyager.ts
+index 2bdcd78..1f81fc3 100644
+--- a/src/lib/iono/voyager.ts
++++ b/src/lib/iono/voyager.ts
+@@ -57,17 +57,33 @@ export function pulseLapse(lightSec: number, sweepMs = 10000): number {
+ export interface VoyagerFix {
+   au: number;
+   date: string; // "2026-Oct-15 00:00"
++  t: number; // epoch ms de la fila
+ }
+ 
+ /** Parseo de la tabla observer Horizons (quantity 20 = range AU). */
+-export function parseHorizons(text: string): VoyagerFix | null {
+-  const rows: { date: string; au: number }[] = [];
++export function parseHorizons(text: string): VoyagerFix[] {
++  const rows: VoyagerFix[] = [];
+   for (const ln of text.split("\n")) {
+-    const m = ln.match(/^\s*(\d{4}-[A-Za-z]{3}-\d{2} \d{2}:\d{2})\s+([\d.]+)\s+[\d.\-+]+\s*$/);
++    const m = ln.match(/^\s*(\d{4})-([A-Za-z]{3})-(\d{2}) (\d{2}):(\d{2})\s+([\d.]+)\s+[\d.\-+]+\s*$/);
+     if (!m) continue;
+-    const au = parseFloat(m[2]);
+-    if (Number.isFinite(au) && au > 100 && au < 200) rows.push({ date: m[1], au });
++    const au = parseFloat(m[6]);
++    if (!(Number.isFinite(au) && au > 100 && au < 200)) continue;
++    const t = Date.parse(`${m[2]} ${m[3]}, ${m[1]} ${m[4]}:${m[5]} UTC`);
++    if (!Number.isFinite(t)) continue;
++    rows.push({ date: `${m[1]}-${m[2]}-${m[3]} ${m[4]}:${m[5]}`, au, t });
+   }
++  return rows;
++}
++
++/**
++ * P1-286: fila pasada MAS CERCANA a ahora (nunca futura; fallback
++ * declarado a la primera si todo es futuro).
++ */
++export function pickCurrentRow(rows: VoyagerFix[], nowMs: number): VoyagerFix | null {
+   if (!rows.length) return null;
+-  return rows[rows.length - 1];
++  let best: VoyagerFix | null = null;
++  for (const r of rows) {
++    if (r.t <= nowMs) best = r;
++  }
++  return best ?? rows[0];
+ }
