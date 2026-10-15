@@ -1,0 +1,435 @@
+From t <t@t> Mon Oct 12 00:00:00 2026 +0200
+From: t <t@t>
+Date: Mon, 12 Oct 2026 00:00:00 +0200
+Subject: [PATCH] w293-voyager (range+Friis+pulse)
+
+---
+ src/app/api/voyager/route.ts                       | 77 ++++++++++++++++++++
+ src/app/page.tsx                                   | 28 ++++++++
+ .../src/components/ionosphere/hud/VoyagerPanel.tsx | 82 ++++++++++++++++++++++
+ src/components/ionosphere/types.ts                 | 10 +++
+ src/lib/iono/voyager.test.ts                       | 49 +++++++++++++
+ src/lib/iono/voyager.ts                            | 73 +++++++++++++++++++
+ 6 files changed, 319 insertions(+)
+
+diff --git b/src/app/api/voyager/route.ts b/src/app/api/voyager/route.ts
+new file mode 100644
+index 0000000..a56cbd0
+--- /dev/null
++++ b/src/app/api/voyager/route.ts
+@@ -0,0 +1,77 @@
++import { NextResponse } from "next/server";
++import { parseHorizons, friisReceivedW, lightTimeSec } from "@/lib/iono/voyager";
++
++/**
++ * W-4 F2b #7: rango Voyager 1 fresco (JPL Horizons, O7).
++ * El pin del catalogo (172.4869 AU del 14-oct) NO es eterno: se
++ * refresca al ejecutar. Cache 6 h (la deriva es ~0.01 UA/dia).
++ */
++
++export const revalidate = 0;
++
++const UA = "IonosphereLive3D-Web/1.0 (exploration demo)";
++const TTL = 21600_000;
++
++let cached: { data: unknown; ts: number } | null = null;
++
++function day(d: Date): string {
++  return d.toISOString().slice(0, 10);
++}
++
++export async function GET() {
++  if (cached && Date.now() - cached.ts < TTL) {
++    return NextResponse.json(cached.data, { headers: { "Cache-Control": "no-store", "X-Cache": "hit" } });
++  }
++  const now = Date.now();
++  const end = new Date(now + 2 * 86400_000);
++  const body = new URLSearchParams({
++    format: "text",
++    COMMAND: "'-31'",
++    OBJ_DATA: "'NO'",
++    MAKE_EPHEM: "'YES'",
++    EPHEM_TYPE: "'OBSERVER'",
++    CENTER: "'500@399'",
++    START_TIME: `'${day(new Date(now))}'`,
++    STOP_TIME: `'${day(end)}'`,
++    STEP_SIZE: "'1d'",
++    QUANTITIES: "'20'",
++  });
++  let text: string | null = null;
++  try {
++    const ctrl = new AbortController();
++    const timer = setTimeout(() => ctrl.abort(), 30000);
++    const res = await fetch("https://ssd.jpl.nasa.gov/api/horizons.api", {
++      method: "POST",
++      headers: { "User-Agent": UA, "Content-Type": "application/x-www-form-urlencoded" },
++      body: body.toString(),
++      signal: ctrl.signal,
++      next: { revalidate: 0 },
++    });
++    clearTimeout(timer);
++    if (!res.ok) throw new Error("upstream " + res.status);
++    text = await res.text();
++  } catch {
++    text = null;
++  }
++  // Sin red -> honesto sin rango (jamas rango ficticio).
++  const fix = text ? parseHorizons(text) : null;
++  const payload = fix
++    ? {
++        au: fix.au,
++        date: fix.date,
++        lightHours: lightTimeSec(fix.au) / 3600,
++        prW: friisReceivedW(fix.au),
++        checkedAt: now,
++        source: "JPL Horizons (live)",
++      }
++    : {
++        au: null,
++        date: null,
++        lightHours: null,
++        prW: null,
++        checkedAt: now,
++        source: "unavailable",
++      };
++  cached = { data: payload, ts: now };
++  return NextResponse.json(payload, { headers: { "Cache-Control": "no-store", "X-Cache": "miss" } });
++}
+diff --git a/src/app/page.tsx b/src/app/page.tsx
+index cd1fa3c..ce971f1 100644
+--- a/src/app/page.tsx
++++ b/src/app/page.tsx
+@@ -15,6 +15,7 @@ import AePanel from "@/components/ionosphere/hud/AePanel";
+ import DstPanel from "@/components/ionosphere/hud/DstPanel";
+ import BeltsPanel from "@/components/ionosphere/hud/BeltsPanel";
+ import ParkerPanel from "@/components/ionosphere/hud/ParkerPanel";
++import VoyagerPanel from "@/components/ionosphere/hud/VoyagerPanel";
+ import LayersPanel from "@/components/ionosphere/hud/LayersPanel";
+ import RadioPanel from "@/components/ionosphere/hud/RadioPanel";
+ import TimeBar from "@/components/ionosphere/hud/TimeBar";
+@@ -30,6 +31,7 @@ import {
+   AeData,
+   DstData,
+   RbeData,
++  VoyagerData,
+   AuroraData,
+   IonosondeData,
+   SceneSettings,
+@@ -70,6 +72,8 @@ export default function Home() {
+   const [dst, setDst] = useState<DstData | null>(null);
+   // W-4 F2a #19: DONKI RBE (polling 5 min; TTL de ruta 30 min, cache hits).
+   const [rbe, setRbe] = useState<RbeData | null>(null);
++  // W-4 F2b #7: JPL Horizons Voyager (polling 6 h == TTL de la ruta).
++  const [voyager, setVoyager] = useState<VoyagerData | null>(null);
+   const [aurora, setAurora] = useState<AuroraData | null>(null);
+   const [ionos, setIonos] = useState<IonosondeData | null>(null);
+   const [settings, setSettings] = useState<SceneSettings>(DEFAULT_SETTINGS);
+@@ -175,6 +179,20 @@ export default function Home() {
+     };
+   }, []);
+ 
++  useEffect(() => {
++    let alive = true;
++    const load = async () => {
++      const v = await fetchJson<VoyagerData>("/api/voyager", 60000);
++      if (alive && v) setVoyager(v);
++    };
++    load();
++    const t = setInterval(load, 21600_000);
++    return () => {
++      alive = false;
++      clearInterval(t);
++    };
++  }, []);
++
+   useEffect(() => {
+     let alive = true;
+     const load = async () => {
+@@ -348,6 +366,7 @@ export default function Home() {
+         <DstPanel dst={dst} ae={ae} />
+         <BeltsPanel rbe={rbe} kp={sw ? sw.kp.now : 2} epochMs={cmeEpoch} />
+         <ParkerPanel sw={sw} />
++        <VoyagerPanel voyager={voyager} />
+       </div>
+       <div className="absolute right-4 top-20 z-10 w-64 pointer-events-none space-y-3 hidden md:block">
+         <LayersPanel settings={settings} onChange={onSettingsChange} ionosondes={ionos} fps={fps} sw={sw ? sw.wind : null} />
+@@ -365,6 +384,7 @@ export default function Home() {
+         ae={ae}
+         dst={dst}
+         rbe={rbe}
++        voyager={voyager}
+         settings={settings}
+         onChange={onSettingsChange}
+         ionos={ionos}
+@@ -543,6 +563,7 @@ function MobilePanels({
+   ae,
+   dst,
+   rbe,
++  voyager,
+   settings,
+   onChange,
+   ionos,
+@@ -565,6 +586,7 @@ function MobilePanels({
+   ae: AeData | null;
+   dst: DstData | null;
+   rbe: RbeData | null;
++  voyager: VoyagerData | null;
+   settings: SceneSettings;
+   onChange: (p: Partial<SceneSettings>) => void;
+   ionos: IonosondeData | null;
+@@ -635,6 +657,12 @@ function MobilePanels({
+           <div className="mt-2">
+             <ParkerPanel sw={sw} />
+           </div>
++          <div className="mt-2">
++            <ParkerPanel sw={sw} />
++          </div>
++          <div className="mt-2">
++            <VoyagerPanel voyager={voyager} />
++          </div>
+         </>
+       )}
+       {tab === "radio" && (
+diff --git b/src/components/ionosphere/hud/VoyagerPanel.tsx b/src/components/ionosphere/hud/VoyagerPanel.tsx
+new file mode 100644
+index 0000000..fe76dda
+--- /dev/null
++++ b/src/components/ionosphere/hud/VoyagerPanel.tsx
+@@ -0,0 +1,82 @@
++"use client";
++
++import { useEffect, useRef, useState } from "react";
++import { Satellite } from "lucide-react";
++import { VoyagerData } from "../types";
++import { PanelBox, SourceDot } from "./SpaceWeatherPanel";
++import { pulseLapse, lightTimeSec } from "@/lib/iono/voyager";
++
++/** W-4 F2b #7: Voyager panel (EN for all new UI).
++ * Range refreshed from Horizons at runtime (O7) + Friis whisper with
++ * public JPL params + HONEST pulse: the schematic sweeps in 10 s with
++ * a VISIBLE factor (real one-way light time shown). DSN Robledo note. */
++export default function VoyagerPanel({ voyager }: { voyager: VoyagerData | null }) {
++  const [sweep, setSweep] = useState<number | null>(null);
++  const raf = useRef(0);
++
++  useEffect(() => {
++    setSweep(null);
++    return () => cancelAnimationFrame(raf.current);
++  }, [voyager?.au]);
++  useEffect(() => () => cancelAnimationFrame(raf.current), []);
++
++  if (!voyager || voyager.au == null || voyager.lightHours == null || voyager.prW == null) {
++    return (
++      <PanelBox title="Voyager">
++        <div className="text-xs text-slate-500 py-6 text-center animate-pulse">
++          {voyager ? "No Horizons range (honest, never fictitious)." : "Contacting JPL Horizons…"}
++        </div>
++      </PanelBox>
++    );
++  }
++  const n = pulseLapse(lightTimeSec(voyager.au), 10000);
++  const disp = sweep ?? 0;
++  const startSweep = () => {
++    cancelAnimationFrame(raf.current);
++    const t0 = performance.now();
++    const step = (t: number) => {
++      const f = Math.min(1, (t - t0) / 10000);
++      setSweep(f);
++      if (f < 1) raf.current = requestAnimationFrame(step);
++    };
++    raf.current = requestAnimationFrame(step);
++  };
++
++  return (
++    <PanelBox title="Voyager" badge={<SourceDot source={voyager.source} />}>
++      <div className="flex items-center justify-between">
++        <span className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-slate-400">
++          <Satellite size={12} /> Range
++        </span>
++        <span className="text-xs font-mono text-slate-200">{voyager.au.toFixed(3)} AU</span>
++      </div>
++      <div className="text-[10px] text-slate-500 font-mono">
++        one-way light {voyager.lightHours.toFixed(1)} h · whisper {voyager.prW.toExponential(2)} W
++      </div>
++      {/* Pulse schematic Earth -> spacecraft (declared acceleration). */}
++      <div className="flex items-center gap-1.5 mt-1.5 text-[10px] text-slate-400">
++        <span className="shrink-0 text-cyan-300">⊕</span>
++        <div className="relative flex-1 h-1 rounded-full bg-white/10">
++          <div
++            className="absolute top-1/2 w-2 h-2 rounded-full bg-cyan-300"
++            style={{ left: `calc(${(disp * 100).toFixed(1)}% - 4px)`, transform: "translateY(-50%)" }}
++          />
++        </div>
++        <span className="shrink-0 text-slate-300"><Satellite size={11} /></span>
++        <button
++          onClick={startSweep}
++          className="shrink-0 text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-slate-200 hover:bg-white/20"
++          title={`Real transit ${voyager.lightHours.toFixed(1)} h compressed to 10 s`}
++        >
++          ▶ ×{n}
++        </button>
++      </div>
++      <div className="text-[10px] text-slate-500 mt-0.5">
++        Friis 23 W · 3.7 m · 8.42 GHz · DSN 70 m (public JPL params)
++      </div>
++      <p className="text-[10px] text-slate-500 leading-snug mt-2 pt-2 border-t border-white/10">
++        DSN Madrid (Robledo) hears it too. Pulse honest: real time shown, sweep declared.
++      </p>
++    </PanelBox>
++  );
++}
+diff --git a/src/components/ionosphere/types.ts b/src/components/ionosphere/types.ts
+index d7c7e21..45b9612 100644
+--- a/src/components/ionosphere/types.ts
++++ b/src/components/ionosphere/types.ts
+@@ -171,6 +171,16 @@ export interface RbeData {
+   source: string;
+ }
+ 
++/** Espejo del payload de /api/voyager (W-4 F2b #7, ruling 288). */
++export interface VoyagerData {
++  au: number | null;
++  date: string | null;
++  lightHours: number | null;
++  prW: number | null;
++  checkedAt: number;
++  source: string;
++}
++
+ export interface StationHistoryPoint {
+   t: string; // ISO
+   foF2: number;
+diff --git b/src/lib/iono/voyager.test.ts b/src/lib/iono/voyager.test.ts
+new file mode 100644
+index 0000000..873763e
+--- /dev/null
++++ b/src/lib/iono/voyager.test.ts
+@@ -0,0 +1,49 @@
++import { describe, expect, it } from "vitest";
++import {
++  friisReceivedW,
++  lightTimeSec,
++  pulseLapse,
++  parseHorizons,
++} from "./voyager";
++
++// Respuesta REAL de Horizons el 2026-10-15 (forma pineada).
++const HOR = ` Date__(UT)__HR:MN                delta      deldot
++ 2026-Oct-15 00:00     172.508150629083  36.7108670
++ 2026-Oct-16 00:00     172.529281520162  36.4666980
++`;
++
++describe("parseHorizons (forma JPL pineada)", () => {
++  it("rango fresco (no el pin eterno del catalogo)", () => {
++    const f = parseHorizons(HOR);
++    expect(f).not.toBeNull();
++    expect(f!.au).toBeCloseTo(172.5293, 3);
++    expect(f!.au).toBeGreaterThan(172.48); // deriva real desde el 14-oct
++  });
++  it("basura -> null", () => {
++    expect(parseHorizons("")).toBeNull();
++    expect(parseHorizons("no data")).toBeNull();
++  });
++});
++
++describe("Friis (el susurro ~5e-19 W, O7)", () => {
++  it("orden de magnitud con parametros JPL publicos", () => {
++    const pr = friisReceivedW(172.5);
++    expect(pr).toBeGreaterThan(1e-19);
++    expect(pr).toBeLessThan(2e-18);
++  });
++  it("decae con r^2", () => {
++    expect(friisReceivedW(172.5) / friisReceivedW(86.25)).toBeCloseTo(0.25, 5);
++  });
++});
++
++describe("tiempo-luz honesto (O7: 23h54m solo-ida)", () => {
++  it("172.5 UA ~= 23.9 h", () => {
++    const h = lightTimeSec(172.5) / 3600;
++    expect(h).toBeGreaterThan(23.5);
++    expect(h).toBeLessThan(24.5);
++  });
++  it("factor visible del barrido (O1.5)", () => {
++    // ~86100 s a 10 s -> x8610.
++    expect(pulseLapse(lightTimeSec(172.5), 10000)).toBeGreaterThan(8000);
++  });
++});
+diff --git b/src/lib/iono/voyager.ts b/src/lib/iono/voyager.ts
+new file mode 100644
+index 0000000..2bdcd78
+--- /dev/null
++++ b/src/lib/iono/voyager.ts
+@@ -0,0 +1,73 @@
++/**
++ * W-4 F2b #7 Voyager (ruling 266/288, oraculo O7). Puro: sin DOM ni red.
++ *
++ * REFERENCIA PINEADA (regla 252, ANTES de codigo):
++ * (a) JPL Horizons API en vivo (verificado 2026-10-15): Voyager 1
++ *     (-31) geocentrico, observer quantity 20 (range AU):
++ *     2026-Oct-15 172.508150629083 AU (el pin del catalogo, 172.4869
++ *     del 14-oct, NO es eterno — la ruta refresca al ejecutar, O7).
++ *     Tiempo-luz real: 1 UA = 499.004 s => ~23.9 h solo-ida (los
++ *     23h54m del ruling).
++ * (b) Friis con parametros PUBLICOS JPL (declarados): Pt 23 W (TWTA
++ *     banda X), antena nave 3.7 m, f 8.42 GHz, DSN 70 m, eficiencias
++ *     tipicas eta 0.55/0.65 (declaradas). Pr ~= 5e-19 W (el oraculo
++ *     lo recalcula independiente).
++ * Pulso HONESTO: el esquema se barre en 10 s con factor xN VISIBLE
++ * (O1.5); bono local DSN Robledo (Madrid) declarado en el panel.
++ */
++
++export const VOYAGER_FREQ_HZ = 8.42e9; // banda X bajada, publico JPL
++export const VOYAGER_TX_W = 23; // TWTA, publico JPL
++export const VOYAGER_DISH_M = 3.7; // publico JPL
++export const DSN_DISH_M = 70; // 70 m, publico JPL
++export const ETA_TX = 0.55; // eficiencia tipica (declarada)
++export const ETA_RX = 0.65; // eficiencia tipica (declarada)
++export const C_MS = 299792458;
++export const AU_KM = 1.496e8;
++
++function dishGain(dM: number, eta: number): number {
++  const lambda = C_MS / VOYAGER_FREQ_HZ;
++  const x = (Math.PI * dM) / lambda;
++  return eta * x * x;
++}
++
++/** Presupuesto Friis (W recibidos) a distancia r_au. */
++export function friisReceivedW(r_au: number): number {
++  if (!(r_au > 0)) return 0;
++  const lambda = C_MS / VOYAGER_FREQ_HZ;
++  const r = r_au * AU_KM * 1000;
++  const gt = dishGain(VOYAGER_DISH_M, ETA_TX);
++  const gr = dishGain(DSN_DISH_M, ETA_RX);
++  const path = lambda / (4 * Math.PI * r);
++  return VOYAGER_TX_W * gt * gr * path * path;
++}
++
++/** Tiempo-luz solo-ida en segundos para r_au. */
++export function lightTimeSec(r_au: number): number {
++  if (!(r_au > 0)) return 0;
++  return ((r_au * AU_KM * 1000) / C_MS);
++}
++
++/** Factor visible del barrido del pulso (O1.5): transito real a 10 s. */
++export function pulseLapse(lightSec: number, sweepMs = 10000): number {
++  if (!(lightSec > 0) || !(sweepMs > 0)) return 1;
++  return Math.max(1, Math.round((lightSec * 1000) / sweepMs));
++}
++
++export interface VoyagerFix {
++  au: number;
++  date: string; // "2026-Oct-15 00:00"
++}
++
++/** Parseo de la tabla observer Horizons (quantity 20 = range AU). */
++export function parseHorizons(text: string): VoyagerFix | null {
++  const rows: { date: string; au: number }[] = [];
++  for (const ln of text.split("\n")) {
++    const m = ln.match(/^\s*(\d{4}-[A-Za-z]{3}-\d{2} \d{2}:\d{2})\s+([\d.]+)\s+[\d.\-+]+\s*$/);
++    if (!m) continue;
++    const au = parseFloat(m[2]);
++    if (Number.isFinite(au) && au > 100 && au < 200) rows.push({ date: m[1], au });
++  }
++  if (!rows.length) return null;
++  return rows[rows.length - 1];
++}
