@@ -1,0 +1,128 @@
+From t <t@t> Mon Oct 12 00:00:00 2026 +0200
+From: t <t@t>
+Date: Mon, 12 Oct 2026 00:00:00 +0200
+Subject: [PATCH] w282-micro (P1-280+P1-281)
+
+---
+ src/app/api/dst/route.ts                      | 21 ++++++++++++++++-----
+ src/app/page.tsx                              | 18 ++++++++++++------
+ .../src/components/ionosphere/hud/AePanel.tsx |  2 +-
+ 3 files changed, 29 insertions(+), 12 deletions(-)
+
+diff --git a/src/app/api/dst/route.ts b/src/app/api/dst/route.ts
+index 73e8072..fe1c1cb 100644
+--- a/src/app/api/dst/route.ts
++++ b/src/app/api/dst/route.ts
+@@ -43,10 +43,15 @@ export async function GET() {
+   const y = dt.getUTCFullYear();
+   const m = dt.getUTCMonth() + 1;
+   const tag = String(y).slice(2) + String(m).padStart(2, "0");
++  // P1-281: el AE digital vive con lag de semanas; el diagrama de fase
++  // necesita Dst del rango del AE -> tambien el mes anterior.
++  const pm = m === 1 ? { y: y - 1, m: 12 } : { y, m: m - 1 };
++  const ptag = String(pm.y).slice(2) + String(pm.m).padStart(2, "0");
+   const end = new Date(now + 24 * 3600_000);
+   const day = (d: Date) => d.toISOString().slice(0, 10);
+-  const [dstTxt, gstTxt] = await Promise.all([
++  const [dstTxt, dstPrevTxt, gstTxt] = await Promise.all([
+     fetchText(`https://wdc.kugi.kyoto-u.ac.jp/dst_realtime/presentmonth/dst${tag}.for.request`),
++    fetchText(`https://wdc.kugi.kyoto-u.ac.jp/dst_realtime/${pm.y}${String(pm.m).padStart(2, "0")}/dst${ptag}.for.request`),
+     fetchText(
+       `https://ccmc.gsfc.nasa.gov/DONKI-API/get/GST?startDate=${day(new Date(now - 30 * 86400_000))}&endDate=${day(end)}`
+     ),
+@@ -60,12 +65,18 @@ export async function GET() {
+     }
+   }
+   const pts = dstTxt ? parseDstWdc(dstTxt, y, m) : [];
+-  const cut = now - 7 * 86400_000;
++  if (dstPrevTxt) pts.push(...parseDstWdc(dstPrevTxt, pm.y, pm.m));
++  pts.sort((a, b) => a.t - b.t);
++  // Ventana larga (45 d) para el diagrama de fase con el AE con lag;
++  // min7d y now siguen sobre los ultimos 7 dias.
++  const cut = now - 45 * 86400_000;
++  const cut7 = now - 7 * 86400_000;
+   const win = pts.filter((p) => p.t >= cut && p.t <= now);
+-  const live = win.length > 0;
++  const win7 = win.filter((p) => p.t >= cut7);
++  const live = win7.length > 0;
+   const payload = {
+-    now: live ? win[win.length - 1].dst : 0,
+-    min7d: live ? Math.min(...win.map((p) => p.dst)) : 0,
++    now: live ? win7[win7.length - 1].dst : 0,
++    min7d: live ? Math.min(...win7.map((p) => p.dst)) : 0,
+     series: win.filter((_, i) => i % 3 === 0).map((p) => ({ t: p.t, dst: p.dst })),
+     count: win.length,
+     gst: parseGst(gst).map((g) => ({ id: g.id, start: g.start, kpMax: g.kpMax, link: g.link })),
+diff --git a/src/app/page.tsx b/src/app/page.tsx
+index e21cd74..da5321a 100644
+--- a/src/app/page.tsx
++++ b/src/app/page.tsx
+@@ -63,7 +63,7 @@ export default function Home() {
+   const [lightning, setLightning] = useState<LightningData | null>(null);
+   // W-4 F2a #17: Kyoto AE (polling 5 min; TTL de ruta 15 min, cache hits).
+   const [ae, setAe] = useState<AeData | null>(null);
+-  // W-4 F2a #18: Kyoto Dst + GST (polling 15 min == TTL de la ruta).
++  // W-4 F2a #18: Kyoto Dst + GST (polling 5 min; TTL de ruta 15 min, cache hits).
+   const [dst, setDst] = useState<DstData | null>(null);
+   const [aurora, setAurora] = useState<AuroraData | null>(null);
+   const [ionos, setIonos] = useState<IonosondeData | null>(null);
+@@ -75,7 +75,10 @@ export default function Home() {
+   const [legend, setLegend] = useState<{ min: number; max: number }>({ min: 2, max: 10 });
+   const [fps, setFps] = useState(60);
+   const [ideasOpen, setIdeasOpen] = useState(false);
+-  const [now, setNow] = useState(() => new Date());
++  // P1-280: reloj client-only — el prerender estatico no fija hora
++  // (evita mismatch de hidratacion React #418 con el HTML servido).
++  const [now, setNow] = useState<Date | null>(null);
++  const [mounted, setMounted] = useState(false);
+ 
+   // W-2 alertas: motor vivo en ref; se evalua al publicar datos (sw/ionos),
+   // sin fetch nuevo. El wiring (normalizacion de clase + honestidad de
+@@ -195,6 +198,8 @@ export default function Home() {
+ 
+   // reloj
+   useEffect(() => {
++    setMounted(true);
++    setNow(new Date());
+     const t = setInterval(() => setNow(new Date()), 1000);
+     return () => clearInterval(t);
+   }, []);
+@@ -233,12 +238,13 @@ export default function Home() {
+     setSettings((s) => ({ ...s, ...patch }));
+   }, []);
+ 
++  const nowMs = now ? now.getTime() : 0;
+   const effSec = useMemo(
+-    () => (Date.now() - (settings.timeMode === "replay" ? settings.replayMinutes * 60_000 : 0)) / 1000,
+-    [settings.timeMode, settings.replayMinutes, now]
++    () => (nowMs - (settings.timeMode === "replay" ? settings.replayMinutes * 60_000 : 0)) / 1000,
++    [settings.timeMode, settings.replayMinutes, nowMs]
+   );
+   // W-4 #1: el tablero y la escena usan el mismo epoch (replay determinista).
+-  const cmeEpoch = settings.timeMode === "replay" ? Date.now() - settings.replayMinutes * 60_000 : Date.now();
++  const cmeEpoch = settings.timeMode === "replay" ? nowMs - settings.replayMinutes * 60_000 : nowMs;
+ 
+   const tx = ionos?.stations.find((s) => s.code === txCode) ?? null;
+   const rx = ionos?.stations.find((s) => s.code === rxCode) ?? null;
+@@ -290,7 +296,7 @@ export default function Home() {
+               </span>
+             </h1>
+             <p className="text-[11px] text-slate-500 mt-0.5 flex items-center gap-2">
+-              <span className="font-mono tabular-nums" suppressHydrationWarning>{now.toISOString().slice(11, 19)} UTC</span>
++              <span className="font-mono tabular-nums" suppressHydrationWarning>{mounted && now ? now.toISOString().slice(11, 19) : "--:--:--"} UTC</span>
+               <span className="w-1 h-1 rounded-full bg-cyan-400/60" />
+               <span className="font-mono">
+                 subsolar {subsolar(new Date(effSec * 1000)).lat.toFixed(0)}{"\u00B0"} {subsolar(new Date(effSec * 1000)).lon >= 0 ? "E" : "W"}{" "}
+diff --git a/src/components/ionosphere/hud/AePanel.tsx b/src/components/ionosphere/hud/AePanel.tsx
+index 889e71b..5318be3 100644
+--- a/src/components/ionosphere/hud/AePanel.tsx
++++ b/src/components/ionosphere/hud/AePanel.tsx
+@@ -50,7 +50,7 @@ export default function AePanel({ ae }: { ae: AeData | null }) {
+         </div>
+       )}
+       <div className="text-[10px] text-slate-600 mt-1">
+-        Substorm AE/Dst correlation view arrives with #18 — declared.
++        Substorm AE/Dst correlation below, in the Dst panel.
+       </div>
+       <p className="text-[10px] text-slate-500 leading-snug mt-2 pt-2 border-t border-white/10">
+         AE index: WDC for Geomagnetism, Kyoto (non-commercial, citation required).
