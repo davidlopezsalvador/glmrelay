@@ -1,0 +1,554 @@
+From t <t@t> Mon Oct 12 00:00:00 2026 +0200
+From: t <t@t>
+Date: Fri, 16 Oct 2026 21:30:00 +0200
+Subject: [PATCH] w307-msis9d (shell+micro)
+
+---
+ src/lib/iono/msis/msisInit.test.ts | 7    +++++++
+ src/lib/iono/msis/README.md | 1    +
+ src/components/ionosphere/types.ts | 21   +++++++++++++++++++++
+ src/app/page.tsx | 23   +++++++++++++++++++++++
+ src/lib/iono/msis/msisGrid.ts | 139  ++++++++++++++++++++++++++++++
+ src/lib/iono/msis/msisGrid.test.ts | 63   ++++++++++++++++++++++++++++++
+ src/app/api/msis/route.ts | 102  ++++++++++++++++++++++++++++++
+ src/components/ionosphere/hud/MsisPanel.tsx | 51   ++++++++++++++++++++++++++++++
+ 8 files changed, 407 insertions(+), 0 deletions(-)
+
+diff --git a/src/lib/iono/msis/msisInit.test.ts b/src/lib/iono/msis/msisInit.test.ts
+index ac67786..317d641 100644
+--- a/src/lib/iono/msis/msisInit.test.ts
++++ b/src/lib/iono/msis/msisInit.test.ts
+@@ -18,6 +18,8 @@ import {
+   WGAMMA,
+   SPECMASS,
+   C2TN,
++  C1O1,
++  C1NO,
+   GWHT,
+   PI,
+   NL,
+@@ -66,6 +68,11 @@ describe("9a constants (independent pins)", () => {
+     expect(C2TN[2][1]).toBe(-16.666666666666668);
+     expect(GWHT[0]).toBe(5 / 24);
+     expect(PI).toBe(Math.PI);
++    // Row-complete literal pins (304 section 9.2 micro, 306 condition)
++    expect(C1O1[0]).toEqual([1.75, -1.624999900076852]);
++    expect(C1O1[1]).toEqual([-2.916666573405061, 21.458332647194382]);
++    expect(C1NO[0]).toEqual([1.5, 0.0]);
++    expect(C1NO[1]).toEqual([-3.75, 15.0]);
+   });
+ });
+ 
+diff --git a/src/lib/iono/msis/README.md b/src/lib/iono/msis/README.md
+index 7276ae9..237d7c8 100644
+--- a/src/lib/iono/msis/README.md
++++ b/src/lib/iono/msis/README.md
+@@ -42,6 +42,7 @@ Files:
+ | `msisDfn.ts` | `msis_dfn.F90` (539 lines) | 9c translated (dfnparm/dfnx/pwmp) |
+ | `msisCalc.ts` | `msis_calc.F90` (223 lines) | 9c translated (msiscalc, stateless) |
+ | `msisGtd8d.ts` | `msis_gtd8d.F90` (147 lines) | 9c translated (legacy wrapper) |
++| `msisGrid.ts` | shell grid (no Fortran source) | 9d new code (Tn/rho lat×lon, GPL-3.0 own) |
+ | `msis2.1_test_in.txt` | official vectors (12864 B) | test-only fixture, byte-exact |
+ | `msis2.1_test_ref_dp.txt` | official vectors (40602 B) | test-only fixture, byte-exact |
+ | `msis21.parm` | parameter data (536576 B) | byte-exact blob (untouched since 9a) |
+diff --git a/src/components/ionosphere/types.ts b/src/components/ionosphere/types.ts
+index 45b9612..a389a01 100644
+--- a/src/components/ionosphere/types.ts
++++ b/src/components/ionosphere/types.ts
+@@ -181,6 +181,27 @@ export interface VoyagerData {
+   source: string;
+ }
+ 
++/** Espejo del payload de /api/msis (W-4 F2b #9d: Tn/rho locales). */
++export interface MsisProfileRow {
++  altKm: number;
++  tn: number;
++  rho: number;
++}
++export interface MsisData {
++  point: { altKm: number; lat: number; lon: number; tn: number; rho: number };
++  profile: MsisProfileRow[];
++  grid: {
++    w: number; h: number; altKm: number;
++    tnMin: number; tnMax: number; tnMean: number;
++    rhoMin: number; rhoMax: number; rhoMean: number;
++  };
++  inputs: {
++    doy: number; utsec: number; epochSec: number;
++    f107a: number; f107: number; apDaily: number; referenceDefaults: boolean;
++  };
++  source: string;
++}
++
+ export interface StationHistoryPoint {
+   t: string; // ISO
+   foF2: number;
+diff --git a/src/app/page.tsx b/src/app/page.tsx
+index 51b4fd4..be334bc 100644
+--- a/src/app/page.tsx
++++ b/src/app/page.tsx
+@@ -16,6 +16,7 @@ import DstPanel from "@/components/ionosphere/hud/DstPanel";
+ import BeltsPanel from "@/components/ionosphere/hud/BeltsPanel";
+ import ParkerPanel from "@/components/ionosphere/hud/ParkerPanel";
+ import VoyagerPanel from "@/components/ionosphere/hud/VoyagerPanel";
++import MsisPanel from "@/components/ionosphere/hud/MsisPanel";
+ import LayersPanel from "@/components/ionosphere/hud/LayersPanel";
+ import RadioPanel from "@/components/ionosphere/hud/RadioPanel";
+ import TimeBar from "@/components/ionosphere/hud/TimeBar";
+@@ -32,6 +33,7 @@ import {
+   DstData,
+   RbeData,
+   VoyagerData,
++  MsisData,
+   AuroraData,
+   IonosondeData,
+   SceneSettings,
+@@ -74,6 +76,8 @@ export default function Home() {
+   const [rbe, setRbe] = useState<RbeData | null>(null);
+   // W-4 F2b #7: JPL Horizons Voyager (polling 6 h == TTL de la ruta).
+   const [voyager, setVoyager] = useState<VoyagerData | null>(null);
++  // W-4 F2b #9d: local NRLMSIS Tn/rho (polling 10 min; model is local).
++  const [msis, setMsis] = useState<MsisData | null>(null);
+   const [aurora, setAurora] = useState<AuroraData | null>(null);
+   const [ionos, setIonos] = useState<IonosondeData | null>(null);
+   const [settings, setSettings] = useState<SceneSettings>(DEFAULT_SETTINGS);
+@@ -193,6 +197,20 @@ export default function Home() {
+     };
+   }, []);
+ 
++  useEffect(() => {
++    let alive = true;
++    const load = async () => {
++      const m = await fetchJson<MsisData>("/api/msis", 60000);
++      if (alive && m) setMsis(m);
++    };
++    load();
++    const t = setInterval(load, 600_000);
++    return () => {
++      alive = false;
++      clearInterval(t);
++    };
++  }, []);
++
+   useEffect(() => {
+     let alive = true;
+     const load = async () => {
+@@ -367,6 +385,7 @@ export default function Home() {
+         <BeltsPanel rbe={rbe} kp={sw ? sw.kp.now : 2} epochMs={cmeEpoch} />
+         <ParkerPanel sw={sw} />
+         <VoyagerPanel voyager={voyager} />
++        <MsisPanel msis={msis} />
+       </div>
+       <div className="absolute right-4 top-20 z-10 w-64 pointer-events-none space-y-3 hidden md:block">
+         <LayersPanel settings={settings} onChange={onSettingsChange} ionosondes={ionos} fps={fps} sw={sw ? sw.wind : null} />
+@@ -385,6 +404,7 @@ export default function Home() {
+         dst={dst}
+         rbe={rbe}
+         voyager={voyager}
++        msis={msis}
+         settings={settings}
+         onChange={onSettingsChange}
+         ionos={ionos}
+@@ -564,6 +584,7 @@ function MobilePanels({
+   dst,
+   rbe,
+   voyager,
++  msis,
+   settings,
+   onChange,
+   ionos,
+@@ -587,6 +608,7 @@ function MobilePanels({
+   dst: DstData | null;
+   rbe: RbeData | null;
+   voyager: VoyagerData | null;
++  msis: MsisData | null;
+   settings: SceneSettings;
+   onChange: (p: Partial<SceneSettings>) => void;
+   ionos: IonosondeData | null;
+@@ -659,6 +681,7 @@ function MobilePanels({
+           </div>
+           <div className="mt-2">
+         <VoyagerPanel voyager={voyager} />
++        <MsisPanel msis={msis} />
+           </div>
+         </>
+       )}
+diff --git b/src/lib/iono/msis/msisGrid.ts b/src/lib/iono/msis/msisGrid.ts
+new file mode 100644
+index 0000000..710d702
+--- /dev/null
++++ b/src/lib/iono/msis/msisGrid.ts
+@@ -0,0 +1,139 @@
++// SPDX-License-Identifier: GPL-3.0-or-later
++// ionosphere-live-3d — NRLMSIS 2.1 shell grid (drop 9d, F2b #9).
++//
++// Pure lat×lon Tn/rho grid builder over msiscalc for the app shell.
++// North-first rows (row 0 = +90 deg, shell convention), cell centers,
++// no DOM, no fetch (the caller supplies the initialized state).
++// Default solar/geomagnetic inputs are REFERENCE quiet conditions,
++// always echoed back to the caller (never presented as live).
++
++import type { MsisState } from "./msisInit";
++import { msiscalc, createGfnCache, type GfnCache } from "./msisCalc";
++
++export interface MsisGridSpec {
++  w: number;
++  h: number;
++  /** Geodetic altitude km (100..600 for the 9d shell grid). */
++  altKm: number;
++  /** Day of year 1..366. */
++  doy: number;
++  /** Universal time seconds. */
++  utsec: number;
++  f107a?: number;
++  f107?: number;
++  /** 7-element Ap array, 0-based (element 0 = daily Ap). */
++  ap?: number[];
++}
++
++export const MSIS_REF_F107A = 150;
++export const MSIS_REF_F107 = 150;
++export const MSIS_REF_AP = 4;
++
++export function resolveMsisInputs(spec: MsisGridSpec): {
++  f107a: number;
++  f107: number;
++  ap: number[];
++} {
++  return {
++    f107a: spec.f107a ?? MSIS_REF_F107A,
++    f107: spec.f107 ?? MSIS_REF_F107,
++    ap: spec.ap ?? [MSIS_REF_AP, 0, 0, 0, 0, 0, 0],
++  };
++}
++
++export interface MsisGrid {
++  w: number;
++  h: number;
++  /** Neutral temperature K, north-first. */
++  tn: Float32Array;
++  /** Total mass density g/cm^3, north-first. */
++  rho: Float32Array;
++  altKm: number;
++  doy: number;
++  utsec: number;
++  f107a: number;
++  f107: number;
++  apDaily: number;
++}
++
++/** Cell-center latitude of a north-first row. */
++export function gridLat(h: number, row: number): number {
++  return 90 - ((row + 0.5) * 180) / h;
++}
++
++/** Cell-center longitude of a column. */
++export function gridLon(w: number, col: number): number {
++  return -180 + ((col + 0.5) * 360) / w;
++}
++
++/**
++ * Build the Tn/rho grid. One shared globe cache across cells (same as
++ * the 9c regression harness).
++ */
++export function buildMsisGrid(
++  state: MsisState,
++  cache: GfnCache,
++  spec: MsisGridSpec,
++): MsisGrid {
++  const { f107a, f107, ap } = resolveMsisInputs(spec);
++  const tn = new Float32Array(spec.w * spec.h);
++  const rho = new Float32Array(spec.w * spec.h);
++  for (let row = 0; row < spec.h; row++) {
++    const lat = gridLat(spec.h, row);
++    for (let col = 0; col < spec.w; col++) {
++      const lon = gridLon(spec.w, col);
++      const r = msiscalc(state, cache, spec.doy, spec.utsec, spec.altKm, lat, lon, f107a, f107, ap);
++      tn[row * spec.w + col] = r.tn;
++      // dn[1] is kg/m^3; shell rho is g/cm^3 (same net factor as gtd8d).
++      rho[row * spec.w + col] = r.dn[1] * 1e-3;
++    }
++  }
++  return {
++    w: spec.w, h: spec.h, tn, rho,
++    altKm: spec.altKm, doy: spec.doy, utsec: spec.utsec,
++    f107a, f107, apDaily: ap[0],
++  };
++}
++
++/** Single-point Tn (K) + rho (g/cm^3) query. */
++export function msisPoint(
++  state: MsisState,
++  cache: GfnCache,
++  spec: MsisGridSpec & { lat: number; lon: number },
++): { tn: number; rho: number } {
++  const { f107a, f107, ap } = resolveMsisInputs(spec);
++  const r = msiscalc(state, cache, spec.doy, spec.utsec, spec.altKm, spec.lat, spec.lon, f107a, f107, ap);
++  return { tn: r.tn, rho: r.dn[1] * 1e-3 };
++}
++
++/** Grid summary statistics (min/max/mean over finite cells). */
++export function msisGridStats(g: MsisGrid): {
++  tnMin: number; tnMax: number; tnMean: number;
++  rhoMin: number; rhoMax: number; rhoMean: number;
++} {
++  let tnMin = Infinity, tnMax = -Infinity, tnSum = 0, tnN = 0;
++  let rhoMin = Infinity, rhoMax = -Infinity, rhoSum = 0, rhoN = 0;
++  for (let k = 0; k < g.w * g.h; k++) {
++    const t = g.tn[k];
++    if (Number.isFinite(t)) {
++      if (t < tnMin) tnMin = t;
++      if (t > tnMax) tnMax = t;
++      tnSum += t;
++      tnN++;
++    }
++    const r = g.rho[k];
++    if (Number.isFinite(r) && r > 0) {
++      if (r < rhoMin) rhoMin = r;
++      if (r > rhoMax) rhoMax = r;
++      rhoSum += r;
++      rhoN++;
++    }
++  }
++  return {
++    tnMin, tnMax, tnMean: tnN ? tnSum / tnN : NaN,
++    rhoMin, rhoMax, rhoMean: rhoN ? rhoSum / rhoN : NaN,
++  };
++}
++
++export { createGfnCache };
++export type { GfnCache };
+diff --git b/src/lib/iono/msis/msisGrid.test.ts b/src/lib/iono/msis/msisGrid.test.ts
+new file mode 100644
+index 0000000..2cd7436
+--- /dev/null
++++ b/src/lib/iono/msis/msisGrid.test.ts
+@@ -0,0 +1,63 @@
++// ionosphere-live-3d — drop 9d TU: shell Tn/rho grid over msiscalc.
++// Official pin: test vector file-row 150 (alt 250 km, lat -86.4,
++// lon 45; ref T 1002.65, rho 0.6501E-13 g/cm^3).
++
++import { describe, expect, it } from "vitest";
++import { readFileSync } from "node:fs";
++import { createMsisState, msisinit } from "./msisInit";
++import {
++  buildMsisGrid,
++  msisPoint,
++  msisGridStats,
++  gridLat,
++  gridLon,
++  resolveMsisInputs,
++  createGfnCache,
++} from "./msisGrid";
++
++function parmBytes(): Uint8Array {
++  const buf = readFileSync(new URL("./msis21.parm", import.meta.url));
++  return new Uint8Array(buf.buffer, buf.byteOffset, buf.byteLength);
++}
++
++describe("9d shell grid", () => {
++  it("north-first cell-center geometry", () => {
++    expect(gridLat(18, 0)).toBe(85);
++    expect(gridLat(18, 17)).toBe(-85);
++    expect(gridLon(36, 0)).toBe(-175);
++    expect(gridLon(36, 35)).toBe(175);
++  });
++  it("reference quiet defaults are echoed, never live", () => {
++    const r = resolveMsisInputs({ w: 1, h: 1, altKm: 300, doy: 1, utsec: 0 });
++    expect(r).toEqual({ f107a: 150, f107: 150, ap: [4, 0, 0, 0, 0, 0, 0] });
++  });
++  it("point query matches official vector (row 150)", () => {
++    const state = createMsisState();
++    msisinit(state, { parmBytes: parmBytes() });
++    const cache = createGfnCache();
++    const f = Math.fround;
++    const p = msisPoint(state, cache, {
++      w: 1, h: 1, altKm: f(250), doy: 126, utsec: f(47520),
++      lat: f(-86.4), lon: f(45), f107a: f(169.2), f107: f(160.7),
++      ap: [f(5), 0, 0, 0, 0, 0, 0],
++    });
++    expect(Math.abs(p.tn - 1002.65)).toBeLessThan(0.01);
++    expect(Math.abs(p.rho - 0.6501e-13) / 0.6501e-13).toBeLessThan(1e-3);
++  });
++  it("grid is deterministic with sane stats", () => {
++    const state = createMsisState();
++    msisinit(state, { parmBytes: parmBytes() });
++    const cache = createGfnCache();
++    const spec = { w: 12, h: 6, altKm: 300, doy: 172, utsec: 43200 };
++    const a = buildMsisGrid(state, cache, spec);
++    const b = buildMsisGrid(state, cache, spec);
++    expect(a.tn).toEqual(b.tn);
++    expect(a.rho).toEqual(b.rho);
++    const st = msisGridStats(a);
++    expect(st.tnMin).toBeGreaterThan(100);
++    expect(st.tnMax).toBeLessThan(3000);
++    expect(st.rhoMin).toBeGreaterThan(0);
++    expect(st.rhoMax).toBeLessThan(1e-6);
++    expect(st.tnMean).toBeGreaterThan(st.tnMin);
++  });
++});
+diff --git b/src/app/api/msis/route.ts b/src/app/api/msis/route.ts
+new file mode 100644
+index 0000000..a5616e1
+--- /dev/null
++++ b/src/app/api/msis/route.ts
+@@ -0,0 +1,102 @@
++import { NextResponse } from "next/server";
++import { readFileSync } from "node:fs";
++import { join } from "node:path";
++import { createMsisState, msisinit, type MsisState } from "@/lib/iono/msis/msisInit";
++import {
++  buildMsisGrid,
++  msisPoint,
++  msisGridStats,
++  createGfnCache,
++  type GfnCache,
++} from "@/lib/iono/msis/msisGrid";
++
++/**
++ * W-4 F2b #9d: local NRLMSIS 2.1 thermosphere (Tn + mass density).
++ * The physics runs HERE (parameter blob on disk, zero egress): every
++ * value is computed live by the ported model, never mocked. Solar and
++ * geomagnetic inputs are REFERENCE quiet defaults unless the caller
++ * passes them explicitly (echoed back in `inputs`).
++ */
++
++export const dynamic = "force-dynamic";
++export const revalidate = 0;
++
++const TTL = 300_000;
++let cached: { key: string; data: unknown; ts: number } | null = null;
++
++let msisState: MsisState | null = null;
++let msisCache: GfnCache | null = null;
++
++function msis(): { state: MsisState; cache: GfnCache } {
++  if (!msisState || !msisCache) {
++    const bytes = readFileSync(join(process.cwd(), "src", "lib", "iono", "msis", "msis21.parm"));
++    const state = createMsisState();
++    msisinit(state, {
++      parmBytes: new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength),
++    });
++    msisState = state;
++    msisCache = createGfnCache();
++  }
++  return { state: msisState, cache: msisCache };
++}
++
++function num(v: string | null, fallback: number): number {
++  if (v == null || v === "") return fallback;
++  const n = Number(v);
++  return Number.isFinite(n) ? n : fallback;
++}
++
++const PROFILE_ALTS = [100, 200, 300, 400, 500, 600];
++
++export async function GET(req: Request) {
++  const q = new URL(req.url).searchParams;
++  const altKm = Math.min(600, Math.max(100, num(q.get("alt"), 300)));
++  const lat = Math.min(90, Math.max(-90, num(q.get("lat"), 0)));
++  const lon = num(q.get("lon"), 0);
++  const epochSec = num(q.get("epoch"), Math.floor(Date.now() / 1000));
++  const day = new Date(epochSec * 1000);
++  const doy =
++    Math.floor((Date.UTC(day.getUTCFullYear(), day.getUTCMonth(), day.getUTCDate()) -
++      Date.UTC(day.getUTCFullYear(), 0, 1)) / 86400000) + 1;
++  const utsec = day.getUTCHours() * 3600 + day.getUTCMinutes() * 60 + day.getUTCSeconds();
++  const f107a = num(q.get("f107a"), 150);
++  const f107 = num(q.get("f107"), 150);
++  const apDaily = num(q.get("ap"), 4);
++  const gw = Math.min(36, Math.max(4, Math.round(num(q.get("gw"), 24))));
++  const gh = Math.min(18, Math.max(3, Math.round(num(q.get("gh"), 12))));
++  const referenceDefaults = q.get("f107a") == null && q.get("f107") == null && q.get("ap") == null;
++
++  const key = [altKm, lat, lon, doy, utsec, f107a, f107, apDaily, gw, gh].join("|");
++  if (cached && cached.key === key && Date.now() - cached.ts < TTL) {
++    return NextResponse.json(cached.data, { headers: { "Cache-Control": "no-store", "X-Cache": "hit" } });
++  }
++
++  const { state, cache } = msis();
++  const ap = [apDaily, 0, 0, 0, 0, 0, 0];
++  const point = msisPoint(state, cache, {
++    w: 1, h: 1, altKm, doy, utsec, lat, lon, f107a, f107, ap,
++  });
++  const profile = PROFILE_ALTS.map((a) => {
++    const p = msisPoint(state, cache, {
++      w: 1, h: 1, altKm: a, doy, utsec, lat, lon, f107a, f107, ap,
++    });
++    return { altKm: a, tn: p.tn, rho: p.rho };
++  });
++  const grid = buildMsisGrid(state, cache, {
++    w: gw, h: gh, altKm, doy, utsec, f107a, f107, ap,
++  });
++  const stats = msisGridStats(grid);
++  const payload = {
++    point: { altKm, lat, lon, tn: point.tn, rho: point.rho },
++    profile,
++    grid: {
++      w: gw, h: gh, altKm,
++      tnMin: stats.tnMin, tnMax: stats.tnMax, tnMean: stats.tnMean,
++      rhoMin: stats.rhoMin, rhoMax: stats.rhoMax, rhoMean: stats.rhoMean,
++    },
++    inputs: { doy, utsec, epochSec, f107a, f107, apDaily, referenceDefaults },
++    source: "NRLMSIS 2.1 port (local model, non-commercial research)",
++  };
++  cached = { key, data: payload, ts: Date.now() };
++  return NextResponse.json(payload, { headers: { "Cache-Control": "no-store", "X-Cache": "miss" } });
++}
+diff --git b/src/components/ionosphere/hud/MsisPanel.tsx b/src/components/ionosphere/hud/MsisPanel.tsx
+new file mode 100644
+index 0000000..749c7e3
+--- /dev/null
++++ b/src/components/ionosphere/hud/MsisPanel.tsx
+@@ -0,0 +1,51 @@
++"use client";
++
++import { Thermometer } from "lucide-react";
++import { MsisData } from "../types";
++import { PanelBox, SourceDot } from "./SpaceWeatherPanel";
++
++/** W-4 F2b #9d: thermosphere panel (EN for all new UI).
++ * Tn + mass density computed LIVE by the local NRLMSIS 2.1 port
++ * (no mock, no upstream): profile 100-600 km plus grid means at the
++ * requested altitude. Solar/geomagnetic inputs are reference quiet
++ * defaults unless overridden (echoed by the route). */
++export default function MsisPanel({ msis }: { msis: MsisData | null }) {
++  if (!msis || !msis.point || !isFinite(msis.point.tn) || !isFinite(msis.point.rho)) {
++    return (
++      <PanelBox title="Thermosphere">
++        <div className="text-xs text-slate-500 py-6 text-center animate-pulse">
++          {msis ? "Model warming up (honest, never fictitious)." : "Starting local NRLMSIS model…"}
++        </div>
++      </PanelBox>
++    );
++  }
++  const p = msis.point;
++  return (
++    <PanelBox title="Thermosphere" badge={<SourceDot source={msis.source} />}>
++      <div className="flex items-center justify-between">
++        <span className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-slate-400">
++          <Thermometer size={12} /> Tn @ {p.altKm} km
++        </span>
++        <span className="text-xs font-mono text-slate-200">{p.tn.toFixed(1)} K</span>
++      </div>
++      <div className="flex items-center justify-between mt-1">
++        <span className="text-[11px] uppercase tracking-wider text-slate-400">Rho @ {p.altKm} km</span>
++        <span className="text-xs font-mono text-slate-200">{p.rho.toExponential(2)} g/cm³</span>
++      </div>
++      <div className="grid grid-cols-3 gap-x-2 gap-y-0.5 mt-1.5 text-[10px] font-mono text-slate-400">
++        {msis.profile.map((r) => (
++          <span key={r.altKm}>
++            {r.altKm}k {r.tn.toFixed(0)}K
++          </span>
++        ))}
++      </div>
++      <div className="text-[10px] text-slate-500 font-mono mt-1">
++        grid mean Tn {msis.grid.tnMean.toFixed(1)} K · rho {msis.grid.rhoMean.toExponential(1)}
++      </div>
++      <div className="text-[10px] text-slate-500 mt-0.5">
++        F10.7 {msis.inputs.f107a}/{msis.inputs.f107} · Ap {msis.inputs.apDaily}
++        {msis.inputs.referenceDefaults ? " (reference quiet)" : " (requested)"}
++      </div>
++    </PanelBox>
++  );
++}
