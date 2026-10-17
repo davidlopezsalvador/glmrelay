@@ -1,0 +1,35 @@
+  http://127.0.0.1:3021/
+✓ Done
+✓ Done
+== localizar TimeBar (contenedor del span del reloj) ==
+"{\"encontrado\":true,\"boton\":\"LIVE\",\"slider_disabled\":true,\"slider_value\":\"10080\",\"max\":\"10080\",\"min\":\"0\"}"
+== click en LIVE -> REPLAY ==
+"clicked: LIVE"
+✓ Done
+"{\"barra\":\"22:30 UTC\",\"boton\":\"REPLAY\",\"slider_disabled\":false,\"slider_value\":\"10080\"}"
+== slider a 120 (= -2 h) con setter nativo ==
+"slider -> 120"
+✓ Done
+== lectura -2h: barra debe ser HUD-2h, boton REPLAY ==
+"{\"barra\":\"20:30 UTC\",\"boton\":\"REPLAY\",\"hud\":\"22:30:59\",\"pared\":\"22:31:02\",\"slider_value\":\"9960\",\"slider_disabled\":false}"
+✓ Screenshot saved to /home/z/my-project/scripts/w328/glm328b_replay2h.png
+== aritmetica del offset (independiente) ==
+"{\"barra\":\"20:31 UTC\",\"esperado_barra\":\"20:31\",\"diff_min\":0}"
+== reset: click en REPLAY -> LIVE ==
+"clicked: REPLAY"
+✓ Done
+"{\"barra\":\"22:31 UTC\",\"boton\":\"LIVE\",\"pared\":\"22:31:34\",\"slider_disabled\":true}"
+✓ Screenshot saved to /home/z/my-project/scripts/w328/glm328b_live_reset.png
+== guard residual: replayMinutes>0 en LIVE NO descuadra la barra (fix 327 vs PRE) ==
+"a replay"
+✓ Done
+"slider -> 180 (-3h)"
+✓ Done
+"barra a -3h: 19:31 UTC"
+"reset a LIVE"
+✓ Done
+"{\"barra_tras_reset\":\"22:32 UTC\",\"hud\":\"22:32:07\",\"pared\":\"22:32:10\"}"
+== errores de consola ==
+0
+0 lineas error/warn
+BROWSER_SMOKE_328B_OK

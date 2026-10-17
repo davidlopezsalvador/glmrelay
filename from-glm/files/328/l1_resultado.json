@@ -1,0 +1,232 @@
+{
+ "checks": [
+  {
+   "name": "pre TimeBar.tsx blob == 98879f95… (cadena GLM 98879f9)",
+   "ok": true,
+   "detail": "98879f95d62a05ece0eb95778c1b95e8821919fa"
+  },
+  {
+   "name": "prefijo-7 == cadena certificada GLM (216->250, 'TimeBar 98879f9 SIN CAMBIO')",
+   "ok": true,
+   "detail": "98879f9"
+  },
+  {
+   "name": "3 pines post-323 del veredicto 324 (b1e4f78f/67cf0e2d/f8c44003)",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "tamaño exacto 1968 B",
+   "ok": true,
+   "detail": "1968"
+  },
+  {
+   "name": "sha256 cdf46975…",
+   "ok": true,
+   "detail": "cdf469757f1a516c…"
+  },
+  {
+   "name": "LF puro (0 CRLF)",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "sin BOM",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "mbox From-line",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "mbox Date",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "mbox Subject w327-timebar-clock (fix SSR)",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "index line 98879f9..6b62384",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "diffstat interno: 1 file changed, 12 insertions(+), 3 deletions(-)",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "git apply --numstat == 1 fichero +12/-3",
+   "ok": true,
+   "detail": "12\t3\tsrc/components/ionosphere/hud/TimeBar.tsx"
+  },
+  {
+   "name": "evidencia web327_smoke_live.png 612540 B sha 55b31802d44ad9df…",
+   "ok": true,
+   "detail": "612540 B 55b31802d44ad9df…"
+  },
+  {
+   "name": "evidencia web327_smoke_replay2h.png 599775 B sha 8961705283e63e7a…",
+   "ok": true,
+   "detail": "599775 B 8961705283e63e7a…"
+  },
+  {
+   "name": "evidencia 326 dep325_sat_headers_1.txt 424 B sha 71c1bfa6…",
+   "ok": true,
+   "detail": "424 B 71c1bfa66cd50179…"
+  },
+  {
+   "name": "evidencia 326 dep325_sat_headers_2.txt 424 B sha 1f1ab6be…",
+   "ok": true,
+   "detail": "424 B 1f1ab6beee7d0f3c…"
+  },
+  {
+   "name": "evidencia 326 dep325_smoke_on.png 568785 B sha 61bb2705…",
+   "ok": true,
+   "detail": "568785 B 61bb27050b26e1a9…"
+  },
+  {
+   "name": "evidencia 326 dep325_smoke_off.png 612037 B sha 88636466…",
+   "ok": true,
+   "detail": "612037 B 886364663e586743…"
+  },
+  {
+   "name": "evidencia 326 dep325_sourceLabel.png 50615 B sha ad32a4de…",
+   "ok": true,
+   "detail": "50615 B ad32a4de9647755f…"
+  },
+  {
+   "name": "inventario PRE capturado (ficheros)",
+   "ok": true,
+   "detail": "248 ficheros"
+  },
+  {
+   "name": "12 pines post-321 intactos",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "10 congelados intactos (MSIS/sgp4/capa-317)",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "sonda /api/egress AUSENTE",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "apply --check OK",
+   "ok": true,
+   "detail": "warning: src/components/ionosphere/hud/TimeBar.tsx has type 100755, expected 100644"
+  },
+  {
+   "name": "git apply OK",
+   "ok": true,
+   "detail": "warning: src/components/ionosphere/hud/TimeBar.tsx has type 100755, expected 100644"
+  },
+  {
+   "name": "post-blob TimeBar.tsx == 6b623845…",
+   "ok": true,
+   "detail": "6b6238458972269aefde08572194dcafe4e069a1"
+  },
+  {
+   "name": "los otros 25 pines intactos tras apply",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "perimetro REAL por inventario: SOLO TimeBar.tsx cambia",
+   "ok": true,
+   "detail": "['src/components/ionosphere/hud/TimeBar.tsx']"
+  },
+  {
+   "name": "apply -R OK",
+   "ok": true,
+   "detail": "warning: src/components/ionosphere/hud/TimeBar.tsx has type 100755, expected 100644"
+  },
+  {
+   "name": "reverse -> inventario == PRE byte-exacto",
+   "ok": true,
+   "detail": "248 vs 248"
+  },
+  {
+   "name": "reverse -> TimeBar == 98879f95… (de nuevo)",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "re-apply OK",
+   "ok": true,
+   "detail": "warning: src/components/ionosphere/hud/TimeBar.tsx has type 100755, expected 100644"
+  },
+  {
+   "name": "re-apply -> inventario == POST exacto",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "ciclo apply/reverse/re-apply IDEMPOTENTE",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "lineas POST = PRE + 9 (117+12-3)",
+   "ok": true,
+   "detail": "PRE 117 -> POST 126"
+  },
+  {
+   "name": "placeholder \"--:--:--\" presente",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "useEffect + interval 1 s con cleanup",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "guard de epoca espejo de escena: timeMode === \"replay\" ? replayMinutes : 0",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "suppressHydrationWarning conservado (patron 197/201)",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "sin cambios de props/API (Props: settings/onChange/maxReplayMin)",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "Date.now() fuera del render puro (todas las ocurrencias dentro del useEffect)",
+   "ok": true,
+   "detail": "2 ocurrencias, 2 en el efecto"
+  },
+  {
+   "name": "el camino de render NO llama Date.now() (usa nowMs)",
+   "ok": true,
+   "detail": ""
+  }
+ ],
+ "fails": [],
+ "erratas": [],
+ "resumen": {
+  "pasadas": 43,
+  "fallidas": 0,
+  "pre_blob_timebar": "98879f95d62a05ece0eb95778c1b95e8821919fa",
+  "post_blob_timebar": "6b6238458972269aefde08572194dcafe4e069a1",
+  "perimetro": [
+   "src/components/ionosphere/hud/TimeBar.tsx"
+  ],
+  "inventario_pre": 248,
+  "inventario_post": 248
+ }
+}

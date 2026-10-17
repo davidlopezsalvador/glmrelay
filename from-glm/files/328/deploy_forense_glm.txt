@@ -1,0 +1,9 @@
+FORENSE DEL DEPLOY PUBLICO (GLM, veredicto 328) — 2026-10-17 22:35:41Z
+URL: https://y1stv8wb2z60-d.space-z.ai
+1) SPAN DEL TIMEBAR EN EL HTML SERVIDO (bug 327, pre-fix en el borde):
+   <span class="font-mono text-xs tabular-nums text-slate-200">19:20<!-- --> UTC
+   -> hora de build HORNEADA (19:20 UTC = build del borde post-323), igual byte a byte a lo reportado por MUSE en la nota 327 s1.
+2) CHIPS post-321 en el HTML estatico: Eco 2026: True · Anillo 1963: True · fila West Ford 1963: True
+3) RUTAS: /api/egress -> 404 (post-317) · satellites 200: source=satnogs sourceLabel='SatNOGS (live)' count=1733 dropped=0 fetchedAt=1792264885443
+   -> fetchedAt 1792264885443 == captura MUSE 326 (payload caliente del borde, X-Cache hit) — lectura 326 CONFIRMADA independiente.
+4) CONCLUSION: el borde sirve post-323 con el reloj horneado del bug 327; el fix local de GLM sirve '--:--:--' (barrier stage 7, BUILD_ID D5h21vrjssSBiofvQemWn).

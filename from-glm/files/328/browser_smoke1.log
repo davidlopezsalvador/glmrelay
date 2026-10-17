@@ -1,0 +1,31 @@
+== readiness :3021 ==
+readiness: 200
+== HTML servido (curl): placeholder horneado, cero horas ==
+<span class="font-mono text-xs tabular-nums text-slate-200">--:--:--
+== abrir pagina ==
+  http://127.0.0.1:3021/
+✓ Done
+-- esperar carga + catalogo + init (22 s) --
+✓ Done
+== (1) barra VIVA vs reloj de pared vs HUD ==
+"{\"barra\":\"22:27 UTC\",\"hud\":\"22:27:47\",\"relojPared\":\"22:27:49\",\"buildIdSpanNoAplica\":true}"
+✓ Screenshot saved to /home/z/my-project/scripts/w328/glm328_live.png
+== refs: boton LIVE/REPLAY y slider ==
+- heading "IONOSPHERE LIVE 3DWEB EXPLORER" [level=1, ref=e3]
+- slider [ref=e36]: 2.200000047683716
+- slider [ref=e37]: 0.8500000238418579
+- slider [ref=e38]: 11
+- slider [ref=e41]: 1
+== (2) slider a -2h (input real, setter nativo + evento) ==
+"slider puesto a 120 (min hacia atras segun onChange)"
+✓ Done
+"{\"barra\":\"22:28 UTC\",\"boton\":\"LIVE\",\"hud\":\"22:28:11\",\"relojPared\":\"22:28:13\",\"slider_value\":\"5\",\"slider_disabled\":false}"
+✓ Screenshot saved to /home/z/my-project/scripts/w328/glm328_replay2h.png
+== (3) reset a LIVE (boton RotateCcw / toggle) ==
+ref del toggle: @
+✗ Element not found: @. Verify the selector, role, or name is correct and the element exists in the DOM.
+✓ Done
+"{\"barra\":\"22:28 UTC\",\"boton\":\"LIVE\",\"relojPared\":\"22:28:35\",\"slider_disabled\":false}"
+✓ Screenshot saved to /home/z/my-project/scripts/w328/glm328_live_reset.png
+== (4) errores de consola ==
+BROWSER_SMOKE_328_OK
