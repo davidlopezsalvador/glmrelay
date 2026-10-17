@@ -1,0 +1,145 @@
+From t <t@t> Mon Oct 12 00:00:00 2026 +0200
+From: t <t@t>
+Date: Sat, 17 Oct 2026 18:15:00 +0200
+Subject: [PATCH] w323-ring-plane (P1-322)
+
+---
+ src/lib/iono/satellites/ring1963.ts | 34   ++++++++++++++++++++++
+ src/lib/iono/satellites/ring1963.test.ts | 26   +++++++++++++++++++++++
+ src/lib/iono/satellites/README.md | 10   +++++++
+ 3 files changed, 52 insertions(+), 18 deletions(-)
+
+diff --git a/src/lib/iono/satellites/ring1963.ts b/src/lib/iono/satellites/ring1963.ts
+index fe21f2d..b1e4f78 100644
+--- a/src/lib/iono/satellites/ring1963.ts
++++ b/src/lib/iono/satellites/ring1963.ts
+@@ -1,19 +1,28 @@
+ /**
+- * W-4 F2b #10 (ruling 320): anillo West Ford 1963 DECLARADO.
++ * W-4 F2b #10 (ruling 320; micro-drop 323 §6.1 del veredicto 322): anillo
++ * West Ford 1963 DECLARADO.
+  *
+  * Reconstruccion ilustrativa (no datos vivos, no propagacion): banda de
+- * particulas en el plano orbital historico — 3.600x3.680 km de altitud,
+- * inclinacion 87.4 grados (SAGE 2025; elipticidad leve declarada), ~4,8e8
+- * dipolos de 1,78 cm (mayo 1963). Se dibujan RING_PARTICLES muestras
+- * deterministas (LCG con semilla fija): la nube es reproducible byte a
+- * byte entre builds. Estatica (sin rotacion simulada): es una ilustracion
+- * del plano, no una orbita fingida. Etiqueta obligatoria RING_LABEL.
++ * particulas en UN plano orbital — nodo fijo declarado (valor ilustrativo;
++ * no hay dato historico de RAAN) e inclinacion 87.4 grados (SAGE 2025;
++ * elipticidad leve declarada), con jitter ±0.6 grados en ambos (espesor
++ * declarado de la banda) y altitud 3.600x3.680 km — ~4,8e8 dipolos de
++ * 1,78 cm (mayo 1963) dispersados a lo largo de la orbita. Se dibujan
++ * RING_PARTICLES muestras deterministas (LCG con semilla fija): la nube es
++ * reproducible byte a byte entre builds. Estatica (sin rotacion simulada):
++ * es una ilustracion del plano, no una orbita fingida. Etiqueta obligatoria
++ * RING_LABEL.
+  */
+ import { R_EARTH_KM } from "../geo";
+ 
+ export const RING_ALT_KM_MIN = 3600;
+ export const RING_ALT_KM_MAX = 3680;
+ export const RING_INC_DEG = 87.4;
++/** Nodo fijo declarado de la banda (grados): la banda vive EN ESTE plano
++ *  (± jitter de espesor). Valor ilustrativo: no hay dato historico de RAAN. */
++export const RING_NODE_DEG = 0;
++/** Espesor declarado: jitter ± (grados) en nodo e inclinacion. */
++export const RING_JITTER_DEG = 0.6;
+ /** Dipolos reales del cinturon (declarado; nunca se renderizan 1:1). */
+ export const RING_DIPOLES = 4.8e8;
+ /** Dipolo individual: dimension fisica declarada (m). */
+@@ -37,17 +46,18 @@ function mulberry32(seed: number): () => number {
+ }
+ 
+ /**
+- * Posiciones de escena (unidades R_E) de la banda: para cada muestra, un
+- * plano orbital con nodo aleatorio, inclinacion 87.4 +/- 0.6 grados
+- * (espesor declarado) y radio 1 + alt/6371 con alt en [3600, 3680] km.
++ * Posiciones de escena (unidades R_E) de la banda: para cada muestra, el
++ * MISMO plano orbital (nodo fijo RING_NODE_DEG) con jitter ±RING_JITTER_DEG
++ * en nodo e inclinacion (espesor declarado), inclinacion RING_INC_DEG y
++ * radio 1 + alt/6371 con alt en [3600, 3680] km.
+  */
+ export function buildRing1963(count: number = RING_PARTICLES): Float32Array {
+   const rnd = mulberry32(19630509);
+   const out = new Float32Array(count * 3);
+   const deg = Math.PI / 180;
+   for (let i = 0; i < count; i++) {
+-    const node = rnd() * Math.PI * 2;
+-    const inc = (RING_INC_DEG + (rnd() - 0.5) * 1.2) * deg;
++    const node = (RING_NODE_DEG + (rnd() - 0.5) * 2 * RING_JITTER_DEG) * deg;
++    const inc = (RING_INC_DEG + (rnd() - 0.5) * 2 * RING_JITTER_DEG) * deg;
+     const altKm = RING_ALT_KM_MIN + rnd() * (RING_ALT_KM_MAX - RING_ALT_KM_MIN);
+     const r = 1 + altKm / R_EARTH_KM;
+     const u = rnd() * Math.PI * 2;
+diff --git a/src/lib/iono/satellites/ring1963.test.ts b/src/lib/iono/satellites/ring1963.test.ts
+index aa779c0..67cf0e2 100644
+--- a/src/lib/iono/satellites/ring1963.test.ts
++++ b/src/lib/iono/satellites/ring1963.test.ts
+@@ -1,7 +1,8 @@
+ // SPDX-License-Identifier: GPL-3.0-or-later
+-// ionosphere-live-3d — TU del anillo West Ford 1963 (drop 321, F2b #10,
+-// ruling 320). La banda es determinista, vive en 3600..3680 km y su plano
+-// esta a 87.4 grados (banda casi polar, spawneada en geo.ts).
++// ionosphere-live-3d — TU del anillo West Ford 1963 (drop 321 + micro-drop
++// 323, F2b #10, ruling 320 / verdict 322 §6.1). La banda es determinista,
++// vive en 3600..3680 km y yace en UN plano casi polar a 87.4 grados (nodo
++// fijo declarado + jitter de espesor en nodo e inclinacion).
+ 
+ import { describe, expect, it } from "vitest";
+ import { R_EARTH_KM } from "../geo";
+@@ -10,6 +11,7 @@ import {
+   RING_ALT_KM_MIN,
+   RING_INC_DEG,
+   RING_LABEL,
++  RING_NODE_DEG,
+   RING_PARTICLES,
+   buildRing1963,
+ } from "./ring1963";
+@@ -39,6 +41,24 @@ describe("buildRing1963", () => {
+     expect(maxAbsLat).toBeGreaterThan(85);
+   });
+ 
++  it("plano unico: todas las particulas yacen en el plano declarado (jitter <= 1.5 grados)", () => {
++    const pos = buildRing1963();
++    const deg = Math.PI / 180;
++    const inc = RING_INC_DEG * deg;
++    const node = RING_NODE_DEG * deg;
++    const nx = Math.sin(inc) * Math.cos(node);
++    const ny = Math.cos(inc);
++    const nz = Math.sin(inc) * Math.sin(node);
++    const bound = Math.sin(1.5 * deg);
++    for (let i = 0; i < RING_PARTICLES; i++) {
++      const x = pos[i * 3];
++      const y = pos[i * 3 + 1];
++      const z = pos[i * 3 + 2];
++      const r = Math.hypot(x, y, z);
++      expect(Math.abs((x * nx + y * ny + z * nz) / r)).toBeLessThanOrEqual(bound);
++    }
++  });
++
+   it("determinista: dos builds son identicos byte a byte", () => {
+     expect(Array.from(buildRing1963(256))).toEqual(Array.from(buildRing1963(256)));
+   });
+diff --git a/src/lib/iono/satellites/README.md b/src/lib/iono/satellites/README.md
+index 027472a..f8c4400 100644
+--- a/src/lib/iono/satellites/README.md
++++ b/src/lib/iono/satellites/README.md
+@@ -44,9 +44,13 @@ Order: **celestrak (live) -> satnogs (live) -> snapshot (dated) -> unavailable**
+   provenance per record, Space-Track.org); one request per TTL.
+ - Timeouts: CelesTrak 25 s (bulk fetch measured 24.1 s from sandbox),
+   SatNOGS 15 s (measured 0.68 s). Aborted fetches count as source failure.
+-  On the published platform (CelesTrak red) the **first cold miss costs
+-  ~26 s, once per 6 h TTL** (verdict 318 obs-1): the timeout is calibrated
+-  for the green case and the wait is paid once per TTL, not per request.
++  Red-CelesTrak environments pay the **first cold miss once per 6 h TTL**:
++  **~10.5 s where the egress connect is blackholed** (undici's 10 s connect
++  timeout fires before the route's 25 s abort; measured in the GLM sandbox —
++  same class as the deploy — verdict 322 §6.3) and **~26 s where the
++  connection opens slowly** (bulk 24.1 s from sandbox; verdict 318 obs-1).
++  The timeout is calibrated for the green case; the wait is paid once per
++  TTL, not per request.
+ 
+ ## Honesty rules (adjudicated 312 Q3-4 / 316 §4)
+ 
