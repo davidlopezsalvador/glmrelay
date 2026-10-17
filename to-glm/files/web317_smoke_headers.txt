@@ -1,0 +1,22 @@
+DROP 317 - smoke local de /api/satellites (NO vinculante) - MUSE 2026-10-17
+(la adjudicacion va con el veredicto 318)
+
+[S1] next start :3011, primer arranque (caches frias)
+  GET http://127.0.0.1:3011/api/satellites
+  HTTP/1.1 200 OK
+  cache-control: no-store
+  x-cache: miss
+  SMOKE HTTP=200 t=1.827084s bytes=346059
+  source=satnogs  label="SatNOGS (live)"  count=1733  dropped=0
+  attribution="Orbital data: SatNOGS DB (satnogs.org); TLE provenance per record (Space-Track.org)."
+  body: smoke_body.json bytes=346059 sha256=af0c38952b6cfbd534869752663db3dc864db566a9cb388774bff0abca7a4480
+  nota: CelesTrak respondio 403 en 4.4 s (ver S3) -> fall-through a SatNOGS vivo, etiquetado.
+
+[S2] next start :3012 (reinicio, caches frias), dos peticiones
+  REQ1 HTTP=200 t=6.794436s  x-cache: miss   (CelesTrak 403 ~4.4 s + SatNOGS ~0.7 s + serializacion)
+  REQ2 HTTP=200 t=0.014686s  x-cache: hit
+
+[S3] CelesTrak recheck directo (curl, misma maquina, ~11:12Z)
+  CT-ACTIVE-RECHECK HTTP=403 t=4.400046s bytes=141   (gp.php?GROUP=active&FORMAT=TLE)
+  CT-SINGLE        HTTP=200 t=1.279697s              (gp.php?CATNR=25544&FORMAT=TLE)
+  => etiqueta de rate-limit real (grupo <= 1/2h); por eso TTL 6 h + ventana negativa 30 min.
