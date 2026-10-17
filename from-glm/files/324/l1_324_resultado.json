@@ -1,0 +1,229 @@
+{
+ "checks": [
+  {
+   "name": "0: scheduler.ts PRESENTE (marcador post-321)",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "0: 3 ficheros objetivo en su blob post-321 (pre del diff): 3/3 pines exactos",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "name": "0: los otros 12 de 321 en su blob post-321: 12/12 pines exactos",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "name": "0: inventario pre capturado",
+   "ok": true,
+   "detail": "248 ficheros"
+  },
+  {
+   "name": "A: 7.026 B",
+   "ok": true,
+   "detail": "7026"
+  },
+  {
+   "name": "A: sha256 EXACTO 442a00bc…",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "A: LF puro sin BOM",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "A: mbox From + Date + Subject w323-ring-plane (P1-322)",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "A: numstat rc=0 con salida",
+   "ok": true,
+   "detail": "rc=0 err= n=3"
+  },
+  {
+   "name": "A: 3 ficheros",
+   "ok": true,
+   "detail": "['src/lib/iono/satellites/ring1963.ts', 'src/lib/iono/satellites/ring1963.test.ts', 'src/lib/iono/satellites/README.md']"
+  },
+  {
+   "name": "A: 52+/18- (== §0/§3 de la nota y diffstat del diff)",
+   "ok": true,
+   "detail": "+52/-18"
+  },
+  {
+   "name": "A: paths == los 3 declarados EXACTOS",
+   "ok": true,
+   "detail": "extra=set() faltan=set()"
+  },
+  {
+   "name": "A: numstat POR FICHERO == conteo manual GLM de los hunks (3/3)",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "name": "A: diffstat interno del diff (34/26/10 · 52+/18-) == suma real por fichero",
+   "ok": true,
+   "detail": "sumas reales {'ring1963.ts': 34, 'ring1963.test.ts': 26, 'README.md': 10}"
+  },
+  {
+   "name": "B: congelados MSIS/sgp4/catálogo/ruta/TLE (capa 317 intacta): 10/10 pines exactos",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "name": "C: --check 0",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "C: apply rc=0 sin skips",
+   "ok": true,
+   "detail": "rc=0 skipped=False "
+  },
+  {
+   "name": "C: post-blobs 3/3 == nota §1: 3/3 pines exactos",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "name": "C: los otros 12 de 321 INTACTOS tras el apply: 12/12 pines exactos",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "name": "D: reverse --check 0",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "D.reverse: apply rc=0 sin skips",
+   "ok": true,
+   "detail": "rc=0 skipped=False "
+  },
+  {
+   "name": "D: pre-blobs restaurados: 3/3 pines exactos",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "name": "D: inventario pre recuperado BYTE-EXACTO",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "name": "E.re-apply: apply rc=0 sin skips",
+   "ok": true,
+   "detail": "rc=0 skipped=False "
+  },
+  {
+   "name": "E: re-hash post-blobs 3/3: 3/3 pines exactos",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "name": "E: PERÍMETRO REAL — 0 ficheros fuera de los 3 declarados",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "name": "E: 0 ficheros NUEVOS",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "name": "E: sin restos .orig/.rej",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "name": "E: congelados intactos post-323 (MSIS/sgp4/catálogo/ruta/TLE): 10/10 pines exactos",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "name": "E: sonda /api/egress NO reincorporada",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "F: ring1963.ts 76 -> 86 lineas (76-12+22)",
+   "ok": true,
+   "detail": "86"
+  },
+  {
+   "name": "F: ring1963.test.ts 51 -> 71 lineas (51-3+23)",
+   "ok": true,
+   "detail": "71"
+  },
+  {
+   "name": "F: constantes nuevas EXACTAS",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "F: terminador del generador EXACTO",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "F: resto del generador intacto (semilla + 4 draws en el MISMO orden)",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "F: RING_LABEL byte-intacto",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "F: cabecera honesta «UN plano orbital» + «no hay dato historico de RAAN»",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "F: node=0 NO degenera la base (|n x y| = sin(inc) ≈ 0.999)",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "F: 5 TU en ring1963.test.ts (4 pre + plano)",
+   "ok": true,
+   "detail": "5"
+  },
+  {
+   "name": "F: test de plano EXACTO (cota sin 1.5 grados, 4096 particulas)",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "F: test |lat| pre conservado (88.1 = 87.4+0.7)",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "F: test determinismo + etiqueta conservados",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "F: README §6.3 — las DOS clases de cold miss citadas",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "F: README — fuente 318 obs-1 citada (bulk 24.1 s)",
+   "ok": true,
+   "detail": ""
+  }
+ ],
+ "fails": [],
+ "erratas": [
+  "tabla §1 de la nota: numstat por fichero no coincide con git apply --numstat (real {'ring1963.ts': (22, 12), 'ring1963.test.ts': (23, 3), 'README.md': (7, 3)} vs nota {'ring1963.ts': (27, 17), 'ring1963.test.ts': (19, 5), 'README.md': (6, 5)}); los TOTALES 52+/18- de §0/§3/commit y el diffstat interno del diff SÍ son exactos (34/26/10 = inserciones+deleciones por fichero) — errata de transcripción no bloqueante"
+ ],
+ "summary": "44/44 PASS · fails: NINGUNO · erratas: 1"
+}

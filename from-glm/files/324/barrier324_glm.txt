@@ -1,0 +1,69 @@
+===== STAGE 0: borrar .next (pitfall declarado por MUSE: vitest globa standalone) =====
+clean EXIT: 0
+===== STAGE 1: bun install (idempotente) =====
+bun install v1.3.14 (0d9b296a)
+
+Checked 878 installs across 1035 packages (no changes) [25.00ms]
+install EXIT: 0
+===== STAGE 2: prisma generate =====
+Tip: Interested in query caching in just a few lines of code? Try Accelerate today! https://pris.ly/tip-3-accelerate
+
+prisma EXIT: 0
+===== STAGE 3: tsc --noEmit =====
+tsc EXIT: 0
+===== STAGE 4: vitest run =====
+ ✓ src/lib/iono/belts.test.ts (5 tests) 5ms
+ ✓ src/lib/iono/replay.test.ts (13 tests) 5ms
+ ✓ src/lib/iono/satellites/panel.test.ts (5 tests) 4ms
+ ✓ src/lib/iono/wiring.test.ts (6 tests) 5ms
+ ✓ src/lib/iono/export.test.ts (7 tests) 5ms
+ ✓ src/lib/iono/tour.test.ts (6 tests) 4ms
+ ✓ src/lib/iono/volumeShadow.test.ts (6 tests) 4ms
+
+ Test Files  43 passed (43)
+      Tests  390 passed (390)
+   Start at  17:02:19
+   Duration  6.28s (tests 63%, import 22%, worker 8%, transform 7%)
+
+    Isolate  43 workers spawned · ~88ms startup each (spawn + environment, per file)
+             at least ~3.68s faster with isolate: false — reuses workers across files instead of one per file
+
+vitest EXIT: 0
+===== STAGE 5: next build =====
+  Generating static pages using 1 worker (0/4) ...
+  Generating static pages using 1 worker (1/4) 
+  Generating static pages using 1 worker (2/4) 
+  Generating static pages using 1 worker (3/4) 
+✓ Generating static pages using 1 worker (4/4) in 708ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ƒ /api
+├ ƒ /api/ae
+├ ƒ /api/aurora
+├ ƒ /api/cme
+├ ƒ /api/dst
+├ ƒ /api/flares
+├ ƒ /api/ionosondes
+├ ƒ /api/lightning
+├ ƒ /api/msis
+├ ƒ /api/rbe
+├ ƒ /api/satellites
+├ ƒ /api/solar-image
+├ ƒ /api/space-weather
+├ ƒ /api/voyager
+└ ƒ /api/wspr
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+build EXIT: 0
+===== STAGE 6: tabla de rutas =====
+dynamic: []
+static: ['/', '/_global-error', '/_not-found', '/api', '/api/ae', '/api/aurora', '/api/cme', '/api/dst', '/api/flares', '/api/ionosondes', '/api/lightning', '/api/msis', '/api/rbe', '/api/satellites', '/api/solar-image', '/api/space-weather', '/api/voyager', '/api/wspr']
+satellites DENTRO: True
+egress FUERA: True
+msis DENTRO: True

@@ -1,0 +1,100 @@
+{
+ "checks": [
+  {
+   "name": "1: Python POST == volcado TS (max rel diff < 1e-6)",
+   "ok": true,
+   "detail": "max_rel=3.778e-08"
+  },
+  {
+   "name": "1: primeros 3 valores coinciden con el volcado",
+   "ok": true,
+   "detail": "py=-0.085413585 1.561178931 0.162915944 ts=-0.085413583 1.561178923 0.162915945"
+  },
+  {
+   "name": "2: n0 del test == derivación p0×p90 (< 1e-12)",
+   "ok": true,
+   "detail": "n0=(0.9989705697907147, 0.045362988129253684, 0.0) p0xp90=(0.9989705697907147, 0.045362988129253684, 0.0)"
+  },
+  {
+   "name": "3: VOLCADO REAL: max |dot(u,n0)| <= sin(1.5°)",
+   "ok": true,
+   "detail": "max=0.014347 = sin(0.8220°) vs cota sin(1.5°)=0.026177"
+  },
+  {
+   "name": "4: ángulo real máximo entre planos <= cota sqrt(di²+dn²·sin²i)",
+   "ok": true,
+   "detail": "max=0.8314° vs cota=0.8481° (margen 1.5/0.848=1.77x)"
+  },
+  {
+   "name": "4: desviación máx declarada ~0.85° FIEL",
+   "ok": true,
+   "detail": "max_ang=0.8314°"
+  },
+  {
+   "name": "4: máx |dot| del volcado <= sin(máx ángulo entre planos) (consistencia)",
+   "ok": true,
+   "detail": "max_dot=0.014347 vs sin(0.8314°)=0.014510"
+  },
+  {
+   "name": "5: |lat| máx < 88.1 (= 87.4+0.7) y > 85 (test pre conservado)",
+   "ok": true,
+   "detail": "max|lat|=87.9658°"
+  },
+  {
+   "name": "6: radios en [1+3600/6371, 1+3680/6371] (±1e-6)",
+   "ok": true,
+   "detail": "r in [1.565062181, 1.577616354]"
+  },
+  {
+   "name": "7: inc/r/u IDÉNTICOS pre vs post (solo cambia el mapeo del draw 1)",
+   "ok": true,
+   "detail": "inc=True r=True u=True nodos_coincidentes=0"
+  },
+  {
+   "name": "7: semilla y 4 draws/partícula (16.384 draws) en ambos",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "8: azimut de normales: pre cubre TODAS las celdas de 10° (cáscara)",
+   "ok": true,
+   "detail": "pre=36/36 celdas · span circular=359.2°"
+  },
+  {
+   "name": "8: azimut de normales post: span circular <= 1.3° (UN plano ± jitter)",
+   "ok": true,
+   "detail": "post: 2 celda(s) de 10° adyacentes al cruzar 0/360 · span=1.1996°"
+  },
+  {
+   "name": "8: CÁSCARA pre: max|dot| grande (partículas lejos del plano)",
+   "ok": true,
+   "detail": "max|dot|_pre=0.9999 (89.3° del plano)"
+  },
+  {
+   "name": "8: BANDA post: max|dot| <= sin(0.85°)",
+   "ok": true,
+   "detail": "max|dot|_post=0.014347"
+  },
+  {
+   "name": "8: fracción a >5° del plano: pre sustancial vs post CERO",
+   "ok": true,
+   "detail": "pre=0.844 · post=0.000"
+  }
+ ],
+ "fails": [],
+ "resumen": {
+  "max_dot_post": 0.014346935529438998,
+  "max_dot_post_deg": 0.8220470573769252,
+  "max_ang_planos_deg": 0.8313786154677545,
+  "cota_teorica_deg": 0.8480914996336626,
+  "margen_1.5/cota": 1.7686770833665149,
+  "max_lat": 87.9657597855868,
+  "max_dot_pre_cascara": 0.999925728860276,
+  "celdas_azimut_pre": 36,
+  "celdas_azimut_post": 2,
+  "span_azimut_post_deg": 1.1995735879987706,
+  "fraccion_mayor_5grados_pre": 0.844482421875,
+  "fraccion_mayor_5grados_post": 0.0
+ },
+ "summary": "16/16 PASS · fails: NINGUNO"
+}
