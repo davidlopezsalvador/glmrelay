@@ -1,0 +1,50 @@
+From t <t@t> Mon Oct 12 00:00:00 2026 +0200
+From: t <t@t>
+Date: Sun, 18 Oct 2026 00:20:00 +0200
+Subject: [PATCH] w327-timebar-clock (fix SSR)
+
+---
+ src/components/ionosphere/hud/TimeBar.tsx | 15   ++++++++++++
+ 1 file changed, 12 insertions(+), 3 deletions(-)
+
+diff --git a/src/components/ionosphere/hud/TimeBar.tsx b/src/components/ionosphere/hud/TimeBar.tsx
+index 98879f9..6b62384 100644
+--- a/src/components/ionosphere/hud/TimeBar.tsx
++++ b/src/components/ionosphere/hud/TimeBar.tsx
+@@ -1,6 +1,6 @@
+ "use client";
+ 
+-import { useState } from "react";
++import { useEffect, useState } from "react";
+ import { Clock, Play, Pause, RotateCcw, Repeat } from "lucide-react";
+ import { SceneSettings } from "../types";
+ 
+@@ -15,9 +15,18 @@ interface Props {
+ /** Barra de tiempo: LIVE vs REPLAY (historia GIRO 168 h, W-4 C1) */
+ export default function TimeBar({ settings, onChange, maxReplayMin }: Props) {
+   const [scrubbing, setScrubbing] = useState(false);
++  const [nowMs, setNowMs] = useState(0);
++
++  useEffect(() => {
++    setNowMs(Date.now());
++    const t = setInterval(() => setNowMs(Date.now()), 1000);
++    return () => clearInterval(t);
++  }, []);
++
+   const replay = settings.timeMode === "replay";
+   const minutesBack = maxReplayMin - settings.replayMinutes; // slider: 0 = presente
+-  const eff = new Date(Date.now() - settings.replayMinutes * 60_000);
++  const effMin = settings.timeMode === "replay" ? settings.replayMinutes : 0;
++  const eff = new Date(nowMs - effMin * 60_000);
+ 
+   return (
+     <div
+@@ -38,7 +47,7 @@ export default function TimeBar({ settings, onChange, maxReplayMin }: Props) {
+       <div className="flex items-center gap-1.5 text-slate-400">
+         <Clock size={13} />
+         <span className="font-mono text-xs tabular-nums text-slate-200" suppressHydrationWarning>
+-          {eff.toISOString().slice(11, 16)} UTC
++          {nowMs ? `${eff.toISOString().slice(11, 16)} UTC` : "--:--:--"}
+         </span>
+       </div>
+ 
