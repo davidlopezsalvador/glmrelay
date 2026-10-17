@@ -1,0 +1,6 @@
+[1-satnogs-solo] status=200 t=2261ms bytes=536452
+[2-celestrak] THROW t=10490ms ConnectTimeoutError {-}
+[3-satnogs-justo-despues] THROW t=257ms AggregateError {ETIMEDOUT:connect ETIMEDOUT 94.130.162.100:443 | ENETUNREACH:connect ENETUNREACH 2a01:4f8:13b:29db::1:443 - Loc}
+[4-satnogs-tras-5s] status=200 t=7950ms bytes=536452
+[5-satnogs-tras-20s-mas] THROW t=272ms AggregateError {ETIMEDOUT:connect ETIMEDOUT 94.130.162.100:443 | ENETUNREACH:connect ENETUNREACH 2a01:4f8:13b:29db::1:443 - Loc}
+PROBE2 OK

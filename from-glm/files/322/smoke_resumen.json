@@ -1,0 +1,31 @@
+{
+  "w322": "smoke GLM del arbol post-321 (drop de MUSE 1d2d71f) sobre build de la barrera",
+  "curl": {
+    "R1_miss": {
+      "t_ms": 10867,
+      "http": 200, "x_cache": "miss", "cache_control": "no-store",
+      "bytes": 3238933, "sha256": "680c5e4bd02715c0a80356afbe54ff707e88d2c5ed62805e1e97ec602e37a596",
+      "source": "snapshot", "sourceLabel": "snapshot 2026-10-17 (no live)",
+      "count": 15927, "dropped": 0, "records0": "CALSPHERE 1"
+    },
+    "R2_hit": { "t_ms": 59, "x_cache": "hit", "byte_identico_a_R1": true },
+    "msis_200": true, "egress_404": true
+  },
+  "cadena_ejecutada": "CelesTrak ConnectTimeoutError (undici connect 10 s, 10.533 s) -> SatNOGS fallo rapido (ver satnogs_intermitente.txt) -> snapshot fechado honesto",
+  "navegador_agent_browser_glm322": {
+    "fps_software_gl": 10,
+    "panel": "label snapshot EXACTO + count/dropped/fetchedAt + fila anillo permanente con texto EXACTO y params",
+    "legend": "etiqueta EXACTA; sitios: ambos-on=2, anillo-off=1, ambos-off=1",
+    "toggles": "Eco 2026 (e35) / Anillo 1963 (e36) funcionales; 0 errores de consola"
+  },
+  "vlm_muse_pngs": { "A_on": "nube+banda+etiqueta SI", "B_eco_off": "sin nube, banda+etiqueta SI", "C_off": "etiqueta NO" },
+  "par_controlado_pixeles": {
+    "metodo": "pixeles dorados (hue 25-58, sat>0.35, val>0.35) fuera del disco terrestre, misma camara ~3 s",
+    "anillo_on": 29911, "anillo_off": 27008, "delta": 2903, "delta_pct": 11
+  },
+  "geometria_anillo_medida": {
+    "distribucion_abs_lat_por_decada_pct": [10.5, 11.0, 10.6, 11.0, 11.6, 10.9, 12.1, 11.8, 10.7],
+    "celdas_lon30_lat15_ocupadas": "144/144 (100%)",
+    "lectura": "cascara esferica uniforme, NO banda en un plano (ver veredicto §6.1)"
+  }
+}
