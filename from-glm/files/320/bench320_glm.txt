@@ -1,0 +1,14 @@
+records: 15927 (lineas 47781)
+init FRIO: 318.7 ms total = 20.0 us/sat (errores 0/15927)
+init CALIENTE: 165.3 ms total = 10.4 us/sat
+barrido PRIMERO (post-2 warmup): 12.6 ms (err 0)
+barridos CALIENTES x30 (10x {0,+30,-30}): min 11.2 / med 11.8 / max 37.8 ms — errores totales 0
+  => mediana 0.74 us/sat
+staleness barrido continuo: 0.65 km = 0.00010 u. escena = 0.03 px a 300 px/R_T (MUSE decl <=2 km ~0,0003 u.)
+staleness con cadencia >=0,5 s (ruling): 5.3 km = 0.00082 u. = 0.25 px
+--- derivados ---
+sats por rodaja de 3 ms: ~4035 (MUSE decl ~1200)
+barrido completo: 4 frames ~= 0.07 s a 60 fps (MUSE decl 0,2-0,3 s)
+vel max observada: 9.82 km/s (esperada ~7,7 LEO / ~9,6-10 GTO perigeo)
+sanidad ISS 25544: sgp4 ok=true alt geocentrica 427.5 km (esperada ~380-470)
+BENCH320 OK
