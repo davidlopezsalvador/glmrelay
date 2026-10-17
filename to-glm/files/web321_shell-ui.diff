@@ -1,0 +1,1240 @@
+From t <t@t> Mon Oct 12 00:00:00 2026 +0200
+From: t <t@t>
+Date: Sat, 17 Oct 2026 16:40:00 +0200
+Subject: [PATCH] w321-shell-ui (P1-320)
+
+---
+ src/components/ionosphere/types.ts | 8    ++++++++
+ src/components/ionosphere/hud/LayersPanel.tsx | 15   ++++++++++++++
+ src/components/ionosphere/hud/Legend.tsx | 8    ++++++++
+ src/components/ionosphere/IonosphereScene.tsx | 117  ++++++++++++++++++++++++++++++
+ src/app/page.tsx | 40   ++++++++++++++++++++++++++++++
+ src/lib/iono/satellites/README.md | 7    +++++++
+ src/lib/iono/satellites/scheduler.ts | 76   ++++++++++++++++++++++++++++++
+ src/lib/iono/satellites/sky.ts | 136  ++++++++++++++++++++++++++++++
+ src/lib/iono/satellites/ring1963.ts | 76   ++++++++++++++++++++++++++++++
+ src/lib/iono/satellites/panel.ts | 55   ++++++++++++++++++++++++++++++
+ src/lib/iono/satellites/scheduler.test.ts | 93   ++++++++++++++++++++++++++++++
+ src/lib/iono/satellites/sky.test.ts | 105  ++++++++++++++++++++++++++++++
+ src/lib/iono/satellites/ring1963.test.ts | 51   ++++++++++++++++++++++++++++++
+ src/lib/iono/satellites/panel.test.ts | 56   ++++++++++++++++++++++++++++++
+ src/components/ionosphere/hud/SatellitePanel.tsx | 96   ++++++++++++++++++++++++++++++
+ 15 files changed, 938 insertions(+), 1 deletions(-)
+
+diff --git a/src/components/ionosphere/types.ts b/src/components/ionosphere/types.ts
+index a389a01..db95cbd 100644
+--- a/src/components/ionosphere/types.ts
++++ b/src/components/ionosphere/types.ts
+@@ -286,6 +286,12 @@ export interface SceneSettings {
+   showDst: boolean;
+   // W-4 F2a #19 Van Allen (ruling 266; default ON: subtle tori).
+   showBelts: boolean;
++  // W-4 F2b #10 eco orbital 2026 (ruling 320; default ON: catalogo vivo
++  // propagado con sgp4 en el cliente, con init troceada + barridos).
++  showSatellites: boolean;
++  // W-4 F2b #10 anillo West Ford 1963 (ruling 320; default ON: banda de
++  // particulas DECLARADA como reconstruccion, sin datos vivos).
++  showRing1963: boolean;
+   // W-4 E-tail o6: tamaño de punto (App.cpp:4293 SliderFloat 3-30).
+   // Adaptación declarada: slider web 3-15 (más allá satura el techo GL).
+   pointSize: number; // 3..15 UI, default 11
+@@ -331,6 +337,8 @@ export const DEFAULT_SETTINGS: SceneSettings = {
+   showAe: true,
+   showDst: true,
+   showBelts: true,
++  showSatellites: true,
++  showRing1963: true,
+ };
+ 
+ /** Avance de replay en minutos-atrás (espejo App.cpp:2139-2141).
+diff --git a/src/components/ionosphere/hud/LayersPanel.tsx b/src/components/ionosphere/hud/LayersPanel.tsx
+index 89ba4e2..6385b70 100644
+--- a/src/components/ionosphere/hud/LayersPanel.tsx
++++ b/src/components/ionosphere/hud/LayersPanel.tsx
+@@ -1,6 +1,6 @@
+ "use client";
+ 
+-import { Layers, Cloud, Sparkles, Radio, Orbit, Mountain, Eye, Disc3, Sun, Boxes, Circle, Rocket, Zap, Sunrise, CloudRainWind, Activity, Donut } from "lucide-react";
++import { Layers, Cloud, Sparkles, Radio, Orbit, Mountain, Eye, Disc3, Sun, Boxes, Circle, Rocket, Zap, Sunrise, CloudRainWind, Activity, Donut, Satellite, CircleDot } from "lucide-react";
+ import { SceneSettings, IonosondeData } from "../types";
+ import { dynamicPressure, shueR0, tailStretch } from "@/lib/iono/magnetosphere";
+ import { PanelBox, SourceDot } from "./SpaceWeatherPanel";
+@@ -167,6 +167,19 @@ export default function LayersPanel({ settings, onChange, ionosondes, fps, sw }:
+           checked={settings.showBelts}
+           onChange={(v) => onChange({ showBelts: v })}
+         />
++        {/* W-4 F2b #10 (ruling 320): eco 2026 vivo + anillo 1963 declarado. */}
++        <Toggle
++          icon={<Satellite size={12} />}
++          label="Eco 2026"
++          checked={settings.showSatellites}
++          onChange={(v) => onChange({ showSatellites: v })}
++        />
++        <Toggle
++          icon={<CircleDot size={12} />}
++          label="Anillo 1963"
++          checked={settings.showRing1963}
++          onChange={(v) => onChange({ showRing1963: v })}
++        />
+       </div>
+       {settings.showMagnetosphere && (
+         <div className="mt-1 text-[10px] font-mono text-slate-400">
+diff --git a/src/components/ionosphere/hud/Legend.tsx b/src/components/ionosphere/hud/Legend.tsx
+index 7a46a24..4566d77 100644
+--- a/src/components/ionosphere/hud/Legend.tsx
++++ b/src/components/ionosphere/hud/Legend.tsx
+@@ -9,12 +9,15 @@ export default function Legend({
+   cmap = "viridis",
+   label = "foF2 (MHz)",
+   timestamp,
++  extras,
+ }: {
+   min: number;
+   max: number;
+   cmap?: ColormapName;
+   label?: string;
+   timestamp: string;
++  /** W-4 F2b #10: avisos de capas declaradas (p.ej. anillo 1963). */
++  extras?: string[];
+ }) {
+   return (
+     <div
+@@ -37,6 +40,11 @@ export default function Legend({
+       <div className="text-[9px] text-slate-600 mt-1 leading-tight">
+         GIRO + fondo climatológico · shell a hmF2 real
+       </div>
++      {extras?.map((x) => (
++        <div key={x} className="text-[9px] text-amber-200/80 mt-0.5 leading-tight">
++          {x}
++        </div>
++      ))}
+     </div>
+   );
+ }
+diff --git a/src/components/ionosphere/IonosphereScene.tsx b/src/components/ionosphere/IonosphereScene.tsx
+index 4dd74d9..9485d4a 100644
+--- a/src/components/ionosphere/IonosphereScene.tsx
++++ b/src/components/ionosphere/IonosphereScene.tsx
+@@ -58,6 +58,10 @@ import {
+ } from "@/lib/iono/densityVolume";
+ import type { DensityVolume } from "@/lib/iono/densityVolume";
+ import { latLonToVec3, vec3ToLatLon } from "@/lib/iono/geo";
++import { createSatSky, type SatSky } from "@/lib/iono/satellites/sky";
++import { SWEEP_INIT_BUDGET_MS } from "@/lib/iono/satellites/scheduler";
++import { buildRing1963 } from "@/lib/iono/satellites/ring1963";
++import type { CatalogPayload } from "@/lib/iono/satellites/catalog";
+ import { tourAdvance, tourEval } from "@/lib/iono/tour";
+ 
+ import {
+@@ -115,6 +119,8 @@ interface Props {
+   rbe: RbeData | null; // W-4 F2a #19: eventos RBE (brillo externo)
+   aurora: AuroraData | null;
+   ionosondes: IonosondeData | null;
++  // W-4 F2b #10 (ruling 320): catalogo orbital vivo (eco 2026).
++  satellites: CatalogPayload | null;
+   settings: SceneSettings;
+   txCode: string | null;
+   rxCode: string | null;
+@@ -195,6 +201,16 @@ export default function IonosphereScene(props: Props) {
+       protons: THREE.Points;
+       electrons: THREE.Points;
+     };
++    // W-4 F2b #10 (ruling 320): eco orbital 2026 (rebuild por payload;
++    // init troceada + barridos agendados viven en el tick).
++    satellites?: {
++      points: THREE.Points;
++      posAttr: THREE.BufferAttribute;
++      sky: SatSky;
++      frames: number;
++    };
++    // W-4 F2b #10 (ruling 320): banda West Ford 1963 (estatica declarada).
++    ring1963?: THREE.Points;
+     raycaster: THREE.Raycaster;
+     gridState: {
+       fo: Float32Array;
+@@ -470,6 +486,24 @@ export default function IonosphereScene(props: Props) {
+       beltsGroup.visible = false;
+       scene.add(beltsGroup);
+ 
++      // W-4 F2b #10 (ruling 320): anillo West Ford 1963 DECLARADO (banda de
++      // particulas determinista, 3600x3680 km, i 87.4; estatica: es una
++      // ilustracion del plano orbital, no una orbita fingida).
++      const ringGeo = new THREE.BufferGeometry();
++      ringGeo.setAttribute("position", new THREE.BufferAttribute(buildRing1963(), 3));
++      const ringMat = new THREE.PointsMaterial({
++        color: 0xd4a24c,
++        size: 0.01,
++        transparent: true,
++        opacity: 0.55,
++        depthWrite: false,
++        blending: THREE.AdditiveBlending,
++      });
++      const ringPts = new THREE.Points(ringGeo, ringMat);
++      ringPts.frustumCulled = false;
++      ringPts.visible = false;
++      scene.add(ringPts);
++
+       S.current = {
+         renderer,
+         scene,
+@@ -508,6 +542,7 @@ export default function IonosphereScene(props: Props) {
+         aejet: { line: aeLine, built: true },
+         dstloop: { line: dstLine, key: "" },
+         belts: { group: beltsGroup, key: "", outer: outerTorus, protons, electrons },
++        ring1963: ringPts,
+         raycaster: new THREE.Raycaster(),
+         gridState: { fo: new Float32Array(GRID_W * GRID_H), hm: new Float32Array(GRID_W * GRID_H), fMin: 2, fMax: 10, stamp: 0 },
+         disposables: [dayTex, nightTex, cmapTex, earth.mesh.geometry, earth.mat, atmo.mesh.geometry, atmo.mat, shell.mesh.geometry, shell.mat, shell.foTex, shell.hmTex, rings.group, stars.points.geometry, stars.mat],
+@@ -1152,6 +1187,32 @@ export default function IonosphereScene(props: Props) {
+           }
+         }
+ 
++        // W-4 F2b #10 (ruling 320): eco orbital 2026. La init troceada
++        // (<=8 ms/frame) arranca DESPUES del primer frame renderizado;
++        // los barridos van agendados (~3 ms/frame, suelo 256, cadencia
++        // >=0.5 s entre INICIOS) y escriben posiciones en el mismo tick.
++        {
++          const sat = S.current?.satellites;
++          if (sat) {
++            if (!sat.sky.ready && sat.frames > 0) {
++              sat.sky.initStep(SWEEP_INIT_BUDGET_MS);
++            }
++            const vis = settings.showSatellites && sat.sky.ready;
++            sat.points.visible = vis;
++            if (vis) {
++              const slice = sat.sky.scheduler.plan(performance.now());
++              if (slice) {
++                const t0 = performance.now();
++                sat.sky.sweep(slice.from, slice.count, effMs);
++                sat.posAttr.needsUpdate = true;
++                (sat.points.geometry as THREE.BufferGeometry).setDrawRange(0, sat.sky.validCount);
++                sat.sky.scheduler.report(slice.count, performance.now() - t0);
++              }
++            }
++            sat.frames++;
++          }
++        }
++
+         // uniforms
+         if (S.current?.earthMat) {
+           const u = S.current.earthMat.uniforms;
+@@ -1222,6 +1283,10 @@ export default function IonosphereScene(props: Props) {
+         if (S.current?.rings) {
+           S.current.rings.visible = propsRef.current.settings.showRings;
+         }
++        // W-4 F2b #10: banda West Ford 1963 (declarada, estatica).
++        if (S.current?.ring1963) {
++          S.current.ring1963.visible = propsRef.current.settings.showRing1963;
++        }
+         // W-4 F1: iso-bands del volumen (u_isoOn, como VolumeRenderer).
+         // W-4 F2: modo Chapman + escala de opacidad (App.cpp:4219-4227).
+         {
+@@ -1400,6 +1465,20 @@ export default function IonosphereScene(props: Props) {
+           so.sliceObj.tex.dispose();
+           so.sliceObj = undefined;
+         }
++        // W-4 F2b #10: eco 2026 + anillo 1963 (objetos gestionados por
++        // efectos de datos, no estan en disposables).
++        if (so.satellites) {
++          so.scene.remove(so.satellites.points);
++          so.satellites.points.geometry.dispose();
++          (so.satellites.points.material as THREE.Material).dispose();
++          so.satellites = undefined;
++        }
++        if (so.ring1963) {
++          so.scene.remove(so.ring1963);
++          so.ring1963.geometry.dispose();
++          (so.ring1963.material as THREE.Material).dispose();
++          so.ring1963 = undefined;
++        }
+         so.renderer.dispose();
+         so.renderer.domElement.remove();
+         S.current = null;
+@@ -1408,6 +1487,44 @@ export default function IonosphereScene(props: Props) {
+     
+   }, []);
+ 
++  // W-4 F2b #10 (ruling 320): eco orbital 2026. La capa se reconstruye al
++  // publicar payload (identidad de prop); la init troceada (satrecs por
++  // tramos tras el primer frame) y los barridos agendados corren en el
++  // tick. Origen vacio (unavailable) o sin payload: sin capa.
++  useEffect(() => {
++    const so = S.current;
++    if (!so) return;
++    if (so.satellites) {
++      so.scene.remove(so.satellites.points);
++      so.satellites.points.geometry.dispose();
++      (so.satellites.points.material as THREE.Material).dispose();
++      so.satellites = undefined;
++    }
++    const payload = props.satellites;
++    if (!payload || payload.records.length === 0) return;
++    const sky = createSatSky(payload.records);
++    const geo = new THREE.BufferGeometry();
++    const pos = new THREE.BufferAttribute(sky.positions, 3);
++    pos.setUsage(THREE.DynamicDrawUsage);
++    geo.setAttribute("position", pos);
++    // Sin barrido aun no hay tramo valido: drawRange 0 evita pintar el
++    // buffer de ceros en el origen.
++    geo.setDrawRange(0, 0);
++    const mat = new THREE.PointsMaterial({
++      color: 0x9fd8ff,
++      size: 0.006,
++      transparent: true,
++      opacity: 0.8,
++      depthWrite: false,
++      blending: THREE.AdditiveBlending,
++    });
++    const points = new THREE.Points(geo, mat);
++    points.frustumCulled = false;
++    points.visible = false;
++    so.scene.add(points);
++    so.satellites = { points, posAttr: pos, sky, frames: 0 };
++  }, [props.satellites]);
++
+   // ----- datos: ionosondas -> rejilla viva -> shell derivada -----
+   // W-3 (P1-172): el shell ya no se alimenta de la era (buildFoF2Grid), sino
+   // de picos DERIVADOS del volumen (pin 158 sec.5.4): estaciones ->
+diff --git a/src/app/page.tsx b/src/app/page.tsx
+index be334bc..6ca79f4 100644
+--- a/src/app/page.tsx
++++ b/src/app/page.tsx
+@@ -14,6 +14,7 @@ import LightningPanel from "@/components/ionosphere/hud/LightningPanel";
+ import AePanel from "@/components/ionosphere/hud/AePanel";
+ import DstPanel from "@/components/ionosphere/hud/DstPanel";
+ import BeltsPanel from "@/components/ionosphere/hud/BeltsPanel";
++import SatellitePanel from "@/components/ionosphere/hud/SatellitePanel";
+ import ParkerPanel from "@/components/ionosphere/hud/ParkerPanel";
+ import VoyagerPanel from "@/components/ionosphere/hud/VoyagerPanel";
+ import MsisPanel from "@/components/ionosphere/hud/MsisPanel";
+@@ -41,6 +42,8 @@ import {
+   replayAdvance,
+ } from "@/components/ionosphere/types";
+ import { LinkResult } from "@/lib/iono/hf";
++import type { CatalogPayload } from "@/lib/iono/satellites/catalog";
++import { RING_LABEL } from "@/lib/iono/satellites/ring1963";
+ import { AlertEngine, buildAlertInput, type AlertSnapshot } from "@/lib/iono/alerts";
+ import { tourCount, tourKey } from "@/lib/iono/tour";
+ import { getSunInfo } from "@/lib/iono/solar";
+@@ -76,6 +79,11 @@ export default function Home() {
+   const [rbe, setRbe] = useState<RbeData | null>(null);
+   // W-4 F2b #7: JPL Horizons Voyager (polling 6 h == TTL de la ruta).
+   const [voyager, setVoyager] = useState<VoyagerData | null>(null);
++  // W-4 F2b #10: catalogo orbital vivo (polling 6 h == TTL de la ruta).
++  // satDown = ultimo intento fallo en el cliente (ruta inalcanzable);
++  // distinto de payload source="unavailable" (cadena agotada, hay hora).
++  const [sat, setSat] = useState<CatalogPayload | null>(null);
++  const [satDown, setSatDown] = useState(false);
+   // W-4 F2b #9d: local NRLMSIS Tn/rho (polling 10 min; model is local).
+   const [msis, setMsis] = useState<MsisData | null>(null);
+   const [aurora, setAurora] = useState<AuroraData | null>(null);
+@@ -197,6 +205,26 @@ export default function Home() {
+     };
+   }, []);
+ 
++  useEffect(() => {
++    let alive = true;
++    const load = async () => {
++      const c = await fetchJson<CatalogPayload>("/api/satellites", 60000);
++      if (!alive) return;
++      if (c) {
++        setSat(c);
++        setSatDown(false);
++      } else {
++        setSatDown(true);
++      }
++    };
++    load();
++    const t = setInterval(load, 21600_000);
++    return () => {
++      alive = false;
++      clearInterval(t);
++    };
++  }, []);
++
+   useEffect(() => {
+     let alive = true;
+     const load = async () => {
+@@ -309,6 +337,7 @@ export default function Home() {
+         rbe={rbe}
+         aurora={aurora}
+         ionosondes={ionos}
++        satellites={sat}
+         settings={settings}
+         txCode={txCode}
+         rxCode={rxCode}
+@@ -383,6 +412,7 @@ export default function Home() {
+         <AePanel ae={ae} />
+         <DstPanel dst={dst} ae={ae} />
+         <BeltsPanel rbe={rbe} kp={sw ? sw.kp.now : 2} epochMs={cmeEpoch} />
++        <SatellitePanel sat={sat} down={satDown} />
+         <ParkerPanel sw={sw} />
+         <VoyagerPanel voyager={voyager} />
+         <MsisPanel msis={msis} />
+@@ -405,6 +435,8 @@ export default function Home() {
+         rbe={rbe}
+         voyager={voyager}
+         msis={msis}
++        sat={sat}
++        satDown={satDown}
+         settings={settings}
+         onChange={onSettingsChange}
+         ionos={ionos}
+@@ -436,6 +468,7 @@ export default function Home() {
+               ? "live"
+               : "…"
+           }
++          extras={settings.showRing1963 ? [RING_LABEL] : undefined}
+         />
+       </div>
+ 
+@@ -585,6 +618,8 @@ function MobilePanels({
+   rbe,
+   voyager,
+   msis,
++  sat,
++  satDown,
+   settings,
+   onChange,
+   ionos,
+@@ -609,6 +644,8 @@ function MobilePanels({
+   rbe: RbeData | null;
+   voyager: VoyagerData | null;
+   msis: MsisData | null;
++  sat: CatalogPayload | null;
++  satDown: boolean;
+   settings: SceneSettings;
+   onChange: (p: Partial<SceneSettings>) => void;
+   ionos: IonosondeData | null;
+@@ -676,6 +713,9 @@ function MobilePanels({
+           <div className="mt-2">
+             <BeltsPanel rbe={rbe} kp={sw ? sw.kp.now : 2} epochMs={cmeEpoch} />
+           </div>
++          <div className="mt-2">
++            <SatellitePanel sat={sat} down={satDown} />
++          </div>
+           <div className="mt-2">
+             <ParkerPanel sw={sw} />
+           </div>
+diff --git a/src/lib/iono/satellites/README.md b/src/lib/iono/satellites/README.md
+index c9e6c38..027472a 100644
+--- a/src/lib/iono/satellites/README.md
++++ b/src/lib/iono/satellites/README.md
+@@ -44,6 +44,9 @@ Order: **celestrak (live) -> satnogs (live) -> snapshot (dated) -> unavailable**
+   provenance per record, Space-Track.org); one request per TTL.
+ - Timeouts: CelesTrak 25 s (bulk fetch measured 24.1 s from sandbox),
+   SatNOGS 15 s (measured 0.68 s). Aborted fetches count as source failure.
++  On the published platform (CelesTrak red) the **first cold miss costs
++  ~26 s, once per 6 h TTL** (verdict 318 obs-1): the timeout is calibrated
++  for the green case and the wait is paid once per TTL, not per request.
+ 
+ ## Honesty rules (adjudicated 312 Q3-4 / 316 §4)
+ 
+@@ -83,5 +86,9 @@ Engine boundary notice: `../sgp4/README.md`.
+ | --- | --- |
+ | `catalog.ts` | pure data layer (parsers, chain, labels, cache/window factories) — GPL-3.0 |
+ | `catalog.test.ts` | TU (parsers, honesty labels, chain, caches, real snapshot sanity) |
++| `sky.ts` | W-4 F2b #10 (drop 321): per-sat sgp4 -> scene conversion + chunked init (ruling 320) |
++| `scheduler.ts` | sweep scheduler (adaptive slices, floor 256, cadence >=0.5 s; injected clock) |
++| `ring1963.ts` | declared West Ford 1963 particle band (3600x3680 km, i 87.4, seeded LCG) |
++| `panel.ts` | eco-2026 panel state contract (byte-exact label, "sin datos", client-error state) |
+ | `active-2026-10-17.tle` | frozen CelesTrak active catalog (data, not code) |
+ | `README.md` | this notice |
+diff --git b/src/lib/iono/satellites/scheduler.ts b/src/lib/iono/satellites/scheduler.ts
+new file mode 100644
+index 0000000..566b4a1
+--- /dev/null
++++ b/src/lib/iono/satellites/scheduler.ts
+@@ -0,0 +1,76 @@
++/**
++ * W-4 F2b #10 (ruling 320): planificador de barridos del eco 2026.
++ *
++ * Puro y sin temporizadores: el reloj entra por parametro (nowMs). El
++ * presupuesto de 3 ms/frame NO se puede cumplir barriendo el catalogo
++ * entero de golpe (15.9k props ~ 31-52 ms medido); el scheduler reparte el
++ * barrido en rebanadas (slices) y adapta el tamano de lote al coste real
++ * reportado, con suelo SWEEP_FLOOR y cadencia SWEEP_CADENCE_MS entre
++ * INICIOS de barrido (ruling 320: >=0.5 s de reloj de pared).
++ */
++
++/** Suelo de satelites por frame durante un barrido (ruling 320). */
++export const SWEEP_FLOOR = 256;
++/** Presupuesto objetivo por slice en ms (ruling 320: ~3 ms/frame). */
++export const SWEEP_BUDGET_MS = 3;
++/** Cadencia minima entre INICIOS de barrido (ruling 320: >=0.5 s). */
++export const SWEEP_CADENCE_MS = 500;
++/** Presupuesto de init troceada por frame (ruling 320: <=8 ms). */
++export const SWEEP_INIT_BUDGET_MS = 8;
++
++export interface SweepSlice {
++  from: number;
++  count: number;
++}
++
++export interface SweepScheduler {
++  /** Siguiente slice, o null si toca esperar (cadencia) o no hay trabajo. */
++  plan(nowMs: number): SweepSlice | null;
++  /** Reporte de coste real del slice anterior (adaptacion de lote). */
++  report(processed: number, elapsedMs: number): void;
++  /** Barridos completos iniciados hasta ahora (observabilidad/tests). */
++  sweepCount(): number;
++  /** Tamano de lote actual (observabilidad/tests). */
++  batchSize(): number;
++}
++
++export function createSweepScheduler(total: number): SweepScheduler {
++  const n = Math.max(0, Math.floor(total));
++  let cursor = 0;
++  let batch = Math.min(SWEEP_FLOOR, n);
++  let lastStart = Number.NEGATIVE_INFINITY;
++  let sweeps = 0;
++
++  return {
++    plan(nowMs: number): SweepSlice | null {
++      if (n === 0) return null;
++      if (cursor >= n) {
++        // Barrido previo completo: la cadencia de 0.5 s se mide entre
++        // INICIOS de barrido (ruling 320), no entre slices.
++        if (nowMs - lastStart < SWEEP_CADENCE_MS) return null;
++        cursor = 0;
++      }
++      if (cursor === 0) {
++        lastStart = nowMs;
++        sweeps++;
++      }
++      const count = Math.min(Math.max(batch, SWEEP_FLOOR), n - cursor);
++      const slice = { from: cursor, count };
++      cursor += count;
++      return slice;
++    },
++    report(processed: number, elapsedMs: number): void {
++      if (processed <= 0) return;
++      const cost = Math.max(0.1, elapsedMs);
++      const factor = Math.min(2, Math.max(0.5, SWEEP_BUDGET_MS / cost));
++      const next = Math.round(batch * factor);
++      batch = Math.min(n, Math.max(Math.min(SWEEP_FLOOR, n), next));
++    },
++    sweepCount(): number {
++      return sweeps;
++    },
++    batchSize(): number {
++      return batch;
++    },
++  };
++}
+diff --git b/src/lib/iono/satellites/sky.ts b/src/lib/iono/satellites/sky.ts
+new file mode 100644
+index 0000000..3a441d8
+--- /dev/null
++++ b/src/lib/iono/satellites/sky.ts
+@@ -0,0 +1,136 @@
++/**
++ * W-4 F2b #10 (ruling 320): cielo del eco 2026.
++ *
++ * Cadena por satelite (misma que el oraculo del ruling):
++ *   sgp4(TLE, tsince) -> rTEME -> teme2ecef(gmst) -> ecef2geodetic
++ *   -> latLonToVec3(lat, lon, 1 + altKm/6371)
++ *
++ * La conversion se comparte con las estaciones (geo.ts): un satelite y una
++ * estacion en la misma lat/lon/alt caen en el MISMO punto de escena.
++ *
++ * Init troceada (<=8 ms por frame tras el primer frame; ruling 320): los
++ * satrecs se construyen por tramos con initStep(); el primer barrido solo
++ * empieza cuando ready. El barrido lo agenda scheduler.ts (rebanadas con
++ * presupuesto y cadencia), aqui solo vive la fisica por rebanada.
++ */
++import { gstime, sgp4, type ElsetRec } from "../sgp4/sgp4";
++import { twoline2rv } from "../sgp4/sgpTle";
++import { ecef2geodetic, teme2ecef } from "../sgp4/sgpCoord";
++import { latLonToVec3, R_EARTH_KM } from "../geo";
++import type { SatRecord } from "./catalog";
++import {
++  createSweepScheduler,
++  SWEEP_INIT_BUDGET_MS,
++  type SweepScheduler,
++} from "./scheduler";
++
++/** JD del epoch Unix (1970-01-01T00:00:00Z). */
++export const JD_UNIX_EPOCH = 2_440_587.5;
++
++export function jdFromUnixMs(ms: number): number {
++  return JD_UNIX_EPOCH + ms / 86_400_000;
++}
++
++/** GMST (rad) del instante; mismo gstime de Vallado para todo el barrido. */
++export function gmstFromUnixMs(ms: number): number {
++  return gstime(jdFromUnixMs(ms));
++}
++
++/** Epoch del TLE en ms Unix (jd entero + fraccion). */
++export function satEpochMs(satrec: ElsetRec): number {
++  return (satrec.jdsatepoch + satrec.jdsatepochF - JD_UNIX_EPOCH) * 86_400_000;
++}
++
++/**
++ * Conversion TEME -> escena (oraculo byte a byte con geo.ts; sin factor de
++ * exageracion: 1 unidad = 1 R_E = 6371 km).
++ */
++export function temeToScene(
++  rTEME: number[],
++  gmst: number,
++  out: Float32Array,
++  offset: number,
++): void {
++  const rECEF = teme2ecef(rTEME, gmst);
++  const g = ecef2geodetic(rECEF);
++  const [x, y, z] = latLonToVec3(g.lat, g.lon, 1 + g.altKm / R_EARTH_KM);
++  out[offset] = x;
++  out[offset + 1] = y;
++  out[offset + 2] = z;
++}
++
++export interface SatSky {
++  /** Numero de satelites del catalogo cargado. */
++  readonly count: number;
++  /** Posiciones de escena (count*3); solo valido hasta validCount. */
++  readonly positions: Float32Array;
++  /** Fin del tramo contiguo ya barrido (para setDrawRange; 0 al inicio). */
++  readonly validCount: number;
++  /** Barridos agendados (rebanadas adaptativas + cadencia). */
++  readonly scheduler: SweepScheduler;
++  /** true cuando TODOS los satrecs estan construidos. */
++  readonly ready: boolean;
++  /** Construye satrecs por tramos hasta agotar el presupuesto (ms). */
++  initStep(budgetMs?: number): void;
++  /** Un slice del barrido: propaga y escribe posiciones from..from+count. */
++  sweep(from: number, count: number, epochMs: number): void;
++  /** Errores sgp4 acumulados (0 con el catalogo activo real). */
++  readonly errors: number;
++}
++
++export function createSatSky(records: SatRecord[]): SatSky {
++  const count = records.length;
++  const satrecs: (ElsetRec | null)[] = new Array(count).fill(null);
++  const epochsMs = new Float64Array(count);
++  const positions = new Float32Array(count * 3);
++  const rTEME = [0, 0, 0];
++  const vTEME = [0, 0, 0];
++  let initCursor = 0;
++  let validEnd = 0;
++  let errors = 0;
++
++  const sky: SatSky = {
++    count,
++    positions,
++    scheduler: createSweepScheduler(count),
++    get ready(): boolean {
++      return initCursor >= count;
++    },
++    get validCount(): number {
++      return validEnd;
++    },
++    get errors(): number {
++      return errors;
++    },
++    initStep(budgetMs: number = SWEEP_INIT_BUDGET_MS): void {
++      const t0 = performance.now();
++      while (initCursor < count && performance.now() - t0 < budgetMs) {
++        const rec = records[initCursor];
++        const { satrec } = twoline2rv(rec.line1, rec.line2, "wgs72", "a", {
++          strict: true,
++        });
++        satrecs[initCursor] = satrec;
++        epochsMs[initCursor] = satEpochMs(satrec);
++        initCursor++;
++      }
++    },
++    sweep(from: number, sliceCount: number, epochMs: number): void {
++      const gmst = gmstFromUnixMs(epochMs);
++      const end = Math.min(count, from + sliceCount);
++      for (let i = from; i < end; i++) {
++        const sr = satrecs[i];
++        if (!sr) continue;
++        const tsince = (epochMs - epochsMs[i]) / 60_000;
++        if (sgp4(sr, tsince, rTEME, vTEME)) {
++          temeToScene(rTEME, gmst, positions, i * 3);
++        } else {
++          errors++;
++        }
++      }
++      // Los slices llegan en orden (scheduler secuencial); el tramo
++      // contiguo crece hasta cubrir el catalogo entero.
++      if (from <= validEnd) validEnd = Math.max(validEnd, end);
++    },
++  };
++  return sky;
++}
+diff --git b/src/lib/iono/satellites/ring1963.ts b/src/lib/iono/satellites/ring1963.ts
+new file mode 100644
+index 0000000..fe21f2d
+--- /dev/null
++++ b/src/lib/iono/satellites/ring1963.ts
+@@ -0,0 +1,76 @@
++/**
++ * W-4 F2b #10 (ruling 320): anillo West Ford 1963 DECLARADO.
++ *
++ * Reconstruccion ilustrativa (no datos vivos, no propagacion): banda de
++ * particulas en el plano orbital historico — 3.600x3.680 km de altitud,
++ * inclinacion 87.4 grados (SAGE 2025; elipticidad leve declarada), ~4,8e8
++ * dipolos de 1,78 cm (mayo 1963). Se dibujan RING_PARTICLES muestras
++ * deterministas (LCG con semilla fija): la nube es reproducible byte a
++ * byte entre builds. Estatica (sin rotacion simulada): es una ilustracion
++ * del plano, no una orbita fingida. Etiqueta obligatoria RING_LABEL.
++ */
++import { R_EARTH_KM } from "../geo";
++
++export const RING_ALT_KM_MIN = 3600;
++export const RING_ALT_KM_MAX = 3680;
++export const RING_INC_DEG = 87.4;
++/** Dipolos reales del cinturon (declarado; nunca se renderizan 1:1). */
++export const RING_DIPOLES = 4.8e8;
++/** Dipolo individual: dimension fisica declarada (m). */
++export const RING_DIPOLE_LENGTH_M = 0.0178;
++/** Muestras de particula dibujadas. */
++export const RING_PARTICLES = 4096;
++
++/** Texto EXACTO de la etiqueta (ruling 320; dos sitios: panel + leyenda). */
++export const RING_LABEL = "West Ford 1963 — reconstrucción declarada (sin datos vivos)";
++
++/** LCG determinista (mulberry32); semilla fija = nube reproducible. */
++function mulberry32(seed: number): () => number {
++  let a = seed >>> 0;
++  return () => {
++    a = (a + 0x6d2b79f5) >>> 0;
++    let t = a;
++    t = Math.imul(t ^ (t >>> 15), t | 1);
++    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
++    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
++  };
++}
++
++/**
++ * Posiciones de escena (unidades R_E) de la banda: para cada muestra, un
++ * plano orbital con nodo aleatorio, inclinacion 87.4 +/- 0.6 grados
++ * (espesor declarado) y radio 1 + alt/6371 con alt en [3600, 3680] km.
++ */
++export function buildRing1963(count: number = RING_PARTICLES): Float32Array {
++  const rnd = mulberry32(19630509);
++  const out = new Float32Array(count * 3);
++  const deg = Math.PI / 180;
++  for (let i = 0; i < count; i++) {
++    const node = rnd() * Math.PI * 2;
++    const inc = (RING_INC_DEG + (rnd() - 0.5) * 1.2) * deg;
++    const altKm = RING_ALT_KM_MIN + rnd() * (RING_ALT_KM_MAX - RING_ALT_KM_MIN);
++    const r = 1 + altKm / R_EARTH_KM;
++    const u = rnd() * Math.PI * 2;
++    // Normal del plano orbital (y = norte): inclinacion desde el eje polar.
++    const nx = Math.sin(inc) * Math.cos(node);
++    const ny = Math.cos(inc);
++    const nz = Math.sin(inc) * Math.sin(node);
++    // Base ortonormal del plano: e1 = y x n / |..|, e2 = n x e1.
++    let e1x = nz;
++    let e1y = 0;
++    let e1z = -nx;
++    const e1n = Math.hypot(e1x, e1y, e1z) || 1;
++    e1x /= e1n;
++    e1y /= e1n;
++    e1z /= e1n;
++    const e2x = ny * e1z - nz * e1y;
++    const e2y = nz * e1x - nx * e1z;
++    const e2z = nx * e1y - ny * e1x;
++    const cu = Math.cos(u);
++    const su = Math.sin(u);
++    out[i * 3] = r * (cu * e1x + su * e2x);
++    out[i * 3 + 1] = r * (cu * e1y + su * e2y);
++    out[i * 3 + 2] = r * (cu * e1z + su * e2z);
++  }
++  return out;
++}
+diff --git b/src/lib/iono/satellites/panel.ts b/src/lib/iono/satellites/panel.ts
+new file mode 100644
+index 0000000..d886635
+--- /dev/null
++++ b/src/lib/iono/satellites/panel.ts
+@@ -0,0 +1,55 @@
++/**
++ * W-4 F2b #10 (ruling 320): estados del panel del eco 2026.
++ *
++ * Contrato de honestidad: el label del payload se muestra BYTE A BYTE
++ * (sin re-derivar); "unavailable" del servidor -> "sin datos"; fallo del
++ * cliente (fetch null) -> estado separado "sin conexión con la ruta".
++ * Puro y table-driven (panel.test.ts).
++ */
++import type { CatalogPayload } from "./catalog";
++
++/** Fallo de cliente: la ruta no responde (fetch null / red). */
++export const SAT_ERR_TEXT = "sin conexión con la ruta";
++/** Servidor respondio source="unavailable" (cadena agotada). */
++export const SAT_NA_TEXT = "sin datos";
++
++export type SatPanelState =
++  | { kind: "loading" }
++  | { kind: "error"; text: string }
++  | { kind: "unavailable"; text: string; fetchedAt: number }
++  | {
++      kind: "ok";
++      label: string;
++      attribution: string;
++      fetchedAt: number;
++      count: number;
++      dropped: number;
++      source: string;
++    };
++
++export function satPanelState(
++  payload: CatalogPayload | null,
++  clientDown: boolean,
++): SatPanelState {
++  if (!payload) {
++    return clientDown
++      ? { kind: "error", text: SAT_ERR_TEXT }
++      : { kind: "loading" };
++  }
++  if (payload.source === "unavailable") {
++    return {
++      kind: "unavailable",
++      text: SAT_NA_TEXT,
++      fetchedAt: payload.fetchedAt,
++    };
++  }
++  return {
++    kind: "ok",
++    label: payload.sourceLabel,
++    attribution: payload.attribution,
++    fetchedAt: payload.fetchedAt,
++    count: payload.count,
++    dropped: payload.dropped,
++    source: payload.source,
++  };
++}
+diff --git b/src/lib/iono/satellites/scheduler.test.ts b/src/lib/iono/satellites/scheduler.test.ts
+new file mode 100644
+index 0000000..d3ab7d1
+--- /dev/null
++++ b/src/lib/iono/satellites/scheduler.test.ts
+@@ -0,0 +1,93 @@
++// SPDX-License-Identifier: GPL-3.0-or-later
++// ionosphere-live-3d — TU del scheduler de barridos del eco 2026 (drop 321,
++// F2b #10, ruling 320). Reloj inyectado (nowMs): sin temporizadores reales.
++// Cubre: suelo 256, presupuesto adaptativo, cadencia >=0.5 s entre INICIOS
++// de barrido y cobertura completa sin huecos ni solapes.
++
++import { describe, expect, it } from "vitest";
++import {
++  SWEEP_CADENCE_MS,
++  SWEEP_FLOOR,
++  createSweepScheduler,
++} from "./scheduler";
++
++describe("createSweepScheduler", () => {
++  it("primer slice: arranca en 0 con el suelo de 256", () => {
++    const s = createSweepScheduler(15927);
++    expect(s.plan(0)).toEqual({ from: 0, count: SWEEP_FLOOR });
++    expect(s.sweepCount()).toBe(1);
++  });
++
++  it("un barrido completo cubre [0,total) exactamente una vez", () => {
++    const total = 15927;
++    const s = createSweepScheduler(total);
++    const seen = new Uint8Array(total);
++    let t = 0;
++    let slices = 0;
++    let covered = 0;
++    while (covered < total) {
++      const slice = s.plan(t);
++      expect(slice).not.toBeNull();
++      if (!slice) break;
++      slices++;
++      for (let i = slice.from; i < slice.from + slice.count; i++) {
++        expect(seen[i]).toBe(0); // sin solapes
++        seen[i] = 1;
++        covered++;
++      }
++      // coste real ~3 ms de presupuesto: el lote no crece ni mengua.
++      s.report(slice.count, 3);
++      t += 16;
++      if (slices > 200) throw new Error("barrido no termina");
++    }
++    expect(slices).toBe(Math.ceil(total / SWEEP_FLOOR));
++    expect(seen.every((v) => v === 1)).toBe(true);
++  });
++
++  it("cadencia: tras completar, espera >=0.5 s entre INICIOS de barrido", () => {
++    const s = createSweepScheduler(512);
++    const t0 = 1000;
++    expect(s.plan(t0)).toEqual({ from: 0, count: 256 });
++    expect(s.plan(t0 + 16)).toEqual({ from: 256, count: 256 });
++    // Barrido 1 completo en el cursor; con t < t0+500 no hay barrido nuevo.
++    expect(s.plan(t0 + 32)).toBeNull();
++    expect(s.plan(t0 + SWEEP_CADENCE_MS - 1)).toBeNull();
++    const again = s.plan(t0 + SWEEP_CADENCE_MS);
++    expect(again).toEqual({ from: 0, count: 256 }); // barrido 2
++    expect(s.sweepCount()).toBe(2);
++  });
++
++  it("adaptacion: coste alto -> el lote jamas baja del suelo (256)", () => {
++    const s = createSweepScheduler(15927);
++    s.plan(0);
++    s.report(256, 12); // 4x sobre presupuesto -> factor 0.5
++    s.report(256, 50); // 16x sobre presupuesto
++    expect(s.batchSize()).toBe(SWEEP_FLOOR);
++    expect(s.plan(16)).toEqual({ from: 256, count: 256 });
++  });
++
++  it("adaptacion: coste bajo -> sube el lote (hasta total)", () => {
++    const s = createSweepScheduler(15927);
++    s.plan(0);
++    s.report(256, 0.5); // factor 2 (clamp)
++    expect(s.batchSize()).toBe(512);
++    expect(s.plan(16)).toEqual({ from: 256, count: 512 });
++    s.report(512, 0.1);
++    expect(s.batchSize()).toBe(1024);
++    s.report(512, 0.1);
++    expect(s.batchSize()).toBe(2048);
++    expect(s.plan(32)?.count).toBe(2048);
++  });
++
++  it("total 0: no hay trabajo", () => {
++    const s = createSweepScheduler(0);
++    expect(s.plan(0)).toBeNull();
++    expect(s.sweepCount()).toBe(0);
++  });
++
++  it("total menor que el suelo: un unico slice con todo", () => {
++    const s = createSweepScheduler(100);
++    expect(s.plan(0)).toEqual({ from: 0, count: 100 });
++    expect(s.plan(16)).toBeNull();
++  });
++});
+diff --git b/src/lib/iono/satellites/sky.test.ts b/src/lib/iono/satellites/sky.test.ts
+new file mode 100644
+index 0000000..678ba30
+--- /dev/null
++++ b/src/lib/iono/satellites/sky.test.ts
+@@ -0,0 +1,105 @@
++// SPDX-License-Identifier: GPL-3.0-or-later
++// ionosphere-live-3d — TU del cielo del eco 2026 (drop 321, F2b #10, ruling
++// 320). Oraculos exigidos: round-trip teme2ecef->ecef2geodetic->latLonToVec3
++// consistente con geo.ts, tsince mixto (antes/despues del epoch TLE),
++// ISS ~427 km y cota anti-flaky: barrido completo <2 s sobre snapshot real.
++
++import { readFileSync } from "node:fs";
++import { join } from "node:path";
++import { describe, expect, it } from "vitest";
++import { gstime, sgp4 } from "../sgp4/sgp4";
++import { twoline2rv } from "../sgp4/sgpTle";
++import { ecef2geodetic, teme2ecef } from "../sgp4/sgpCoord";
++import { latLonToVec3, R_EARTH_KM } from "../geo";
++import { SNAPSHOT_CAPTURED_AT, SNAPSHOT_FILE, parseTleCatalog } from "./catalog";
++import { createSatSky, satEpochMs } from "./sky";
++
++const snap = parseTleCatalog(
++  readFileSync(
++    join(process.cwd(), "src", "lib", "iono", "satellites", SNAPSHOT_FILE),
++    "utf8",
++  ),
++);
++const ISS = snap.records.find((r) => r.name.includes("ISS (ZARYA)"));
++if (!ISS) throw new Error("ISS (ZARYA) no esta en el snapshot");
++
++/** Oracullo independiente: misma ruta del ruling, sin pasar por sky.ts. */
++function oracleScene(rec: { line1: string; line2: string }, epochMs: number): [number, number, number] {
++  const { satrec } = twoline2rv(rec.line1, rec.line2, "wgs72", "a", { strict: true });
++  const epoch = (satrec.jdsatepoch + satrec.jdsatepochF - 2440587.5) * 86_400_000;
++  const tsince = (epochMs - epoch) / 60_000;
++  const r = [0, 0, 0];
++  const v = [0, 0, 0];
++  expect(sgp4(satrec, tsince, r, v)).toBe(true);
++  const gmst = gstime(2440587.5 + epochMs / 86_400_000);
++  const g = ecef2geodetic(teme2ecef(r, gmst));
++  return latLonToVec3(g.lat, g.lon, 1 + g.altKm / R_EARTH_KM);
++}
++
++describe("createSatSky", () => {
++  it("ISS en su epoch: altitud ~427 km, sin errores, tramo valido = 1", () => {
++    const sky = createSatSky([ISS]);
++    sky.initStep(10_000);
++    expect(sky.ready).toBe(true);
++    const { satrec } = twoline2rv(ISS.line1, ISS.line2, "wgs72", "a", { strict: true });
++    sky.sweep(0, 1, satEpochMs(satrec));
++    const alt = (Math.hypot(sky.positions[0], sky.positions[1], sky.positions[2]) - 1) * R_EARTH_KM;
++    expect(alt).toBeGreaterThan(380);
++    expect(alt).toBeLessThan(470);
++    expect(sky.errors).toBe(0);
++    expect(sky.validCount).toBe(1);
++  });
++
++  it("oraculo: el eco coincide con la ruta geodesica del ruling (1e-5)", () => {
++    const sky = createSatSky(snap.records.slice(0, 200));
++    sky.initStep(10_000);
++    const epochMs = Date.parse("2026-10-17T12:00:00Z");
++    sky.sweep(0, 200, epochMs);
++    for (const idx of [0, 5, 42, 199]) {
++      const [x, y, z] = oracleScene(snap.records[idx], epochMs);
++      expect(Math.abs(sky.positions[idx * 3] - x)).toBeLessThan(1e-5);
++      expect(Math.abs(sky.positions[idx * 3 + 1] - y)).toBeLessThan(1e-5);
++      expect(Math.abs(sky.positions[idx * 3 + 2] - z)).toBeLessThan(1e-5);
++    }
++    expect(sky.errors).toBe(0);
++  });
++
++  it("tsince mixto: -30 min / 0 / +30 min determinista y con orbita viva", () => {
++    const sky = createSatSky([ISS]);
++    sky.initStep(10_000);
++    const { satrec } = twoline2rv(ISS.line1, ISS.line2, "wgs72", "a", { strict: true });
++    const e = satEpochMs(satrec);
++    const snapshots: Float32Array[] = [];
++    for (const ms of [e - 30 * 60_000, e, e + 30 * 60_000]) {
++      sky.sweep(0, 1, ms);
++      const copy = Float32Array.from(sky.positions);
++      const alt = (Math.hypot(copy[0], copy[1], copy[2]) - 1) * R_EARTH_KM;
++      expect(alt).toBeGreaterThan(370);
++      expect(alt).toBeLessThan(500);
++      snapshots.push(copy);
++    }
++    const d = (a: Float32Array, b: Float32Array) =>
++      Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
++    expect(d(snapshots[0], snapshots[1])).toBeGreaterThan(1e-4);
++    expect(d(snapshots[1], snapshots[2])).toBeGreaterThan(1e-4);
++    // Determinismo: repetir el mismo instante da la misma nube bit a bit.
++    sky.sweep(0, 1, e);
++    expect(Array.from(sky.positions)).toEqual(Array.from(snapshots[1]));
++    expect(sky.errors).toBe(0);
++  });
++
++  it("cota anti-flaky: barrido completo del snapshot real <2 s, 0 errores", () => {
++    const sky = createSatSky(snap.records);
++    sky.initStep(60_000);
++    expect(sky.ready).toBe(true);
++    const t0 = performance.now();
++    sky.sweep(0, sky.count, SNAPSHOT_CAPTURED_AT);
++    const dt = performance.now() - t0;
++    expect(dt).toBeLessThan(2000);
++    expect(sky.errors).toBe(0);
++    expect(sky.validCount).toBe(sky.count);
++    for (const i of [0, 1000, sky.count - 1]) {
++      expect(Number.isFinite(sky.positions[i * 3])).toBe(true);
++    }
++  });
++});
+diff --git b/src/lib/iono/satellites/ring1963.test.ts b/src/lib/iono/satellites/ring1963.test.ts
+new file mode 100644
+index 0000000..aa779c0
+--- /dev/null
++++ b/src/lib/iono/satellites/ring1963.test.ts
+@@ -0,0 +1,51 @@
++// SPDX-License-Identifier: GPL-3.0-or-later
++// ionosphere-live-3d — TU del anillo West Ford 1963 (drop 321, F2b #10,
++// ruling 320). La banda es determinista, vive en 3600..3680 km y su plano
++// esta a 87.4 grados (banda casi polar, spawneada en geo.ts).
++
++import { describe, expect, it } from "vitest";
++import { R_EARTH_KM } from "../geo";
++import {
++  RING_ALT_KM_MAX,
++  RING_ALT_KM_MIN,
++  RING_INC_DEG,
++  RING_LABEL,
++  RING_PARTICLES,
++  buildRing1963,
++} from "./ring1963";
++
++describe("buildRing1963", () => {
++  it("todas las particulas viven en la banda de altitud declarada", () => {
++    const pos = buildRing1963();
++    expect(pos.length).toBe(RING_PARTICLES * 3);
++    const lo = 1 + RING_ALT_KM_MIN / R_EARTH_KM;
++    const hi = 1 + RING_ALT_KM_MAX / R_EARTH_KM;
++    for (let i = 0; i < RING_PARTICLES; i++) {
++      const r = Math.hypot(pos[i * 3], pos[i * 3 + 1], pos[i * 3 + 2]);
++      expect(r).toBeGreaterThanOrEqual(lo - 1e-6);
++      expect(r).toBeLessThanOrEqual(hi + 1e-6);
++    }
++  });
++
++  it("banda casi polar: |lat| cerca de la inclinacion 87.4 (no ecuatorial)", () => {
++    const pos = buildRing1963();
++    let maxAbsLat = 0;
++    for (let i = 0; i < RING_PARTICLES; i++) {
++      const r = Math.hypot(pos[i * 3], pos[i * 3 + 1], pos[i * 3 + 2]);
++      const lat = Math.abs((Math.asin(pos[i * 3 + 1] / r) * 180) / Math.PI);
++      maxAbsLat = Math.max(maxAbsLat, lat);
++    }
++    expect(maxAbsLat).toBeLessThanOrEqual(RING_INC_DEG + 0.7);
++    expect(maxAbsLat).toBeGreaterThan(85);
++  });
++
++  it("determinista: dos builds son identicos byte a byte", () => {
++    expect(Array.from(buildRing1963(256))).toEqual(Array.from(buildRing1963(256)));
++  });
++
++  it("etiqueta exacta del ruling 320 (dos sitios: panel + leyenda)", () => {
++    expect(RING_LABEL).toBe(
++      "West Ford 1963 — reconstrucción declarada (sin datos vivos)",
++    );
++  });
++});
+diff --git b/src/lib/iono/satellites/panel.test.ts b/src/lib/iono/satellites/panel.test.ts
+new file mode 100644
+index 0000000..47fb043
+--- /dev/null
++++ b/src/lib/iono/satellites/panel.test.ts
+@@ -0,0 +1,56 @@
++// SPDX-License-Identifier: GPL-3.0-or-later
++// ionosphere-live-3d — TU del contrato del panel del eco 2026 (drop 321,
++// F2b #10, ruling 320): label byte a byte, "unavailable" -> "sin datos" y
++// fallo de cliente -> estado separado "sin conexión con la ruta".
++
++import { describe, expect, it } from "vitest";
++import { buildPayload, sourceLabel, type CatalogPayload } from "./catalog";
++import { SAT_ERR_TEXT, SAT_NA_TEXT, satPanelState } from "./panel";
++
++function payload(source: "celestrak" | "satnogs" | "snapshot" | "unavailable"): CatalogPayload {
++  return buildPayload(source, { records: [], dropped: 3 }, 111);
++}
++
++describe("satPanelState", () => {
++  it("sin payload y sin fallo: cargando", () => {
++    expect(satPanelState(null, false)).toEqual({ kind: "loading" });
++  });
++
++  it("fallo de cliente: estado separado con el texto del ruling", () => {
++    const st = satPanelState(null, true);
++    expect(st).toEqual({ kind: "error", text: "sin conexión con la ruta" });
++    expect(SAT_ERR_TEXT).toBe("sin conexión con la ruta");
++  });
++
++  it('source "unavailable": texto "sin datos" (jamas se pinta label)', () => {
++    const st = satPanelState(payload("unavailable"), false);
++    expect(st.kind).toBe("unavailable");
++    if (st.kind === "unavailable") {
++      expect(st.text).toBe(SAT_NA_TEXT);
++      expect(st.text).toBe("sin datos");
++    }
++  });
++
++  it("label byte a byte para las cuatro fuentes (passthrough sin re-derivar)", () => {
++    expect(sourceLabel("celestrak")).toBe("CelesTrak (live)");
++    expect(sourceLabel("satnogs")).toBe("SatNOGS (live)");
++    expect(sourceLabel("snapshot")).toBe("snapshot 2026-10-17 (no live)");
++    for (const source of ["celestrak", "satnogs", "snapshot"] as const) {
++      const p = payload(source);
++      const st = satPanelState(p, false);
++      expect(st.kind).toBe("ok");
++      if (st.kind === "ok") {
++        expect(st.label).toBe(p.sourceLabel);
++        expect(st.attribution).toBe(p.attribution);
++        expect(st.count).toBe(p.count);
++        expect(st.dropped).toBe(3);
++        expect(st.fetchedAt).toBe(p.fetchedAt);
++      }
++    }
++  });
++
++  it("un payload sano gana al flag de fallo (dato viejo etiquetado > error)", () => {
++    const st = satPanelState(payload("snapshot"), true);
++    expect(st.kind).toBe("ok");
++  });
++});
+diff --git b/src/components/ionosphere/hud/SatellitePanel.tsx b/src/components/ionosphere/hud/SatellitePanel.tsx
+new file mode 100644
+index 0000000..d2c0977
+--- /dev/null
++++ b/src/components/ionosphere/hud/SatellitePanel.tsx
+@@ -0,0 +1,96 @@
++"use client";
++
++import { Orbit, Satellite } from "lucide-react";
++import type { CatalogPayload } from "@/lib/iono/satellites/catalog";
++import { satPanelState } from "@/lib/iono/satellites/panel";
++import {
++  RING_ALT_KM_MAX,
++  RING_ALT_KM_MIN,
++  RING_DIPOLE_LENGTH_M,
++  RING_DIPOLES,
++  RING_INC_DEG,
++  RING_LABEL,
++} from "@/lib/iono/satellites/ring1963";
++import { PanelBox } from "./SpaceWeatherPanel";
++
++/**
++ * W-4 F2b #10 (drop 321, ruling 320): eco orbital 2026 + anillo 1963.
++ * Contract: the live label is shown byte-for-byte (never re-derived);
++ * server "unavailable" -> "sin datos"; client fetch failure is a SEPARATE
++ * state "sin conexión con la ruta". The 1963 ring row is permanent (never
++ * a tooltip) and carries the exact declared-reconstruction text.
++ */
++export default function SatellitePanel({
++  sat,
++  down,
++}: {
++  sat: CatalogPayload | null;
++  down: boolean;
++}) {
++  const st = satPanelState(sat, down);
++  return (
++    <PanelBox
++      title="Eco orbital 2026"
++      badge={
++        sat && sat.source !== "unavailable" ? (
++          <span className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wider text-slate-400">
++            <span
++              className={`w-1.5 h-1.5 rounded-full ${
++                sat.source === "snapshot" ? "bg-amber-300" : "bg-emerald-400 animate-pulse"
++              }`}
++            />
++            {sat.source === "snapshot" ? "frozen" : "live"}
++          </span>
++        ) : undefined
++      }
++    >
++      {st.kind === "loading" && (
++        <div className="text-xs text-slate-500 py-6 text-center animate-pulse">
++          Contacting live catalog…
++        </div>
++      )}
++      {st.kind === "error" && (
++        <div className="text-xs text-amber-300/90 py-4 text-center">{st.text}</div>
++      )}
++      {st.kind === "unavailable" && (
++        <div className="text-xs text-slate-400 py-3 text-center">
++          {st.text}
++          <div className="text-[10px] text-slate-500 font-mono mt-0.5">
++            captured {new Date(st.fetchedAt).toISOString().slice(11, 16)} UTC
++          </div>
++        </div>
++      )}
++      {st.kind === "ok" && (
++        <>
++          <div className="flex items-center justify-between">
++            <span className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-slate-400">
++              <Satellite size={12} /> Catalog
++            </span>
++            <span className="text-xs text-slate-200">{st.label}</span>
++          </div>
++          <div className="flex items-center justify-between mt-1 text-[10px] font-mono text-slate-400">
++            <span>{st.count.toLocaleString("en-US")} objects</span>
++            <span>{st.dropped} dropped</span>
++          </div>
++          <div className="text-[10px] text-slate-500 font-mono mt-0.5">
++            captured {new Date(st.fetchedAt).toISOString().slice(11, 16)} UTC
++          </div>
++          <div className="text-[10px] text-slate-500 leading-snug mt-1">{st.attribution}</div>
++        </>
++      )}
++
++      {/* Anillo West Ford 1963: declarado, jamas vivo. Fila permanente. */}
++      <div className="mt-2 pt-2 border-t border-white/10">
++        <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-slate-400">
++          <Orbit size={12} /> West Ford ring 1963
++        </div>
++        <div className="text-[10px] text-amber-200/90 leading-snug mt-0.5">{RING_LABEL}</div>
++        <div className="text-[10px] text-slate-500 font-mono mt-0.5">
++          {RING_ALT_KM_MIN.toLocaleString("en-US")}×{RING_ALT_KM_MAX.toLocaleString("en-US")} km · i{" "}
++          {RING_INC_DEG}° · {(RING_DIPOLES / 1e8).toFixed(1)}e8 dipoles{" "}
++          {(RING_DIPOLE_LENGTH_M * 100).toFixed(2)} cm (SAGE 2025)
++        </div>
++      </div>
++    </PanelBox>
++  );
++}
