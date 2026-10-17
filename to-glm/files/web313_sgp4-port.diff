@@ -1,0 +1,4166 @@
+From t <t@t> Mon Oct 12 00:00:00 2026 +0200
+From: t <t@t>
+Date: Sat, 17 Oct 2026 08:00:00 +0200
+Subject: [PATCH] w313-sgp4-port (P1-312)
+
+---
+ src/app/api/egress/route.ts        |   98 ++
+ src/lib/iono/sgp4/README.md        |   58 +
+ src/lib/iono/sgp4/SGP4-VER.TLE     |  Bin 0 -> 8616 bytes
+ src/lib/iono/sgp4/sgp4.ts          | 1659 ++++++++++++++++++++++++++++
+ src/lib/iono/sgp4/sgpCoord.test.ts |   76 ++
+ src/lib/iono/sgp4/sgpCoord.ts      |   57 +
+ src/lib/iono/sgp4/sgpErr.test.ts   |  126 +++
+ src/lib/iono/sgp4/sgpPin.test.ts   |  280 +++++
+ src/lib/iono/sgp4/sgpTle.test.ts   |   90 ++
+ src/lib/iono/sgp4/sgpTle.ts        |  247 +++++
+ src/lib/iono/sgp4/sgpVer.test.ts   |  131 +++
+ src/lib/iono/sgp4/tle/00005.e      |  Bin 0 -> 1779 bytes
+ src/lib/iono/sgp4/tle/04632.e      |  Bin 0 -> 899 bytes
+ src/lib/iono/sgp4/tle/06251.e      |  Bin 0 -> 3099 bytes
+ src/lib/iono/sgp4/tle/08195.e      |  Bin 0 -> 3099 bytes
+ src/lib/iono/sgp4/tle/09880.e      |  Bin 0 -> 3099 bytes
+ src/lib/iono/sgp4/tle/09998.e      |  Bin 0 -> 1889 bytes
+ src/lib/iono/sgp4/tle/11801.e      |  Bin 0 -> 899 bytes
+ src/lib/iono/sgp4/tle/14128.e      |  Bin 0 -> 3099 bytes
+ src/lib/iono/sgp4/tle/16925.e      |  Bin 0 -> 1779 bytes
+ src/lib/iono/sgp4/tle/20413.e      |  Bin 0 -> 8049 bytes
+ src/lib/iono/sgp4/tle/21897.e      |  Bin 0 -> 3099 bytes
+ src/lib/iono/sgp4/tle/22312.e      |  Bin 0 -> 2879 bytes
+ src/lib/iono/sgp4/tle/22674.e      |  Bin 0 -> 3099 bytes
+ src/lib/iono/sgp4/tle/23177.e      |  Bin 0 -> 1779 bytes
+ src/lib/iono/sgp4/tle/23333.e      |  Bin 0 -> 1999 bytes
+ src/lib/iono/sgp4/tle/23599.e      |  Bin 0 -> 4419 bytes
+ src/lib/iono/sgp4/tle/24208.e      |  Bin 0 -> 1779 bytes
+ src/lib/iono/sgp4/tle/25954.e      |  Bin 0 -> 3209 bytes
+ src/lib/iono/sgp4/tle/26900.e      |  Bin 0 -> 789 bytes
+ src/lib/iono/sgp4/tle/26975.e      |  Bin 0 -> 3099 bytes
+ src/lib/iono/sgp4/tle/28057.e      |  Bin 0 -> 3099 bytes
+ src/lib/iono/sgp4/tle/28129.e      |  Bin 0 -> 1779 bytes
+ src/lib/iono/sgp4/tle/28350.e      |  Bin 0 -> 1779 bytes
+ src/lib/iono/sgp4/tle/28623.e      |  Bin 0 -> 1779 bytes
+ src/lib/iono/sgp4/tle/28626.e      |  Bin 0 -> 1779 bytes
+ src/lib/iono/sgp4/tle/28872.e      |  Bin 0 -> 1559 bytes
+ src/lib/iono/sgp4/tle/29141.e      |  Bin 0 -> 2769 bytes
+ src/lib/iono/sgp4/tle/29238.e      |  Bin 0 -> 1779 bytes
+ src/lib/iono/sgp4/tle/33333.e      |  Bin 0 -> 899 bytes
+ src/lib/iono/sgp4/tle/33334.e      |  Bin 0 -> 459 bytes
+ src/lib/iono/sgp4/tle/33335.e      |  Bin 0 -> 8379 bytes
+ src/lib/iono/sgp4/tle/88888.e      |  Bin 0 -> 1779 bytes
+ 43 files changed, 2822 insertions(+)
+ create mode 100644 src/app/api/egress/route.ts
+ create mode 100644 src/lib/iono/sgp4/README.md
+ create mode 100644 src/lib/iono/sgp4/SGP4-VER.TLE
+ create mode 100644 src/lib/iono/sgp4/sgp4.ts
+ create mode 100644 src/lib/iono/sgp4/sgpCoord.test.ts
+ create mode 100644 src/lib/iono/sgp4/sgpCoord.ts
+ create mode 100644 src/lib/iono/sgp4/sgpErr.test.ts
+ create mode 100644 src/lib/iono/sgp4/sgpPin.test.ts
+ create mode 100644 src/lib/iono/sgp4/sgpTle.test.ts
+ create mode 100644 src/lib/iono/sgp4/sgpTle.ts
+ create mode 100644 src/lib/iono/sgp4/sgpVer.test.ts
+ create mode 100644 src/lib/iono/sgp4/tle/00005.e
+ create mode 100644 src/lib/iono/sgp4/tle/04632.e
+ create mode 100644 src/lib/iono/sgp4/tle/06251.e
+ create mode 100644 src/lib/iono/sgp4/tle/08195.e
+ create mode 100644 src/lib/iono/sgp4/tle/09880.e
+ create mode 100644 src/lib/iono/sgp4/tle/09998.e
+ create mode 100644 src/lib/iono/sgp4/tle/11801.e
+ create mode 100644 src/lib/iono/sgp4/tle/14128.e
+ create mode 100644 src/lib/iono/sgp4/tle/16925.e
+ create mode 100644 src/lib/iono/sgp4/tle/20413.e
+ create mode 100644 src/lib/iono/sgp4/tle/21897.e
+ create mode 100644 src/lib/iono/sgp4/tle/22312.e
+ create mode 100644 src/lib/iono/sgp4/tle/22674.e
+ create mode 100644 src/lib/iono/sgp4/tle/23177.e
+ create mode 100644 src/lib/iono/sgp4/tle/23333.e
+ create mode 100644 src/lib/iono/sgp4/tle/23599.e
+ create mode 100644 src/lib/iono/sgp4/tle/24208.e
+ create mode 100644 src/lib/iono/sgp4/tle/25954.e
+ create mode 100644 src/lib/iono/sgp4/tle/26900.e
+ create mode 100644 src/lib/iono/sgp4/tle/26975.e
+ create mode 100644 src/lib/iono/sgp4/tle/28057.e
+ create mode 100644 src/lib/iono/sgp4/tle/28129.e
+ create mode 100644 src/lib/iono/sgp4/tle/28350.e
+ create mode 100644 src/lib/iono/sgp4/tle/28623.e
+ create mode 100644 src/lib/iono/sgp4/tle/28626.e
+ create mode 100644 src/lib/iono/sgp4/tle/28872.e
+ create mode 100644 src/lib/iono/sgp4/tle/29141.e
+ create mode 100644 src/lib/iono/sgp4/tle/29238.e
+ create mode 100644 src/lib/iono/sgp4/tle/33333.e
+ create mode 100644 src/lib/iono/sgp4/tle/33334.e
+ create mode 100644 src/lib/iono/sgp4/tle/33335.e
+ create mode 100644 src/lib/iono/sgp4/tle/88888.e
+
+diff --git a/src/app/api/egress/route.ts b/src/app/api/egress/route.ts
+new file mode 100644
+index 0000000..5f2b77c
+--- /dev/null
++++ b/src/app/api/egress/route.ts
+@@ -0,0 +1,98 @@
++import { NextResponse } from "next/server";
++import { createHash } from "node:crypto";
++
++/**
++ * TEMPORARY (drop 313, F2b #10): egress probe, deploy-side.
++ * 312 §3: single GET, no UI, NO cache (live read), JSON with
++ * status/latency/sample PER ORIGIN for the three endpoints of the 311
++ * evidence (GP-TLE 25544 / GP-JSON stations / SatNOGS 25544).
++ * Voyager pattern: server-side fetch with timeout + X-Cache: miss as
++ * evidence. This file is DELETED by the shell drop that consumes its
++ * result (salvo indicación del operador).
++ * Path note: GLM suggested `_egress`, but underscore-prefixed folders
++ * are PRIVATE/unrouted in the App Router; hence the routable `egress`.
++ */
++
++export const dynamic = "force-dynamic";
++export const revalidate = 0;
++export const maxDuration = 60;
++
++const UA = "IonosphereLive3D-Web/1.0 (exploration demo)";
++const TIMEOUT_MS = 20_000;
++const SAMPLE_CHARS = 512;
++
++const TARGETS = [
++  {
++    id: "celestrak-gp-tle",
++    url: "https://celestrak.org/NORAD/elements/gp.php?CATNR=25544&FORMAT=TLE",
++  },
++  {
++    id: "celestrak-gp-json",
++    url: "https://celestrak.org/NORAD/elements/gp.php?GROUP=stations&FORMAT=JSON",
++  },
++  {
++    id: "satnogs-satellite",
++    url: "https://db.satnogs.org/api/satellites/?norad_cat_id=25544",
++  },
++] as const;
++
++interface OriginResult {
++  id: string;
++  url: string;
++  status: number | null;
++  latencyMs: number;
++  bytes: number;
++  contentType: string | null;
++  sha256: string | null;
++  sample: string;
++  error: string | null;
++}
++
++async function probe(id: string, url: string): Promise<OriginResult> {
++  const t0 = Date.now();
++  const out: OriginResult = {
++    id,
++    url,
++    status: null,
++    latencyMs: 0,
++    bytes: 0,
++    contentType: null,
++    sha256: null,
++    sample: "",
++    error: null,
++  };
++  try {
++    const ctrl = new AbortController();
++    const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
++    const res = await fetch(url, {
++      headers: { "User-Agent": UA, Accept: "*/*" },
++      signal: ctrl.signal,
++      cache: "no-store",
++      next: { revalidate: 0 },
++    });
++    clearTimeout(timer);
++    const body = await res.text();
++    out.status = res.status;
++    out.contentType = res.headers.get("content-type");
++    out.bytes = Buffer.byteLength(body, "utf8");
++    out.sha256 = createHash("sha256").update(body, "utf8").digest("hex");
++    out.sample = body.slice(0, SAMPLE_CHARS);
++  } catch (e) {
++    out.error = e instanceof Error ? `${e.name}: ${e.message}` : String(e);
++  }
++  out.latencyMs = Date.now() - t0;
++  return out;
++}
++
++export async function GET() {
++  const at = new Date().toISOString();
++  const targets = await Promise.all(TARGETS.map((t) => probe(t.id, t.url)));
++  return NextResponse.json(
++    {
++      at,
++      note: "temporary egress probe (drop 313); raw outputs are adjudicated in 314",
++      targets,
++    },
++    { headers: { "Cache-Control": "no-store", "X-Cache": "miss" } },
++  );
++}
+diff --git a/src/lib/iono/sgp4/README.md b/src/lib/iono/sgp4/README.md
+new file mode 100644
+index 0000000..733d86a
+--- /dev/null
++++ b/src/lib/iono/sgp4/README.md
+@@ -0,0 +1,58 @@
++# SGP4 port — boundary notice (drop 313, F2b #10)
++
++This directory contains a TypeScript translation of the SGP4 propagator
++from the Vallado C++ reference package (AIAA-2006-6753 bundle, `sgp4`
++Archer release), for **research, academic, and non-profit purposes
++only**. Any commercial use is prohibited.
++
++- Reference mirror pinned at the celestrak.org AIAA-2006-6753 bundle;
++  `SGP4.cpp` sha256
++  `2ee7ad0e8f201e8251894083fe21e33a7aace2f43c871bf04357eb44a891b06e`
++  (measured at acquisition; the same value is carried in the
++  `sgp4.ts` header).
++- The Vallado originals carry no separate license text; their
++  authorship/provenance notices (1980/1986 spacetrack reports; 2006
++  AIAA paper by Vallado, Crawford, Hujsak and Kelso) are mirrored in
++  each translated file header (patrón 300 §Q1.2).
++- Own new code in this directory is GPL-3.0-or-later (see `LICENSE` at
++  the repository root). The official verification fixtures
++  (`SGP4-VER.TLE`, `tle/*.e`) are test-only, fenced here byte-exact,
++  and NOT GPL.
++- Dual source of the official verification set: the same bundle is
++  re-generated/checked via python-sgp4 (pure-python model of the same
++  SGP4.cpp family, MIT) in the L4 pipeline; the license position rests
++  on both.
++- satellite.js (MIT) fallback is pre-authorized by the 312 ruling: NOT
++  used in 313. If ever needed it requires an adapter + the same oracle
++  + this notice + documented cause.
++- Web egress citizenship (wiring lands after 313): CelesTrak queries
++  use TTL caching, an own User-Agent and honor rate limits; SatNOGS
++  responses carry attribution.
++
++Files:
++
++| File | Source | Status |
++| --- | --- | --- |
++| `sgp4.ts` | `SGP4.cpp` (initl/sgp4init/dsinit/dpper/gstime/sgp4 core) | 313 translated |
++| `sgpTle.ts` | `SGP4.cpp` twoline2rv front-end (TLE parse; checksum strict by default) | 313 translated |
++| `sgpCoord.ts` | first-party (GMST-only TEME→ECEF + WGS-84 Hirvonen geodetic; no transcribed source) | 313 new code (GPL-3.0 own) |
++| `sgpVer.test.ts` | official verification harness | 313 test-only |
++| `sgpErr.test.ts` | exact return codes (special cases) | 313 test-only |
++| `sgpPin.test.ts` | branch pins vs python-sgp4 | 313 test-only |
++| `SGP4-VER.TLE` | official verification TLEs (8616 B) | test-only fixture, byte-exact |
++| `tle/*.e` | official verification ephemerides (32 files) | test-only fixtures, byte-exact |
++
++Numerics: binding oracle = the official verification set with the 312
++Q3 dual criterion (per component: abs ≤ 1e-6 km OR rel ≤ 1e-6;
++velocity 1e-9 km/s abs; return codes exact, dmissing-style).
++`SGP4-VER.TLE` lists 33 pairs / 32 unique satellites (20413 appears
++twice: the second entry is a second tsince range without an official
++`.e`, deduped by satnum in the harness). Measured on the drop machine
++after the 313 fixes: worstAbsPos 2.67e-8 km, worstAbsVel 5.0e-10 km/s,
++worstRelPos 3.3e-9, worstRelVel 3.9e-8 — circa 40x–300x inside the
++gate; the residual is libm rounding, not physics. Branch pins vs
++python-sgp4 (method 9c): coefficients measured bit-equal are pinned at
++1e-13 rel (margin for cross-V8 libm robustness); periodics carry 2x
++their measured margin as literal bounds (see `sgpPin.test.ts`).
++Constant set: wgs72, opsmode `'a'`. Fixtures are CRLF (test-only;
++patches ship them as binary so the source tree stays LF-pure).
+diff --git a/src/lib/iono/sgp4/SGP4-VER.TLE b/src/lib/iono/sgp4/SGP4-VER.TLE
+new file mode 100644
+index 0000000000000000000000000000000000000000..59b0cd847f0beee56aca8cdfd8835772b2892aae
+GIT binary patch
+literal 8616
+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
+YJ=Fj4FkWmk1gRq^&Z#_;Bxot{U*UwUi~s-t
+
+literal 0
+HcmV?d00001
+
+diff --git a/src/lib/iono/sgp4/sgp4.ts b/src/lib/iono/sgp4/sgp4.ts
+new file mode 100644
+index 0000000..ec78d73
+--- /dev/null
++++ b/src/lib/iono/sgp4/sgp4.ts
+@@ -0,0 +1,1659 @@
++// SPDX-License-Identifier: GPL-3.0-or-later
++// ionosphere-live-3d — SGP4 propagator port (drop 313, F2b #10).
++//
++// TypeScript transcription of `SGP4.cpp` from the Vallado C++ reference
++// package (sgp4 Archer release, mirror pinned at the celestrak.org
++// AIAA-2006-6753 bundle; see README.md, third-party boundary notice).
++// Source sha256: 2ee7ad0e8f201e8251894083fe21e33a7aace2f43c871bf04357eb44a891b06e
++// Faithful translation without physics changes
++// (traducción fiel sin cambios de física). Translated 2026-10-17.
++//
++// The original carries no separate license text; its file header (mirrored
++// above in spirit) documents provenance back to the 1980/1986 spacetrack
++// reports and the 2006 AIAA paper by Vallado, Crawford, Hujsak and Kelso.
++//
++// Notes: C++ `double&` out-params become returned objects (pure where the
++// source is pure); `sgp4init` mutates the passed record exactly like the
++// C++ reference semantics. `fmod` (truncated) maps to a truncating
++// remainder helper (NOT the floored JS `%` for negatives).
++
++const PI = 3.14159265358979323846;
++const TWOPI = 2.0 * PI;
++
++/** Truncated remainder (C/C++ fmod semantics; JS % differs for negatives only in sign handling — same here, kept explicit). */
++function fmod2(x: number, y: number): number {
++  return x - Math.trunc(x / y) * y;
++}
++
++export type GravConstKind = "wgs72old" | "wgs72" | "wgs84";
++
++/** Full SGP4 element set record (elsetrec). Mutable by sgp4init/sgp4. */
++export interface ElsetRec {
++  satnum: string;
++  epochyr: number;
++  epochtynumrev: number;
++  error: number;
++  operationmode: string;
++  init: string;
++  method: string;
++  // Near Earth
++  isimp: number;
++  aycof: number; con41: number; cc1: number; cc4: number; cc5: number;
++  d2: number; d3: number; d4: number;
++  delmo: number; eta: number; argpdot: number; omgcof: number;
++  sinmao: number; t: number; t2cof: number; t3cof: number;
++  t4cof: number; t5cof: number; x1mth2: number; x7thm1: number;
++  mdot: number; nodedot: number; xlcof: number; xmcof: number;
++  nodecf: number;
++  // Deep Space
++  irez: number;
++  d2201: number; d2211: number; d3210: number; d3222: number;
++  d4410: number; d4422: number; d5220: number; d5232: number;
++  d5421: number; d5433: number; dedt: number; del1: number;
++  del2: number; del3: number; didt: number; dmdt: number;
++  dnodt: number; domdt: number; e3: number; ee2: number;
++  peo: number; pgho: number; pho: number; pinco: number;
++  plo: number; se2: number; se3: number; sgh2: number;
++  sgh3: number; sgh4: number; sh2: number; sh3: number;
++  si2: number; si3: number; sl2: number; sl3: number;
++  sl4: number; gsto: number; xfact: number; xgh2: number;
++  xgh3: number; xgh4: number; xh2: number; xh3: number;
++  xi2: number; xi3: number; xl2: number; xl3: number;
++  xl4: number; xlamo: number; zmol: number; zmos: number;
++  atime: number; xli: number; xni: number;
++  // Extra elements
++  a: number; altp: number; alta: number;
++  epochdays: number; jdsatepoch: number; jdsatepochF: number;
++  nddot: number; ndot: number;
++  bstar: number; rcse: number; inclo: number; nodeo: number;
++  ecco: number; argpo: number; mo: number; noKozai: number;
++  classification: string; intldesg: string;
++  ephtype: number; elnum: number; revnum: number;
++  noUnkozai: number;
++  am: number; em: number; im: number; Om: number; om: number; mm: number; nm: number;
++  tumin: number; mus: number; radiusearthkm: number; xke: number;
++  j2: number; j3: number; j4: number; j3oj2: number;
++  diaMm: number; periodSec: number; active: number; notOrbital: number;
++  rcsM2: number;
++}
++
++export function newElsetRec(): ElsetRec {
++  return {
++    satnum: "", epochyr: 0, epochtynumrev: 0, error: 0,
++    operationmode: "a", init: "", method: "",
++    isimp: 0,
++    aycof: 0, con41: 0, cc1: 0, cc4: 0, cc5: 0,
++    d2: 0, d3: 0, d4: 0,
++    delmo: 0, eta: 0, argpdot: 0, omgcof: 0,
++    sinmao: 0, t: 0, t2cof: 0, t3cof: 0,
++    t4cof: 0, t5cof: 0, x1mth2: 0, x7thm1: 0,
++    mdot: 0, nodedot: 0, xlcof: 0, xmcof: 0,
++    nodecf: 0,
++    irez: 0,
++    d2201: 0, d2211: 0, d3210: 0, d3222: 0,
++    d4410: 0, d4422: 0, d5220: 0, d5232: 0,
++    d5421: 0, d5433: 0, dedt: 0, del1: 0,
++    del2: 0, del3: 0, didt: 0, dmdt: 0,
++    dnodt: 0, domdt: 0, e3: 0, ee2: 0,
++    peo: 0, pgho: 0, pho: 0, pinco: 0,
++    plo: 0, se2: 0, se3: 0, sgh2: 0,
++    sgh3: 0, sgh4: 0, sh2: 0, sh3: 0,
++    si2: 0, si3: 0, sl2: 0, sl3: 0,
++    sl4: 0, gsto: 0, xfact: 0, xgh2: 0,
++    xgh3: 0, xgh4: 0, xh2: 0, xh3: 0,
++    xi2: 0, xi3: 0, xl2: 0, xl3: 0,
++    xl4: 0, xlamo: 0, zmol: 0, zmos: 0,
++    atime: 0, xli: 0, xni: 0,
++    a: 0, altp: 0, alta: 0,
++    epochdays: 0, jdsatepoch: 0, jdsatepochF: 0,
++    nddot: 0, ndot: 0,
++    bstar: 0, rcse: 0, inclo: 0, nodeo: 0,
++    ecco: 0, argpo: 0, mo: 0, noKozai: 0,
++    classification: "", intldesg: "",
++    ephtype: 0, elnum: 0, revnum: 0,
++    noUnkozai: 0,
++    am: 0, em: 0, im: 0, Om: 0, om: 0, mm: 0, nm: 0,
++    tumin: 0, mus: 0, radiusearthkm: 0, xke: 0,
++    j2: 0, j3: 0, j4: 0, j3oj2: 0,
++    diaMm: 0, periodSec: 0, active: 0, notOrbital: 0,
++    rcsM2: 0,
++  };
++}
++
++// ---------------------------------------------------------------------------
++// dpper: deep-space long-period periodic contributions
++// ---------------------------------------------------------------------------
++
++export interface DpperState {
++  ep: number; inclp: number; nodep: number; argpp: number; mp: number;
++}
++
++export function dpper(
++  s: {
++    e3: number; ee2: number; peo: number; pgho: number; pho: number;
++    pinco: number; plo: number; se2: number; se3: number;
++    sgh2: number; sgh3: number; sgh4: number; sh2: number; sh3: number;
++    si2: number; si3: number; sl2: number; sl3: number; sl4: number;
++    t: number; xgh2: number; xgh3: number; xgh4: number;
++    xh2: number; xh3: number; xi2: number; xi3: number;
++    xl2: number; xl3: number; xl4: number; zmol: number; zmos: number;
++    inclo: number;
++  },
++  init: string,
++  st: DpperState,
++  opsmode: string,
++): DpperState {
++  let { ep, inclp, nodep, argpp, mp } = st;
++  const zns = 1.19459e-5;
++  const zes = 0.01675;
++  const znl = 1.5835218e-4;
++  const zel = 0.0549;
++
++  let zm = s.zmos + zns * s.t;
++  if (init === "y") zm = s.zmos;
++  let zf = zm + 2.0 * zes * Math.sin(zm);
++  let sinzf = Math.sin(zf);
++  let f2 = 0.5 * sinzf * sinzf - 0.25;
++  let f3 = -0.5 * sinzf * Math.cos(zf);
++  const ses = s.se2 * f2 + s.se3 * f3;
++  const sis = s.si2 * f2 + s.si3 * f3;
++  const sls = s.sl2 * f2 + s.sl3 * f3 + s.sl4 * sinzf;
++  const sghs = s.sgh2 * f2 + s.sgh3 * f3 + s.sgh4 * sinzf;
++  const shs = s.sh2 * f2 + s.sh3 * f3;
++  zm = s.zmol + znl * s.t;
++  if (init === "y") zm = s.zmol;
++  zf = zm + 2.0 * zel * Math.sin(zm);
++  sinzf = Math.sin(zf);
++  f2 = 0.5 * sinzf * sinzf - 0.25;
++  f3 = -0.5 * sinzf * Math.cos(zf);
++  const sel = s.ee2 * f2 + s.e3 * f3;
++  const sil = s.xi2 * f2 + s.xi3 * f3;
++  const sll = s.xl2 * f2 + s.xl3 * f3 + s.xl4 * sinzf;
++  const sghl = s.xgh2 * f2 + s.xgh3 * f3 + s.xgh4 * sinzf;
++  const shll = s.xh2 * f2 + s.xh3 * f3;
++  let pe = ses + sel;
++  let pinc = sis + sil;
++  let pl = sls + sll;
++  let pgh = sghs + sghl;
++  let ph = shs + shll;
++
++  if (init === "n") {
++    pe = pe - s.peo;
++    pinc = pinc - s.pinco;
++    pl = pl - s.plo;
++    pgh = pgh - s.pgho;
++    ph = ph - s.pho;
++    inclp = inclp + pinc;
++    ep = ep + pe;
++    const sinip = Math.sin(inclp);
++    const cosip = Math.cos(inclp);
++
++    if (inclp >= 0.2) {
++      ph = ph / sinip;
++      pgh = pgh - cosip * ph;
++      argpp = argpp + pgh;
++      nodep = nodep + ph;
++      mp = mp + pl;
++    } else {
++      const sinop = Math.sin(nodep);
++      const cosop = Math.cos(nodep);
++      let alfdp = sinip * sinop;
++      let betdp = sinip * cosop;
++      const dalf = ph * cosop + pinc * cosip * sinop;
++      const dbet = -ph * sinop + pinc * cosip * cosop;
++      alfdp = alfdp + dalf;
++      betdp = betdp + dbet;
++      nodep = fmod2(nodep, TWOPI);
++      if (nodep < 0.0 && opsmode === "a") nodep = nodep + TWOPI;
++      let xls = mp + argpp + cosip * nodep;
++      const dls = pl + pgh - pinc * nodep * sinip;
++      xls = xls + dls;
++      const xnoh = nodep;
++      nodep = Math.atan2(alfdp, betdp);
++      if (nodep < 0.0 && opsmode === "a") nodep = nodep + TWOPI;
++      if (Math.abs(xnoh - nodep) > PI) {
++        if (nodep < xnoh) nodep = nodep + TWOPI;
++        else nodep = nodep - TWOPI;
++      }
++      mp = mp + pl;
++      argpp = xls - mp - cosip * nodep;
++    }
++  }
++
++  return { ep, inclp, nodep, argpp, mp };
++}
++
++// ---------------------------------------------------------------------------
++// dscom: deep-space common items
++// ---------------------------------------------------------------------------
++
++export interface DscomOut {
++  snodm: number; cnodm: number; sinim: number; cosim: number;
++  sinomm: number; cosomm: number; day: number; e3: number; ee2: number;
++  em: number; emsq: number; gam: number; peo: number; pgho: number;
++  pho: number; pinco: number; plo: number; rtemsq: number;
++  se2: number; se3: number; sgh2: number; sgh3: number; sgh4: number;
++  sh2: number; sh3: number; si2: number; si3: number;
++  sl2: number; sl3: number; sl4: number;
++  s1: number; s2: number; s3: number; s4: number; s5: number;
++  s6: number; s7: number;
++  ss1: number; ss2: number; ss3: number; ss4: number; ss5: number;
++  ss6: number; ss7: number;
++  sz1: number; sz2: number; sz3: number;
++  sz11: number; sz12: number; sz13: number;
++  sz21: number; sz22: number; sz23: number;
++  sz31: number; sz32: number; sz33: number;
++  xgh2: number; xgh3: number; xgh4: number; xh2: number;
++  xh3: number; xi2: number; xi3: number; xl2: number; xl3: number;
++  xl4: number; nm: number;
++  z1: number; z2: number; z3: number;
++  z11: number; z12: number; z13: number;
++  z21: number; z22: number; z23: number;
++  z31: number; z32: number; z33: number;
++  zmol: number; zmos: number;
++}
++
++export function dscom(
++  epoch: number, ep: number, argpp: number, tc: number,
++  inclp: number, nodep: number, np: number,
++): DscomOut {
++  const zes = 0.01675;
++  const zel = 0.0549;
++  const c1ss = 2.9864797e-6;
++  const c1l = 4.7968065e-7;
++  const zsinis = 0.39785416;
++  const zcosis = 0.91744867;
++  const zcosgs = 0.1945905;
++  const zsings = -0.98088458;
++
++  const nm = np;
++  const em = ep;
++  const snodm = Math.sin(nodep);
++  const cnodm = Math.cos(nodep);
++  const sinomm = Math.sin(argpp);
++  const cosomm = Math.cos(argpp);
++  const sinim = Math.sin(inclp);
++  const cosim = Math.cos(inclp);
++  const emsq = em * em;
++  const betasq = 1.0 - emsq;
++  const rtemsq = Math.sqrt(betasq);
++
++  let peo = 0.0;
++  let pinco = 0.0;
++  let plo = 0.0;
++  let pgho = 0.0;
++  let pho = 0.0;
++  const day = epoch + 18261.5 + tc / 1440.0;
++  const xnodce = fmod2(4.523602 - 9.2422029e-4 * day, TWOPI);
++  const stem = Math.sin(xnodce);
++  const ctem = Math.cos(xnodce);
++  const zcosil = 0.91375164 - 0.03568096 * ctem;
++  const zsinil = Math.sqrt(1.0 - zcosil * zcosil);
++  const zsinhl = 0.089683511 * stem / zsinil;
++  const zcoshl = Math.sqrt(1.0 - zsinhl * zsinhl);
++  const gam = 5.8351514 + 0.001944368 * day;
++  let zx = (zsinis * stem) / zsinil;
++  const zy = zcoshl * ctem + zcosis * zsinhl * stem;
++  zx = Math.atan2(zx, zy);
++  zx = gam + zx - xnodce;
++  const zcosgl = Math.cos(zx);
++  const zsingl = Math.sin(zx);
++
++  let zcosg = zcosgs;
++  let zsing = zsings;
++  let zcosi = zcosis;
++  let zsini = zsinis;
++  let zcosh = cnodm;
++  let zsinh = snodm;
++  let cc = c1ss;
++  const xnoi = 1.0 / nm;
++
++  let a1 = 0, a2 = 0, a3 = 0, a4 = 0, a5 = 0, a6 = 0, a7 = 0;
++  let a8 = 0, a9 = 0, a10 = 0;
++  let x1 = 0, x2 = 0, x3 = 0, x4 = 0, x5 = 0, x6 = 0, x7 = 0, x8 = 0;
++  let z31 = 0, z32 = 0, z33 = 0;
++  let z1 = 0, z2 = 0, z3 = 0;
++  let z11 = 0, z12 = 0, z13 = 0;
++  let z21 = 0, z22 = 0, z23 = 0;
++  let s3 = 0, s2 = 0, s4 = 0, s1 = 0, s5 = 0, s6 = 0, s7 = 0;
++  let ss1 = 0, ss2 = 0, ss3 = 0, ss4 = 0, ss5 = 0, ss6 = 0, ss7 = 0;
++  let sz1 = 0, sz2 = 0, sz3 = 0;
++  let sz11 = 0, sz12 = 0, sz13 = 0;
++  let sz21 = 0, sz22 = 0, sz23 = 0;
++  let sz31 = 0, sz32 = 0, sz33 = 0;
++
++  for (let lsflg = 1; lsflg <= 2; lsflg++) {
++    a1 = zcosg * zcosh + zsing * zcosi * zsinh;
++    a3 = -zsing * zcosh + zcosg * zcosi * zsinh;
++    a7 = -zcosg * zsinh + zsing * zcosi * zcosh;
++    a8 = zsing * zsini;
++    a9 = zsing * zsinh + zcosg * zcosi * zcosh;
++    a10 = zcosg * zsini;
++    a2 = cosim * a7 + sinim * a8;
++    a4 = cosim * a9 + sinim * a10;
++    a5 = -sinim * a7 + cosim * a8;
++    a6 = -sinim * a9 + cosim * a10;
++
++    x1 = a1 * cosomm + a2 * sinomm;
++    x2 = a3 * cosomm + a4 * sinomm;
++    x3 = -a1 * sinomm + a2 * cosomm;
++    x4 = -a3 * sinomm + a4 * cosomm;
++    x5 = a5 * sinomm;
++    x6 = a6 * sinomm;
++    x7 = a5 * cosomm;
++    x8 = a6 * cosomm;
++
++    z31 = 12.0 * x1 * x1 - 3.0 * x3 * x3;
++    z32 = 24.0 * x1 * x2 - 6.0 * x3 * x4;
++    z33 = 12.0 * x2 * x2 - 3.0 * x4 * x4;
++    z1 = 3.0 * (a1 * a1 + a2 * a2) + z31 * emsq;
++    z2 = 6.0 * (a1 * a3 + a2 * a4) + z32 * emsq;
++    z3 = 3.0 * (a3 * a3 + a4 * a4) + z33 * emsq;
++    z11 = -6.0 * a1 * a5 + emsq * (-24.0 * x1 * x7 - 6.0 * x3 * x5);
++    z12 =
++      -6.0 * (a1 * a6 + a3 * a5) + emsq * (-24.0 * (x2 * x7 + x1 * x8) - 6.0 * (x3 * x6 + x4 * x5));
++    z13 = -6.0 * a3 * a6 + emsq * (-24.0 * x2 * x8 - 6.0 * x4 * x6);
++    z21 = 6.0 * a2 * a5 + emsq * (24.0 * x1 * x5 - 6.0 * x3 * x7);
++    z22 =
++      6.0 * (a4 * a5 + a2 * a6) + emsq * (24.0 * (x2 * x5 + x1 * x6) - 6.0 * (x4 * x7 + x3 * x8));
++    z23 = 6.0 * a4 * a6 + emsq * (24.0 * x2 * x6 - 6.0 * x4 * x8);
++    z1 = z1 + z1 + betasq * z31;
++    z2 = z2 + z2 + betasq * z32;
++    z3 = z3 + z3 + betasq * z33;
++    s3 = cc * xnoi;
++    s2 = (-0.5 * s3) / rtemsq;
++    s4 = s3 * rtemsq;
++    s1 = -15.0 * em * s4;
++    s5 = x1 * x3 + x2 * x4;
++    s6 = x2 * x3 + x1 * x4;
++    s7 = x2 * x4 - x1 * x3;
++
++    if (lsflg === 1) {
++      ss1 = s1; ss2 = s2; ss3 = s3; ss4 = s4;
++      ss5 = s5; ss6 = s6; ss7 = s7;
++      sz1 = z1; sz2 = z2; sz3 = z3;
++      sz11 = z11; sz12 = z12; sz13 = z13;
++      sz21 = z21; sz22 = z22; sz23 = z23;
++      sz31 = z31; sz32 = z32; sz33 = z33;
++      zcosg = zcosgl;
++      zsing = zsingl;
++      zcosi = zcosil;
++      zsini = zsinil;
++      zcosh = zcoshl * cnodm + zsinhl * snodm;
++      zsinh = snodm * zcoshl - cnodm * zsinhl;
++      cc = c1l;
++    }
++  }
++
++  const zmol = fmod2(4.7199672 + 0.2299715 * day - gam, TWOPI);
++  const zmos = fmod2(6.2565837 + 0.017201977 * day, TWOPI);
++
++  const se2 = 2.0 * ss1 * ss6;
++  const se3 = 2.0 * ss1 * ss7;
++  const si2 = 2.0 * ss2 * sz12;
++  const si3 = 2.0 * ss2 * (sz13 - sz11);
++  const sl2 = -2.0 * ss3 * sz2;
++  const sl3 = -2.0 * ss3 * (sz3 - sz1);
++  const sl4 = -2.0 * ss3 * (-21.0 - 9.0 * emsq) * zes;
++  const sgh2 = 2.0 * ss4 * sz32;
++  const sgh3 = 2.0 * ss4 * (sz33 - sz31);
++  const sgh4 = -18.0 * ss4 * zes;
++  const sh2 = -2.0 * ss2 * sz22;
++  const sh3 = -2.0 * ss2 * (sz23 - sz21);
++
++  const ee2 = 2.0 * s1 * s6;
++  const e3 = 2.0 * s1 * s7;
++  const xi2 = 2.0 * s2 * z12;
++  const xi3 = 2.0 * s2 * (z13 - z11);
++  const xl2 = -2.0 * s3 * z2;
++  const xl3 = -2.0 * s3 * (z3 - z1);
++  const xl4 = -2.0 * s3 * (-21.0 - 9.0 * emsq) * zel;
++  const xgh2 = 2.0 * s4 * z32;
++  const xgh3 = 2.0 * s4 * (z33 - z31);
++  const xgh4 = -18.0 * s4 * zel;
++  const xh2 = -2.0 * s2 * z22;
++  const xh3 = -2.0 * s2 * (z23 - z21);
++
++  return {
++    snodm, cnodm, sinim, cosim, sinomm, cosomm, day,
++    e3, ee2, em, emsq, gam, peo, pgho, pho, pinco, plo, rtemsq,
++    se2, se3, sgh2, sgh3, sgh4, sh2, sh3, si2, si3, sl2, sl3, sl4,
++    s1, s2, s3, s4, s5, s6, s7,
++    ss1, ss2, ss3, ss4, ss5, ss6, ss7,
++    sz1, sz2, sz3, sz11, sz12, sz13, sz21, sz22, sz23, sz31, sz32, sz33,
++    xgh2, xgh3, xgh4, xh2, xh3, xi2, xi3, xl2, xl3, xl4, nm,
++    z1, z2, z3, z11, z12, z13, z21, z22, z23, z31, z32, z33,
++    zmol, zmos,
++  };
++}
++
++// ---------------------------------------------------------------------------
++// dsinit: deep-space resonance initialization
++// ---------------------------------------------------------------------------
++
++export interface DsinitIn {
++  xke: number;
++  cosim: number; emsq: number; argpo: number;
++  s1: number; s2: number; s3: number; s4: number; s5: number;
++  sinim: number;
++  ss1: number; ss2: number; ss3: number; ss4: number; ss5: number;
++  sz1: number; sz3: number; sz11: number; sz13: number;
++  sz21: number; sz23: number; sz31: number; sz33: number;
++  t: number; tc: number; gsto: number;
++  mo: number; mdot: number; no: number; nodeo: number; nodedot: number;
++  xpidot: number;
++  z1: number; z3: number; z11: number; z13: number;
++  z21: number; z23: number; z31: number; z33: number;
++  ecco: number; eccsq: number;
++}
++
++export interface DsinitState {
++  em: number; argpm: number; inclm: number; mm: number;
++  nm: number; nodem: number;
++}
++
++export interface DsinitOut extends DsinitState {
++  irez: number;
++  atime: number;
++  d2201: number; d2211: number; d3210: number; d3222: number;
++  d4410: number; d4422: number; d5220: number; d5232: number;
++  d5421: number; d5433: number;
++  dedt: number; didt: number; dmdt: number; dndt: number;
++  dnodt: number; domdt: number;
++  del1: number; del2: number; del3: number;
++  xfact: number; xlamo: number; xli: number; xni: number;
++}
++
++export function dsinit(q: DsinitIn, st: DsinitState): DsinitOut {
++  let { em, argpm, inclm, mm, nm, nodem } = st;
++  const {
++    xke, cosim, emsq, argpo, s1, s2, s3, s4, s5, sinim,
++    ss1, ss2, ss3, ss4, ss5, sz1, sz3, sz11, sz13,
++    sz21, sz23, sz31, sz33, t, tc, gsto,
++    mo, mdot, no, nodeo, nodedot, xpidot,
++    z1, z3, z11, z13, z21, z23, z31, z33, ecco, eccsq,
++  } = q;
++
++  const q22 = 1.7891679e-6;
++  const q31 = 2.1460748e-6;
++  const q33 = 2.2123015e-7;
++  const root22 = 1.7891679e-6;
++  const root44 = 7.3636953e-9;
++  const root54 = 2.1765803e-9;
++  const rptim = 4.37526908801129966e-3;
++  const root32 = 3.7393792e-7;
++  const root52 = 1.1428639e-7;
++  const x2o3 = 2.0 / 3.0;
++  const znl = 1.5835218e-4;
++  const zns = 1.19459e-5;
++
++  let irez = 0;
++  if (nm < 0.0052359877 && nm > 0.0034906585) irez = 1;
++  if (nm >= 8.26e-3 && nm <= 9.24e-3 && em >= 0.5) irez = 2;
++
++  let ses = ss1 * zns * ss5;
++  let sis = ss2 * zns * (sz11 + sz13);
++  let sls = -zns * ss3 * (sz1 + sz3 - 14.0 - 6.0 * emsq);
++  let sghs = ss4 * zns * (sz31 + sz33 - 6.0);
++  let shs = -zns * ss2 * (sz21 + sz23);
++  if (inclm < 5.2359877e-2 || inclm > PI - 5.2359877e-2) shs = 0.0;
++  if (sinim !== 0.0) shs = shs / sinim;
++  const sgs = sghs - cosim * shs;
++
++  let dedt = ses + s1 * znl * s5;
++  let didt = sis + s2 * znl * (z11 + z13);
++  let dmdt = sls - znl * s3 * (z1 + z3 - 14.0 - 6.0 * emsq);
++  const sghl = s4 * znl * (z31 + z33 - 6.0);
++  let shll = -znl * s2 * (z21 + z23);
++  if (inclm < 5.2359877e-2 || inclm > PI - 5.2359877e-2) shll = 0.0;
++  let domdt = sgs + sghl;
++  let dnodt = shs;
++  if (sinim !== 0.0) {
++    domdt = domdt - (cosim / sinim) * shll;
++    dnodt = dnodt + shll / sinim;
++  }
++
++  let dndt = 0.0;
++  const theta = fmod2(gsto + tc * rptim, TWOPI);
++  em = em + dedt * t;
++  inclm = inclm + didt * t;
++  argpm = argpm + domdt * t;
++  nodem = nodem + dnodt * t;
++  mm = mm + dmdt * t;
++
++  let aonv = 0, cosisq = 0, emo = 0, emsqo = 0, eoc = 0;
++  let g201 = 0, g211 = 0, g300 = 0, g310 = 0, g322 = 0;
++  let g410 = 0, g422 = 0, g520 = 0, g521 = 0, g532 = 0, g533 = 0;
++  let sini2 = 0;
++  let f220 = 0, f221 = 0, f310 = 0, f311 = 0, f321 = 0, f322 = 0, f330 = 0;
++  let f441 = 0, f442 = 0, f522 = 0, f523 = 0, f542 = 0, f543 = 0;
++  let del1 = 0, del2 = 0, del3 = 0;
++  let xfact = 0, xlamo = 0, xli = 0, xni = 0, atime = 0;
++  let d2201 = 0, d2211 = 0, d3210 = 0, d3222 = 0;
++  let d4410 = 0, d4422 = 0, d5220 = 0, d5232 = 0;
++  let d5421 = 0, d5433 = 0;
++
++  if (irez !== 0) {
++    aonv = Math.pow(nm / xke, x2o3);
++
++    if (irez === 2) {
++      cosisq = cosim * cosim;
++      emo = em;
++      em = ecco;
++      emsqo = emsq;
++      const emsqNew = eccsq;
++      eoc = em * emsqNew;
++      g201 = -0.306 - (em - 0.64) * 0.44;
++
++      if (em <= 0.65) {
++        g211 = 3.616 - 13.247 * em + 16.29 * emsqNew;
++        g310 = -19.302 + 117.39 * em - 228.419 * emsqNew + 156.591 * eoc;
++        g322 = -18.9068 + 109.7927 * em - 214.6334 * emsqNew + 146.5816 * eoc;
++        g410 = -41.122 + 242.694 * em - 471.094 * emsqNew + 313.953 * eoc;
++        g422 = -146.407 + 841.88 * em - 1629.014 * emsqNew + 1083.435 * eoc;
++        g520 = -532.114 + 3017.977 * em - 5740.032 * emsqNew + 3708.276 * eoc;
++      } else {
++        g211 = -72.099 + 331.819 * em - 508.738 * emsqNew + 266.724 * eoc;
++        g310 = -346.844 + 1582.851 * em - 2415.925 * emsqNew + 1246.113 * eoc;
++        g322 = -342.585 + 1554.908 * em - 2366.899 * emsqNew + 1215.972 * eoc;
++        g410 = -1052.797 + 4758.686 * em - 7193.992 * emsqNew + 3651.957 * eoc;
++        g422 = -3581.69 + 16178.11 * em - 24462.77 * emsqNew + 12422.52 * eoc;
++        if (em > 0.715) g520 = -5149.66 + 29936.92 * em - 54087.36 * emsqNew + 31324.56 * eoc;
++        else g520 = 1464.74 - 4664.75 * em + 3763.64 * emsqNew;
++      }
++      if (em < 0.7) {
++        g533 = -919.2277 + 4988.61 * em - 9064.77 * emsqNew + 5542.21 * eoc;
++        g521 = -822.71072 + 4568.6173 * em - 8491.4146 * emsqNew + 5337.524 * eoc;
++        g532 = -853.666 + 4690.25 * em - 8624.77 * emsqNew + 5341.4 * eoc;
++      } else {
++        g533 = -37995.78 + 161616.52 * em - 229838.2 * emsqNew + 109377.94 * eoc;
++        g521 = -51752.104 + 218913.95 * em - 309468.16 * emsqNew + 146349.42 * eoc;
++        g532 = -40023.88 + 170470.89 * em - 242699.48 * emsqNew + 115605.82 * eoc;
++      }
++
++      sini2 = sinim * sinim;
++      f220 = 0.75 * (1.0 + 2.0 * cosim + cosisq);
++      f221 = 1.5 * sini2;
++      f321 = 1.875 * sinim * (1.0 - 2.0 * cosim - 3.0 * cosisq);
++      f322 = -1.875 * sinim * (1.0 + 2.0 * cosim - 3.0 * cosisq);
++      f441 = 35.0 * sini2 * f220;
++      f442 = 39.375 * sini2 * sini2;
++      f522 =
++        9.84375 * sinim * (sini2 * (1.0 - 2.0 * cosim - 5.0 * cosisq) +
++          0.33333333 * (-2.0 + 4.0 * cosim + 6.0 * cosisq));
++      f523 =
++        sinim * (4.92187512 * sini2 * (-2.0 - 4.0 * cosim + 10.0 * cosisq) +
++          6.56250012 * (1.0 + 2.0 * cosim - 3.0 * cosisq));
++      f542 =
++        29.53125 * sinim * (2.0 - 8.0 * cosim + cosisq * (-12.0 + 8.0 * cosim + 10.0 * cosisq));
++      f543 =
++        29.53125 * sinim * (-2.0 - 8.0 * cosim + cosisq * (12.0 + 8.0 * cosim - 10.0 * cosisq));
++      const xno2 = nm * nm;
++      const ainv2 = aonv * aonv;
++      let temp1 = 3.0 * xno2 * ainv2;
++      let temp = temp1 * root22;
++      d2201 = temp * f220 * g201;
++      d2211 = temp * f221 * g211;
++      temp1 = temp1 * aonv;
++      temp = temp1 * root32;
++      d3210 = temp * f321 * g310;
++      d3222 = temp * f322 * g322;
++      temp1 = temp1 * aonv;
++      temp = 2.0 * temp1 * root44;
++      d4410 = temp * f441 * g410;
++      d4422 = temp * f442 * g422;
++      temp1 = temp1 * aonv;
++      temp = temp1 * root52;
++      d5220 = temp * f522 * g520;
++      d5232 = temp * f523 * g532;
++      temp = 2.0 * temp1 * root54;
++      d5421 = temp * f542 * g521;
++      d5433 = temp * f543 * g533;
++      xlamo = fmod2(mo + nodeo + nodeo - theta - theta, TWOPI);
++      xfact = mdot + dmdt + 2.0 * (nodedot + dnodt - rptim) - no;
++      em = emo;
++    }
++
++    if (irez === 1) {
++      g201 = 1.0 + emsq * (-2.5 + 0.8125 * emsq);
++      g310 = 1.0 + 2.0 * emsq;
++      g300 = 1.0 + emsq * (-6.0 + 6.60937 * emsq);
++      f220 = 0.75 * (1.0 + cosim) * (1.0 + cosim);
++      f311 = 0.9375 * sinim * sinim * (1.0 + 3.0 * cosim) - 0.75 * (1.0 + cosim);
++      f330 = 1.0 + cosim;
++      f330 = 1.875 * f330 * f330 * f330;
++      del1 = 3.0 * nm * nm * aonv * aonv;
++      del2 = 2.0 * del1 * f220 * g201 * q22;
++      del3 = 3.0 * del1 * f330 * g300 * q33 * aonv;
++      del1 = del1 * f311 * g310 * q31 * aonv;
++      xlamo = fmod2(mo + nodeo + argpo - theta, TWOPI);
++      xfact = mdot + xpidot - rptim + dmdt + domdt + dnodt - no;
++    }
++
++    xli = xlamo;
++    xni = no;
++    atime = 0.0;
++    nm = no + dndt;
++    void emsqo;
++  }
++
++  return {
++    em, argpm, inclm, mm, nm, nodem,
++    irez, atime,
++    d2201, d2211, d3210, d3222, d4410, d4422, d5220, d5232, d5421, d5433,
++    dedt, didt, dmdt, dndt, dnodt, domdt,
++    del1, del2, del3, xfact, xlamo, xli, xni,
++  };
++}
++
++// ---------------------------------------------------------------------------
++// dspace: deep-space resonance effects
++// ---------------------------------------------------------------------------
++
++export interface DspaceState {
++  em: number; argpm: number; inclm: number;
++  xli: number; mm: number; xni: number; nodem: number;
++  nm: number;
++}
++
++export interface DspaceOut extends DspaceState {
++  atime: number;
++  dndt: number;
++}
++
++export function dspace(
++  s: {
++    irez: number;
++    d2201: number; d2211: number; d3210: number; d3222: number;
++    d4410: number; d4422: number; d5220: number; d5232: number;
++    d5421: number; d5433: number;
++    dedt: number; del1: number; del2: number; del3: number;
++    didt: number; dmdt: number; dnodt: number; domdt: number;
++    argpo: number; argpdot: number; t: number; tc: number;
++    gsto: number; xfact: number; xlamo: number; no: number;
++  },
++  st: DspaceState,
++  atimeIn: number,
++): DspaceOut {
++  let { em, argpm, inclm, xli, mm, xni, nodem, nm } = st;
++  const {
++    irez, d2201, d2211, d3210, d3222, d4410, d4422, d5220, d5232,
++    d5421, d5433, dedt, del1, del2, del3, didt, dmdt, dnodt, domdt,
++    argpo, argpdot, t, tc, gsto, xfact, xlamo, no,
++  } = s;
++  let atime = atimeIn;
++
++  const fasx2 = 0.13130908;
++  const fasx4 = 2.8843198;
++  const fasx6 = 0.37448087;
++  const g22 = 5.7686396;
++  const g32 = 0.95240898;
++  const g44 = 1.8014998;
++  const g52 = 1.050833;
++  const g54 = 4.4108898;
++  const rptim = 4.37526908801129966e-3;
++  const stepp = 720.0;
++  const stepn = -720.0;
++  const step2 = 259200.0;
++
++  let dndt = 0.0;
++  const theta = fmod2(gsto + tc * rptim, TWOPI);
++  em = em + dedt * t;
++  inclm = inclm + didt * t;
++  argpm = argpm + domdt * t;
++  nodem = nodem + dnodt * t;
++  mm = mm + dmdt * t;
++
++  let ft = 0.0;
++  if (irez !== 0) {
++    if (atime === 0.0 || t * atime <= 0.0 || Math.abs(t) < Math.abs(atime)) {
++      atime = 0.0;
++      xni = no;
++      xli = xlamo;
++    }
++    const delt = t > 0.0 ? stepp : stepn;
++
++    let iretn = 381;
++    let iret = 0;
++    void iret;
++    let xndt = 0.0, xnddt = 0.0, xldot = 0.0;
++    while (iretn === 381) {
++      if (irez !== 2) {
++        xndt = del1 * Math.sin(xli - fasx2) + del2 * Math.sin(2.0 * (xli - fasx4)) + del3 * Math.sin(3.0 * (xli - fasx6));
++        xldot = xni + xfact;
++        xnddt = del1 * Math.cos(xli - fasx2) + 2.0 * del2 * Math.cos(2.0 * (xli - fasx4)) + 3.0 * del3 * Math.cos(3.0 * (xli - fasx6));
++        xnddt = xnddt * xldot;
++      } else {
++        const xomi = argpo + argpdot * atime;
++        const x2omi = xomi + xomi;
++        const x2li = xli + xli;
++        xndt =
++          d2201 * Math.sin(x2omi + xli - g22) + d2211 * Math.sin(xli - g22) +
++          d3210 * Math.sin(xomi + xli - g32) + d3222 * Math.sin(-xomi + xli - g32) +
++          d4410 * Math.sin(x2omi + x2li - g44) + d4422 * Math.sin(x2li - g44) +
++          d5220 * Math.sin(xomi + xli - g52) + d5232 * Math.sin(-xomi + xli - g52) +
++          d5421 * Math.sin(xomi + x2li - g54) + d5433 * Math.sin(-xomi + x2li - g54);
++        xldot = xni + xfact;
++        xnddt =
++          d2201 * Math.cos(x2omi + xli - g22) + d2211 * Math.cos(xli - g22) +
++          d3210 * Math.cos(xomi + xli - g32) + d3222 * Math.cos(-xomi + xli - g32) +
++          d5220 * Math.cos(xomi + xli - g52) + d5232 * Math.cos(-xomi + xli - g52) +
++          2.0 * (d4410 * Math.cos(x2omi + x2li - g44) +
++            d4422 * Math.cos(x2li - g44) +
++            d5421 * Math.cos(xomi + x2li - g54) +
++            d5433 * Math.cos(-xomi + x2li - g54));
++        xnddt = xnddt * xldot;
++      }
++
++      if (Math.abs(t - atime) >= stepp) {
++        iret = 0;
++        iretn = 381;
++      } else {
++        ft = t - atime;
++        iretn = 0;
++      }
++
++      if (iretn === 381) {
++        xli = xli + xldot * delt + xndt * step2;
++        xni = xni + xndt * delt + xnddt * step2;
++        atime = atime + delt;
++      }
++    }
++
++    nm = xni + xndt * ft + xnddt * ft * ft * 0.5;
++    const xl = xli + xldot * ft + xndt * ft * ft * 0.5;
++    if (irez !== 1) {
++      mm = xl - 2.0 * nodem + 2.0 * theta;
++      dndt = nm - no;
++    } else {
++      mm = xl - nodem - argpm + theta;
++      dndt = nm - no;
++    }
++    nm = no + dndt;
++  }
++
++  return { em, argpm, inclm, xli, mm, xni, nodem, nm, atime, dndt };
++}
++
++// ---------------------------------------------------------------------------
++// initl: initialize SGP4
++// ---------------------------------------------------------------------------
++
++export interface InitlOut {
++  method: string;
++  ainv: number; ao: number;
++  con41: number; con42: number; cosio: number; cosio2: number;
++  eccsq: number; omeosq: number; posq: number; rp: number;
++  rteosq: number; sinio: number; gsto: number;
++  noUnkozai: number;
++}
++
++export function initl(
++  xke: number, j2: number,
++  ecco: number, epoch: number, inclo: number, noKozai: number,
++): InitlOut {
++  const x2o3 = 2.0 / 3.0;
++  const eccsq = ecco * ecco;
++  const omeosq = 1.0 - eccsq;
++  const rteosq = Math.sqrt(omeosq);
++  const cosio = Math.cos(inclo);
++  const cosio2 = cosio * cosio;
++
++  const ak = Math.pow(xke / noKozai, x2o3);
++  const d1 = (0.75 * j2 * (3.0 * cosio2 - 1.0)) / (rteosq * omeosq);
++  let del = d1 / (ak * ak);
++  const adel = ak * (1.0 - del * del - del * ((1.0 / 3.0) + (134.0 * del * del) / 81.0));
++  del = d1 / (adel * adel);
++  const noUnkozai = noKozai / (1.0 + del);
++
++  const ao = Math.pow(xke / noUnkozai, x2o3);
++  const sinio = Math.sin(inclo);
++  const po = ao * omeosq;
++  const con42 = 1.0 - 5.0 * cosio2;
++  const con41 = -con42 - cosio2 - cosio2;
++  const ainv = 1.0 / ao;
++  const posq = po * po;
++  const rp = ao * (1.0 - ecco);
++  const method = "n";
++
++  // sgp4fix modern approach: the old-way gst below is dead in the source
++  // (kept verbatim for fidelity; the live value comes from gstime).
++  const ts70 = epoch - 7305.0;
++  const ds70 = Math.floor(ts70 + 1.0e-8);
++  const tfrac = ts70 - ds70;
++  const c1 = 1.72027916940703639e-2;
++  const thgr70 = 1.7321343856509374;
++  const fk5r = 5.075514194322694e-15;
++  const c1p2p = c1 + TWOPI;
++  let gstoOld = fmod2(thgr70 + c1 * ds70 + c1p2p * tfrac + ts70 * ts70 * fk5r, TWOPI);
++  if (gstoOld < 0.0) gstoOld = gstoOld + TWOPI;
++  void gstoOld;
++  const gsto = gstime(epoch + 2433281.5);
++
++  return {
++    method, ainv, ao, con41, con42, cosio, cosio2, eccsq, omeosq,
++    posq, rp, rteosq, sinio, gsto, noUnkozai,
++  };
++}
++
++// ---------------------------------------------------------------------------
++// sgp4init: initialize the SGP4 propagator (mutates satrec, like C++).
++// Returns true; errors ride on satrec.error (1..6).
++// ---------------------------------------------------------------------------
++
++export interface Sgp4InitIn {
++  whichconst: GravConstKind;
++  opsmode: string;
++  satn: string;
++  epoch: number;
++  xbstar: number;
++  xndot: number;
++  xnddot: number;
++  xecco: number;
++  xargpo: number;
++  xinclo: number;
++  xmo: number;
++  xnoKozai: number;
++  xnodeo: number;
++}
++
++export function sgp4init(q: Sgp4InitIn, satrec: ElsetRec): boolean {
++  const temp4 = 1.5e-12;
++
++  satrec.isimp = 0; satrec.method = "n"; satrec.aycof = 0.0;
++  satrec.con41 = 0.0; satrec.cc1 = 0.0; satrec.cc4 = 0.0;
++  satrec.cc5 = 0.0; satrec.d2 = 0.0; satrec.d3 = 0.0;
++  satrec.d4 = 0.0; satrec.delmo = 0.0; satrec.eta = 0.0;
++  satrec.argpdot = 0.0; satrec.omgcof = 0.0; satrec.sinmao = 0.0;
++  satrec.t = 0.0; satrec.t2cof = 0.0; satrec.t3cof = 0.0;
++  satrec.t4cof = 0.0; satrec.t5cof = 0.0; satrec.x1mth2 = 0.0;
++  satrec.x7thm1 = 0.0; satrec.mdot = 0.0; satrec.nodedot = 0.0;
++  satrec.xlcof = 0.0; satrec.xmcof = 0.0; satrec.nodecf = 0.0;
++
++  satrec.irez = 0; satrec.d2201 = 0.0; satrec.d2211 = 0.0;
++  satrec.d3210 = 0.0; satrec.d3222 = 0.0; satrec.d4410 = 0.0;
++  satrec.d4422 = 0.0; satrec.d5220 = 0.0; satrec.d5232 = 0.0;
++  satrec.d5421 = 0.0; satrec.d5433 = 0.0; satrec.dedt = 0.0;
++  satrec.del1 = 0.0; satrec.del2 = 0.0; satrec.del3 = 0.0;
++  satrec.didt = 0.0; satrec.dmdt = 0.0; satrec.dnodt = 0.0;
++  satrec.domdt = 0.0; satrec.e3 = 0.0; satrec.ee2 = 0.0;
++  satrec.peo = 0.0; satrec.pgho = 0.0; satrec.pho = 0.0;
++  satrec.pinco = 0.0; satrec.plo = 0.0; satrec.se2 = 0.0;
++  satrec.se3 = 0.0; satrec.sgh2 = 0.0; satrec.sgh3 = 0.0;
++  satrec.sgh4 = 0.0; satrec.sh2 = 0.0; satrec.sh3 = 0.0;
++  satrec.si2 = 0.0; satrec.si3 = 0.0; satrec.sl2 = 0.0;
++  satrec.sl3 = 0.0; satrec.sl4 = 0.0; satrec.gsto = 0.0;
++  satrec.xfact = 0.0; satrec.xgh2 = 0.0; satrec.xgh3 = 0.0;
++  satrec.xgh4 = 0.0; satrec.xh2 = 0.0; satrec.xh3 = 0.0;
++  satrec.xi2 = 0.0; satrec.xi3 = 0.0; satrec.xl2 = 0.0;
++  satrec.xl3 = 0.0; satrec.xl4 = 0.0; satrec.xlamo = 0.0;
++  satrec.zmol = 0.0; satrec.zmos = 0.0; satrec.atime = 0.0;
++  satrec.xli = 0.0; satrec.xni = 0.0;
++
++  const gc = getgravconst(q.whichconst);
++  satrec.tumin = gc.tumin; satrec.mus = gc.mus;
++  satrec.radiusearthkm = gc.radiusearthkm; satrec.xke = gc.xke;
++  satrec.j2 = gc.j2; satrec.j3 = gc.j3; satrec.j4 = gc.j4;
++  satrec.j3oj2 = gc.j3oj2;
++
++  satrec.error = 0;
++  satrec.operationmode = q.opsmode;
++  satrec.satnum = q.satn;
++
++  satrec.bstar = q.xbstar;
++  satrec.ndot = q.xndot;
++  satrec.nddot = q.xnddot;
++  satrec.ecco = q.xecco;
++  satrec.argpo = q.xargpo;
++  satrec.inclo = q.xinclo;
++  satrec.mo = q.xmo;
++  satrec.noKozai = q.xnoKozai;
++  satrec.nodeo = q.xnodeo;
++
++  satrec.am = 0; satrec.em = 0; satrec.im = 0;
++  satrec.Om = 0; satrec.om = 0; satrec.mm = 0; satrec.nm = 0;
++
++  const ss = 78.0 / satrec.radiusearthkm + 1.0;
++  const qzms2ttemp = (120.0 - 78.0) / satrec.radiusearthkm;
++  const qzms2t = qzms2ttemp * qzms2ttemp * qzms2ttemp * qzms2ttemp;
++  const x2o3 = 2.0 / 3.0;
++
++  satrec.init = "y";
++  satrec.t = 0.0;
++
++  const il = initl(satrec.xke, satrec.j2, satrec.ecco, q.epoch, satrec.inclo, satrec.noKozai);
++  satrec.method = il.method;
++  const ao = il.ao;
++  const con41 = il.con41;
++  satrec.con41 = il.con41;
++  const con42 = il.con42;
++  const cosio = il.cosio;
++  const cosio2 = il.cosio2;
++  const eccsq = il.eccsq;
++  const omeosq = il.omeosq;
++  const posq = il.posq;
++  const rp = il.rp;
++  const rteosq = il.rteosq;
++  const sinio = il.sinio;
++  satrec.gsto = il.gsto;
++  satrec.noUnkozai = il.noUnkozai;
++  satrec.a = Math.pow(satrec.noUnkozai * satrec.tumin, -2.0 / 3.0);
++  satrec.alta = satrec.a * (1.0 + satrec.ecco) - 1.0;
++  satrec.altp = satrec.a * (1.0 - satrec.ecco) - 1.0;
++  satrec.error = 0;
++
++  if (omeosq >= 0.0 || satrec.noUnkozai >= 0.0) {
++    satrec.isimp = 0;
++    if (rp < 220.0 / satrec.radiusearthkm + 1.0) satrec.isimp = 1;
++    let sfour = ss;
++    let qzms24 = qzms2t;
++    const perige = (rp - 1.0) * satrec.radiusearthkm;
++
++    if (perige < 156.0) {
++      sfour = perige - 78.0;
++      if (perige < 98.0) sfour = 20.0;
++      const qzms24temp = (120.0 - sfour) / satrec.radiusearthkm;
++      qzms24 = qzms24temp * qzms24temp * qzms24temp * qzms24temp;
++      sfour = sfour / satrec.radiusearthkm + 1.0;
++    }
++    const pinvsq = 1.0 / posq;
++    const tsi = 1.0 / (ao - sfour);
++    satrec.eta = ao * satrec.ecco * tsi;
++    const etasq = satrec.eta * satrec.eta;
++    const eeta = satrec.ecco * satrec.eta;
++    const psisq = Math.abs(1.0 - etasq);
++    const coef = qzms24 * Math.pow(tsi, 4.0);
++    const coef1 = coef / Math.pow(psisq, 3.5);
++    const cc2 =
++      coef1 * satrec.noUnkozai *
++      (ao * (1.0 + 1.5 * etasq + eeta * (4.0 + etasq)) +
++        0.375 * (satrec.j2 * tsi) / psisq * con41 * (8.0 + 3.0 * etasq * (8.0 + etasq)));
++    satrec.cc1 = satrec.bstar * cc2;
++    let cc3 = 0.0;
++    if (satrec.ecco > 1.0e-4)
++      cc3 = ((-2.0 * coef * tsi * satrec.j3oj2 * satrec.noUnkozai * sinio) / satrec.ecco);
++    satrec.x1mth2 = 1.0 - cosio2;
++    satrec.cc4 =
++      2.0 * satrec.noUnkozai * coef1 * ao * omeosq *
++      (satrec.eta * (2.0 + 0.5 * etasq) + satrec.ecco * (0.5 + 2.0 * etasq) -
++        satrec.j2 * tsi * (1.0 / (ao * psisq)) *
++          (-3.0 * con41 * (1.0 - 2.0 * eeta + etasq * (1.5 - 0.5 * eeta)) +
++            0.75 * satrec.x1mth2 * (2.0 * etasq - eeta * (1.0 + etasq)) * Math.cos(2.0 * satrec.argpo)));
++    satrec.cc5 = 2.0 * coef1 * ao * omeosq * (1.0 + 2.75 * (etasq + eeta) + eeta * etasq);
++    const cosio4 = cosio2 * cosio2;
++    const temp1 = 1.5 * satrec.j2 * pinvsq * satrec.noUnkozai;
++    const temp2 = 0.5 * temp1 * satrec.j2 * pinvsq;
++    const temp3 = -0.46875 * satrec.j4 * pinvsq * pinvsq * satrec.noUnkozai;
++    satrec.mdot =
++      satrec.noUnkozai + 0.5 * temp1 * rteosq * con41 +
++      0.0625 * temp2 * rteosq * (13.0 - 78.0 * cosio2 + 137.0 * cosio4);
++    satrec.argpdot =
++      -0.5 * temp1 * con42 + 0.0625 * temp2 * (7.0 - 114.0 * cosio2 + 395.0 * cosio4) +
++      temp3 * (3.0 - 36.0 * cosio2 + 49.0 * cosio4);
++    const xhdot1 = -temp1 * cosio;
++    satrec.nodedot = xhdot1 + (0.5 * temp2 * (4.0 - 19.0 * cosio2) + 2.0 * temp3 * (3.0 - 7.0 * cosio2)) * cosio;
++    const xpidot = satrec.argpdot + satrec.nodedot;
++    satrec.omgcof = satrec.bstar * cc3 * Math.cos(satrec.argpo);
++    satrec.xmcof = 0.0;
++    if (satrec.ecco > 1.0e-4) satrec.xmcof = (-x2o3 * coef * satrec.bstar) / eeta;
++    satrec.nodecf = 3.5 * omeosq * xhdot1 * satrec.cc1;
++    satrec.t2cof = 1.5 * satrec.cc1;
++    if (Math.abs(cosio + 1.0) > temp4) satrec.xlcof = (-0.25 * satrec.j3oj2 * sinio * (3.0 + 5.0 * cosio)) / (1.0 + cosio);
++    else satrec.xlcof = (-0.25 * satrec.j3oj2 * sinio * (3.0 + 5.0 * cosio)) / temp4;
++    satrec.aycof = -0.5 * satrec.j3oj2 * sinio;
++    const delmotemp = 1.0 + satrec.eta * Math.cos(satrec.mo);
++    satrec.delmo = delmotemp * delmotemp * delmotemp;
++    satrec.sinmao = Math.sin(satrec.mo);
++    satrec.x7thm1 = 7.0 * cosio2 - 1.0;
++
++    if ((2 * PI) / satrec.noUnkozai >= 225.0) {
++      satrec.method = "d";
++      satrec.isimp = 1;
++      const tc = 0.0;
++      let inclm = satrec.inclo;
++
++      const ds = dscom(q.epoch, satrec.ecco, satrec.argpo, tc, satrec.inclo, satrec.nodeo, satrec.noUnkozai);
++      const snodm = ds.snodm, cnodm = ds.cnodm;
++      void snodm; void cnodm;
++      const sinim = ds.sinim, cosim = ds.cosim;
++      const sinomm = ds.sinomm, cosomm = ds.cosomm;
++      void sinomm; void cosomm;
++      const day = ds.day;
++      void day;
++      const em = ds.em, emsq = ds.emsq, gam = ds.gam;
++      void gam;
++      satrec.e3 = ds.e3; satrec.ee2 = ds.ee2;
++      satrec.peo = ds.peo; satrec.pgho = ds.pgho; satrec.pho = ds.pho;
++      satrec.pinco = ds.pinco; satrec.plo = ds.plo;
++      const rtemsq = ds.rtemsq;
++      void rtemsq;
++      satrec.se2 = ds.se2; satrec.se3 = ds.se3;
++      satrec.sgh2 = ds.sgh2; satrec.sgh3 = ds.sgh3; satrec.sgh4 = ds.sgh4;
++      satrec.sh2 = ds.sh2; satrec.sh3 = ds.sh3;
++      satrec.si2 = ds.si2; satrec.si3 = ds.si3;
++      satrec.sl2 = ds.sl2; satrec.sl3 = ds.sl3; satrec.sl4 = ds.sl4;
++      const s1 = ds.s1, s2 = ds.s2, s3 = ds.s3, s4 = ds.s4, s5 = ds.s5, s6 = ds.s6, s7 = ds.s7;
++      void s6; void s7;
++      const ss1 = ds.ss1, ss2 = ds.ss2, ss3 = ds.ss3, ss4 = ds.ss4, ss5 = ds.ss5;
++      const sz1 = ds.sz1, sz2 = ds.sz2, sz3 = ds.sz3;
++      void sz2;
++      const sz11 = ds.sz11, sz12 = ds.sz12, sz13 = ds.sz13;
++      const sz21 = ds.sz21, sz22 = ds.sz22, sz23 = ds.sz23;
++      void sz22;
++      const sz31 = ds.sz31, sz32 = ds.sz32, sz33 = ds.sz33;
++      satrec.xgh2 = ds.xgh2; satrec.xgh3 = ds.xgh3; satrec.xgh4 = ds.xgh4;
++      satrec.xh2 = ds.xh2; satrec.xh3 = ds.xh3;
++      satrec.xi2 = ds.xi2; satrec.xi3 = ds.xi3;
++      satrec.xl2 = ds.xl2; satrec.xl3 = ds.xl3; satrec.xl4 = ds.xl4;
++      const nm = ds.nm;
++      void nm;
++      const z1 = ds.z1, z2 = ds.z2, z3 = ds.z3;
++      void z2;
++      const z11 = ds.z11, z12 = ds.z12, z13 = ds.z13;
++      const z21 = ds.z21, z22 = ds.z22, z23 = ds.z23;
++      void z22;
++      const z31 = ds.z31, z32 = ds.z32, z33 = ds.z33;
++      satrec.zmol = ds.zmol; satrec.zmos = ds.zmos;
++
++      const dp = dpper(
++        {
++          e3: satrec.e3, ee2: satrec.ee2, peo: satrec.peo, pgho: satrec.pgho,
++          pho: satrec.pho, pinco: satrec.pinco, plo: satrec.plo,
++          se2: satrec.se2, se3: satrec.se3, sgh2: satrec.sgh2,
++          sgh3: satrec.sgh3, sgh4: satrec.sgh4, sh2: satrec.sh2,
++          sh3: satrec.sh3, si2: satrec.si2, si3: satrec.si3,
++          sl2: satrec.sl2, sl3: satrec.sl3, sl4: satrec.sl4,
++          t: satrec.t, xgh2: satrec.xgh2, xgh3: satrec.xgh3,
++          xgh4: satrec.xgh4, xh2: satrec.xh2, xh3: satrec.xh3,
++          xi2: satrec.xi2, xi3: satrec.xi3, xl2: satrec.xl2,
++          xl3: satrec.xl3, xl4: satrec.xl4, zmol: satrec.zmol,
++          zmos: satrec.zmos, inclo: satrec.inclo,
++        },
++        satrec.init,
++        { ep: satrec.ecco, inclp: satrec.inclo, nodep: satrec.nodeo, argpp: satrec.argpo, mp: satrec.mo },
++        satrec.operationmode,
++      );
++      satrec.ecco = dp.ep;
++      void inclm;
++      satrec.nodeo = dp.nodep;
++      satrec.argpo = dp.argpp;
++      satrec.mo = dp.mp;
++
++      let argpm = 0.0, nodem = 0.0, mm = 0.0;
++      const di = dsinit(
++        {
++          xke: satrec.xke, cosim, emsq, argpo: satrec.argpo,
++          s1, s2, s3, s4, s5, sinim, ss1, ss2, ss3, ss4, ss5,
++          sz1, sz3, sz11, sz13, sz21, sz23, sz31, sz33,
++          t: satrec.t, tc, gsto: satrec.gsto, mo: satrec.mo,
++          mdot: satrec.mdot, no: satrec.noUnkozai, nodeo: satrec.nodeo,
++          nodedot: satrec.nodedot, xpidot, z1, z3, z11, z13,
++          z21, z23, z31, z33, ecco: satrec.ecco, eccsq,
++        },
++        { em, argpm, inclm, mm, nm: satrec.noUnkozai, nodem },
++      );
++      satrec.irez = di.irez;
++      satrec.atime = di.atime;
++      satrec.d2201 = di.d2201; satrec.d2211 = di.d2211;
++      satrec.d3210 = di.d3210; satrec.d3222 = di.d3222;
++      satrec.d4410 = di.d4410; satrec.d4422 = di.d4422;
++      satrec.d5220 = di.d5220; satrec.d5232 = di.d5232;
++      satrec.d5421 = di.d5421; satrec.d5433 = di.d5433;
++      satrec.dedt = di.dedt; satrec.didt = di.didt;
++      satrec.dmdt = di.dmdt; satrec.dnodt = di.dnodt;
++      satrec.domdt = di.domdt;
++      satrec.del1 = di.del1; satrec.del2 = di.del2; satrec.del3 = di.del3;
++      satrec.xfact = di.xfact; satrec.xlamo = di.xlamo;
++      satrec.xli = di.xli; satrec.xni = di.xni;
++      void argpm; void nodem; void mm;
++    }
++
++    if (satrec.isimp !== 1) {
++      const cc1sq = satrec.cc1 * satrec.cc1;
++      satrec.d2 = 4.0 * ao * tsi * cc1sq;
++      const temp = satrec.d2 * tsi * satrec.cc1 / 3.0;
++      satrec.d3 = (17.0 * ao + sfour) * temp;
++      satrec.d4 = 0.5 * temp * ao * tsi * (221.0 * ao + 31.0 * sfour) * satrec.cc1;
++      satrec.t3cof = satrec.d2 + 2.0 * cc1sq;
++      satrec.t4cof = 0.25 * (3.0 * satrec.d3 + satrec.cc1 * (12.0 * satrec.d2 + 10.0 * cc1sq));
++      satrec.t5cof =
++        0.2 * (3.0 * satrec.d4 + 12.0 * satrec.cc1 * satrec.d3 + 6.0 * satrec.d2 * satrec.d2 + 15.0 * cc1sq * (2.0 * satrec.d2 + cc1sq));
++    }
++  }
++
++  const r0 = [0, 0, 0];
++  const v0 = [0, 0, 0];
++  sgp4(satrec, 0.0, r0, v0);
++
++  satrec.init = "n";
++
++  return true;
++}
++
++// ---------------------------------------------------------------------------
++// sgp4: main propagator (mutates satrec.t / satrec.error; fills r, v).
++// Returns true normally; false + satrec.error set on error.
++// ---------------------------------------------------------------------------
++
++export function sgp4(satrec: ElsetRec, tsince: number, r: number[], v: number[]): boolean {
++  const temp4 = 1.5e-12;
++  const vkmpersec = (satrec.radiusearthkm * satrec.xke) / 60.0;
++
++  satrec.t = tsince;
++  satrec.error = 0;
++
++  let xmdf = satrec.mo + satrec.mdot * satrec.t;
++  const argpdf = satrec.argpo + satrec.argpdot * satrec.t;
++  const nodedf = satrec.nodeo + satrec.nodedot * satrec.t;
++  let argpm = argpdf;
++  let mm = xmdf;
++  const t2 = satrec.t * satrec.t;
++  let nodem = nodedf + satrec.nodecf * t2;
++  let tempa = 1.0 - satrec.cc1 * satrec.t;
++  let tempe = satrec.bstar * satrec.cc4 * satrec.t;
++  let templ = satrec.t2cof * t2;
++
++  if (satrec.isimp !== 1) {
++    const delomg = satrec.omgcof * satrec.t;
++    const delmtemp = 1.0 + satrec.eta * Math.cos(xmdf);
++    const delm = satrec.xmcof * (delmtemp * delmtemp * delmtemp - satrec.delmo);
++    const temp = delomg + delm;
++    mm = xmdf + temp;
++    argpm = argpdf - temp;
++    const t3 = t2 * satrec.t;
++    const t4 = t3 * satrec.t;
++    tempa = tempa - satrec.d2 * t2 - satrec.d3 * t3 - satrec.d4 * t4;
++    tempe = tempe + satrec.bstar * satrec.cc5 * (Math.sin(mm) - satrec.sinmao);
++    templ = templ + satrec.t3cof * t3 + t4 * (satrec.t4cof + satrec.t * satrec.t5cof);
++  }
++
++  let nm = satrec.noUnkozai;
++  let em = satrec.ecco;
++  let inclm = satrec.inclo;
++  if (satrec.method === "d") {
++    const tc = satrec.t;
++    const ds = dspace(
++      {
++        irez: satrec.irez,
++        d2201: satrec.d2201, d2211: satrec.d2211, d3210: satrec.d3210,
++        d3222: satrec.d3222, d4410: satrec.d4410, d4422: satrec.d4422,
++        d5220: satrec.d5220, d5232: satrec.d5232, d5421: satrec.d5421,
++        d5433: satrec.d5433, dedt: satrec.dedt, del1: satrec.del1,
++        del2: satrec.del2, del3: satrec.del3, didt: satrec.didt,
++        dmdt: satrec.dmdt, dnodt: satrec.dnodt, domdt: satrec.domdt,
++        argpo: satrec.argpo, argpdot: satrec.argpdot, t: satrec.t, tc,
++        gsto: satrec.gsto, xfact: satrec.xfact, xlamo: satrec.xlamo,
++        no: satrec.noUnkozai,
++      },
++      {
++        em, argpm, inclm, xli: satrec.xli, mm, xni: satrec.xni,
++        nodem, nm,
++      },
++      satrec.atime,
++    );
++    em = ds.em; argpm = ds.argpm; inclm = ds.inclm;
++    satrec.xli = ds.xli; mm = ds.mm; satrec.xni = ds.xni;
++    nodem = ds.nodem; nm = ds.nm;
++    satrec.atime = ds.atime;
++  }
++
++  if (nm <= 0.0) {
++    satrec.error = 2;
++    return false;
++  }
++  let am = Math.pow(satrec.xke / nm, 2.0 / 3.0) * tempa * tempa;
++  nm = satrec.xke / Math.pow(am, 1.5);
++  em = em - tempe;
++
++  if (em >= 1.0 || em < -0.001) {
++    satrec.error = 1;
++    return false;
++  }
++  if (em < 1.0e-6) em = 1.0e-6;
++  mm = mm + satrec.noUnkozai * templ;
++  let xlm = mm + argpm + nodem;
++  const emsq = em * em;
++  const temp = 1.0 - emsq;
++
++  nodem = fmod2(nodem, TWOPI);
++  argpm = fmod2(argpm, TWOPI);
++  xlm = fmod2(xlm, TWOPI);
++  mm = fmod2(xlm - argpm - nodem, TWOPI);
++
++  satrec.am = am; satrec.em = em; satrec.im = inclm;
++  satrec.Om = nodem; satrec.om = argpm; satrec.mm = mm;
++  satrec.nm = nm;
++
++  const sinim = Math.sin(inclm);
++  const cosim = Math.cos(inclm);
++
++  let ep = em;
++  let xincp = inclm;
++  let argpp = argpm;
++  let nodep = nodem;
++  let mp = mm;
++  let sinip = sinim;
++  let cosip = cosim;
++  if (satrec.method === "d") {
++    const dp = dpper(
++      {
++        e3: satrec.e3, ee2: satrec.ee2, peo: satrec.peo, pgho: satrec.pgho,
++        pho: satrec.pho, pinco: satrec.pinco, plo: satrec.plo,
++        se2: satrec.se2, se3: satrec.se3, sgh2: satrec.sgh2,
++        sgh3: satrec.sgh3, sgh4: satrec.sgh4, sh2: satrec.sh2,
++        sh3: satrec.sh3, si2: satrec.si2, si3: satrec.si3,
++        sl2: satrec.sl2, sl3: satrec.sl3, sl4: satrec.sl4,
++        t: satrec.t, xgh2: satrec.xgh2, xgh3: satrec.xgh3,
++        xgh4: satrec.xgh4, xh2: satrec.xh2, xh3: satrec.xh3,
++        xi2: satrec.xi2, xi3: satrec.xi3, xl2: satrec.xl2,
++        xl3: satrec.xl3, xl4: satrec.xl4, zmol: satrec.zmol,
++        zmos: satrec.zmos, inclo: satrec.inclo,
++      },
++      "n",
++      { ep, inclp: xincp, nodep, argpp, mp },
++      satrec.operationmode,
++    );
++    ep = dp.ep; xincp = dp.inclp; nodep = dp.nodep;
++    argpp = dp.argpp; mp = dp.mp;
++    if (xincp < 0.0) {
++      xincp = -xincp;
++      nodep = nodep + PI;
++      argpp = argpp - PI;
++    }
++    if (ep < 0.0 || ep > 1.0) {
++      satrec.error = 3;
++      return false;
++    }
++  }
++
++  if (satrec.method === "d") {
++    sinip = Math.sin(xincp);
++    cosip = Math.cos(xincp);
++    satrec.aycof = -0.5 * satrec.j3oj2 * sinip;
++    if (Math.abs(cosip + 1.0) > temp4)
++      satrec.xlcof = (-0.25 * satrec.j3oj2 * sinip * (3.0 + 5.0 * cosip)) / (1.0 + cosip);
++    else satrec.xlcof = (-0.25 * satrec.j3oj2 * sinip * (3.0 + 5.0 * cosip)) / temp4;
++  }
++  const axnl = ep * Math.cos(argpp);
++  const tempA = 1.0 / (am * (1.0 - ep * ep));
++  const aynl = ep * Math.sin(argpp) + tempA * satrec.aycof;
++  const xl = mp + argpp + nodep + tempA * satrec.xlcof * axnl;
++
++  let u = fmod2(xl - nodep, TWOPI);
++  let eo1 = u;
++  let tem5 = 9999.9;
++  let ktr = 1;
++  let sineo1 = 0.0;
++  let coseo1 = 0.0;
++  while (Math.abs(tem5) >= 1.0e-12 && ktr <= 10) {
++    sineo1 = Math.sin(eo1);
++    coseo1 = Math.cos(eo1);
++    tem5 = 1.0 - coseo1 * axnl - sineo1 * aynl;
++    tem5 = (u - aynl * coseo1 + axnl * sineo1 - eo1) / tem5;
++    if (Math.abs(tem5) >= 0.95) tem5 = tem5 > 0.0 ? 0.95 : -0.95;
++    eo1 = eo1 + tem5;
++    ktr = ktr + 1;
++  }
++
++  const ecose = axnl * coseo1 + aynl * sineo1;
++  const esine = axnl * sineo1 - aynl * coseo1;
++  const el2 = axnl * axnl + aynl * aynl;
++  const pl = am * (1.0 - el2);
++  let mrt = 0;
++  if (pl < 0.0) {
++    satrec.error = 4;
++    return false;
++  } else {
++    const rl = am * (1.0 - ecose);
++    const rdotl = (Math.sqrt(am) * esine) / rl;
++    const rvdotl = Math.sqrt(pl) / rl;
++    const betal = Math.sqrt(1.0 - el2);
++    const tempB = esine / (1.0 + betal);
++    const sinu = (am / rl) * (sineo1 - aynl - axnl * tempB);
++    const cosu = (am / rl) * (coseo1 - axnl + aynl * tempB);
++    const su = Math.atan2(sinu, cosu);
++    const sin2u = (cosu + cosu) * sinu;
++    const cos2u = 1.0 - 2.0 * sinu * sinu;
++    const tempC = 1.0 / pl;
++    const temp1 = 0.5 * satrec.j2 * tempC;
++    const temp2 = temp1 * tempC;
++
++    if (satrec.method === "d") {
++      const cosisq = cosip * cosip;
++      satrec.con41 = 3.0 * cosisq - 1.0;
++      satrec.x1mth2 = 1.0 - cosisq;
++      satrec.x7thm1 = 7.0 * cosisq - 1.0;
++    }
++    mrt = rl * (1.0 - 1.5 * temp2 * betal * satrec.con41) + 0.5 * temp1 * satrec.x1mth2 * cos2u;
++    const su2 = su - 0.25 * temp2 * satrec.x7thm1 * sin2u;
++    const xnode = nodep + 1.5 * temp2 * cosip * sin2u;
++    const xinc = xincp + 1.5 * temp2 * cosip * sinip * cos2u;
++    const mvt = rdotl - (nm * temp1 * satrec.x1mth2 * sin2u) / satrec.xke;
++    const rvdot = rvdotl + (nm * temp1 * (satrec.x1mth2 * cos2u + 1.5 * satrec.con41)) / satrec.xke;
++
++    const sinsu = Math.sin(su2);
++    const cossu = Math.cos(su2);
++    const snod = Math.sin(xnode);
++    const cnod = Math.cos(xnode);
++    const sini = Math.sin(xinc);
++    const cosi = Math.cos(xinc);
++    const xmx = -snod * cosi;
++    const xmy = cnod * cosi;
++    const ux = xmx * sinsu + cnod * cossu;
++    const uy = xmy * sinsu + snod * cossu;
++    const uz = sini * sinsu;
++    const vx = xmx * cossu - cnod * sinsu;
++    const vy = xmy * cossu - snod * sinsu;
++    const vz = sini * cossu;
++
++    r[0] = mrt * ux * satrec.radiusearthkm;
++    r[1] = mrt * uy * satrec.radiusearthkm;
++    r[2] = mrt * uz * satrec.radiusearthkm;
++    v[0] = (mvt * ux + rvdot * vx) * vkmpersec;
++    v[1] = (mvt * uy + rvdot * vy) * vkmpersec;
++    v[2] = (mvt * uz + rvdot * vz) * vkmpersec;
++  }
++
++  if (mrt < 1.0) {
++    satrec.error = 6;
++    return false;
++  }
++
++  return true;
++}
++
++// ---------------------------------------------------------------------------
++// getgravconst
++// ---------------------------------------------------------------------------
++
++export interface GravConstants {
++  tumin: number;
++  mus: number;
++  radiusearthkm: number;
++  xke: number;
++  j2: number;
++  j3: number;
++  j4: number;
++  j3oj2: number;
++}
++
++export function getgravconst(whichconst: GravConstKind): GravConstants {
++  switch (whichconst) {
++    case "wgs72old":
++      return {
++        mus: 398600.79964,
++        radiusearthkm: 6378.135,
++        xke: 0.0743669161,
++        tumin: 1.0 / 0.0743669161,
++        j2: 0.001082616,
++        j3: -0.00000253881,
++        j4: -0.00000165597,
++        j3oj2: -0.00000253881 / 0.001082616,
++      };
++    case "wgs72": {
++      const xke = 60.0 / Math.sqrt((6378.135 * 6378.135 * 6378.135) / 398600.8);
++      return {
++        mus: 398600.8,
++        radiusearthkm: 6378.135,
++        xke,
++        tumin: 1.0 / xke,
++        j2: 0.001082616,
++        j3: -0.00000253881,
++        j4: -0.00000165597,
++        j3oj2: -0.00000253881 / 0.001082616,
++      };
++    }
++    case "wgs84": {
++      const xke = 60.0 / Math.sqrt((6378.137 * 6378.137 * 6378.137) / 398600.5);
++      return {
++        mus: 398600.5,
++        radiusearthkm: 6378.137,
++        xke,
++        tumin: 1.0 / xke,
++        j2: 0.00108262998905,
++        j3: -0.00000253215306,
++        j4: -0.00000161098761,
++        j3oj2: -0.00000253215306 / 0.00108262998905,
++      };
++    }
++  }
++}
++
++// ---------------------------------------------------------------------------
++// gstime: Greenwich sidereal time (Vallado 2013, eq 3-45)
++// ---------------------------------------------------------------------------
++
++export function gstime(jdut1: number): number {
++  const tut1 = (jdut1 - 2451545.0) / 36525.0;
++  let temp =
++    -6.2e-6 * tut1 * tut1 * tut1 + 0.093104 * tut1 * tut1 +
++    (876600.0 * 3600 + 8640184.812866) * tut1 + 67310.54841;
++  temp = fmod2((temp * (PI / 180.0)) / 240.0, TWOPI);
++  if (temp < 0.0) temp += TWOPI;
++  return temp;
++}
++
++export function sgn(x: number): number {
++  return x < 0.0 ? -1.0 : 1.0;
++}
++
++export function mag(x: number[]): number {
++  return Math.sqrt(x[0] * x[0] + x[1] * x[1] + x[2] * x[2]);
++}
++
++export function cross(vec1: number[], vec2: number[], outvec: number[]): void {
++  outvec[0] = vec1[1] * vec2[2] - vec1[2] * vec2[1];
++  outvec[1] = vec1[2] * vec2[0] - vec1[0] * vec2[2];
++  outvec[2] = vec1[0] * vec2[1] - vec1[1] * vec2[0];
++}
++
++export function dot(x: number[], y: number[]): number {
++  return x[0] * y[0] + x[1] * y[1] + x[2] * y[2];
++}
++
++export function angle(vec1: number[], vec2: number[]): number {
++  const small = 0.00000001;
++  const undefined = 999999.1;
++  const magv1 = mag(vec1);
++  const magv2 = mag(vec2);
++  if (magv1 * magv2 > small * small) {
++    let temp = dot(vec1, vec2) / (magv1 * magv2);
++    if (Math.abs(temp) > 1.0) temp = sgn(temp) * 1.0;
++    return Math.acos(temp);
++  }
++  return undefined;
++}
++
++export function asinh(xval: number): number {
++  return Math.log(xval + Math.sqrt(xval * xval + 1.0));
++}
++
++export function newtonnu(ecc: number, nu: number): { e0: number; m: number } {
++  let e0 = 999999.9;
++  let m = 999999.9;
++  const small = 0.00000001;
++
++  if (Math.abs(ecc) < small) {
++    m = nu;
++    e0 = nu;
++  } else if (ecc < 1.0 - small) {
++    const sine = (Math.sqrt(1.0 - ecc * ecc) * Math.sin(nu)) / (1.0 + ecc * Math.cos(nu));
++    const cose = (ecc + Math.cos(nu)) / (1.0 + ecc * Math.cos(nu));
++    e0 = Math.atan2(sine, cose);
++    m = e0 - ecc * Math.sin(e0);
++  } else if (ecc > 1.0 + small) {
++    if (Math.abs(nu) + 0.00001 < PI - Math.acos(1.0 / ecc)) {
++      const sine = (Math.sqrt(ecc * ecc - 1.0) * Math.sin(nu)) / (1.0 + ecc * Math.cos(nu));
++      e0 = asinh(sine);
++      m = ecc * Math.sinh(e0) - e0;
++    }
++  } else if (Math.abs(nu) < (168.0 * PI) / 180.0) {
++    e0 = Math.tan(nu * 0.5);
++    m = e0 + (e0 * e0 * e0) / 3.0;
++  }
++
++  if (ecc < 1.0) {
++    m = fmod2(m, 2.0 * PI);
++    if (m < 0.0) m = m + 2.0 * PI;
++    e0 = fmod2(e0, 2.0 * PI);
++  }
++  return { e0, m };
++}
++
++export interface CoeResult {
++  p: number; a: number; ecc: number; incl: number;
++  omega: number; argp: number; nu: number; m: number;
++  arglat: number; truelon: number; lonper: number;
++}
++
++export function rv2coe(r: number[], v: number[], mus: number): CoeResult {
++  const undefined = 999999.1;
++  const infinite = 999999.9;
++  const small = 0.00000001;
++  let p = 0, a = 0, ecc = 0, incl = 0, omega = 0, argp = 0;
++  let nu = 0, m = 0, arglat = 0, truelon = 0, lonper = 0;
++
++  const magr = mag(r);
++  const magv = mag(v);
++  const hbar = [0, 0, 0];
++  cross(r, v, hbar);
++  const magh = mag(hbar);
++  if (magh > small) {
++    const nbar = [-hbar[1], hbar[0], 0.0];
++    const magn = mag(nbar);
++    const c1 = magv * magv - mus / magr;
++    const rdotv = dot(r, v);
++    const ebar = [0, 0, 0];
++    for (let i = 0; i <= 2; i++) ebar[i] = (c1 * r[i] - rdotv * v[i]) / mus;
++    ecc = mag(ebar);
++
++    const sme = magv * magv * 0.5 - mus / magr;
++    if (Math.abs(sme) > small) a = -mus / (2.0 * sme);
++    else a = infinite;
++    p = (magh * magh) / mus;
++
++    const hk = hbar[2] / magh;
++    incl = Math.acos(hk);
++
++    let typeorbit = 1;
++    if (ecc < small) {
++      if (Math.abs(incl) < small || Math.abs(incl - PI) < small) typeorbit = 2;
++      else typeorbit = 3;
++    } else {
++      if (Math.abs(incl) < small || Math.abs(incl - PI) < small) typeorbit = 4;
++    }
++
++    if (magn > small) {
++      let temp = nbar[0] / magn;
++      if (Math.abs(temp) > 1.0) temp = sgn(temp);
++      omega = Math.acos(temp);
++      if (nbar[1] < 0.0) omega = TWOPI - omega;
++    } else omega = undefined;
++
++    if (typeorbit === 1) {
++      argp = angle(nbar, ebar);
++      if (ebar[2] < 0.0) argp = TWOPI - argp;
++    } else argp = undefined;
++
++    if (typeorbit === 1 || typeorbit === 4) {
++      nu = angle(ebar, r);
++      if (rdotv < 0.0) nu = TWOPI - nu;
++    } else nu = undefined;
++
++    if (typeorbit === 3) {
++      arglat = angle(nbar, r);
++      if (r[2] < 0.0) arglat = TWOPI - arglat;
++      m = arglat;
++    } else arglat = undefined;
++
++    if (ecc > small && typeorbit === 4) {
++      let temp = ebar[0] / ecc;
++      if (Math.abs(temp) > 1.0) temp = sgn(temp);
++      lonper = Math.acos(temp);
++      if (ebar[1] < 0.0) lonper = TWOPI - lonper;
++      if (incl > PI * 0.5) lonper = TWOPI - lonper;
++    } else lonper = undefined;
++
++    if (magr > small && typeorbit === 2) {
++      let temp = r[0] / magr;
++      if (Math.abs(temp) > 1.0) temp = sgn(temp);
++      truelon = Math.acos(temp);
++      if (r[1] < 0.0) truelon = TWOPI - truelon;
++      if (incl > PI * 0.5) truelon = TWOPI - truelon;
++      m = truelon;
++    } else truelon = undefined;
++
++    if (typeorbit === 1 || typeorbit === 4) {
++      const nm = newtonnu(ecc, nu);
++      m = nm.m;
++    }
++  } else {
++    p = undefined; a = undefined; ecc = undefined; incl = undefined;
++    omega = undefined; argp = undefined; nu = undefined; m = undefined;
++    arglat = undefined; truelon = undefined; lonper = undefined;
++  }
++  return { p, a, ecc, incl, omega, argp, nu, m, arglat, truelon, lonper };
++}
++
++export function jday(
++  year: number, mon: number, day: number, hr: number, minute: number, sec: number,
++): { jd: number; jdFrac: number } {
++  let jd = 367.0 * year - Math.floor((7 * (year + Math.floor((mon + 9) / 12.0))) * 0.25) + Math.floor((275 * mon) / 9.0) + day + 1721013.5;
++  let jdFrac = (sec + minute * 60.0 + hr * 3600.0) / 86400.0;
++  if (Math.abs(jdFrac) > 1.0) {
++    const dtt = Math.floor(jdFrac);
++    jd = jd + dtt;
++    jdFrac = jdFrac - dtt;
++  }
++  return { jd, jdFrac };
++}
++
++export function days2mdhms(
++  year: number, days: number,
++): { mon: number; day: number; hr: number; minute: number; sec: number } {
++  const lmonth = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
++  const dayofyr = Math.floor(days);
++  if (year % 4 === 0) lmonth[2] = 29;
++  let i = 1;
++  let inttemp = 0;
++  while (dayofyr > inttemp + lmonth[i] && i < 12) {
++    inttemp = inttemp + lmonth[i];
++    i = i + 1;
++  }
++  const mon = i;
++  const day = dayofyr - inttemp;
++  const temp = (days - dayofyr) * 24.0;
++  const hr = Math.floor(temp);
++  const temp2 = (temp - hr) * 60.0;
++  const minute = Math.floor(temp2);
++  const sec = (temp2 - minute) * 60.0;
++  return { mon, day, hr, minute, sec };
++}
++
++export function invjday(jd: number, jdFrac: number): {
++  year: number; mon: number; day: number; hr: number; minute: number; sec: number;
++} {
++  let jdW = jd;
++  let jdFW = jdFrac;
++  if (Math.abs(jdFW) >= 1.0) {
++    jdW = jdW + Math.floor(jdFW);
++    jdFW = jdFW - Math.floor(jdFW);
++  }
++  const dt = jdW - Math.floor(jdW) - 0.5;
++  if (Math.abs(dt) > 0.00000001) {
++    jdW = jdW - dt;
++    jdFW = jdFW + dt;
++  }
++  const temp = jdW - 2415019.5;
++  const tu = temp / 365.25;
++  let year = 1900 + Math.floor(tu);
++  let leapyrs = Math.floor((year - 1901) * 0.25);
++  let days = Math.floor(temp - ((year - 1900) * 365.0 + leapyrs));
++  if (days + jdFW < 1.0) {
++    year = year - 1;
++    leapyrs = Math.floor((year - 1901) * 0.25);
++    days = Math.floor(temp - ((year - 1900) * 365.0 + leapyrs));
++  }
++  const r = days2mdhms(year, days + jdFW);
++  return { year, mon: r.mon, day: r.day, hr: r.hr, minute: r.minute, sec: r.sec };
++}
+diff --git a/src/lib/iono/sgp4/sgpCoord.test.ts b/src/lib/iono/sgp4/sgpCoord.test.ts
+new file mode 100644
+index 0000000..d4b0c98
+--- /dev/null
++++ b/src/lib/iono/sgp4/sgpCoord.test.ts
+@@ -0,0 +1,76 @@
++// ionosphere-live-3d — drop 313 TU: TEME/ECEF/geodetic helpers.
++// gstime is ported Vallado eq. 3-45; rotation/geodetic are own code.
++// Numeric pins computed with an INDEPENDENT Python implementation
++// (same published formulas, no shared code with this module).
++
++import { describe, expect, it } from "vitest";
++import { gstime, teme2ecef, ecef2geodetic, jday, invjday } from "./sgpCoord";
++
++describe("313 gstime (ported Vallado eq 3-45)", () => {
++  it("matches the independent implementation", () => {
++    // Python (own coding of eq. 3-45): 3.482786746879171
++    expect(gstime(2453106.5)).toBeCloseTo(3.482786746879171, 12);
++  });
++  it("advances ~2pi per day (wrapped excess is one extra turn per year)", () => {
++    const g0 = gstime(2453106.5);
++    const g1 = gstime(2453107.5);
++    let d = g1 - g0;
++    if (d < 0) d += 2 * Math.PI;
++    // One solar day = one extra sidereal increment of 2pi/365.25 (mod 2pi)
++    expect(d).toBeCloseTo((2 * Math.PI) / 365.25, 4);
++  });
++});
++
++describe("313 teme2ecef (GMST z-rotation)", () => {
++  it("matches the independent implementation", () => {
++    const e = teme2ecef([4200, -5500, 3200], 3.482786746879171);
++    expect(e[0]).toBeCloseTo(-2117.52501971713, 6);
++    expect(e[1]).toBeCloseTo(6588.329666225876, 6);
++    expect(e[2]).toBe(3200);
++  });
++  it("is a pure z rotation (norm + z preserved, basis images)", () => {
++    const e = teme2ecef([1, 0, 0], Math.PI / 2);
++    expect(e[0]).toBeCloseTo(0, 12);
++    expect(e[1]).toBeCloseTo(-1, 12);
++    expect(e[2]).toBe(0);
++    const v = teme2ecef([3, -4, 12], 1.234);
++    expect(Math.hypot(v[0], v[1], v[2])).toBeCloseTo(Math.hypot(3, -4, 12), 12);
++    expect(v[2]).toBe(12);
++  });
++});
++
++describe("313 ecef2geodetic (Hirvonen, WGS-84)", () => {
++  it("matches the independent implementation", () => {
++    const g = ecef2geodetic([-2117.52501971713, 6588.329666225876, 3200.0]);
++    expect(g.lat).toBeCloseTo(24.939063621, 6);
++    expect(g.lon).toBeCloseTo(107.817687872, 6);
++    expect(g.altKm).toBeCloseTo(1249.945535518, 6);
++  });
++  it("equator/prime-meridian and pole are exact", () => {
++    const eq = ecef2geodetic([6378.137, 0, 0]);
++    expect(eq.lat).toBeCloseTo(0, 9);
++    expect(eq.lon).toBeCloseTo(0, 9);
++    expect(eq.altKm).toBeCloseTo(0, 6);
++    const b = 6378.137 * (1 - 1 / 298.257223563);
++    const np = ecef2geodetic([0, 0, b]);
++    expect(np.lat).toBeCloseTo(90, 6);
++    expect(np.altKm).toBeCloseTo(0, 3);
++  });
++});
++
++describe("313 jday/invjday round-trip", () => {
++  it("2000-01-01 12:00 UTC is JD 2451545.0", () => {
++    const { jd, jdFrac } = jday(2000, 1, 1, 12, 0, 0);
++    expect(jd + jdFrac).toBeCloseTo(2451545.0, 9);
++  });
++  it("inverts jday", () => {
++    const fwd = jday(2024, 6, 15, 10, 30, 45.5);
++    const back = invjday(fwd.jd, fwd.jdFrac);
++    expect(back.year).toBe(2024);
++    expect(back.mon).toBe(6);
++    expect(back.day).toBe(15);
++    expect(back.hr).toBe(10);
++    expect(back.minute).toBe(30);
++    expect(back.sec).toBeCloseTo(45.5, 6);
++  });
++});
+diff --git a/src/lib/iono/sgp4/sgpCoord.ts b/src/lib/iono/sgp4/sgpCoord.ts
+new file mode 100644
+index 0000000..01d0d15
+--- /dev/null
++++ b/src/lib/iono/sgp4/sgpCoord.ts
+@@ -0,0 +1,57 @@
++// SPDX-License-Identifier: GPL-3.0-or-later
++// ionosphere-live-3d — TEME/ECEF/geodetic helpers for the SGP4 port
++// (drop 313, F2b #10).
++//
++// Own first-party code (no Fortran/C++ source transcribed here):
++// - gstime lives in sgp4.ts (ported Vallado eq. 3-45).
++// - teme2ecef: rotation about the z-axis by GMST (the standard
++//   GMST-only TEME→pseudo-Earth-fixed reduction used with SGP4 output;
++//   full FK5 teme_pef with nutation terms is out of scope for the 313
++//   motor and would not change the verification vectors, which are TEME).
++// - ecef2geodetic: Hirvonen iterative method, WGS-84.
++// TU pins come from an independent Python implementation of the same
++// published formulas (9a method), hardcoded with provenance.
++
++import { gstime, jday, invjday, days2mdhms } from "./sgp4";
++
++export const WGS84_A = 6378.137; // km
++export const WGS84_F = 1 / 298.257223563;
++
++/**
++ * TEME (km) to pseudo-Earth-fixed ECEF (km) via GMST rotation.
++ * gmstRad: use gstime(jdut1) from sgp4.ts.
++ */
++export function teme2ecef(rTEME: number[], gmst: number): number[] {
++  const c = Math.cos(gmst);
++  const s = Math.sin(gmst);
++  return [
++    c * rTEME[0] + s * rTEME[1],
++    -s * rTEME[0] + c * rTEME[1],
++    rTEME[2],
++  ];
++}
++
++/** ECEF (km) to geodetic latitude (deg), longitude (deg), height (km). */
++export function ecef2geodetic(rECEF: number[]): { lat: number; lon: number; altKm: number } {
++  const a = WGS84_A;
++  const f = WGS84_F;
++  const e2 = 2 * f - f * f;
++  const [x, y, z] = rECEF;
++  const lon = Math.atan2(y, x);
++  const p = Math.sqrt(x * x + y * y);
++  if (p === 0) {
++    // Exact pole: Hirvonen divides by zero; height is |z| minus polar radius.
++    return { lat: z >= 0 ? 90 : -90, lon: 0, altKm: Math.abs(z) - a * (1 - f) };
++  }
++  let lat = Math.atan2(z, p * (1 - e2));
++  let alt = 0;
++  for (let k = 0; k < 5; k++) {
++    const sinLat = Math.sin(lat);
++    const n = a / Math.sqrt(1 - e2 * sinLat * sinLat);
++    alt = p / Math.cos(lat) - n;
++    lat = Math.atan2(z, p * (1 - (e2 * n) / (n + alt)));
++  }
++  return { lat: (lat * 180) / Math.PI, lon: (lon * 180) / Math.PI, altKm: alt };
++}
++
++export { gstime, jday, invjday, days2mdhms };
+diff --git a/src/lib/iono/sgp4/sgpErr.test.ts b/src/lib/iono/sgp4/sgpErr.test.ts
+new file mode 100644
+index 0000000..cd65eb1
+--- /dev/null
++++ b/src/lib/iono/sgp4/sgpErr.test.ts
+@@ -0,0 +1,126 @@
++// ionosphere-live-3d — drop 313 TU: special cases & exact return codes.
++// Oracle: official SGP4 verification set (.e rows where valid) + the
++// python-sgp4 pure model (same SGP4.cpp family) for the code pins.
++// Reference semantics: return codes are PER-CALL (recomputed on every
++// call, including "recovery" after a transient error), so the tail
++// probes pin the exact code at the exact tsince (method 9c: measured
++// against the reference, then pinned verbatim; see README numerics).
++// Codes: 0 ok; 1 mean ecc out of range; 3 perturbed ecc out of range;
++// 4 semi-latus rectum negative (decayed); 6 mrt < 1 (decayed).
++
++import { describe, expect, it } from "vitest";
++import { readFileSync } from "node:fs";
++import { twoline2rv } from "./sgpTle";
++import { sgp4 } from "./sgp4";
++
++const ABS_POS = 1e-6;
++const REL = 1e-6;
++const ABS_VEL = 1e-9;
++
++interface Row {
++  tsinceMin: number;
++  r: number[];
++  v: number[];
++}
++
++function readVer(): string[] {
++  const buf = readFileSync(new URL("./SGP4-VER.TLE", import.meta.url));
++  return Buffer.from(buf.buffer, buf.byteOffset, buf.byteLength).toString("utf8").split("\n");
++}
++
++function verPair(satnum: string): [string, string] {
++  const lines = readVer();
++  for (let k = 0; k < lines.length; k++) {
++    if (lines[k].startsWith("1 ") && lines[k].slice(2, 7).trim() === satnum) {
++      return [lines[k], lines[k + 1]];
++    }
++  }
++  throw new Error("tle not found: " + satnum);
++}
++
++function ephemRows(satnum: string): Row[] {
++  const buf = readFileSync(new URL(`./tle/${satnum}.e`, import.meta.url));
++  const text = Buffer.from(buf.buffer, buf.byteOffset, buf.byteLength).toString("utf8");
++  const rows: Row[] = [];
++  let started = false;
++  for (const raw of text.split("\n")) {
++    const line = raw.trim();
++    if (line.startsWith("EphemerisTimePosVel")) {
++      started = true;
++      continue;
++    }
++    if (!started) continue;
++    if (line.startsWith("END")) break;
++    if (line.length === 0) continue;
++    const p = line.split(/\s+/).map(Number);
++    rows.push({ tsinceMin: p[0] / 60, r: [p[1], p[2], p[3]], v: [p[4], p[5], p[6]] });
++  }
++  return rows;
++}
++
++interface Special {
++  rows: number;
++  rowCodes: number[];
++  probes: Array<[number, number]>;
++}
++
++const SPECIAL: Record<string, Special> = {
++  // e=0.995: pl < 0 at t=25 only; the reference recovers afterwards
++  "33333": { rows: 5, rowCodes: [0, 0, 0, 0, 0], probes: [[25, 4], [80, 0], [320, 0]] },
++  // nm ~ 1e-5 rev/day: perturbed-ecc range error; code shifts 3 -> 1 at long t
++  "33334": { rows: 1, rowCodes: [3], probes: [[1, 3], [60, 3], [300, 1]] },
++  // Lyddane special: no error across the full 24 h sweep
++  "33335": {
++    rows: 73,
++    rowCodes: Array(73).fill(0),
++    probes: [[1460, 0], [1500, 0], [1740, 0]],
++  },
++  // decayed (mrt < 1) at t=55 only
++  "28872": { rows: 11, rowCodes: Array(11).fill(0), probes: [[55, 6], [110, 0], [350, 0]] },
++  // decayed; stays below (mrt < 1) for every t beyond the last row
++  "29141": { rows: 22, rowCodes: Array(22).fill(0), probes: [[440, 6], [480, 6], [720, 6]] },
++  // 12 h resonance: em crosses 1 after the last row (startmfe + 20 min grid)
++  "22312": {
++    rows: 23,
++    rowCodes: Array(23).fill(0),
++    probes: [[528.4057344, 1], [534.2028672, 1], [774.2028672, 1]],
++  },
++  // STR#3 original: no error (kept for completeness; also in the main harness)
++  "88888": {
++    rows: 13,
++    rowCodes: Array(13).fill(0),
++    probes: [[1560, 0], [1620, 0], [1740, 0]],
++  },
++};
++
++describe("313 special cases: exact per-call return codes", () => {
++  for (const [sat, spec] of Object.entries(SPECIAL)) {
++    it(`${sat}: ${spec.rows} .e rows + tail probes match the reference codes`, () => {
++      const [l1, l2] = verPair(sat);
++      const { satrec } = twoline2rv(l1, l2, "wgs72", "a", { strict: false });
++      const rows = ephemRows(sat);
++      expect(rows.length).toBe(spec.rows);
++      const r = [0, 0, 0];
++      const v = [0, 0, 0];
++      for (let i = 0; i < rows.length; i++) {
++        const ok = sgp4(satrec, rows[i].tsinceMin, r, v);
++        expect(satrec.error).toBe(spec.rowCodes[i]);
++        expect(ok).toBe(spec.rowCodes[i] === 0);
++        if (spec.rowCodes[i] !== 0) continue;
++        for (let k = 0; k < 3; k++) {
++          const dr = Math.abs(r[k] - rows[i].r[k]);
++          const rel = rows[i].r[k] !== 0 ? dr / Math.abs(rows[i].r[k]) : Infinity;
++          expect(dr <= ABS_POS || rel <= REL).toBe(true);
++          const dv = Math.abs(v[k] - rows[i].v[k]);
++          const relv = rows[i].v[k] !== 0 ? dv / Math.abs(rows[i].v[k]) : Infinity;
++          expect(dv <= ABS_VEL || relv <= REL).toBe(true);
++        }
++      }
++      for (const [t, code] of spec.probes) {
++        const ok = sgp4(satrec, t, r, v);
++        expect(satrec.error).toBe(code);
++        expect(ok).toBe(code === 0);
++      }
++    });
++  }
++});
+diff --git a/src/lib/iono/sgp4/sgpPin.test.ts b/src/lib/iono/sgp4/sgpPin.test.ts
+new file mode 100644
+index 0000000..891bc2c
+--- /dev/null
++++ b/src/lib/iono/sgp4/sgpPin.test.ts
+@@ -0,0 +1,280 @@
++// ionosphere-live-3d — drop 313 TU: branch pins (near-earth init,
++// deep-space dsinit periodics, synchronous irez==1, 12 h resonance irez==2).
++// Oracle: python-sgp4 pure model (same SGP4.cpp family). Method 9c:
++// every pin below was MEASURED on the drop machine, then written verbatim.
++// Policy: integer/zero flags asserted exact (toBe); float fields measured
++// bit-equal use 1e-13 relative (measured 0; margin for cross-V8 libm
++// robustness); fields with a measured non-zero margin use 2x that margin
++// as the literal bound (comment states the measurement).
++
++import { describe, expect, it } from "vitest";
++import { readFileSync } from "node:fs";
++import { twoline2rv } from "./sgpTle";
++
++function readVer(): string[] {
++  const buf = readFileSync(new URL("./SGP4-VER.TLE", import.meta.url));
++  return Buffer.from(buf.buffer, buf.byteOffset, buf.byteLength).toString("utf8").split("\n");
++}
++
++function verPair(satnum: string): [string, string] {
++  const lines = readVer();
++  for (let k = 0; k < lines.length; k++) {
++    if (lines[k].startsWith("1 ") && lines[k].slice(2, 7).trim() === satnum) {
++      return [lines[k], lines[k + 1]];
++    }
++  }
++  throw new Error("tle not found: " + satnum);
++}
++
++function initSat(satnum: string) {
++  const [l1, l2] = verPair(satnum);
++  return twoline2rv(l1, l2, "wgs72", "a").satrec;
++}
++
++const REL_PIN = 1e-13;
++
++function nearRel(actual: number, pin: number) {
++  expect(Math.abs(actual - pin)).toBeLessThanOrEqual(REL_PIN * Math.abs(pin));
++}
++
++function near(actual: number, pin: number, bound: number) {
++  expect(Math.abs(actual - pin)).toBeLessThanOrEqual(bound);
++}
++
++function field(s: unknown, name: string): number {
++  return (s as Record<string, number>)[name];
++}
++
++describe("313 pins: 00005 near-earth init (reference: python-sgp4)", () => {
++  const s = initSat("00005");
++
++  it("method + flags", () => {
++    expect(s.method).toBe("n");
++    expect(s.isimp).toBe(0);
++  });
++
++  it("gravity + periodic factors", () => {
++    nearRel(s.con41, 1.0488650879956589);
++    nearRel(s.x1mth2, 0.31704497066811366);
++    nearRel(s.x7thm1, 3.7806852053232047);
++  });
++
++  it("keps rates", () => {
++    nearRel(s.argpdot, 5.429305256054411e-5);
++    nearRel(s.nodedot, -3.7171353845372952e-5);
++    nearRel(s.mdot, 0.047229443383208038);
++  });
++
++  it("secular drag + periodic coefficients", () => {
++    nearRel(s.cc1, 9.5310932694231938e-12);
++    nearRel(s.cc4, 5.2593607316167933e-7);
++    nearRel(s.cc5, 1.6465152476785347e-5);
++    nearRel(s.d2, 1.4398737902921817e-21);
++    nearRel(s.d3, 3.217106892467983e-31);
++    nearRel(s.d4, 8.358359772162507e-41);
++    nearRel(s.t2cof, 1.4296639904134791e-11);
++    nearRel(s.t3cof, 1.62155726811307e-21);
++    nearRel(s.t4cof, 2.8461828382529684e-31);
++    nearRel(s.t5cof, 6.0806613973410566e-41);
++    nearRel(s.xmcof, -1.885936118348151e-11);
++    nearRel(s.xlcof, 0.0012890577280388418);
++    nearRel(s.aycof, 0.00066021623179585967);
++    nearRel(s.nodecf, -1.1942211733132768e-15);
++  });
++
++  it("scaled kepler elements", () => {
++    nearRel(s.eta, 0.73690954292802413);
++    nearRel(s.delmo, 4.8730846591121253);
++    nearRel(s.sinmao, 0.33094922987265429);
++    nearRel(s.ecco, 0.1859667);
++    nearRel(s.inclo, 0.5980929187319208);
++    nearRel(s.bstar, 2.8098e-5);
++  });
++});
++
++describe("313 pins: 23333 deep-space dsinit periodics (non-resonant)", () => {
++  const s = initSat("23333");
++
++  it("deep-space flags", () => {
++    expect(s.method).toBe("d");
++    expect(s.isimp).toBe(1);
++    expect(s.irez).toBe(0);
++  });
++
++  it("non-resonant: all resonance/integrator fields are zero", () => {
++    for (const f of [
++      "atime",
++      "xli",
++      "xni",
++      "xfact",
++      "xlamo",
++      "d2201",
++      "d2211",
++      "d3210",
++      "d3222",
++      "d4410",
++      "d4422",
++      "d5220",
++      "d5232",
++      "d5421",
++      "d5433",
++      "del1",
++      "del2",
++      "del3",
++    ]) {
++      expect(field(s, f)).toBe(0);
++    }
++  });
++
++  it("secular + periodic rates (bounds = 2x measured)", () => {
++    near(s.e3, 0.006618130467595364, 3e-16); // measured 1.01e-16
++    near(s.ee2, -0.007503198877722854, 2e-16); // measured 8.93e-17
++    near(s.dedt, 2.9681356032421368e-9, 3e-22); // measured 1.34e-22
++    near(s.didt, -3.439044884764362e-7, 1.1e-21); // measured 5.29e-22
++    near(s.dmdt, -3.438051105625226e-6, 6e-21); // measured 2.54e-21
++    near(s.dnodt, -5.053925231473856e-7, 9e-22); // measured 4.24e-22
++    near(s.domdt, 6.914571527622966e-7, 1.1e-21); // measured 5.29e-22
++    near(s.zmol, 5.607868196209495, 8e-13); // measured 3.98e-13
++    near(s.zmos, 5.196058843771105, 5e-14); // measured 2.13e-14
++    near(s.gsto, 3.84921956856428, 1.3e-13); // measured 6.39e-14
++  });
++});
++
++describe("313 pins: 08195 12 h resonance (irez==2, dsinit coeffs)", () => {
++  const s = initSat("08195");
++
++  it("flags", () => {
++    expect(s.method).toBe("d");
++    expect(s.irez).toBe(2);
++  });
++
++  it("exact zeros in the resonance branch", () => {
++    for (const f of ["atime", "del1", "del2", "del3"]) {
++      expect(field(s, f)).toBe(0);
++    }
++  });
++
++  it("resonant coefficients + branch-only fields (measured bit-equal)", () => {
++    nearRel(s.xni, 0.008748547019630239);
++    nearRel(s.xfact, -0.008753597222053683);
++    nearRel(s.d2201, -1.1973595516231104e-11);
++    nearRel(s.d2211, 6.453213834121484e-11);
++    nearRel(s.d3210, -3.893722738131047e-12);
++    nearRel(s.d3222, -7.364857538023281e-12);
++    nearRel(s.d4410, 2.5769601409463443e-12);
++    nearRel(s.d4422, 4.361455592714352e-12);
++    nearRel(s.d5220, -2.5287894659528444e-12);
++    nearRel(s.d5232, 6.767712568551213e-13);
++    nearRel(s.d5421, -2.280698046561967e-12);
++    nearRel(s.d5433, -1.6595708214914194e-12);
++    nearRel(s.dnodt, -6.124323489695265e-8);
++  });
++
++  it("integrator + periodic fields (bounds = 2x measured)", () => {
++    near(s.xli, 2.6628995258087294, 4e-12); // measured 1.56e-12
++    near(s.xlamo, 2.6628995258087294, 4e-12); // measured 1.56e-12
++    near(s.e3, -0.0004408046133189363, 4e-18); // measured 1.46e-18
++    near(s.ee2, -0.00010934280539374914, 1.5e-17); // measured 6.03e-18
++    near(s.dedt, -2.8885476234610693e-8, 2e-23); // measured 6.62e-24
++    near(s.didt, -9.78410826921414e-9, 4e-24); // measured 1.65e-24
++    near(s.dmdt, 9.270786742526957e-8, 6e-23); // measured 2.65e-23
++    near(s.domdt, -1.4155210733836934e-8, 2e-23); // measured 8.6e-24
++    near(s.zmol, 1.703291771990898, 1.6e-12); // measured 3.98e-13
++    near(s.zmos, 2.972158040325546, 1.5e-14); // measured 2.13e-14
++    near(s.gsto, 0.574180126904011, 1.6e-12); // measured 7.82e-13
++  });
++});
++
++describe("313 pins: 09880 12 h resonance (irez==2, dsinit coeffs)", () => {
++  const s = initSat("09880");
++
++  it("flags", () => {
++    expect(s.method).toBe("d");
++    expect(s.irez).toBe(2);
++  });
++
++  it("exact zeros in the resonance branch", () => {
++    for (const f of ["atime", "del1", "del2", "del3"]) {
++      expect(field(s, f)).toBe(0);
++    }
++  });
++
++  it("resonant coefficients + branch-only fields (measured bit-equal)", () => {
++    nearRel(s.xni, 0.008762667060363351);
++    nearRel(s.xfact, -0.008754040087689473);
++    nearRel(s.d2201, -1.2230660003395134e-11);
++    nearRel(s.d2211, 7.174605316403472e-11);
++    nearRel(s.d3210, -4.151751044682107e-12);
++    nearRel(s.d3222, -8.877536621153812e-12);
++    nearRel(s.d4410, 3.097256488149366e-12);
++    nearRel(s.d4422, 5.5073675014217865e-12);
++    nearRel(s.d5220, -3.2549115160322203e-12);
++    nearRel(s.d5232, 7.951364509680308e-13);
++    nearRel(s.d5421, -2.951741474263858e-12);
++    nearRel(s.d5433, -2.267801942329212e-12);
++    nearRel(s.dnodt, -8.61575009268081e-8);
++  });
++
++  it("integrator + periodic fields (bounds = 2x measured)", () => {
++    near(s.xli, 2.15824144430918, 4e-12); // measured 1.56e-12
++    near(s.xlamo, 2.15824144430918, 4e-12); // measured 1.56e-12
++    near(s.e3, 0.00012494318395640518, 2e-17); // measured 8.92e-18
++    near(s.ee2, 0.000647665259705538, 4e-18); // measured 1.84e-18
++    near(s.dedt, -4.867357573014225e-9, 8e-24); // measured 3.31e-24
++    near(s.didt, -1.740817385888356e-9, 1e-24); // measured 4.14e-25
++    near(s.dmdt, 7.275290629300275e-9, 7e-23); // measured 3.09e-23
++    near(s.dnodt, -8.61575009268081e-8, 3e-23); // measured 1.41e-23
++    near(s.domdt, 2.3358159779494885e-8, 2e-23); // measured 9.9e-24
++    near(s.zmol, 1.7556058272777406, 1.6e-12); // measured 3.98e-13
++    near(s.zmos, 2.976104523219526, 1.5e-14); // measured 2.13e-14
++    near(s.gsto, 2.0196171169817347, 1.6e-12); // measured 7.82e-13
++  });
++});
++
++describe("313 pins: 28626 geosynchronous (irez==1, synchronous branch)", () => {
++  const s = initSat("28626");
++
++  it("flags", () => {
++    expect(s.method).toBe("d");
++    expect(s.irez).toBe(1);
++    expect(s.isimp).toBe(1);
++  });
++
++  it("non-resonant zeros + synchronous nonzero fields (measured bit-equal)", () => {
++    for (const f of [
++      "atime",
++      "dnodt",
++      "d2201",
++      "d2211",
++      "d3210",
++      "d3222",
++      "d4410",
++      "d4422",
++      "d5220",
++      "d5232",
++      "d5421",
++      "d5433",
++    ]) {
++      expect(field(s, f)).toBe(0);
++    }
++    nearRel(s.del1, -6.397199405204386e-13);
++    nearRel(s.del2, 1.4103512638856627e-11);
++    nearRel(s.del3, 1.9783840354489316e-12);
++    nearRel(s.xfact, -0.004375014405569654);
++    nearRel(s.xni, 0.004374949216285717);
++    nearRel(s.didt, -2.9471771963940842e-8);
++  });
++
++  it("integrator + periodic fields (bounds = 2x measured)", () => {
++    near(s.xli, 4.797386947629335, 1.6e-12); // measured 7.82e-13
++    near(s.xlamo, 4.797386947629335, 1.6e-12); // measured 7.82e-13
++    near(s.e3, 9.73028658447897e-8, 1.5e-22); // measured 6.62e-23
++    near(s.ee2, 4.11664580708399e-9, 3e-21); // measured 1.41e-21
++    near(s.dedt, -1.1633512183437053e-12, 2e-27); // measured 6.06e-28
++    near(s.dmdt, -1.0450301245210244e-7, 3e-22); // measured 1.32e-22
++    near(s.domdt, 3.403399555000861e-8, 6e-23); // measured 2.65e-23
++    near(s.zmol, 1.7340023589123845, 1.6e-12); // measured 7.46e-13
++    near(s.zmos, 2.9744747944997627, 1.5e-14); // measured 7.11e-15
++    near(s.gsto, 1.4227134337369165, 1.6e-12); // measured 7.82e-13
++  });
++});
+diff --git a/src/lib/iono/sgp4/sgpTle.test.ts b/src/lib/iono/sgp4/sgpTle.test.ts
+new file mode 100644
+index 0000000..28da626
+--- /dev/null
++++ b/src/lib/iono/sgp4/sgpTle.test.ts
+@@ -0,0 +1,90 @@
++// ionosphere-live-3d — drop 313 TU: TLE parsing + checksum policy.
++// Fixture: SGP4-VER.TLE line pairs (official verification set).
++
++import { describe, expect, it } from "vitest";
++import { readFileSync } from "node:fs";
++import { parseTle, tleChecksumOk, twoline2rv } from "./sgpTle";
++
++function verLines(): string[] {
++  const buf = readFileSync(new URL("./SGP4-VER.TLE", import.meta.url));
++  return Buffer.from(buf.buffer, buf.byteOffset, buf.byteLength).toString("utf8").split("\n");
++}
++
++function tlePair(satnum: string): [string, string] {
++  const lines = verLines();
++  for (let k = 0; k < lines.length; k++) {
++    if (lines[k].startsWith("1 ") && lines[k].slice(2, 7).trim() === satnum) {
++      return [lines[k], lines[k + 1]];
++    }
++  }
++  throw new Error("tle not found: " + satnum);
++}
++
++describe("313 TLE checksum (strict by default)", () => {
++  it("all 30 clean VER TLEs pass strict parsing", () => {
++    const lines = verLines();
++    let n = 0;
++    for (let k = 0; k < lines.length; k++) {
++      if (!lines[k].startsWith("1 ")) continue;
++      const l1 = lines[k];
++      const l2 = lines[k + 1];
++      if (l2 === undefined || !l2.startsWith("2 ")) continue;
++      const sat = l1.slice(2, 7).trim();
++      if (["33333", "33334", "33335"].includes(sat)) continue; // intentional error cases
++      const el = parseTle(l1, l2);
++      expect(tleChecksumOk(l1)).toBe(true);
++      expect(tleChecksumOk(l2)).toBe(true);
++      expect(el.checksumOk1).toBe(true);
++      expect(el.checksumOk2).toBe(true);
++      n++;
++    }
++    expect(n).toBe(30);
++  });
++  it("a single corrupted digit is rejected", () => {
++    const [l1, l2] = tlePair("00005");
++    const bad = "9" + l1.slice(1);
++    expect(tleChecksumOk(bad)).toBe(false);
++    expect(() => parseTle(bad, l2)).toThrow();
++  });
++  it("the 3 intentional error TLEs fail checksum (documented) but parse lenient", () => {
++    for (const sat of ["33333", "33334", "33335"]) {
++      const [l1, l2] = tlePair(sat);
++      expect(tleChecksumOk(l1) && tleChecksumOk(l2)).toBe(false);
++      expect(() => parseTle(l1, l2)).toThrow();
++      const el = parseTle(l1, l2, { strict: false });
++      expect(el.satnum).toBe(sat);
++    }
++  });
++  it("short lines are rejected", () => {
++    expect(tleChecksumOk("1 00005U")).toBe(false);
++    expect(() => parseTle("1 00005U", "2 00005")).toThrow();
++  });
++});
++
++describe("313 TLE field transcription (00005 spot checks)", () => {
++  it("parses epoch/inclination/eccentricity", () => {
++    const [l1, l2] = tlePair("00005");
++    const el = parseTle(l1, l2);
++    expect(el.satnum).toBe("00005");
++    expect(el.epochyr).toBe(0);
++    expect(el.epochdays).toBe(179.78495062);
++    expect(el.inclo).toBe(34.2682);
++    // 0.1859667 via the implied-decimal surgery (col 26 '.')
++    expect(el.ecco).toBe(0.1859667);
++    // [52] != ' ' branch: 11-char mean motion,-verbatim like the C reader
++    expect(el.noKozai).toBe(10.82419157);
++    expect(el.bstar).toBe(0.28098); // raw; x10^ibexp applied in twoline2rv
++    expect(el.ibexp).toBe(-4);
++    expect(el.startmfe).toBe(0);
++    expect(el.stopmfe).toBe(4320);
++    expect(el.deltamin).toBe(360);
++  });
++  it("twoline2rv converts units (rad/min)", () => {
++    const [l1, l2] = tlePair("00005");
++    const { satrec } = twoline2rv(l1, l2, "wgs72", "a");
++    expect(satrec.error).toBe(0);
++    expect(satrec.inclo).toBeCloseTo((34.2682 * Math.PI) / 180, 12);
++    expect(satrec.mo).toBeCloseTo((19.3264 * Math.PI) / 180, 12);
++    expect(satrec.bstar).toBeCloseTo(0.28098e-4, 18);
++  });
++});
+diff --git a/src/lib/iono/sgp4/sgpTle.ts b/src/lib/iono/sgp4/sgpTle.ts
+new file mode 100644
+index 0000000..a0a1f73
+--- /dev/null
++++ b/src/lib/iono/sgp4/sgpTle.ts
+@@ -0,0 +1,247 @@
++// SPDX-License-Identifier: GPL-3.0-or-later
++// ionosphere-live-3d — TLE parser for the SGP4 port (drop 313, F2b #10).
++//
++// Covers the twoline2rv front-end of SGP4.cpp (Vallado C++ reference,
++// AIAA-2006-6753 bundle). Header mirrored from the source file.
++// Translated 2026-10-17. Faithful translation without physics changes
++// (traducción fiel sin cambios de física).
++//
++// Checksum rule (TLE standard, enforced by default): sum of all digits
++// in columns 1..68 plus 1 for each '-' sign, modulo 10, must equal the
++// digit in column 69. The 3 intentional error-case TLEs of the official
++// verification set carry invalid checksums BY DESIGN (documented) and
++// are parsed in lenient mode only for the return-code tests.
++
++import { newElsetRec, sgp4init, jday, days2mdhms, type ElsetRec, type GravConstKind } from "./sgp4";
++
++export interface TleElements {
++  satnum: string;
++  classification: string;
++  intldesg: string;
++  epochyr: number;
++  epochdays: number;
++  ndot: number;
++  nddot: number;
++  nexp: number;
++  bstar: number;
++  ibexp: number;
++  ephtype: number;
++  elnum: number;
++  inclo: number;
++  nodeo: number;
++  ecco: number;
++  argpo: number;
++  mo: number;
++  noKozai: number;
++  revnum: number;
++  startmfe: number | null;
++  stopmfe: number | null;
++  deltamin: number | null;
++  checksumOk1: boolean;
++  checksumOk2: boolean;
++}
++
++/** TLE line checksum over columns 1..68 (0-based 0..67). */
++export function tleChecksumOk(line: string): boolean {
++  if (line.length < 69) return false;
++  let sum = 0;
++  for (let k = 0; k < 68; k++) {
++    const ch = line[k];
++    if (ch >= "0" && ch <= "9") sum += ch.charCodeAt(0) - 48;
++    else if (ch === "-") sum += 1;
++  }
++  const check = line[68];
++  return check >= "0" && check <= "9" && sum % 10 === check.charCodeAt(0) - 48;
++}
++
++interface Scanner {
++  s: string;
++  i: number;
++}
++
++function skipWs(sc: Scanner): void {
++  while (
++    sc.i < sc.s.length &&
++    (sc.s[sc.i] === " " || sc.s[sc.i] === "\t" || sc.s[sc.i] === "\n" || sc.s[sc.i] === "\r")
++  )
++    sc.i++;
++}
++
++/** C strtol semantics, base 10, longest valid prefix within width. */
++function scanInt(sc: Scanner, width: number): number {
++  skipWs(sc);
++  const sub = sc.s.slice(sc.i, sc.i + width);
++  const m = /^[+-]?[0-9]+/.exec(sub);
++  if (!m) throw new Error(`sgp4: bad int field near offset ${sc.i}`);
++  sc.i += m[0].length;
++  return parseInt(m[0], 10);
++}
++
++/** C strtod semantics (no hex/inf/nan — TLE domain), longest prefix. */
++function scanFloat(sc: Scanner, width: number): number {
++  skipWs(sc);
++  const sub = sc.s.slice(sc.i, sc.i + width);
++  const m = /^[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+-]?[0-9]+)?/.exec(sub);
++  if (!m) throw new Error(`sgp4: bad float field near offset ${sc.i}`);
++  sc.i += m[0].length;
++  return parseFloat(m[0]);
++}
++
++function scanChars(sc: Scanner, width: number): string {
++  skipWs(sc);
++  let out = "";
++  while (out.length < width && sc.i < sc.s.length) {
++    const ch = sc.s[sc.i];
++    if (ch === " " || ch === "\t" || ch === "\n" || ch === "\r") break;
++    out += ch;
++    sc.i++;
++  }
++  return out;
++}
++
++function scanRaw(sc: Scanner, width: number): string {
++  const out = sc.s.slice(sc.i, sc.i + width);
++  sc.i += out.length;
++  return out;
++}
++
++/** Apply the C char-surgery to mutable line buffers (exact indices). */
++function surgery(l1: string[], l2: string[]): void {
++  for (let j = 10; j <= 15; j++) if (l1[j] === " ") l1[j] = "_";
++  if (l1[44] !== " ") l1[43] = l1[44];
++  l1[44] = ".";
++  if (l1[7] === " ") l1[7] = "U";
++  if (l1[9] === " ") l1[9] = ".";
++  for (let j = 45; j <= 49; j++) if (l1[j] === " ") l1[j] = "0";
++  if (l1[51] === " ") l1[51] = "0";
++  if (l1[53] !== " ") l1[52] = l1[53];
++  l1[53] = ".";
++  l2[25] = ".";
++  for (let j = 26; j <= 32; j++) if (l2[j] === " ") l2[j] = "0";
++  if (l1[62] === " ") l1[62] = "0";
++  if (l1[68] === " ") l1[68] = "0";
++}
++
++const XPDP = 1440.0 / (2.0 * Math.PI);
++
++/**
++ * Parse a TLE pair. With strict=true (default) a bad checksum throws.
++ * VER-format line 2 may carry start/stop/delta after column 68.
++ */
++export function parseTle(raw1: string, raw2: string, opts: { strict?: boolean } = {}): TleElements {
++  const strict = opts.strict ?? true;
++  const c1 = tleChecksumOk(raw1);
++  const c2 = tleChecksumOk(raw2);
++  if (strict && (!c1 || !c2)) {
++    throw new Error(`sgp4: TLE checksum failed (l1=${c1} l2=${c2})`);
++  }
++  const l1 = raw1.split("");
++  const l2 = raw2.split("");
++  surgery(l1, l2);
++
++  const s1: Scanner = { s: l1.join(""), i: 0 };
++  scanInt(s1, 2); // cardnumb
++  const satnum = scanChars(s1, 5);
++  const classification = scanRaw(s1, 1);
++  const intldesg = scanChars(s1, 10);
++  const epochyr = scanInt(s1, 2);
++  const epochdays = scanFloat(s1, 12);
++  const ndot = scanFloat(s1, 11);
++  const nddot = scanFloat(s1, 7);
++  const nexp = scanInt(s1, 2);
++  const bstar = scanFloat(s1, 7);
++  const ibexp = scanInt(s1, 2);
++  const ephtype = scanInt(s1, 2);
++  const elnum = scanInt(s1, 6);
++
++  const s2: Scanner = { s: l2.join(""), i: 0 };
++  scanInt(s2, 2);
++  scanChars(s2, 5);
++  const inclo = scanFloat(s2, 9);
++  const nodeo = scanFloat(s2, 9);
++  const ecco = scanFloat(s2, 8);
++  const argpo = scanFloat(s2, 9);
++  const mo = scanFloat(s2, 9);
++  let noKozai: number;
++  if (l2[52] === " ") noKozai = scanFloat(s2, 10);
++  else noKozai = scanFloat(s2, 11);
++  const revnum = scanInt(s2, 6);
++  let startmfe: number | null = null;
++  let stopmfe: number | null = null;
++  let deltamin: number | null = null;
++  const rest = s2.s.slice(s2.i).trim();
++  if (rest.length > 0) {
++    const parts = rest.split(/\s+/).map(Number);
++    if (parts.length >= 3 && parts.every(Number.isFinite)) {
++      startmfe = parts[0];
++      stopmfe = parts[1];
++      deltamin = parts[2];
++    }
++  }
++
++  return {
++    satnum, classification, intldesg, epochyr, epochdays,
++    ndot, nddot, nexp, bstar, ibexp, ephtype, elnum,
++    inclo, nodeo, ecco, argpo, mo, noKozai, revnum,
++    startmfe, stopmfe, deltamin,
++    checksumOk1: c1, checksumOk2: c2,
++  };
++}
++
++export interface TwolineResult {
++  satrec: ElsetRec;
++  startmfe: number | null;
++  stopmfe: number | null;
++  deltamin: number | null;
++}
++
++/**
++ * twoline2rv equivalent: parse + unit conversion + jd + sgp4init.
++ * whichconst 'wgs72' matches the official verification runs.
++ */
++export function twoline2rv(
++  line1: string,
++  line2: string,
++  whichconst: GravConstKind,
++  opsmode: string,
++  opts: { strict?: boolean } = {},
++): TwolineResult {
++  const deg2rad = Math.PI / 180.0;
++  const el = parseTle(line1, line2, opts);
++  const satrec = newElsetRec();
++  satrec.satnum = el.satnum;
++
++  satrec.noKozai = el.noKozai / XPDP;
++  satrec.nddot = el.nddot * Math.pow(10.0, el.nexp);
++  satrec.bstar = el.bstar * Math.pow(10.0, el.ibexp);
++  satrec.ndot = el.ndot / (XPDP * 1440.0);
++  satrec.nddot = satrec.nddot / (XPDP * 1440.0 * 1440.0);
++  satrec.inclo = el.inclo * deg2rad;
++  satrec.nodeo = el.nodeo * deg2rad;
++  satrec.argpo = el.argpo * deg2rad;
++  satrec.mo = el.mo * deg2rad;
++  satrec.classification = el.classification;
++  satrec.intldesg = el.intldesg;
++  satrec.ephtype = el.ephtype;
++  satrec.elnum = el.elnum;
++  satrec.revnum = el.revnum;
++
++  const year = el.epochyr < 57 ? el.epochyr + 2000 : el.epochyr + 1900;
++  const md = days2mdhms(year, el.epochdays);
++  const jd = jday(year, md.mon, md.day, md.hr, md.minute, md.sec);
++  satrec.jdsatepoch = jd.jd;
++  satrec.jdsatepochF = jd.jdFrac;
++
++  sgp4init(
++    {
++      whichconst, opsmode, satn: el.satnum,
++      epoch: satrec.jdsatepoch + satrec.jdsatepochF - 2433281.5,
++      xbstar: satrec.bstar, xndot: satrec.ndot, xnddot: satrec.nddot,
++      xecco: el.ecco, xargpo: satrec.argpo, xinclo: satrec.inclo,
++      xmo: satrec.mo, xnoKozai: satrec.noKozai, xnodeo: satrec.nodeo,
++    },
++    satrec,
++  );
++
++  return { satrec, startmfe: el.startmfe, stopmfe: el.stopmfe, deltamin: el.deltamin };
++}
+diff --git a/src/lib/iono/sgp4/sgpVer.test.ts b/src/lib/iono/sgp4/sgpVer.test.ts
+new file mode 100644
+index 0000000..720d7ab
+--- /dev/null
++++ b/src/lib/iono/sgp4/sgpVer.test.ts
+@@ -0,0 +1,131 @@
++// ionosphere-live-3d — drop 313 binding oracle: official SGP4 verification.
++// Harness over SGP4-VER.TLE + the 32 official .e ephemerides.
++//
++// DECLARED DUAL CRITERION (312 Q3): per component, PASS if
++// abs-diff <= 1e-6 km OR relative <= 1e-6; velocity 1e-9 km/s abs
++// (same dual form). dmissing-style exactness: return codes must match
++// exactly (2/3/4/6), including the intentional error TLEs.
++// Fixtures are the official verification files (test-only, fenced dir).
++// whichconst = wgs72 to match the reference runs; opsmode 'a'.
++
++import { describe, expect, it } from "vitest";
++import { readFileSync } from "node:fs";
++import { twoline2rv } from "./sgpTle";
++import { sgp4 } from "./sgp4";
++
++const ABS_POS = 1e-6;
++const REL = 1e-6;
++const ABS_VEL = 1e-9;
++
++function readText(name: string): string {
++  const buf = readFileSync(new URL("./" + name, import.meta.url));
++  return Buffer.from(buf.buffer, buf.byteOffset, buf.byteLength).toString("utf8");
++}
++
++interface EphemRow {
++  tsinceMin: number;
++  r: number[];
++  v: number[];
++}
++
++function parseEphem(satnum: string): EphemRow[] {
++  const rows: EphemRow[] = [];
++  let txt: string;
++  try {
++    txt = readText(`tle/${satnum}.e`);
++  } catch {
++    return rows;
++  }
++  for (const line of txt.split("\n")) {
++    const m = line.match(/^\s*-?\d+\.\d+\s+-?\d/);
++    if (!m) continue;
++    const p = line.trim().split(/\s+/).map(Number);
++    if (p.length < 7 || p.some((v) => !Number.isFinite(v))) continue;
++    rows.push({ tsinceMin: p[0] / 60, r: p.slice(1, 4), v: p.slice(4, 7) });
++  }
++  return rows;
++}
++
++function tleList(): [string, string][] {
++  const lines = readText("SGP4-VER.TLE").split("\n");
++  const out: [string, string][] = [];
++  for (let k = 0; k < lines.length; k++) {
++    if (lines[k].startsWith("1 ") && lines[k + 1] !== undefined && lines[k + 1].startsWith("2 ")) {
++      out.push([lines[k], lines[k + 1]]);
++    }
++  }
++  return out;
++}
++
++function close(a: number, b: number, absTol: number): boolean {
++  const d = Math.abs(a - b);
++  if (d <= absTol) return true;
++  if (b !== 0) return d / Math.abs(b) <= REL;
++  return false;
++}
++
++describe("313 binding oracle: official SGP4 verification set", () => {
++  it("propagates every .e row within the dual criterion, error-free", () => {
++    const fails: string[] = [];
++    let worstP = 0;
++    let worstV = 0;
++    let worstRelP = 0;
++    let worstRelV = 0;
++    let nrows = 0;
++    const done = new Set<string>();
++    for (const [l1, l2] of tleList()) {
++      const satnum = l1.slice(2, 7).trim();
++      if (["33333", "33334", "33335", "28872", "29141", "22312"].includes(satnum)) continue;
++      // The official file lists 20413 twice: the last entry is a second
++      // range (1.844e6..1.8451e6 min) and has no .e file — the .e covers
++      // the first range only; identical elements, so dedupe by satnum.
++      if (done.has(satnum)) continue;
++      done.add(satnum);
++      const { satrec } = twoline2rv(l1, l2, "wgs72", "a", { strict: false });
++      const rows = parseEphem(satnum);
++      if (rows.length === 0) {
++        fails.push(`${satnum}: no .e rows`);
++        continue;
++      }
++      for (const row of rows) {
++        const r = [0, 0, 0];
++        const v = [0, 0, 0];
++        const ok = sgp4(satrec, row.tsinceMin, r, v);
++        if (!ok || satrec.error !== 0) {
++          fails.push(`${satnum} t=${row.tsinceMin}: unexpected error ${satrec.error}`);
++          break;
++        }
++        nrows++;
++        for (let k = 0; k < 3; k++) {
++          const dr = Math.abs(r[k] - row.r[k]);
++          const rel = row.r[k] !== 0 ? dr / Math.abs(row.r[k]) : Infinity;
++          if (dr > worstP) worstP = dr;
++          if (Math.abs(row.r[k]) > 1.0 && Number.isFinite(rel) && rel > worstRelP) worstRelP = rel;
++          if (!(dr <= ABS_POS || rel <= REL)) {
++            fails.push(`${satnum} t=${row.tsinceMin} r[${k}]: ${r[k]} vs ${row.r[k]}`);
++          }
++          const dv = Math.abs(v[k] - row.v[k]);
++          const relv = row.v[k] !== 0 ? dv / Math.abs(row.v[k]) : Infinity;
++          if (dv > worstV) worstV = dv;
++          if (Math.abs(row.v[k]) > 0.01 && Number.isFinite(relv) && relv > worstRelV) worstRelV = relv;
++          if (!(dv <= ABS_VEL || relv <= REL)) {
++            fails.push(`${satnum} t=${row.tsinceMin} v[${k}]: ${v[k]} vs ${row.v[k]}`);
++          }
++        }
++        if (fails.length > 12) break;
++      }
++      if (fails.length > 12) break;
++    }
++    // eslint-disable-next-line no-console
++    console.log(
++      `rows=${nrows} worstAbsPos=${worstP} worstAbsVel=${worstV} worstRelPos=${worstRelP} worstRelVel=${worstRelV}`,
++    );
++    expect(fails.slice(0, 12)).toEqual([]);
++    expect(nrows).toBeGreaterThan(200);
++    // Binding dual criterion (312 Q3): the per-component gate above is the
++    // oracle; the relative worst tracks the global margin (numerically
++    // limited by libm sin/cos/pow rounding, not by physics).
++    expect(worstRelP).toBeLessThan(1e-6);
++    expect(worstRelV).toBeLessThan(1e-6);
++  });
++});
+diff --git a/src/lib/iono/sgp4/tle/00005.e b/src/lib/iono/sgp4/tle/00005.e
+new file mode 100644
+index 0000000000000000000000000000000000000000..fc7094380911acb25779142b9e0d355da9b9cf1c
+GIT binary patch
+literal 1779
+zcmah~%WfM-5Ioa>|6zY%2h*?VZXX>Jfs<G^U?+D*+E_#+u0YZO{P(F@QUVzm$chK<
+z3}>pks=9SJ{$2hlT4Z?r>h-I)>!07>4C|-+>2ca`4_L$J=G)_+)BfXMFUz0i?e2J3
+ztw<ZTKi^Kf&3-$tpXS^9)i4a~!!O@<1J_yyiZ@o@P!<=l=9!5T?{~*(|1>{rj@x<n
+zVLIN=cdONJo3H!L?(6j5{g3;*X}?+-)_<CI$NlEv?R@urg=f9lAMg9}Jn!$eyUlU>
+z{QYp89<lXh{bBusoioM%CHQW8IBs^g)9<_O5x4!ieV897a6Sw2BE*;N<Me4h{4qTM
+ztba~VEhv3?`ny-=qRlwDHN20c6~741=4Pi80~RFHs4q~7lu)XKmsYeI-raH-w3ujA
+zXRBv0rq(Ze1{<ABaTRgJUk4KpDda71MwbPXRw$L26AM~gDZ;hpFlr&AAopg&$fc&F
+zm~z*C;i&>suh0aPQnV6*9@v^tY0;EKI@%!IYGEfVg)9Iho>E}}020TTQF(tcb72po
+zXEYqSL>tUnK!5~TP`_L?L9%7C<+32rq=W-LPiS0|YEy^qhT77x5rK%JY7JNt^%)He
+zuh2$#08Yu0DgYZB1D>E%gmkn~Az-PnRUM=U2e(GmfH{n{D5_@n>I2Np$ndByXoRnq
+zXk)gh#Tqd=gC7`1MQYrg;6Ps(h+$7{5mllCBys`oU^9GcmWuZB3dakxOXuY0+6Ym*
+zM8jQKkpa&JIr`o1+DbOq*JwdAqHZ)2ilCtOLd3#GicnE8_F98NI}eg1W3hNfGo<e#
+zCGgD?N<v?vr2%@<OT)S5(PK0A)RkbU0uD<iQ42$92oK*_C`>9eR%EG#xS&r?ne2L9
+zqK(n4V%ng;c**2QNm^hgfn{&EQEGMcNUNgVSwV!H8dxKf3L1gtgU(AP$%L`c=Umqb
+zeRGwP5#52=mRyzEBAlCJm^MYnW^cejT)m)=5DZ)c0L(yDhQ6q~fID1QhQ<uv&~QL|
+z&g9bEmrBBpEL9B(-~=8B4L1U*MjI^)z1_{wRwn2-Mqq2=Rz(c^DB&80!h6+C)e&yv
+zb8Resl@g4Oq@s$JMjPPr(U9np;0xP&u_N}RD4MQ%k4-BL@gzs_C-IsDQUh601ipp#
+zET5D_%U-2q%!)~&-o0(hEWyZ(;uQpK8D+x|1lG|UgcbnY9ere+2MdG|&7}hfvqViH
+N0npYr@2>u({R@L&Ys3Hm
+
+literal 0
+HcmV?d00001
+
+diff --git a/src/lib/iono/sgp4/tle/04632.e b/src/lib/iono/sgp4/tle/04632.e
+new file mode 100644
+index 0000000000000000000000000000000000000000..0cbac109d19efede6331ef0e35f1beaf362398b2
+GIT binary patch
+literal 899
+zcmah|&2H2%5I(0;-@z{sYyLd8dn}Dmfo?0ca1Xnt8?l?LvH_`Y&$wNxf{?I$@r-A_
+zpRte2cmLCiXLo*fes<Ztzh1fSur2#C4@ZmHUj5jAE%WWS*YMpmjLWfUP}I`*>oWH9
+zFm;D%y=|OxjP64}Isy<!coFb|f@eq}Dgao;^|+MzFzxzfn8us3Y^P1reCi+Petax{
+z=WpjtnVTk9{9PHBx!+w*o2SNB*U!tghNo%X3}e5P`={el_Lh3+Zn}SDP89!3@M<_N
+z{kSfl$6>K<ABWwvFUI*~$g2?#!@k^2$1i1PV0FJN@TT*5)iW`RN0b0&fpe{3Ch#J_
+zfhE6Gv{u4Nqj0nWpGcVym|RV0fQ+i*9QY6+vqIo!u$B=)e#2RB%3!^LLW)SqdLt*y
+zK8b;XvIW`@kv+4<jEP-~K57C@oWZs1$w);sh83A}AW-D$eJy3<_!f;RC-Om41O&7T
+zh-jk@lCvsQX|46Prb!~jXg9zsMiI3O6^&yiv1js}F?Vv12=RnQ*5oZ35#;C%j3J;&
+zG4Ua>H-(f9p`uA*^(@AVt9mjy5OOp=W{o!wLl#xD*!(9IVTkoT)>136=Xn~OoiQL~
+zZ`ZQ~sbgc!5Pg(DN@RpBA}N}B3TpZ*T1bc*F~w?YAR&-g2Wn#jNnr24{xa9CuKxI9
+FzW}~x%RvAD
+
+literal 0
+HcmV?d00001
+
+diff --git a/src/lib/iono/sgp4/tle/06251.e b/src/lib/iono/sgp4/tle/06251.e
+new file mode 100644
+index 0000000000000000000000000000000000000000..6730bd38f3d25451c949a81efe8250bda85263af
+GIT binary patch
+literal 3099
+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
+MyxqKgb@k}~FT}rHO8@`>
+
+literal 0
+HcmV?d00001
+
+diff --git a/src/lib/iono/sgp4/tle/08195.e b/src/lib/iono/sgp4/tle/08195.e
+new file mode 100644
+index 0000000000000000000000000000000000000000..671c4b6848edb4f3e5df8be38f1a2ee65240699b
+GIT binary patch
+literal 3099
+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
+QdGb8Yx4XBmZm#}+0}HWVR{#J2
+
+literal 0
+HcmV?d00001
+
+diff --git a/src/lib/iono/sgp4/tle/09880.e b/src/lib/iono/sgp4/tle/09880.e
+new file mode 100644
+index 0000000000000000000000000000000000000000..69755789bd13aacf3e519119739ab8a2ab1d7d02
+GIT binary patch
+literal 3099
+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
+I{p{2KAB5Lm8~^|S
+
+literal 0
+HcmV?d00001
+
+diff --git a/src/lib/iono/sgp4/tle/09998.e b/src/lib/iono/sgp4/tle/09998.e
+new file mode 100644
+index 0000000000000000000000000000000000000000..6d8bc639b55fbd67cae1095a9cf68b3115823afb
+GIT binary patch
+literal 1889
+zcmai#-EJE<5QVQ5An&j*umop@<ZyDCMks>TPJkr6SL1Cg)RqicE#SBBN6B`aqCnS@
+zr6rd<obxlfKmM8iP9@p&`qk@KZ`VJ+zns>0*URm4*xob7>+-ML-<QLOKc0s_?zg++
+z{c0tpG5zW5vfCWC`}N)a>-B1yChgP3=3&yD>m>1JvNz@__wZmySn+;$Tn=~po6T{%
+z-(4)n>;2Vg_3P%_VYB<T{Cobx;c7XoR+aIemfi8Nxp}+4dRTF-H;3c(7~by>SKHm@
+zxO{rJKQ6aSeO_Oz|6}Iyi2r-Qcia2pX7_dZvfCcn?U(J%{&wNakAyrE@p*f@eB9sv
+zw%h<VUgs;P{CEvEYBf#KqqsJordeG}N!m<3s-0KNl0+&KDy&FFvUcmejvI+0UR&qU
+zoNB3^acyU?xwn#^;MiNl8Y{ZCD$*G+K0Vdin|B#tb1h=2X*G{1(_~4^dlPNK@{~n*
+zQd=HioVN-p#$#!7*Zu;H-7H69s}i9x&|0*d3Zq%d39U%<R9NNB+0&8+MTU8u=5cP7
+z)-pB%t#AW6;yl)N^2;NYU<pJ-%G4X#2a(jKo;ba<o+$-tYpbb8&#g47r#7KT_0H_5
+zO>?wTxB)F(J3QxSwAx<QraFi%XcuOjZ&v)<6RH_+RAQ*Pr;y5@>QJg#uVyv?Bn3OT
+z`&c_<Lu?Hcc&d#keAf*g(J}SnRS|fgN!6ON8my2RE^4J%sO&z_0LWHa!5n93SS=>Z
+zfM%tZ99EvtT7T)1$!d>C6`^}JJcez6OU{2x0zA}7?#Yq1>KMo=!YwQp9=DXCqV`%&
+zGsR1HXd1~LOXoK9{;r!r0+z1DIt-5|=nx%~c9mR*ZWDD_>R!8-0D#5VqN*z7VHvH`
+z3tEjCbEd*ioo6havF;CO*r`H(G--h+v5n`Jn&1+(6MSWLGQ}f&8#cru(3RV{wiYDp
+zL@Nof)|z6dr`oFj;1X!^mfRJc^FUM0%~C0(%bn9t6K>%==x9zqBw`+D$~3cBrf4Si
+z<A$oc)k;17jD~D4m{hzaq%sS(9HpQKc|*mFQYV)*D>NHQ_70OXyf@(Bi!@@H$V9#2
+zun|7ad`iSK+Q`;--Na}*$<W=-GSOOcK}c*6XCW&|qaKXFLjx@&46o-Cns5ds)IQLZ
+zq!UVc_9Qni(IzGN2?sR#!>P88X%jZ2c?EIDCGM0UBZt^#9_cQexUwhYDJv}m6+j~=
+zfxxF<o3V5*5cZ<BnV`}sqz3O{c<aLEPG=#*CngCpEhC$V(uYCI7}z4t<c&5$6GbY}
+S3YpErGlR+X<+~q#K>q<-iGWD}
+
+literal 0
+HcmV?d00001
+
+diff --git a/src/lib/iono/sgp4/tle/11801.e b/src/lib/iono/sgp4/tle/11801.e
+new file mode 100644
+index 0000000000000000000000000000000000000000..3e93c3e448aa11de0ec7c3cdb3e97b20d3fc27c2
+GIT binary patch
+literal 899
+zcmaiz+iKh}5QeWE$UEo-EHnq5a@RDbgf<6A+Iu&vW=(hP#p@LE_WhM?!nPDDjIm}$
+z|MzQVcfb6!zpPp@rzfW;=iR5vYt!x4Wn1Q9j~Jfor|tJL-~4zF-%i80?3;!(Abs~x
+z#(o~AZZ|!w8)FPb^Wo{yP)^R6cxJ+xI!h9guyYP4F2|+JyJ^!e!!%x%Wj(E$=1c!L
+z_v2&vJAX5;%G@*_@sDL(=6-WNt)3gKuAi564Nud&8peJpchCE!Y>~R}uDX9@4i^7w
+z@M736{rFJ6j>7`A&%<Wg7I;21<h>F1!?xT``)_3fSbbiXv$*HWs{5!>tVD9GnO+K%
+zlg%1632_bhgaEc0ViIgExk%niEe}>zLvrH0Y0<_MNQ84dz?g!2!$GMP)LCZI6tW^9
+ztmJG`VG)5`%NlaDgqLQorX?$mNTN`#8}cONp;=*^a0uq=Z=?D&kU6H2awN;yB}qOZ
+z4;W~w;<9rYfmS1X8w1XfO4Y=dcj_7CY(vaR2^WPg>ykRJ;_IX<%mhuxv^M9At9k@q
+z#ToQyMVVL?dM!(!U{msFo(GMrqY$D><_dsOu0*uK*~lr^p2Rm=3VKX4Ii_e61`^l@
+xxIwAM92rxDCTQd_6brqmD0!h}<;unkorStja2#sJGYeYdQl)j*7k~W4egmbT%3=Tj
+
+literal 0
+HcmV?d00001
+
+diff --git a/src/lib/iono/sgp4/tle/14128.e b/src/lib/iono/sgp4/tle/14128.e
+new file mode 100644
+index 0000000000000000000000000000000000000000..40e9885f3d9a4b62dc3a60b722430f9e74442f60
+GIT binary patch
+literal 3099
+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
+XqWOKzHHqd}3Vx5DuHL@-?&|+98K_@%
+
+literal 0
+HcmV?d00001
+
+diff --git a/src/lib/iono/sgp4/tle/16925.e b/src/lib/iono/sgp4/tle/16925.e
+new file mode 100644
+index 0000000000000000000000000000000000000000..ca39e9472202b6c8e4b2819e1fde3ebe22c691e5
+GIT binary patch
+literal 1779
+zcmah~+in|241HFB{KNdf4#*)nB=eX?D1z2bfFyla?QJa7mJCTP;J@#gwdL4FfiCo*
+zo!#N#xp4M)`m_FBwMu#W=IxvJ>z_Yfmi7J3d^aDqN37v@`Pbd=^WoDU&&!|p+uiB7
+zTCsLK{&F?%HizwgeZRlDS(Q?R%f;rQG@@R(zhio*UR&#|N<`T4ad(;z_xsz;X}jND
+z%%_|E^=kF&=KEo@`#%5s`KQD6d|0gv>p#uA(_wS_et-S2!nNKUPB&wDzdu}Wcbn7v
+z<>7dm@9^mB`eOYbPo7%*-v&QykEhM<YW}v{o>1+V?d|?<M$b=zJPYx4dpCdHAAg%~
+z0XBY*7gg|Fu5oW>S($tEkY38foXVAyl010XF>zMqCe|QXkt*4+!F$8oHMM6LH!VeL
+zGjg-Ab_R3E`~-(ms3BQHnu}{<VQTJNp}czd0OLr~YTijyq)b$?-qhhvDXn&*WbY}Z
+zP_<yg0<|->#latFlSmkD8(y;*Oxz?YOPYBb@F<D)EQz9XM>mzgl3R2u6WDYP3Q;Xn
+zuVEeK(B>JfF~EPIVHX*4q}ot)2uaOi$kUzOfyLrMmAgiFK|fSGXY<4!Jgk8}nM~Ut
+z3LT|e`pDH|qY*FBiuGt!yP+$7<i?p*s5z-ap2DW$71*NWG`OiNYU=P1M8hLpU^$*x
+zh<DdM(!Zd|(Detm0<Q;^rjmjFCXlsOVQ#`lETCdigIA3rM{4j;gM|q<Fwrquq2>@>
+zD>oDJ)G^Zwn#${xunE^8Q}4~j8&g2Z=FkSJ;GPqP!I4Zsentw}i5$xdbVqs+<G`yR
+zk>FxZ&q^Ay{es&hz^NJ3(|AE^*j^pBHy<UC1aq%~hQ^;^6(c_*LV?bznzX<?ASGHc
+zL}>}d&)i0oU!bwT;p*;~fi?m^g_Bpr0Hp=7fp0c^lLmIQ<h%h$VGnF>m{cSRY?g7L
+zj(O^^;*5qKU!oP!1UIIRq%1a#X~F;|r~8Nvj8v<^A!8~>792SY&0L6@wKVJoH>qZd
+z0KwEV+8FK^+zOaWB}Yt_@tQ!kK}pMwJS`!GpM=yx$wZkELvL^y=^Iu-Zx<5*H*CY{
+z!;CR_M$6YJA+%mGJ!FU$s1(-l8kwxz$8>W<!<PfI#tS#D$eoChK~|h4m>gO}M?euR
+z6v{rn7^7B+{wgJ9f(NxX!tsF53VbsL8cr#k5Ip8>GKZ2j+{ZaIa*n}k$mBR!@PX+a
+Vd}R2>!++f38ffdw53fFH{{Wl7Yq|gc
+
+literal 0
+HcmV?d00001
+
+diff --git a/src/lib/iono/sgp4/tle/20413.e b/src/lib/iono/sgp4/tle/20413.e
+new file mode 100644
+index 0000000000000000000000000000000000000000..511059608e58ec9fc386fff217b366a876a8c1c2
+GIT binary patch
+literal 8049
+zcmajk-EJhwaRuP(5ukVI7wAG|R{m7_Qrdwb*jfpY<ooe1r5$)@xZuzN^!EB9i|np8
+z1eiM)%Wig^jK~uwPDFou{h#IUOIfzduYdLHU;XCezyI$0%g0}SdiwJ8^7)(B{QLfY
+zzx?;p%OC!Fd-;#gpTE9-`|u%^=IuZI@bvZ5%jf5hzdZl&(}&CDlE>w{rynkPUF#){
+zf4i*yE$h1Gy^k?`;&)$PpI&}>{`u4E=jX4#e|r7t`Nt0*{`1q{UOs*O+tdGj{|_%e
+zKD~VSP`&=!r?0OspML($^N;`d;OFC~m)D=-<>%*@A3uNn^!oIte|&p=`r@rWfBgN&
+zfAP-S5&z!<e)sv?>!+_jJpJYC=T}erkIz3pe|d7|w}jjh@#oK9p8oj!?Z2LW1{VL0
+zpBb%y*EO<HQ{I+5@>qLGm&-M6IoG9((OTYHd}7OGEM?tl+S|BDR@wKqZzcJqEPeES
+z^g6c7bzMeFDUCKZU@5Jw1WF{=k7sYSjlOJk&9xMtzILEv835{N8CLStbxFCjR7>^y
+z(#mL?$8PaUZ?0$?B?nmT&8gQK+;~IV9?{&f&+oZxNhHv6YD?-{%Q^RnwtAuWk*a7X
+zTJ3w^bDz+Churp-4zy8wFMYkEwFfkBrKQwuPc=udZM5FKF!sH#PJc<;Uh-15zK$)=
+za2nLS=S|+zvaj3Pa;s&c?RliF)!@}zY(hO{Ql7@r;}Yr`nQZ=iTiRaNwvHK_qxWUq
+zw<^2?t(Ug%`?^mwxf$D<)&s4{+*<b=T8h-oYn%7BwSg10_Oh+=bcM6Kde5utBuUze
+zdlRR~_9K(~mfg?haAMmcb7DQvMwg{g?r8N9E$#bK_ibcJm}pY7)NQ!Bc(_b%32FDW
+z_IVyG84@AlGSR9V=(&!GCfRv3lzGo&+8@wz>m%}%+lX7awm9lCss~o37-*uy^Re!j
+z5deK%dn@TJw(c~&*CUg0>1{pTTTYK?skJ2nsrg_@8*5!KWTY(ro}S?@xn#emc~#z1
+zHmEpb8);9jc(Mcmw@KbxY+1#f?k%;Nm$mFlJF4m0+O|~{&|T9S#ho%vFI5GmRRj@R
+z+I#J_PEL-r_S98SWU{Trf89IpnamP#MvFX^ZI^=)_0~LR$C55PQSQ(nAwy1%aAY#~
+zQJn5TLqhSm#EB-6x#!UEqXL4WC$zPt60!MD%>-KNEedd~+fm(;L0n4SOR5Lj)*X58
+zGn1nX*yL}bC3@3Wl)0fjYKdxDom|0|xb|x+6-iUesx1;Hw$M$NS?RzbAEkB7DDx7B
+zRLSsO4>YH&yX(E7J!lCEG>oHxig#+sM)s8ZmWG0!Xs#l7*y<ZGy8qd>aikSjm3n`V
+zZER#&)Hk#TEg_;v(f2hM(igFL&bBC5;dQB%{=MqKYp00&Ea=|aiib_XAei?_Ri8T9
+z^5*!3%DkhM2QA4YV_V|ZR%IS&x$jW{UHXIY(CDJrsvA0_5r5p(8r=sP3d`~ShNhBS
+z&AkVd2Q5LbwrenJL59i6oO)iO&7`$BJv96TAGteJS&&nTkJw=OeLXn2rLwOcaF6Xl
+zOJs{s#j#xq#$DqEXA9etx|nEehFrVbEp%JGX?%DZj1`+ybg4Wzsa?`pzr1I%K4?jH
+z#bb$H961j(k0}e4)f1STh>dhCC0Bo1C+YXKDH~!EXlbQ!DqyzmhGN>WrhY?v(30G?
+zQZ*RI)<Y&5Ai}%jhRc8!_kguI?UEd^?WwCgADC#0zYy>vlcj8%ZhngGK}#~??-X7I
+z&1YTtgA&)I-B;=wXdbM0tMw8x4God>gW+AVRqd=qCk`#4fcwC?TWoIhq$LvM;jJKL
+zo;q3g0bXuoH?#>_r8Z>?P41ExEzKqFxH{1Y9s013fmRhFa^0Ombl1CbF*i}nVK|*a
+zCbhbf7V@=fIGzWMZct(gPEqdAisN?(ftKA{(!6IkC9)W_pOi~!KA`at?3?bLOXwtm
+z(aGv_3iCkY+4S3n-G_Wc&=fjk44PX|-aZ?#aVX&w?^@#5Ga9>rC7P5b=;6?4`ciNl
+z<Kx~gLp2hYt@@vXC0aE#ARmENky&$X2byl9@bCB5AGL&mk+@aCX_$f5(1i=-Gv#Qa
+z>1WFrTo>}qOuFOhb5a3qcPzcJPqZ#UoXWidDEm1!Z@ahM5gHal0~fSYWK7>gtNbL{
+zU(2ms&q5E6loviiTB7(OlN#^dIMW*^DexH$(YQs%x{}&JizpXLxDORJ(YE9-7%;Nq
+zJOW?$EYTcspq0XB_qXca)o&vvH?;jxOV|!(73GMsk3;jM7z1Q@I`a#`q{@h>q0UUY
+zM>;>k5JGcPEy16$8KqVl*zahMTH><981RASia;ac9zN3(p<FJc4JR>~PXZt|HHC;V
+zqeRf*V0f5`CNG1FyZ3-7tW&+MQ31kHu+h%0mFXFJH@kv|6AfRmRzI6F4>YCEbVVwl
+zl`xued7zQM!8_k#QvfHlkW{K1HbHa~ZB^amK!y%Z5+XAW_7tXa#ztqz$6IWXmrk++
+z4U^&|yx+SjtNSw=tv8%?B~#5QVsnw(lHz3!a>gb#3s08!nLM#|lB$nSEzwfY%b!fN
+z6dpjdceDpBNeob3(4E<dW_%^GET8O9=OBf9^9q^9G=DW?)6v+_urZmUa)Rn_>ZF%>
+zStq@tJ!lC9;sXM!<S_PEd1+=GtmiR3?{aZLI}fPfNAx7IjX~z<`9#w_fgC-c<B?m=
+zH#Ae|Lni&@=HA1kZNbT+W4JfI#5pG?wYC+}SN9iaVSG0A%(}!cjdaoIW1{L5*~cX5
+z?cQYS0Zo%P2Qc=M7uBtWG6wOyRiB-)Mae`Rt?iJ;m6?$~RTXGNMsNnzV2SCA#WO73
+z&>plT>Aa!Jl#<yCG^K`uraU9uyf=>;A->KL!>`yReM3-@Q=PC1hUn?J*mXroDQ{?e
+z#+j2<J<6nPX=H&WSS4YsVAf_P9fjkJ$4J0L(>5qwIP=grET(?5<HYnqh3=fxh#%0{
+zb~Z$Wk@7&R`pJTIjKQ3QFQh@RXiLCnIEF*~bbEou_p+2qa%NJOG{u5`&!nz=j*Z;L
+z;G5J>*vG4m5mSEn1`}l5TSF`?VOW{18Joh}!l+ENC^+knsgnp*N^|xb8cLqgP$BBg
+z%pP_k&>UKSvnzP3w-}M4y;APzfMM!5D~@aiitk&D{6}^3Y6>UcSwcY1XjTzaPzN<F
+zPfi|#Z{kmA<%}(+4nz6ikS9wp2$4DDfHt-GHP{-Q)ZdgJ6Y!qN{HP^5O)}?(Q=aZs
+z!%@s!e(XsmODZvm{gR!^8`_45GUi?LiP_ckuQ>(UUN=LE_H#pf)RJU7z(r+GZw`Ak
+zy<<tJ;D`l}A8`ac8J&}PSV$5+i1$RJAG7I9w6VoXiOGFO+a9&Vrof)dV#nRd(^Z!n
+z#nhpM4H^?IYD8dGO>eRFuw2#-ffnl&>xFe@(!{}MMxVW*J!*+dCaohC2~o^fSd5Bx
+z5<@N8h>ccIQZ2Mb!xI~0>#w4}`OE0>rn1>__yR4!2zN(2Ysuwm4F*kabT}Wsx~<Ly
+zMbS>7vJ}Kt`eA>gs|OmN=}p|7Xe>#ja=M^c12HOQqxaY>BJP~LTnRl{jE2=?$hgKL
+zX*XEtS}j@-v}!j+&%#B|*l1IXR57S-T#)9Zil$EPVY$OD-O<ik0xgGAh&;vY42=<`
+zwGv>=KhWkB6#JjpLPl(IrNUy|<8vcoFU)#VY~lFsP9Zi7=h&po1Va@?gVNTcwmzzx
+z@Uq7<HWS@ab#5D@Df{@#xf`(p&ERXUQ{cf#O-UD5W4G9l<cvn>aex(e@TdUUGSsVC
+z#F_iai}P}?8m6n7@?pbfAW_qS7M)46GeiZN22Wz|I|YPzM2kJHu^FRh$FUfUV53jj
+z@kDIY-px{aPGM?E$h;O6$^}iY4+%Xgz@WItAbyYStR;L13!o*k#=1kq<_^_c)K&<4
+zpc!sdKy;uO=)#PP#g9}lEDF=|@R+;ZrtWAWxuc!6L^abSjH848GSFfNMDPrWcs|kW
+zrJ~>J(8N8^xM9!aKA;T?4tC%zlb%9%?;FDq(eu5r*s-8rY08{&u#0d~3n_1N4w!Z}
+z{C%WpqA^+4DKVSIiY#VkdJ^}>PIONCzUg)12eb_djG|%M=3ZIeg(6r6K^yTC6klwg
+z$#6{h(d+0_nAt#6sL~#TWuVbWZVH*+t2;{R=FBhGY`xCo5?N%FNzJUs=1JxRH_<F_
+zmzWD&_+*K(8--(c1`Vn7>(HS<QztPv-|tNfXEa*lSqw6mU<u~c__D#>8?6J)UpSAQ
+zot5H5qu880febV`RH=?U(TX((V|dp|#`yt_xrrtfi)kFVatKzfu^JsJZla-F_!3K(
+z*eU4aiBB+ufR4X3g-2hTXtl0N>EsmL?+Fbl%}b^Z*D~jBy(d~Vx$}f0HY1vw)kh>?
+zqFKXo1i{H-jYP$b-qUlD6}n}Od%L$#!27-VbdCzJg7F1L#Kt>YqDMPE_FPsNJ44W|
+zy{!5VG^52)A2!f>Jr802k9)HmLwZ}Hcb1^c1DcTv%gpI$7H9_WglT-5Wl&_&AP|#+
+z71sP-DKe?DbqR;73n(+xo1e5ub&Rue#d_})n=a;AxS<BZ1sQtuZkc4gkJ(g%<0WiV
+z3@^^30+^~;6}i>0wXv-ftB-~PI{5kCG_*5Xj4}qOu-CEvzmkR=4O5-Qj2S<P<3v$~
+zbSyx*at16m;}?avD)UYIn`qI;{c^uIGx{0L2+i>7P+nH9SDO#t{vo&~KEDq1QtX0?
+zyYbP8&5hy|QxIsrCbRosG!8U3>YclvjJ@M2lOm^FHgO`rfoq!O&VxAO8(K6xmXw)}
+z!GJFbNoBvqraADq@#TdIh)lY4SA5qJw)l+3M`-s{*kyz&J94b-q5;fn@{+5eT;_19
+z7Sm#Ud*y<n)pyd!toe@PsBTS=Q#A6wak80Z9?<l5gy(XR$t7Ja7!6QL_PqkGv9jl|
+z9Ou~dT6l(b$2TF<=TgV;qAFmIZMtFQ7F&GPaz@kX?YXLZ(M1A{Tl2neMGI>lFQ_Ql
+mlTI`Rp!5l2+`cclLkHZV9l?w(7PLx<Dv0gl_uoByq5e<Crvs7z
+
+literal 0
+HcmV?d00001
+
+diff --git a/src/lib/iono/sgp4/tle/21897.e b/src/lib/iono/sgp4/tle/21897.e
+new file mode 100644
+index 0000000000000000000000000000000000000000..bcef8925b61426f537bc49d0c6026c9495b492c5
+GIT binary patch
+literal 3099
+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
+bW<U*tX4HnG!&0TQVRv@rn|H6DUH$(7Z*E~L
+
+literal 0
+HcmV?d00001
+
+diff --git a/src/lib/iono/sgp4/tle/22312.e b/src/lib/iono/sgp4/tle/22312.e
+new file mode 100644
+index 0000000000000000000000000000000000000000..d4a0cab15800daa359cef470c9f8aa40f6dc9d4d
+GIT binary patch
+literal 2879
+zcmai$-EJI35QVRe#5>FjOslK9s(-ixVj%<xNCfUpyu>T)-Dtfa<?Z>ZH{R?bBu2il
+zd)$4xPMvdVo{xW~zmui1eEG$fUwm`>-S=;n+Yb+$r_Eve%o;y${(Aa-bNK0x^YYL8
+z?e6$|b0b!H{mZ+}?(VSN-+tJ?d$?J6Z29`bVbPrHBJ$PZUs+3C+o(O~%#QDO$Iaox
+z{_*a(-S1v+jt~3$o0}i+-XHFE?>GN`|I^`qbGW&2*1z5Cj)%L)Z}#^eZ+LF+4#$UB
+z-tQ0h+uhx9^UKHQ<K~H1Z*O1U{>Ph_EB@aFUu~a{ce{6+Uw7Lhr~R;f+&^u&^Cv>i
+zM7-TTZGPTA|F(GqEPhT;PSiP{_*=|0NtU8RG#08$PFkwE*@y+6o_Z1U-hEk1vgS>!
+zm$oc9jnTAftDT+vm-m{B`3qQ4=k%tz%(Iu0D`3{TdEwmEyVPV}-CaEvbhMG&yVV>=
+zmNY!qTDtQVWbwk0R@j+(1KYUwxiqsYw4z<<Z0>H=q72QgC9B+c<ca3e2iF_Dx0a)t
+zJX$erS(c@x(p-wy!PPa5oMqIO^^C@?uWIv>Lr3t~YM@oqnt)_yj$#*Sq8yrAZG#F5
+zbg`1lfK^E_WzZ9>*5p-cR&VW$R{JH|T4YG7KxI9(jnipcQyHK7=)-{@otoPOD8pFl
+zO_voG3NMN^S=J2S&Ao_(isPa*JYS(nmrkcu)#@a!7FGI&#klC)QM=G9<wS?;l8Vtu
+zmqwwIphhe!d)E+&xT2WPXyaNX>f)(ZvtCQ|ZB_A5V5Tyi3n7;zNFgKA=njGeu2z~z
+z-$X{qo<~5}GJ5r@;p}-)<ab%yq9&GHJEsZTm&KbQiYy$Uq1qKnd-737k*GiuwIb*d
+zXoaoKJ9tPYq^uNepEW6LxlqX}C@qaX%t~Pg2lT4+t>Y)O#p8lXtXo)VszfVhqmLHk
+zL1OnIp%Uyc%@E#usZIZ_5`m72okC=kVkRRsYYo_75_m(k6c^+o(d6dVhICZo;dG;b
+zj!Jw=8DRU2W>+dfHS~?16sryIvPTOIXgEk`l&qyyJca{vIjN+#%tgpzVj1!<K2D#|
+zDv~>DmUC?+#08T}(MnQSF~m9h27e=>jX(Pg7i-yor*TbS5}j*pBE-|oDnV9AbT)Bd
+z6!qNCev^8w5>$|r^i1UV$=!5<m<0Y5Ws6or44Fu=+``?%3DHQaDH;6Sh!8j?0ZBZ<
+zWlo!D0^Yq=NhmwPg$!C3Op01h<Oz`%w?`$MkaEq0mx7kjIn`1rXt-NiBZ%<^Y9((-
+z8H9Ic5|S^Nq%x(|oxLYBueH=VMd}S51pW{LsyNDv+$OmM1Q}S2(41K!Hu7}04kf$g
+zj7D=W(HH@_q~>FAt56A|6b^KhaLUP*U*RagFhOXt67#SXU2TLOk{ok7WUNjGy5fyb
+z4j>J$&<G%bIK~VP3N+?g$8S@WlgZWcK(*Ky3C!`9GuhSoJOJ7-1CEH;fs$-lqMS3D
+zUa4f|Y_bUH5{wf~vs!{D<-T*lD_<Kl&%?;k9ip*VM~l%nRc6E}OoxCjT^M)}{!$xG
+zzU-SC-X+lu@=ktZ8YH|ekup&%XBoZ9!)m8hyeuJ@VN;-R>KHPn0~1G?6Qz{%G(~Zj
+zXq@F}Ksm8sO4`PtMDUShBx)=;RnV)BZzBy$!u3oyayrOka>Tf<lj9uisH~i8tJf;g
+z-nml_E>3>4-aElt`Pi5fXJs7B`9^qA8%fXT7G6>TSrP-i1n*dd(Gej(h=~^_+m%YN
+zR|5^IHG+?aDB}8%#)k;EXTd^~$f9A~PziI6CR_Avh8`A1uQSFtLt^Tl(fHcA>{}tR
+zNUos30&OjfL`L->1wwTk618=-!(gD1k`R<&89q{IReV6T5<OojlzsT)lqI)sUR`}2
+F{{t&IG+_V$
+
+literal 0
+HcmV?d00001
+
+diff --git a/src/lib/iono/sgp4/tle/22674.e b/src/lib/iono/sgp4/tle/22674.e
+new file mode 100644
+index 0000000000000000000000000000000000000000..011c83c0145795c070cfdb261964a8fc08ba8cb4
+GIT binary patch
+literal 3099
+zcmai$-;QH76U46viFY_J5X<d$yWLy@BLv^ag2bQuVK=Z5JIN{&ka&B3eKLs>gv4lW
+zj!%xu)m>HXm(%a%&(e!7pMLV`C!arl_4S+O@#FjL^Y*xVVU7Pce?0%PJ%0D=b@}_l
+zZhv}tc#uAL{lnYs{^__oJbpa9egCj5OS9#hKlV$jbu6NvHT!I_(#P!GBZ4o!-k-L|
+zkB1LWr`=)y?e_Hk@b2N^|4+XipZ33P|M~vA<Gbzg;lWt{V!J;bpFVtkc=y)>e~(Yc
+z)B9XL9FFgH`=`_PhreD<+h<<=`1tMPzr1-p;(s3S%iYWAY5#Wn(|&hixBu-v9G<tF
+z`L!U|Lj1UU-hO|0`FZ;Ru>3#&)ly&oc$V(cN^7-go0Wx)^sZ$}9WpH!@~@VuJ$%l&
+zEWLD@F|0dprHmF9t;YIB#7t$@b^&wB{0hf5&G@viOZ7R{y+eB|qiXe-k-yL(LN`X_
+zN&;7tHhY~T!J4QvS30+}(p%Kp#j<C4NVxPnG#L`b!mN7F&3SHC+Dc?}7IbKg;-SN)
+z%Ce~?hK|}bD^bgs)~!P|p~YRMg!%=o$+$)1Tuq8q>#FR<C(&%OA>Zg|EI=Y==|1{Y
+z4!wb=dGFH_paKvawGU1TYZt3+RJo#2w3|vU30J5iXRxFqvxC+pIAwTp^V)my?!Ao|
+zi8j2?p-Lqo+I1wisrjZ=sl7(j3mQeZLE8u*Y))q<bP`RX4*CWcc4483YoLW1?t0#n
+z^RyUe0E*%>sQ$9iqOJEHtzEfwy;F(QXo#$e41~bun`SPBMd^~FV<Bu5&C<01eq_D8
+zxf_KSUW9o_rRXR*X4fp`g_}Y3rjpH6TM_mW<9z&0rA>TJ8njn#QwxM)VU)IF7u-@k
+znNvK63J|L%ZB}be>#u0pp&JJ@6)*V%M88(j&_J0DflJE;r7Knt8)9Y~S~a7&(E$Kz
+zadn+EaV6S<vQMmeK|@-%Xrj(uV-B}DlN)WD7*H`)t=KCyS+$HXio`EclSF|#23(1%
+zSwufWlLtoqd3g0(n)`+u_7+3N(kb!EZF)x~%64t00}#RJg&LtFJ!^8zijNG*)UsNS
+zuV<cvI;Q=Q?gfpMxk1}N1(lE^jjT#;Ehbq)VFAg7)@z5ok`j16_XNKx5wi-ELSh=v
+zb7-kT5>VL8aXv)^<4z@ujqbEDYS13uZ?r{<!eoxnT(C~KOlxWtfMt>ejvK_+zM);i
+zFKNwIG9wysd*wy~-EyOlq##~RX{|Zwos_2hz-I>2Naj_+7ZcsDt?IZXumeAbsAf@e
+z!hwb}wIY;Da%Jo9(6A|er&nyTCKtJY1hF<gN;K^ps31o}Zfj0X87_pz8qru=gC`!?
+z2a=T$aM2{ocPhbYoisI$#QsTTP9ONKW4qPez0yRuu}!8;_KoeTY90>rMWuEOsPn@l
+zWu;x*%>cSn36e8R1AUafaw8pS4VfP!2h4)(SrG9_OKPGGqoYB=Q<H7-Q}lYC4v=Z-
+zh*y<JLu0p^Wb%0-ZG<+h+$cRGh>42DQZ{Xfj?x2V;)_J1?u-PcZ9WhzU=LzvlYK)x
+z6O~@k;!Y(S6i?w8AD&5(u{b5o449APwy{ZYR^07WX<35VOY|_rRx~Qn2PR(6K_GKD
+zV&;OTSo4Nk!zwdJH5s$cfF=FH#9;)~^H6Y3OB@a*X4dZDJ)@Y$;b<cA$vHq>TBd2k
+zCJ;UQZ5`dWXvE;aO{CizMa*_(1PLB$G%EY19UToH9$ehARn9;Nf^zj6BEzzTdO{na
+zkmK#zH|`X-+{B2sf(*%knr6n-j3A;;K}|H|H@pb9l}cW(nk3dNPnj}Q#G5?%DWjDt
+zX0lvn0K4C*WZ?pW20Hfwi&c}sS&MT|A+c6&!4S{ft{G9QCIKd*xhbS3N#bTTr#h^O
+zhR*!BRucK%a@%l~3MM@EK4%FxzTl8t-?$+p8bPEa>2M4H17t|<;v>|M4=H|u8==Xa
+zi%5r=T+y7bZ~C@j`lo~F0{gT1vf)0(P#|`>oa8g}QVU6j{T)k;B4b8)OKzxFbMPY+
+V#GAJ<u9JffppwToU*28){{}Q5U#|cF
+
+literal 0
+HcmV?d00001
+
+diff --git a/src/lib/iono/sgp4/tle/23177.e b/src/lib/iono/sgp4/tle/23177.e
+new file mode 100644
+index 0000000000000000000000000000000000000000..2065d3e4cf898d11019f5db9456627ddbd7f2eb3
+GIT binary patch
+literal 1779
+zcmah~+iu%N5PepF`~!c0i@EL0P9D<;McT#*khJfr&Bj7)(U6z|`TL%wZB;G`l+uI9
+z<<6ONnbm3ev;0-8=<xd0>sN2LKfb>jwhy<{{dC-)@C@IpZ}-1X$B%!UAAg$nhvl@{
+zusN1LUr&eKaX)V#=Ih(dFbrbDPu~uM5c$CLrnWbhB|=gf5n;#s!!jKo=DXdppAR3V
+z<#xW=Y<}5&J?;))r+=@1Jl;&l&8Fh{57S{e?(W{sH{Un7w!7nU+aJ&K@n(P6Ez{@k
+zr)9dw(wFUr?SHI1wfMgczT2Oc-Qjxr^{`)1?dSd7d_SS*Cqd3aeA(YmpXSqV(;dM2
+z_wk|vp6iACu{Gl2MCJiO)@#HYsx@kj^8>Rg5~jnbrD>H&CLYEp?oz98)M22Kc+FWw
+zpTPn$Kf!e{_69Ev`&(_eSFW{|temb!9ZXwmB@=~|6J`|>B{YJYQ3_X9a-$VYypq?5
+z_Dqe<F40(2YN>4Kv|`7oEnBYvu42~FtdSHTD!AbdF5&oT4B`-hNwC`xBTyrh%V5oC
+zG-0Ur4>wc@g&GZgD|U>aX$|djxIZduA`MA13Qg{4<l*emATt+;ViL{k3hkcN)#Ho?
+zpDxjy(~6OST!T&{Zow^02%DsHL%XobI-bKeD#{uv+|V3IQwy+>wyr=BGUl_A3ThW<
+zLu;s2sfL=tw_&Ids=%ux_}w3jC{{dMGj{8_Ab@3xz*U6`f>_|Qq6JAn<UXB!>tOma
+zB~D$Z>d-<V%_!BOBtiiKy?ayyNYP*lWU`9~3%O!~K}QQm5F!<;Z<-W|_vIN4_P^wY
+zzDmXXcP`zxhJ&LRB1dR{?awnHSVUA^Q-U`M#_B37@(*<CeL%8s%EoZ?i5rBvL=)o1
+zMKC<gd+|{*5rX;iH5Mycl`IU-4PLFmkRDfiq?5u4@&M=oWlUul!u^DXg%@b9$hUJO
+z#<Hgbc}7SztETmkLP^3zLTAeC(ozw_A_#$~6oo1ndRx(?g(bN5GqP_T`fy*Qr02du
+z0Rk9x;YNvd-4esIDhcDFAmwP9Q4_(S3{{BIQ<5Z>PB<CB&7#52+Rna3zD!BF!xc!4
+z4?>2sB^8n+v$(BjLRkx%_9R_Xf>R3-LDgZj5<TP<R(96FK^dH6&)gbLnG0@%!Ea2E
+zDO%FiH*zmX2%%$0ixeA-Os)WAj08?D%(;kGi~}qOWsJb1iEOD2r_q{{?bW*%e`$XM
+DYKv=;
+
+literal 0
+HcmV?d00001
+
+diff --git a/src/lib/iono/sgp4/tle/23333.e b/src/lib/iono/sgp4/tle/23333.e
+new file mode 100644
+index 0000000000000000000000000000000000000000..7f802124f2aa119d275ddd38c5f2c6cde24502e9
+GIT binary patch
+literal 1999
+zcmah~+lm`U5Pg=x|DYe3rtV#xN5>+V#A}0{yer;`S7cW*TE*bM&#75yt%N`ZA()=&
+zK6Nft^LYBReQnls{qn`j7q2!yy}4O$zTC|Z^KtixHT-V=diZ@lzWd{O`Tb$HKRvEi
+zY=OrgKF#~>ad+5!IefZXt#R@C=J0jRW7wMc2Os#gF$SySA3NUcPxJB1;eLDC9rkbM
+z)7{~AwfbfI`MBMGp8x&)-SKulu2zoqALsq)xV?XMxc#=mwb>p|ceQ*t9B+5~?P>n-
+z?eR1};L*p;+s%JGxs>>S1-{-rp0@i>^RN5e38($MyFWb4sQE0&vk)J55A*xO<8Sjl
+z!0PvOQKR#P`)Md~6LS+8QZJ}VG$tX^Toyz*n}!*)^!1dj3pOc{uP16LDdMDfLX8D4
+zTS~uxbsTes1D08IX@f;aBo%rHYh!p3o?HvuHCqxZ_X5+_d02PqglA1PqAQ6M81`nS
+z1YfAJ*)>{pa&3fnTr=xzgXb-P?E~4sis$I?o`5xUJxR+T?-7g}Zk*aXdn`OX(z*_+
+zgkbA>EgaWq=_0+Qi7Q8;iPYhgmS%n7Ho8dj!D${=XeMDXQWiAoC`-V#xH*n7HhtzM
+zncvYSCK?$K))=`3l?g6(R6KB83@@@O3H3Swy%<PiltHK|iyIQ)N^q*sY_Ml{*nQ@v
+zp!V$B#OySnBt?d1FEoe<Dgmn2Yk?!w8njBJXcWLeq%7c20SryJ*imVr1*#rG&uFGs
+zDVY#5qyZVAupAI>GT5$7WkhFC!RaFjJxi8^y@l2jdxUras8sZ{fUH0>mZ~H#+?=jb
+z0+}F~HfW_HR8(x3Ml*+U?1}{#iG_knyj^G@+e1LM0N|!FTzx_lcFTaQXC;xQYb7CM
+zP(!Qr6dyR;m)JlnhD2qgc!!e2hT!%E&Ebuf-wPTg1=CX|jSQ^_rWZ6Qc8!J{C$wQC
+zDHQ!S1tAbEu#W~U+|oIkgbYG}iW`&~NPR~@3Gs1;%%~JMXrkeqOc%6j?yHn^bbmDs
+zY=+r|7Br-FM8wQ6N+w08J3?BWgd7144TUCiFfTNSo(R>VBvzpT+<8VrWUkPX+?VMC
+znW~v5z_T|&Oz4TMYENiwP)N?>L%3&R1}$i49Teirjl#}844rfKEg{l1+OX>G?y3Z7
+zfEMiDyuzYZ3pk;V;)a1(F~m@X^MdYM=s*(qi=JDQbSBI@5Iv)fYPidsM7$B_#GtZ@
+zL8Sz7muz6hWk8{!%d?^6UI+^svcNSE3jh?6`HsEi8|-H7-)9NxxI%-f=xWSyButiB
+yl7g9qaZ$shJ^_=Wczgmt6(e>*W2lIi;%N|v8|rwP%1|92gYzue+`RtB=lXBo2%0hg
+
+literal 0
+HcmV?d00001
+
+diff --git a/src/lib/iono/sgp4/tle/23599.e b/src/lib/iono/sgp4/tle/23599.e
+new file mode 100644
+index 0000000000000000000000000000000000000000..4f791546973e5a16fbf91d571d2f034dd5861fe8
+GIT binary patch
+literal 4419
+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
+
+literal 0
+HcmV?d00001
+
+diff --git a/src/lib/iono/sgp4/tle/24208.e b/src/lib/iono/sgp4/tle/24208.e
+new file mode 100644
+index 0000000000000000000000000000000000000000..bb53c7ccc792d609b3e44557031bebfaacda549f
+GIT binary patch
+literal 1779
+zcmai#-EJE<5QVQ5An&j*AYwRw9Og2KP^4{~07-kV*xOjBr8T5YfxLasNS3Sw1-cLn
+zESKcreCG^(nEx*S6fH8meDU(d>(wvsZidz4{kR?Xn*+x1yZN^LGVVY8bs7FRZFciv
+zv8d|!{ONYwt@oR0^*G($FNR@YAAbF|8<@z4fnHg>;$B2WobX`9yWKqQAE$@)yqR|I
+z$N7G`TP%KGf8DQlU&o)nf7suR`^CaA{$||G`}M=?>F)ai&uYD&?{j#X_II1zdLBQ0
+zKg{D6pFXeNum0o9(-HsofNwX4dA++G|JZG2?DpH{VcL#3^AnH@h|int_;EV?IX*xv
+zf2W5^7Mf4KHxn(DdbAoH?^@ZtNXOq$IjvX{W&~B@7?x6qTlF9c@GE8!8oejX!qj?j
+zGdqhlV1AMthGkWbUTW`3S`~XsSMP<)gve@&<&@$a64vXm<Pu$&jMcEbkeX@>#mRA`
+z)?JjfpG&K%*J{FeN@uFt&9FCnuU^=ct@W&RVD%{0aeC{T0=?lRt#eOlu`XiNaIgfx
+zCS6))Dwhsi5t!%NP*9c94Jf6949KFcV%5!EPHL#Cbn4`eJpt9Qha1SAsP@_z1oI0K
+zV^$h)Rto@sRs%TVg6Rg=fF5Y!Ndb*!%tzZ;wH9G-A%^n+o_pu00RdobFkHQ&(5%hE
+zt)c2CwPP<lt6>wv`iOwL*lQ`!wNg<itDJn3K$ix#u?BYl&z%|X5CB$S5l-l-7L{r!
+zAU&xm9Dc5CSb8)qt##x`8ERUQ4{R>nl`(*4sa~9r3N@fTMiR3qYonq_RjaifUjS63
+zv1ex=ml|EC1c5`+-~>shqZ&*GT8mB%G*b(l458Ox<S=VPRgR7caISzym8EB)nMsgR
+z1ni>Lu2V7qoJoPEOG{2mMmD0Lg@6Rs=Lil|6oz0SiUmAG()Cy<7tFJ!NMfo{?`&v}
+zOKq;#DM2p_P7d>$ha5L|h8mW+MNQw93`5a?XbKXP19;XO?f~RGu_C@foV}U`In0j6
+z=i0KluY801hEm`XdM59dYQ}=AM9_c<4r<^8dVvYX8H|b;SKvUX5^FOUm$wc`Rstig
+z?V^TGzEVREQ!VP`Q9VN;LbzO%y*6M-wTh7fv1~wGT!6<2y#%B3ii@R5K<w1rft?JN
+zpVh*DNXcLZHHs<?eq(c_t>eCHxQvwYa>179ZurX#!;TGYgbN2*K4K*tUjRB^@|uJJ
+O0FF$qZr=XzFYRB=5o_iE
+
+literal 0
+HcmV?d00001
+
+diff --git a/src/lib/iono/sgp4/tle/25954.e b/src/lib/iono/sgp4/tle/25954.e
+new file mode 100644
+index 0000000000000000000000000000000000000000..1086aadbb06e6d78ac670a8b1a715e1ab0c02095
+GIT binary patch
+literal 3209
+zcmcJS+in|25JaD8!2hs6z`^wNT>a>n35>)Sz;@ngYhw|SNP}Vm`0sOi_9D>;kf*E!
+zLE7a^O;=Y{uO2Rcy1!j?Iy`^&{MpOhFR$MYyKlGS{dhh+aF6e|f8Bo`&+q<NZ@)hs
+zj+ckcMq=jihcDxCe?FXc-%ej{Hv?B4ejYy$!TUH!ei8hOL0oJxM9;;F*T>6v{&u?C
+zUk<0^oAGjcy4h@g+kZXpk6*_hpT9fbjOWcJasQ|BcscLyUY>5gZ@6~*^X1lVpHAnS
+z!*PEZKYV|<jQ2eHxO=nvmnX{+|LcIS4iA_8@yqz>c(}0JuZO$S{m7YTLRKO^9`48Y
+zr-$FiJHYIFy1cVO?dojQP@JTkeJo)ZwoyV*KGBK<E%Op}Sz`??>oC~E;%iZ9!{A+x
+zTD)lBN#D3d$yq0`ZOxE6!*wu`>ZB%VAxH<)TwU}@i<UZrMJM88&J}dPq~w-M<m29@
+zCXG%to=jk>UaZTubXyuteMAeT<m@zhNgCLEt5QOAtx$PNOKHtDWy6YChTv3U(98n+
+z!-v>BWiF+`QO&ZV0rmt<8~eCaAgvWvY(;@}8JYQ*;#8Zclh9HP397wouvkMiB7<up
+zlvd+{79h3N1ue(=6fKHIfg8;!8a1d|eR4%IyQMUv1y^IMHF+7fbjl~+Y6zUgXr*s8
+z<Z4eSBsB3F7qnD3_al=kSs<<jfjDbZD9sngnv|$=LK~W+^HM2)*g~G-C{3mdXa!oL
+z_%NdtsZrM25)?f_6V*Z~DTI<t0|V5y=mIh;IrU=grt=A@Rj37xlNem4iO^aST-L&q
+zzAc1M&{A8}E0t{Nd~~&;ZS^!_fLdWgO;FcplU-YNHRnLV&3^YH@PkY`t*ELb3S7{%
+z<-9VfeDJZhZKytE7Z4?@jY*XRlfXADIM=pq4*p}Q8MFY+xgz2W0JKu1FR68Cw#FH?
+zwxzaEpQ>aFtr2hvVwJTCNnt?bU$E)aH+1TJPAyjL-7y|QEo4Eb6~UBNb*?S2ldQD`
+zV_{W^C5M?A)k=eISgRQaczV>bnaFM#wVq1D)T*o;kzFZ=V|a{C5cDRRCdn9%J-b`t
+zQ<Y$5EfAM5H3nyAe3Y^i#ovmOC%EP`p!=j`9Y;yg2Px783RejQSr>W{#mANwCJB?L
+zDuE<|!13usjg}>xrJ-xpimFXET$B(>MufD=3>{)lg&;HX8VZTXW=*cxSUT6%S3fd|
+zng5qiUeT^<8v@ahVKUMaJVP0Rm0ZQKMcd3I?k3ytTSKI1vNYr0!pb@vX;dwAp%;N%
+zC6op2x^IKUaibGrTD89MOH592u*j0irV<NVw(W-25(v708;#Z)nMIZi9WBHJw+q^}
+zCNVRk#-&7#^D*POVFy>(J>#NI{LnQ?^J!c+bjmn7M$k-?1OaQ;oTQ^=RmrvAFf&$j
+znf$?EJtsM80-jVx%M%(*5>*^a*%R^#la;StTVO4-m5`f~D>sJl;(*~gOE@;1yGoSi
+zu5YMC+^*u^n02m=5+Z{=Gs?Q5Z3YVJ>a=o`P{SK@PDanfT$ubZCmSnCu7oe6F==Y1
+zSdCO```Lv9$oyholc7l(iFKkC<M3I(FxgN7gK2&(xt;--Ic54LzA=9-gcX|w7Zb5Q
+z4FyBP-E@tX!xv{`NJU-&dUAPc6s<OkW=)dHYu~Qt8)haXT;Xs`Y9me<(2O&VPVXlN
+zSaLB<Q7K|GLlX%WH65C1(Uf7g)D{whaINinc9WBA>}>whH&e-$wbj+a{3nIE(Otof
+zmUt-zp4m;f)yj|F#Ky6JSo}sm7z7KGX70x<*{ZLNKRGv(pIn04%ne%2;92Jznyem|
+zNtYqf#_ThD8m&-KK<3HJBrL5=UcYlelD(J2OesDXT7)5%nUfVAOvNddFqzVRGjxCd
+z<JF|oioAG(d3>E@zhZCYedUkulP#%buBnRG343{ElsQ&6c3F~3dHpDfCiL1Ew2UK$
+YK&KTX0Ckx-WO52UOLlKxUHzl+4~n~MasU7T
+
+literal 0
+HcmV?d00001
+
+diff --git a/src/lib/iono/sgp4/tle/26900.e b/src/lib/iono/sgp4/tle/26900.e
+new file mode 100644
+index 0000000000000000000000000000000000000000..818c5eba4a8496822f4821231256427436bdcbfb
+GIT binary patch
+literal 789
+zcmah{+iDvz5PjZ2{y{%rp^@ey<*jL!652R{q<!DoYP{6mHQH?<f8Wu@4LB4!=tXlm
+zmtm&)r~Pfw26K6Fd2!u-x?P+0xXXuJ`bl&8*1rzlbGiTVmVOxfVV;@>khT1{$wOEA
+zu|1BPU1N*^HXn|~c<0!FT#>&bXQLx@(K)9Rx5J#vaol%vKMr?!-i_O)`O-a?Zg|e`
+z>-S}wOVg0%KjvXB-Tr#qzBC$bSLR(!k7L>PLpSHgmub!iEj_h&?LR6fiT@RN(@%3Z
+zZ1UHkpB3$MzaI}-HJ=vpwuq<xkRQhBTiz>KeXrrH`dq@86?z9~V~|7=r8Wd{-UbXL
+zB7T`zdA2O%oF_3WXFVqo@~EF+9YZ7xDHyW=hrr_bm5iva^hBpn=n_ZE5kl}OYGRd=
+zBbyQsyT}Wf0k9DhvTCZ3;=K?@)OK%EOpFv_sxlNB7(Bzt8Zq!0n}<M_Ig(C81qUaJ
+zksxVnrC(BNUd!rd!ITK(*r{=~Ca5bwq7z$CH(W2V4ie+JHwX@`kXnJT>@9{AtrtO`
+m5bKCWvZ7<`0V}4e*M3#GumJ)H@?UQRKvM6@wCkI*qyGbI@U_JN
+
+literal 0
+HcmV?d00001
+
+diff --git a/src/lib/iono/sgp4/tle/26975.e b/src/lib/iono/sgp4/tle/26975.e
+new file mode 100644
+index 0000000000000000000000000000000000000000..a562387bd20476e82593783817733bb0f0472710
+GIT binary patch
+literal 3099
+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
+
+literal 0
+HcmV?d00001
+
+diff --git a/src/lib/iono/sgp4/tle/28057.e b/src/lib/iono/sgp4/tle/28057.e
+new file mode 100644
+index 0000000000000000000000000000000000000000..1f34f342a381c416a65000f0db295e155d5cc146
+GIT binary patch
+literal 3099
+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
+OpP9GS+gCSN|9=6Ap<N#U
+
+literal 0
+HcmV?d00001
+
+diff --git a/src/lib/iono/sgp4/tle/28129.e b/src/lib/iono/sgp4/tle/28129.e
+new file mode 100644
+index 0000000000000000000000000000000000000000..5b92943fe26a8d90bc143525986df563976912aa
+GIT binary patch
+literal 1779
+zcmah~%WfM-5Ioa>|6zZCgX#B-kB*7JNh}+%lRG1AEF$8rK&}J$?^8`tG;IXPiU-YO
+zySl5YdymWC<)5NOhL<m1zIeU)`R&cHdAuL@<6(Ei9)34p_J59t_kUfsKg_#nIj&Zu
+zj^mHF<Fq~O=FQ`Ld%qfnfpz%h%QSGUK9IapdZoRnlU3=x<Bhk|G9Di1hwZYPr+4FW
+zKi{oZzimGsw$tbF$Mg4xyYaAE8TNk~r{%DHcs<{JUE$em56gXS&-3AKH*J^k<JaRd
+z?s4>K^KSDWC+8IZH^Dc%<FcJ@$KR*jf@r_)9_IasoX><@i1@VIk00jaAL9eS^7r)A
+zQqNDaK~V$cE3p_2!<tN}6{j$kUN5hZm=PHd0~M)Sxie`l8hNkU0}CnS)T#IIXRrXx
+zXE=nS=Hw-;NB)<wh1?4nMO2m3jV4kQK*CgqHJ2Jr%#|FumL^Rt@R!Ke9Cu8T`;0Y^
+z>NVP0AaSv3-G$pJxG@*5p@^68)ViVqt<lJISWA&GHICL3pbC4d5dv0<Sr=9leMV#Q
+zE3|bkqg1ZVyF~^!6)x7hv&$2ajC`Cms??q_r8=l<;2nzwCBU$^%!6Eltx~(7wRVk0
+z;6X}t5;aA#cn1asKWw>|IyP^Hjl_}@c?2|y&X%+`uPiPSr`n)~QH%PFCMfMnw?UMx
+z5P>)da0+guB?Kx3+9=Vi!8IwjW%XdPtGkOrL@<dgaF#R>yaio|`$aeKbdAOttN=+G
+zWo@t|RR{p9kU^$=q(wpLpiH4G6_DCPx&s<aS{AAmhB{eN(b%|lc8S5gSG7??vBi5A
+zi;hz8j-_o3Ooqen1NF+9K8Gy=x^aOay(u(!@+7JOoll;GfxvUb1ud>!0-4Zga9p@4
+zJb>WM)sZnfnj&2S8MGx~a883dVA37-jI?kq9Y`pLIcbICaJvUTqq%<P5;QlMtY|4h
+zvt)2%vZC6!Yh+8La<C03CxwuRnXXfX?{fhr72OT;&YnbW-&~Sve`6AnsAumo_)2QB
+zSZqMd@J?V7H(Ep?MF$5#Dlln+ChLlFKnvQFi5;B?xluO8f?qrd=U$<u1u!Wr1U^p>
+zAh?Sa3=;Op?#70sCtEPL26ezBh*$I(L<Ext2<+f0m_(Az(7n%0LY8YZOrV;h1GB@@
+z6l($zy`V=Crsw1uh6sG8xS=EP89_{pLZpX@m<voAbSC*J4}!LaDSC3r=H|_JpR|7g
+D^&M<)
+
+literal 0
+HcmV?d00001
+
+diff --git a/src/lib/iono/sgp4/tle/28350.e b/src/lib/iono/sgp4/tle/28350.e
+new file mode 100644
+index 0000000000000000000000000000000000000000..656a5a4dab3312051fc45640c5cef28af40dea66
+GIT binary patch
+literal 1779
+zcmah~U2oe)5PVjE{0II49`^h8@|Z>_(l$<jq<vRyHWq4&hQt)ezwaDv8FCSzCq0mN
+z<j(HQ?DDkyUH&Onba?&h^{cnrpWj~%+lSlfemd??*u($o+x?%@@#A05+n?tBVL5F!
+zY=Ps?*VAEl+|S#G`TBM<3<JmT%eTWIL@^BhhV_kkF{&m;M0n%<VVRB(^WARQ&xa4w
+zay#E_Hoxt@9(RYY(|^xD9&e`OX5-lZX*w*&-QC;y=KBU~yE`toeS4mdH~YhGnLd9%
+zEz>=YzHC2ie{k}Y;{PW2Zhu;KhwJJ0!+t@uU-x(O{e+yK2ze&r%l>})G@t&M?f};R
+zkBbWGTvxvjRV|b(%96Mr*^^32x~PDmz8aNi>RyG0fl39lY9=}iT0}rxxZ|WEPLIMW
+zXE3~RhC`fD8$vZr^K|c#m0U_oHEvY<hOv85sZdASFnVd!aLt*+h_q@b)fUlDNE<5~
+z*|{_}DEL%dk2MBq@m>cp(i=vJ^ulV@JX+uIY+Nb{#82r3phRaRS;0eT)x)E97O1dr
+z6$$D}_uzwYyg;*>2{sh5Wi4f>DaC`M30r@|Q~?ht3*lk3(%c;7bpS1qsuuX+!IFdv
+zPi@a=nU`oI*x`ae#9?c2cB_!BBKL|?P@Fk}R>lKuB~K|s+&hz6z_@FAwPEbCNqA#^
+zu1!(eC6i|G1X!zz?0ak_$xbbiB1GTtjM7X^!x()94XFtM0UcLBX;shy&Ao(#I$83$
+zHp8=*Xroz_?kZ~N1uSVQMKU1{vd8l34M8;_5u}1{!N^z)0F1l{`_{CJi2Pcm%;(ww
+zeTg<|Wi7RNGR%wEBP(=^U^qcn+c=99!yU6CpD56*DWi_gBu*hlRiJ6HKtf#C$<q@>
+zrY~Ir17+uitIMNI(5%3b1f#7R!ej;V*9?bC;LnyuARIg+(X9Q+E^!o4ZQ3df@Z`yW
+zP8Up$9*XxB;;z#UOoku^HHS=(wy6QG8;Yfb7tqh}3$a(YM2bQI!_(-*0CaXmFaw^@
+zdUIc(4N_~sldZAGN}R%OMWdm+9m4{aOs&u@qQa-Wf(jd8u)y@_ZU{<nnm|M_Kp-*$
+z);*)aPM2uRmf*=?YhC+I3>G9<R5e%IIBX506U@R;2Q-8C5NQBFXJ$jILhIh$iYrGo
+z{fn{cmSEum4b23Z8YOaCI{@LpB$^Pzq8q-qTNe_hg^e&=(CMHOgN0#G?PDy_?wAbd
+Sdmss80<LJ=t9LIxY5xLVyJ~p=
+
+literal 0
+HcmV?d00001
+
+diff --git a/src/lib/iono/sgp4/tle/28623.e b/src/lib/iono/sgp4/tle/28623.e
+new file mode 100644
+index 0000000000000000000000000000000000000000..c6cb5051e49e24e26a57e5d954df8fb5f0ba190d
+GIT binary patch
+literal 1779
+zcmah~+in{-5PepF`~!bL1n17lV;Z4I+c*J|_Fc8Nu~1twq)mbReGk{RDi;MR2!@vw
+zXXf0vr}@wNSJf)z^{dyf-fn(;e^oXQx6}P}+?}w7@71^a->2ipKhDda4!iw)TCGSO
+z+n=we{r0#!Y#t8Rx2sYLd->_xzHn<^DBp0r5w1#_;jIx)yx-5$@!@c{op*=*hiSe&
+z+^kl=Y`-42`>)f#_dgzQrsHa5SpQ+#&&TcE+r!QG6+WBoalRePhr{t^x8Kgw=kKR^
+zy2sX+&4<l@>^zP5zXQJ8o#yTSdir(0n^EoO-QD4S!pu*EoQe3dyPrNCPQOieXg0o&
+zpH|z`r<663yVYpfSXc)=nkv;vMa1Iq1Y7ORR9plns--h`XBrP0P8{h}3RPlnmSOtb
+zEI{*9yT@i~RZLCO+EP0stAu+O^RZw?Q9E{9vtEi+Z4oNgxU8*GmzJ8nmvyU}oLxBL
+z85*fxbVDtttdwlbF`!YpVPM7R+(-L$uv3+;>ETw^TpIzTGRbI7&AS39ptZ{QSH^VD
+z-I(B)Gq$qMXuUdWXV5~VOY=%<CNS6NM%=V=YV;1U;I6ZhD`y*UQYc%3+l5FH#iQ}L
+zTkjX$){rN)HX-MpjN%0{g2@IPZ2=1=Q-Dp>`d|{WnS+TW$fg*S+#nq$1-A4gX6?`2
+z1kf(9l?VbinA|xAaWraGum@sgfL#YzgI4NhvG~H(F|jyyF=${^*a<rgw5CGGKC(6@
+zFDjQVK`pah#Y55?ged4K&>qsjX9Mh-rDK8NN$NV7%uMSNxipXzZOI*H39WleF&YUS
+z&5E^4m#k@c5q=-0-~}7NVMyy4ok83<VN$zLbb{x>mwLi>A`lVSAh=TtbZZq8VyMuw
+zZs7O@lSv*pV&2gXwFwj<ZU$>GEuQoq(2B=FlmTBIQelq~Myt$dONO6fC$u>j$+IV2
+zFI|GfaE$0OVwj6314nCgM4+{SZ7qm<H5fhM=aB${89*2!1~_C5p+V7wNem&q^?YV>
+zg!><tfJtvi6C4Oz*}!J51am=`{up;)1bSiQ9ScB!+Xk5?#=SD4ZbR5{>kQPLQ3eKh
+z(k=3ZOG*m5;gSfJHi#>j8JRU67F;|DA#j&C{x-yR)I>6oz9FLH`hcGx;^I~$61Nif
+zvu-$cfepkY;Vpz4!5&Qk2uJ`offGi&-~=PglYQKr%UuFOalIhZqjeD8Hxa%(<j{?f
+N{()_C_3p(h?QbZuYr+5k
+
+literal 0
+HcmV?d00001
+
+diff --git a/src/lib/iono/sgp4/tle/28626.e b/src/lib/iono/sgp4/tle/28626.e
+new file mode 100644
+index 0000000000000000000000000000000000000000..931a9cf965f99abc3678d3acff90f44cae92c7ec
+GIT binary patch
+literal 1779
+zcmai#-EP}P5QVQ5An(8z;9}=zXLfR#MkvxYPJpDnS8X;HYKaEL6v*56EJev`QJ}Og
+zq$PLHoNvz1r}@wHSJEWi>sPN|z1{x!{;u0TKMsds+Mlq7&)v7f@5A)*kL&WMaetgo
+zn+>Vq_UHTIxSRIl_IbR2+;m;XrTgjIvE!VrBYH#phBRp@IoF&CJKi7XVR{~)cJqEb
+zei-J*@nN(1W%qU39ls9$zW;H07^cmpVEu>TI8VE$x8uY24X*8OnjhQpI8G1y<8B^4
+ze?QH`0k^(vKWzWw&RXLC7Wi&|ns>+h;n(AS#%VwApT@(0npYrK5MTC(;nR5fZFquM
+z`<$<w@_OO7GHfTOT9`?&(6gzfYEoUru3IXeAP()ioG65HA@{D6l&xB=T&Uf_xhhpP
+zE@BSMs~nCJcU^wgQlg1bt(lWsb;g%fOj<XHOVzHYBu-fhqgfrEEDYrkJi44C0_~QK
+zWh<%Ps<GfNwbEK|n|z__NhDzAs-`Jwuq#(sPsNJ68E4d%EVNm@s*ypjb$U@_vRk!|
+z)jX+kWb&p4vLVTG<cJc>maZ!a#TZBRu5au@6tzGNR6W9t-MapaOvoj!Y9RGOvZoq`
+zY9kkp0D7P`L&e76PZu>!Sycomn>SaZLQ#3aTG<?4QO9yDL0hgQ1=eoVz`vH(#wfr6
+zHI|G81#kAnY_rEHSEts}CSX-?F95z_MSnvK$v&$wsz)6wNtN4_^okx!;!JST*yCgl
+z0xaf=Q`!Pz3Sbb>Fr)<E&BC=3-~p>=%32I{EGC2~XTPYGe4CP9ykGzX@vh=%L{CAS
+zlV+_2?OD~}jlC3au|XySqv2IotQk!-0@g*1u@Nm<y%oPrNe?HY@aBdnBGSDSxJ-;`
+z!yK;T1`A}0&@}geS2Lkk$U?*FjOGN!?W{(k@#4+&HYFfWIZ|XqKq^Af&{CWBk`a;?
+zQe03&s<VUbGS80K7BQ#+E2_&?;zBa#g3-NrYs3ALl8ypBO^B2$+T9LDdkR9z1v7h5
+z!xK~u@8-puOPkrkc&`wcqs34M^yOH@Kx=!4FLip{rUb(buWh^{gD}*%#Vx@rUJ|t|
+zTN*I@z=*X0Y~w*7Vhw!5>Pou2ht6t9EDl=Ls@<jp!%PH{#s=PPybu#EFk8?NyQBob
+iFkX0XE)Gax3|WF&%OsVSlB+k5VoOT4ckll3FYRyTr)YBk
+
+literal 0
+HcmV?d00001
+
+diff --git a/src/lib/iono/sgp4/tle/28872.e b/src/lib/iono/sgp4/tle/28872.e
+new file mode 100644
+index 0000000000000000000000000000000000000000..c718048c550c228f7fc184e1b8f812c79bf904c2
+GIT binary patch
+literal 1559
+zcmah}U60!~5PWuk{0II45#(||xOq%t6hWIyfTVqQ@6?>pvvrWw0QvWwmG91RQJ{oj
+zKqR#@J2R`(@>l+rIk)us)$3Ppw?DtXN!!Q!@i5N&6ZY`C`TOw4IDh=}W&6{#KQ5=u
+zrn2Jr^X+)t&HHKlINjcFQcC3MX8M+>6iKPPq5ejC_U5%T_l`H-AD3}{oE~<|emZ^_
+zm;32%v-x%Rb>1Dnj{iRYINy!)W+T}DX*@3T?&0lp_kDx4-ObB=Y){jCw?FQd@$>i7
+zG9GaBW&2_KA16-~|Civq{b|`9Z^z$``vuj0**{E&5uBd{c@g5v{xE);PQQ;20E^#w
+zm0X?{o(HY1=1$fMi^c_F)-2Sk;4d}?l9rXJLZOz1k}I=Qp*StsU1}+=EhWn;U0I6S
+z3s@`9a8XIjJrk1vm7_LEchu_@%h!!kYZjIoRdJph2^DL~fn3-sUN#Caa;3(_>ZLWk
+zLSs|U1$3&bt;Ly2W{@nRD3KDECb^X^(i?6t4p}-_Y8q-TTAUgc5Yt?&c(HDLLGvrL
+zR!wpcH;{_rK$Yy>S}%Q77ATa1ziR;+YBF^5W-FREF*Do=9*_ig3N(3EvLdig#-a95
+zslo^^#J#MoR5%vGaV1}+RW{DrtC59Xn&FwT!f7~~LxXB9x~|!{TW?(>{lOf2@*`SG
+z-8EZ-dx8kWVm7n_$}PqS<v}+SF{bL=oA=gWP^Un1_{>@X028~BB3rojg4VClDA3$h
+zo19ZJFt6UXF6Z9Fg;7*Zpi}gQaB}a2iC@vw*%9D0w9KF(-b;K7f+#YDWL=a@kW8|5
+zhuUjOAg#45fFLl97Z3?(tpa5`q=l-murtLpKuPUZ5m!7&R#2=3>@H}K<Oeha&%lWs
+zwpY|1szXU<2*rAy0B!JJt+Kau0+7kd7157OB2Eqnt!aP(F2=1ix}e!L8fa#tR{L4W
+zfq<G3IIqZd^p+YsibCzkc?>t9e|0JG;FwD27_wT1_!!#`2cDJ0a9{NXH$ra`rx0$4
+vaH177MjR<YvljE;Dhr_<%BGC~7B)wm9mG6*gGTr!;SrMvwC&BitIz&F#1BF+
+
+literal 0
+HcmV?d00001
+
+diff --git a/src/lib/iono/sgp4/tle/29141.e b/src/lib/iono/sgp4/tle/29141.e
+new file mode 100644
+index 0000000000000000000000000000000000000000..2a44c3e2c48c7bd1024c70befd4e5b8c7c7a23ed
+GIT binary patch
+literal 2769
+zcmai$+in|25JaD8ApfvGu!HHIo|_*X3xSjP0@%qrV{I%V5@}F$0RMeX4=)jg03r0C
+z<u0eXtE;N_@$gspJ6K554=;Xr@#^NMH}9sKuXoGCvfn)N9e?k>J^Zok-~V~}`onIs
+zJv^>fVujluKQG($ezUvzy8C>$nx;wm^z*mvq%oFhDlav^Gzn@NTjawp-fR!c{_F03
+zec0@_Z<oW}?sm2Mb^T?(-hNr0-+#ZqUG}S0=KCL)?P0&Zf3>^)zT$JU-XHG#>)mdD
+zyV<S}%g67Jhvk7=pKjjX{KuVBiT_*R>&@d~z5TrWw%r^!?U&8{?qQ+k6CoEOK5ZVB
+z54*?TmwUkc@A!$q8}-k)Hcg>-?K!LQ#av2mK~!@Q>*EPYB}j@EQ-(6(=OxutBu!Hc
+zDmBI48y7W{qPf-9^$aG^e1aQC^(3Li))J37m_(^TYRjr=fR(I0NLRD0b(%T9w`R3V
+z8|O=EU3%rW%uGw_-I~vA96qUCqs=V^vmWV0{E4Ei1dWW^GWAZA0vn9ts}!M{Ad<4=
+zUSUE*rm-58*5*o|otkoK7qnEa(B=+rxt0cZ11)LpL3t=AqxxyiRW&$uYGw3B_wd{x
+zaxS5!oKj2tc200)ElaC<L8H&7OwO8f@EJjU9*0Y!;$Dl6>ZjQ#BWTr>#K~i9wbs~E
+z1kFN^xu@2A<T)^~tfIv(XjJ_aZEB^$BqD*4ffiE>h9tD7!K6_OEi|Fqp$leaR&%1b
+z9AeVM@fgz4as^A_<UF_fOeGoOq)=USjZITZwS*MWOivC!<<g;++ckCginLRz^`taf
+zLNS*vB@ZUEGXSp_w05l$1mCGi8WG@3PH<Y#tSZ_Xj!<n9dafoA=xCKu(|gxx)=;5N
+zthriINmO$+|EtOVOeM7$PgT+epSuIJBAX=4b7*pgCU=0(q{CN4F$EPSbPho78LE{b
+zGEqwsJ11Rw6A!VcezS;mQJ9oG&`ODwX^7<7Pv*83Qi>{ebXAPK2_u3E%m;G@`CMS`
+zu94>Kq7pav6<Qa@WF5U7=Qd;A5L+?)><*at4;=y!Q-Qq5P*n=iLM@&ic)ilnP%FTx
+zbS_RRLEl$sWCw>U_Qs^+aLx%7Oe@DhGDpg5Xap$@cauD5R3T3>PbYO60MLr-odCJa
+zP3)OUP;)3!OxrOP6?2kYG?wb1Ha9Dw8?Bvsi<~LsL2-98&uTSRE=U|<aGng8-tse*
+zV0|2b%v(D~2VM&e{N&MrY)BC_StEgSa(B1V5efhX0GcF~nHv)UsYIH+pp|DT@i7q{
+zjQ4mrM$MsGCKSsspjE}Usc_U$lc<sE$VNAG>5?-A4tJ9;9cV)HJU8E~SDJ(;g9)OE
+zUrdvs5N6*}FZhNJA(KKR1XxAGZ=IZCBN(0I%&NU)a?cxOF(9A9c+Y5v^eNhmJ=yLw
+zX3hqO=Z4_3RYdPGJtwUMl)E`sq7lCp>>|mnj=+RKjn%lINT%7bo4;51S-eC%Q%SKD
+zs!JoQqmj~$!?|j(<zM8^#v#@sPK3Nj($`K>8v^xB=*y=GvBOh_eln?dL6d8hOh^tU
+zN#%CT68KYkEBr=APO@2jU1wI6KLHvh&e5RN9l$hc-qA>RRv<IM>gV3@##1JzT01I1
+zSR)VcsBpg~+C4Hk6>`M`%7b&vEu%o<*WFm51#7^>aH7MqUJ1=J8bm%tn|a&tpduBA
+z12~+>7uOPobMEI<jQ14QW+SZF-Q2+;M2!y-?UI{CxC1mxl1<Ai#~F<Ty+R|hLwDiE
+zI(9d2iL7dBhf#OHjPw<bBEs>dKyrDo0|#0S<V*K#Lz9GNV<$>x0-)Wzdwuo7`VTm%
+B9S#5h
+
+literal 0
+HcmV?d00001
+
+diff --git a/src/lib/iono/sgp4/tle/29238.e b/src/lib/iono/sgp4/tle/29238.e
+new file mode 100644
+index 0000000000000000000000000000000000000000..bd7afd06b68d77da34fc59964be43effd97be576
+GIT binary patch
+literal 1779
+zcmah~+in|241HFB{KNjh4tN_5na4Cjk+yLHB<;IuZ)2gBWJsF=`TL$(ORiNE=)f>A
+zm*wH%IiybWpXIM&MTgg~UcY*~{_*|IuztLscGGct!WsT<zU_XWjvxPcKK^vr?&s5L
+z#pbyFd^_zo$L(SLc(}b^4Z|Ql{Pb-<2$2tizp47htXOr|#KITv_w#goJUndX?P336
+zn(q&HtJN=?ugA^)>-6vYkH@>|xLQ@5|1j<6<L2S*;qLniYrQ$n_x<>AINojdn|b>D
+z{WMQITzy%8SpUb(ImQ1?@ZI(_Z}zv-ulwzcXg_Zs4!a3Cp9}I_h%ejS^yzT=ZF&G$
+z|9e_g=)ABWE0~v>l_fa)fwsufY9@2-2Uy;UlZJ>@)UQNS+^aV{E+JKoswkcn62&&f
+zFJKL2KEw4uX3dJU<Z6jf!^k)(O(dL6mKV-h0wJ0xURY@?$PU=UP>XvgIaeJ<DUI04
+zoAHGjf?c6;iWF{$0N5V9GHW6H3tiAgqiBV~8VMn$7fWiMUU?X)R6!2JH5Q)fgioto
+z&;;l&xQ$4wmDFk;(W#6=iS(&uw4{E(X<S^J5@HPl6}C*+(1BKwXhp(HAwiT(969}i
+z7V#2o5DO{Z3vbLlxQYjCoMyH5(t@mcQGA7p0u3S)2hK8jS&bwt8t8y1Sf(kebK$0-
+z_JZ4Bq+Y}kTB7yfKySrV4FWIlQVHyn&_#gnbOLI?R>*}*>k^YgbKI!1CbWwSn(38G
+z#@d>fU~TMO_Fg#-kmXwS>``or$ig1#NP+2+kqaz|;)%c;@XQlYg@aJ23tFXXmn`<q
+z@J!UBgQ0@m2*O|oS9h|m@L@}nz(E5y)D=6FRf=%{8lLVOz`98{_qhXVyK>2Z3Q|vy
+z8XBqxN4p7Rg4PvcV2w4sG!Rwp#(-hbFb=1q8IeXs8Q>CB679xN&ei*L?4J&9S1uV1
+zdKIcn-4*=-2f-ySO;wg|w_t~EO;B?I_kst;*${IPv0@tNQ`>`B50uZI?9KhcB_q1U
+z3mVyjTIV)eR7k@@5M&Wj123uq6ZYtyM6Z~6>#dG<V7!NC7K4&t*AXw=T3)$i08kdM
+zAPk{8H{qt3WQG}p!eOy`7J;l7Sl|YqTMY$M$P9y02G~6{UzotFA<v!+^wt$Omn;=6
+zgdwv`MGQSE88A~H5M4IK?+Aos%$w}$sDl9LE#o6I(tDqEqA)ndB>7Uw_07AhpR~UL
+DPzY-0
+
+literal 0
+HcmV?d00001
+
+diff --git a/src/lib/iono/sgp4/tle/33333.e b/src/lib/iono/sgp4/tle/33333.e
+new file mode 100644
+index 0000000000000000000000000000000000000000..febf06ea47c649da895fa4f28caadff77f6859de
+GIT binary patch
+literal 899
+zcmah|!EW0y3_ZI*|3N<xffOZ@>anXa6kF2*?RNJPtudC^f#VhE-;c_&6deYP(7`6n
+z_xK*=!~Da)_~^-9UR+*Ww;ykpuHA3Su1x*Ga(0$Kci+l%|NWeP82e#9Gz~_!^5d!u
+z-PDimeq3!D=Um8cIlj06keq|7pjSzKri?&2t99HCbD8$zwwwELxGVE!TsO_<?s@8l
+z=kj;`ep;8QX_DnXlwqE_?e(~RZ7kYunm08)j?=myy16{Q9_F&M(o=ia{-bgl@xKG!
+z^oO|{R^`jk&xZD?-;TRtGoK7O8}Zcd%ENg0TDC@3&+h;ar*Lk8A%l7rq@)7%0|kvf
+zapXv%_8x+&c!`;<OWnfSg|lLoZ2tL>0;d2RoI|f9l-QuoWCVZcj^s-0i7{(R726RK
+z`hd!)RM~?FWsf1*c5>a1SK!PUa;VG%)=ZS7lErKw2n=u1Y{Zi|!!nd$SR5h%+IVgu
+z1j!4tgv4CgA_JQORePd}2_g_V2dr#L0mY0kHt<4GW29VfqP5n@@7RRZ+z?R|vW^92
+zh~N_hi9sqol4|ye2n-gF+ANbGR&7R&pjjZ94JN`Yipj{&Y-ktuO<N!p_GU~<Q7Rir
+xkmPL>OlmV)MiI&9gb<@x!bVZM<BI09X%iM3IO1`kfq^8mE!4EN%bRz<*e}j7%8~#8
+
+literal 0
+HcmV?d00001
+
+diff --git a/src/lib/iono/sgp4/tle/33334.e b/src/lib/iono/sgp4/tle/33334.e
+new file mode 100644
+index 0000000000000000000000000000000000000000..b16f024a7cdb0056f81ff7ff739d1a0a859c0e15
+GIT binary patch
+literal 459
+zcmah`+iC+L6nr+2fA9w)y5812rje4ixj@ps+w5spx~su8h5UU@8v-qb4hP}PsArfn
+z<ahEx1mSo*8joi7ezC&#*g_A<4}~kWI`yxR)^9g@6Me`7LQJS4Z}$*f^3fjSzC{@0
+zisOe<z!jyc98)f*LK8`a6oOJ#UMxa}bc~(LK87XaHZ}-7xkGZ{0KfHhY9Jvb3x5Y8
+zC)dqlb4CT$rQBZV7*pee%dkBU8Tuma?9%?BTrK`<aPEif!XBQ3&*isA-^Ct^=W8Ih
+zAa=foO&ngJE5k1J4NB-0Uuo1@5u=QhLTijCTvu8WB`d{i!^@3H%@`*}GAe{F1SPUI
+fjMj`(JfTD@tyL{peQ7F1xi(6hGR&^#KUVb#^W%C_
+
+literal 0
+HcmV?d00001
+
+diff --git a/src/lib/iono/sgp4/tle/33335.e b/src/lib/iono/sgp4/tle/33335.e
+new file mode 100644
+index 0000000000000000000000000000000000000000..3798089b7eab6a5d73d257d1ff422c0086cea4f7
+GIT binary patch
+literal 8379
+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
+I)BiQ$KTa(X(EtDd
+
+literal 0
+HcmV?d00001
+
+diff --git a/src/lib/iono/sgp4/tle/88888.e b/src/lib/iono/sgp4/tle/88888.e
+new file mode 100644
+index 0000000000000000000000000000000000000000..ec855e7f76efc4dba2d21b4c7bebbfb0dda50084
+GIT binary patch
+literal 1779
+zcmah~+lm`U5Pg=x|1dwGrt9AAN5>+V#JdLDc~^EPUXhh%ktPBEeNK&5i#7z(NQl1G
+zsXBE|>oosa{w`W%c>Ct<oA;ZaKi&+Rr-yMr9(O0K;dArX{`c{C`^U@j=V^DCPpcKF
+zWBbe9c-S6y)8=Wqdsqz^G~C|J1NBx1mUl|;SPPMabqw72c$mlI)AYEVchlk1I6qAH
+ztJSaD@5k-o`}ptu+vELsT&)c2KaGd^xP5#--Tzo&Y_`YwA(yA=c)vSr=kd#r(>(66
+z^>y=U^B+5x6#p;554+R6J=~4o4!arAe%U=v`w=-m6Y@gD*WG^nJe__U9|4x1^Qfgh
+zkDRk`E8Tk-J7c~E4OW<|kx0uE6x2%(?)b$CE}ggruF<frr8iNEZa%D|)Lt7oQ@wx%
+z*9+Vds&XyfS=4Na&D^}0vsV{Qbf-?m%-lN1u$B_)rqU~ry{Lx?2NSX?jiWd7XqVDR
+z^%`w0%m}Wcoy-zmtRi6Tfnt{hMYPhe&_yL<f|%Z!2-R4L)~a%A$kYnTvSy7_QyFVu
+z@@uq#)x1!R>L!SVQfg4?(ojv!g@KrX*2A%cV!1eQd#zfNNY%zkA6O0W-vW6c?F$-m
+zxn^>R7RX60P+kV-rAvfU9lBrORZ4SruB;1_)?1S%IPQfbz^c%ahx9;N&GmvNDD4Vu
+zEkx*axVFj*nh;Y7snCp^nQYMt8B^3;pu!5;y{0Ze3+uuqb`%Y$7A}^a&ddju*D7H&
+zHATUYWd?^Rhzm$W?wlGOh9H4xB~%lQK^}^<FbD&A_eM}6Bm*Xepy!U>UC<1CU)6@*
+zqHoC4Dexj-fD|o;4m7Ta2PL3iMbssaoS9VjN+}s!RfU`&sm!BWbR`ddL5o)^S#xj5
+z7Kf^3BbL5F2;?XRt;aC9tO$!#MHn!N@W?Jgl1T-U1hA9I>@2=8$}^MMpzGQgVM}e@
+zK~oZ!Oj<b$ttGXH-x0LdfDs`ZE|{aY1}%U|H&(LR0SzXdTTWkUOLJeN4f&Lq;uZD4
+z_4J$No1neg89tp}m{0^fwlE20bzEC477iN{Wz~XqgQ6Bfm)hWmYqT{t<x;%`-h@ar
+z@X){yoUHjyfk_Zp1oJ=*$)tB`c;+A(FbObNSW-U%CsOiAFSWr8*J!X8&<s6;h0aXY
+w=(q;E5ijn>bK?beCiZkBtglVsnbaig00#x<W0g!Ao;jg&ZJV19ul~~h0o)jBUjP6A
+
+literal 0
+HcmV?d00001
+
+-- 
+2.53.0.windows.3
+
