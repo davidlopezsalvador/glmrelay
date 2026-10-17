@@ -1,0 +1,30 @@
+{
+ "veredicto": "318",
+ "arbol": "post-317 (scratch GLM)",
+ "puerto": 3013,
+ "fecha": "2026-10-17",
+ "r1": {
+  "x_cache": "miss",
+  "ms": 12570,
+  "bytes": 346057,
+  "sha256": "c5deb9fcda4d0922dee5f319b3ca1a4494f8dc9188159f1e23791c0d9abdeaf2",
+  "source": "satnogs",
+  "sourceLabel": "SatNOGS (live)",
+  "count": 1733,
+  "dropped": 0,
+  "fetchedAt": 1792241822823,
+  "attribution": "Orbital data: SatNOGS DB (satnogs.org); TLE provenance per record (Space-Track.org).",
+  "records0": [
+   "25544",
+   "ISS (ZARYA)"
+  ]
+ },
+ "r2": {
+  "x_cache": "hit",
+  "ms": 16,
+  "bytes_iguales_r1": true
+ },
+ "api_egress": 404,
+ "api_msis": 200,
+ "nota": "sandbox GLM reproduce el caso deploy: CelesTrak rojo por-entorno (316 par.3) -> cadena cae a SatNOGS (live) etiquetado"
+}
