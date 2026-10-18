@@ -1,0 +1,132 @@
+{
+ "checks": [
+  {
+   "name": "329 tamaño 4164 B",
+   "ok": true,
+   "detail": "4164"
+  },
+  {
+   "name": "329 sha256 EXACTO",
+   "ok": true,
+   "detail": "e4ee006bd777d8de…"
+  },
+  {
+   "name": "329 LF puro sin BOM",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "329 mbox",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "329 numstat 3 ficheros",
+   "ok": true,
+   "detail": "[(3, 3, 'src/components/ionosphere/hud/TimeBar.tsx'), (9, 0, 'src/components/ionosphere/types.ts'), (20, 0, 'src/lib/iono/replay.test.ts')]"
+  },
+  {
+   "name": "329 numstat +32/-3 EXACTO",
+   "ok": true,
+   "detail": "32/3"
+  },
+  {
+   "name": "329 perimetro == 3 declarados",
+   "ok": true,
+   "detail": "src/components/ionosphere/hud/TimeBar.tsx; src/components/ionosphere/types.ts; src/lib/iono/replay.test.ts"
+  },
+  {
+   "name": "329 PRE TimeBar.tsx == 6b6238458972…",
+   "ok": true,
+   "detail": "6b6238458972269a"
+  },
+  {
+   "name": "329 PRE types.ts == db95cbdf…",
+   "ok": true,
+   "detail": "db95cbdf8fade432"
+  },
+  {
+   "name": "329 PRE replay.test.ts == 0c307fc6…",
+   "ok": true,
+   "detail": "0c307fc6a2e46aaf"
+  },
+  {
+   "name": "329 inventario pre == 248",
+   "ok": true,
+   "detail": "248"
+  },
+  {
+   "name": "329 apply --check 0",
+   "ok": true,
+   "detail": "warning: src/components/ionosphere/hud/TimeBar.tsx has type 100755, expected 100644\nwarning: src/com"
+  },
+  {
+   "name": "329 apply 0 sin skips",
+   "ok": true,
+   "detail": "warning: src/components/ionosphere/hud/TimeBar.tsx has type 100755, expected 100644\nwarning: src/com"
+  },
+  {
+   "name": "329 POST TimeBar.tsx == 56bc2547",
+   "ok": true,
+   "detail": "56bc2547317eaba2"
+  },
+  {
+   "name": "329 POST types.ts == c4b89a24",
+   "ok": true,
+   "detail": "c4b89a24546386fe"
+  },
+  {
+   "name": "329 POST replay.test.ts == e1dc75fd",
+   "ok": true,
+   "detail": "e1dc75fda72b84d0"
+  },
+  {
+   "name": "329 PERIMETRO: exactamente 3 ficheros cambian",
+   "ok": true,
+   "detail": "['src/components/ionosphere/hud/TimeBar.tsx', 'src/components/ionosphere/types.ts', 'src/lib/iono/replay.test.ts']"
+  },
+  {
+   "name": "329 inventario post == 248 (0 nuevos)",
+   "ok": true,
+   "detail": "248"
+  },
+  {
+   "name": "329 REST guard: api/** intacto",
+   "ok": true,
+   "detail": "[]"
+  },
+  {
+   "name": "329 apply -R 0",
+   "ok": true,
+   "detail": "warning: src/lib/iono/replay.test.ts has type 100755, expected 100644\nwarning: src/components/ionosp"
+  },
+  {
+   "name": "329 reverse == pre BYTE EXACTO (248/248)",
+   "ok": true,
+   "detail": "248 ficheros"
+  },
+  {
+   "name": "329 re-apply 0",
+   "ok": true,
+   "detail": "warning: src/components/ionosphere/hud/TimeBar.tsx has type 100755, expected 100644\nwarning: src/com"
+  },
+  {
+   "name": "329 re-apply == post (idempotente)",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "329 sin .orig/.rej",
+   "ok": true,
+   "detail": "[]"
+  }
+ ],
+ "pass": 24,
+ "fail": 0,
+ "resumen": {
+  "pass": 24,
+  "fail": 0,
+  "arbol": "post-329 (w327-web + slider fix)",
+  "esperado_barrera": "tsc 0 · vitest 393/393 · build 0"
+ }
+}

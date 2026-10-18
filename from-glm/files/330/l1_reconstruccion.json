@@ -1,0 +1,353 @@
+{
+ "checks": [
+  {
+   "name": "Fase0 msis/msisConstants.ts",
+   "ok": true,
+   "detail": "got ca9509f"
+  },
+  {
+   "name": "Fase0 msis/msisInit.ts",
+   "ok": true,
+   "detail": "got 19662f0"
+  },
+  {
+   "name": "Fase0 msis/msisInit.test.ts",
+   "ok": true,
+   "detail": "got f3b708f"
+  },
+  {
+   "name": "Fase0 msis/msisUtils.ts",
+   "ok": true,
+   "detail": "got b7bb8e6"
+  },
+  {
+   "name": "Fase0 msis/README.md",
+   "ok": true,
+   "detail": "got 67bcdd8"
+  },
+  {
+   "name": "Fase0 msis/msisGfn.ts",
+   "ok": true,
+   "detail": "got b2579f8"
+  },
+  {
+   "name": "Fase0 msis/msisTfn.ts",
+   "ok": true,
+   "detail": "got f879dee"
+  },
+  {
+   "name": "Fase0 msis/msisTfn.test.ts",
+   "ok": true,
+   "detail": "got a869d5a"
+  },
+  {
+   "name": "Fase0 msis/msis21.parm",
+   "ok": true,
+   "detail": "got 8809e7b"
+  },
+  {
+   "name": "Fase0 msis/nrlmsis2.1_license.txt",
+   "ok": true,
+   "detail": "got 244ab19"
+  },
+  {
+   "name": "Fase0 LICENSE",
+   "ok": true,
+   "detail": "got f288702"
+  },
+  {
+   "name": "Fase0 src/app/page.tsx",
+   "ok": true,
+   "detail": "got e58b156"
+  },
+  {
+   "name": "Fase0 src/components/ionosphere/types.ts",
+   "ok": true,
+   "detail": "got 45b9612"
+  },
+  {
+   "name": "Fase0 src/lib/iono/voyager.ts",
+   "ok": true,
+   "detail": "got 1f81fc3"
+  },
+  {
+   "name": "Fase0 src/components/ionosphere/hud/TimeBar.tsx",
+   "ok": true,
+   "detail": "got 98879f95d62a05ece0eb95778c1b95e8821919fa"
+  },
+  {
+   "name": "Fase0 src/lib/iono/replay.test.ts",
+   "ok": true,
+   "detail": "got 0c307fc6"
+  },
+  {
+   "name": "305 sha256 diff",
+   "ok": true,
+   "detail": "f963e5323fd597e8…"
+  },
+  {
+   "name": "305 numstat legible",
+   "ok": true,
+   "detail": "8 ficheros"
+  },
+  {
+   "name": "305 apply --check 0",
+   "ok": true,
+   "detail": "warning: src/lib/iono/msis/msisInit.test.ts has type 100755, expected 100644\nwarning: src/lib/iono/msis/README.md has ty"
+  },
+  {
+   "name": "305 apply 0 sin skips",
+   "ok": true,
+   "detail": "warning: src/lib/iono/msis/msisInit.test.ts has type 100755, expected 100644\nwarning: src/lib/iono/msis/README.md has ty"
+  },
+  {
+   "name": "305 post-blobs 8/8",
+   "ok": true,
+   "detail": "init.test=src/lib/iono/msis/msisInit.test.ts; README(msis)=src/lib/iono/msis/README.md; dfn=src/lib/iono/msis/msisDfn.ts; calc=src/lib/iono/msis/msisCalc.ts; gtd8d=src/lib/iono/msis/msisGtd8d.ts; regression=src/lib/iono/msis/msisRegression.test.ts; test_in=src/lib/iono/msis/msis2.1_test_in.txt; ref_dp=src/lib/iono/msis/msis2.1_test_ref_dp.txt"
+  },
+  {
+   "name": "309 sha256 diff",
+   "ok": true,
+   "detail": "0adab8f82dfef498…"
+  },
+  {
+   "name": "309 numstat legible",
+   "ok": true,
+   "detail": "8 ficheros"
+  },
+  {
+   "name": "309 apply --check 0",
+   "ok": true,
+   "detail": "warning: src/lib/iono/msis/msisInit.test.ts has type 100755, expected 100644\nwarning: src/lib/iono/msis/README.md has ty"
+  },
+  {
+   "name": "309 apply 0 sin skips",
+   "ok": true,
+   "detail": "warning: src/lib/iono/msis/msisInit.test.ts has type 100755, expected 100644\nwarning: src/lib/iono/msis/README.md has ty"
+  },
+  {
+   "name": "309 post-blobs 8/8",
+   "ok": true,
+   "detail": "init.test=src/lib/iono/msis/msisInit.test.ts; README(msis)=src/lib/iono/msis/README.md; types(web)=src/components/ionosphere/types.ts; page=src/app/page.tsx; grid=src/lib/iono/msis/msisGrid.ts; grid.test=src/lib/iono/msis/msisGrid.test.ts; route(msis)=src/app/api/msis/route.ts; panel=src/components/ionosphere/hud/MsisPanel.tsx"
+  },
+  {
+   "name": "313 sha256 diff",
+   "ok": true,
+   "detail": "ed14450e3d3d9dd5…"
+  },
+  {
+   "name": "313 numstat legible",
+   "ok": true,
+   "detail": "43 ficheros"
+  },
+  {
+   "name": "313 apply --check 0",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "313 apply 0 sin skips",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "313 post-blobs 0/0",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "313 pines-309 intactos (adds-only)",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "313 egress/route.ts == 5f2b77c",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "313 >=32 ficheros .e del motor",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "317 sha256 diff",
+   "ok": true,
+   "detail": "538c9262d71059fc…"
+  },
+  {
+   "name": "317 numstat legible",
+   "ok": true,
+   "detail": "7 ficheros"
+  },
+  {
+   "name": "317 apply --check 0",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "317 apply 0 sin skips",
+   "ok": true,
+   "detail": "/home/z/my-project/relay/to-glm/files/web317_shell-data.diff:341: trailing whitespace.\nCALSPHERE 1             \n/home/z/"
+  },
+  {
+   "name": "317 post-blobs 6/6",
+   "ok": false,
+   "detail": "satellites/route.ts=?? 0 hits; catalog.ts=?? 0 hits; catalog.test.ts=?? 0 hits; satellites/README.md=?? 0 hits; active-2026-10-17.tle=?? 0 hits; sgp4/README.md=?? 0 hits"
+  },
+  {
+   "name": "317 egress BORRADO (término 4)",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "317 tle sha256 == nota §4",
+   "ok": true,
+   "detail": "40b7e35a2492f73d…"
+  },
+  {
+   "name": "321 sha256 diff",
+   "ok": true,
+   "detail": "ecbf673e60fd5eea…"
+  },
+  {
+   "name": "321 numstat legible",
+   "ok": true,
+   "detail": "15 ficheros"
+  },
+  {
+   "name": "321 apply --check 0",
+   "ok": true,
+   "detail": "warning: src/components/ionosphere/types.ts has type 100755, expected 100644\nwarning: src/components/ionosphere/hud/Laye"
+  },
+  {
+   "name": "321 apply 0 sin skips",
+   "ok": true,
+   "detail": "warning: src/components/ionosphere/types.ts has type 100755, expected 100644\nwarning: src/components/ionosphere/hud/Laye"
+  },
+  {
+   "name": "321 post-blobs 15/15",
+   "ok": false,
+   "detail": "scheduler.ts=?? 0 hits; sky.ts=?? 0 hits; ring1963.ts=?? 0 hits; panel.ts=?? 0 hits; scheduler.test.ts=?? 0 hits; sky.test.ts=?? 0 hits; ring1963.test.ts=?? 0 hits; panel.test.ts=?? 0 hits; SatellitePanel.tsx=?? 0 hits; types.ts=?? 0 hits; LayersPanel.tsx=?? 0 hits; Legend.tsx=?? 0 hits; IonosphereScene.tsx=?? 0 hits; page.tsx=?? 0 hits; satellites/README.md=?? 0 hits"
+  },
+  {
+   "name": "323 sha256 diff",
+   "ok": true,
+   "detail": "442a00bccdd32ff5…"
+  },
+  {
+   "name": "323 numstat legible",
+   "ok": true,
+   "detail": "3 ficheros"
+  },
+  {
+   "name": "323 apply --check 0",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "323 apply 0 sin skips",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "323 post-blobs 3/3",
+   "ok": false,
+   "detail": "ring1963(post)=?? 0 hits; ring1963.test(post)=?? 0 hits; satellites/README(post)=?? 0 hits"
+  },
+  {
+   "name": "327 PRE TimeBar == cadena certificada (sha1 completo)",
+   "ok": true,
+   "detail": "98879f95d62a05ece0eb95778c1b95e8821919fa"
+  },
+  {
+   "name": "327 sha256 diff",
+   "ok": true,
+   "detail": "cdf469757f1a516c…"
+  },
+  {
+   "name": "327 numstat legible",
+   "ok": true,
+   "detail": "1 ficheros"
+  },
+  {
+   "name": "327 apply --check 0",
+   "ok": true,
+   "detail": "warning: src/components/ionosphere/hud/TimeBar.tsx has type 100755, expected 100644"
+  },
+  {
+   "name": "327 apply 0 sin skips",
+   "ok": true,
+   "detail": "warning: src/components/ionosphere/hud/TimeBar.tsx has type 100755, expected 100644"
+  },
+  {
+   "name": "327 post-blobs 1/1",
+   "ok": false,
+   "detail": "TimeBar(post-327)=?? 0 hits"
+  }
+ ],
+ "pass": 53,
+ "fail": 4,
+ "mapeos": {
+  "305": {
+   "init.test": "src/lib/iono/msis/msisInit.test.ts",
+   "README(msis)": "src/lib/iono/msis/README.md",
+   "dfn": "src/lib/iono/msis/msisDfn.ts",
+   "calc": "src/lib/iono/msis/msisCalc.ts",
+   "gtd8d": "src/lib/iono/msis/msisGtd8d.ts",
+   "regression": "src/lib/iono/msis/msisRegression.test.ts",
+   "test_in": "src/lib/iono/msis/msis2.1_test_in.txt",
+   "ref_dp": "src/lib/iono/msis/msis2.1_test_ref_dp.txt"
+  },
+  "309": {
+   "init.test": "src/lib/iono/msis/msisInit.test.ts",
+   "README(msis)": "src/lib/iono/msis/README.md",
+   "types(web)": "src/components/ionosphere/types.ts",
+   "page": "src/app/page.tsx",
+   "grid": "src/lib/iono/msis/msisGrid.ts",
+   "grid.test": "src/lib/iono/msis/msisGrid.test.ts",
+   "route(msis)": "src/app/api/msis/route.ts",
+   "panel": "src/components/ionosphere/hud/MsisPanel.tsx"
+  },
+  "313": {},
+  "317": {
+   "satellites/route.ts": "?? 0 hits",
+   "catalog.ts": "?? 0 hits",
+   "catalog.test.ts": "?? 0 hits",
+   "satellites/README.md": "?? 0 hits",
+   "active-2026-10-17.tle": "?? 0 hits",
+   "sgp4/README.md": "?? 0 hits"
+  },
+  "321": {
+   "scheduler.ts": "?? 0 hits",
+   "sky.ts": "?? 0 hits",
+   "ring1963.ts": "?? 0 hits",
+   "panel.ts": "?? 0 hits",
+   "scheduler.test.ts": "?? 0 hits",
+   "sky.test.ts": "?? 0 hits",
+   "ring1963.test.ts": "?? 0 hits",
+   "panel.test.ts": "?? 0 hits",
+   "SatellitePanel.tsx": "?? 0 hits",
+   "types.ts": "?? 0 hits",
+   "LayersPanel.tsx": "?? 0 hits",
+   "Legend.tsx": "?? 0 hits",
+   "IonosphereScene.tsx": "?? 0 hits",
+   "page.tsx": "?? 0 hits",
+   "satellites/README.md": "?? 0 hits"
+  },
+  "323": {
+   "ring1963(post)": "?? 0 hits",
+   "ring1963.test(post)": "?? 0 hits",
+   "satellites/README(post)": "?? 0 hits"
+  },
+  "327": {
+   "TimeBar(post-327)": "?? 0 hits"
+  }
+ },
+ "resumen": {
+  "pass": 53,
+  "fail": 4,
+  "arbol_final": "w327-web (post-327; el 329 se verifica aparte)",
+  "esperado_barrera": "tsc 0 · vitest 390/390 · build 0"
+ }
+}

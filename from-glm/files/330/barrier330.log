@@ -1,0 +1,220 @@
+===== STAGE 0: borrar .next (pitfall standalone) =====
+clean EXIT: 0
+===== STAGE 1: bun install =====
+bun install v1.3.14 (0d9b296a)
+
++ @tailwindcss/postcss@4.3.3
++ @types/react@19.3.0
++ @types/react-dom@19.3.0
++ bun-types@1.4.3
++ eslint@9.39.5
++ eslint-config-next@16.4.0
++ tailwindcss@4.3.3
++ tw-animate-css@1.4.0
++ typescript@5.9.3
++ vite@7.3.7
++ vitest@5.0.4
++ @dnd-kit/core@6.3.1
++ @dnd-kit/sortable@10.0.0
++ @dnd-kit/utilities@3.2.2
++ @hookform/resolvers@5.9.1
++ @mdxeditor/editor@3.55.0
++ @prisma/client@6.19.3
++ @radix-ui/react-accordion@1.3.1
++ @radix-ui/react-alert-dialog@1.2.1
++ @radix-ui/react-aspect-ratio@1.2.0
++ @radix-ui/react-avatar@1.3.1
++ @radix-ui/react-checkbox@1.4.1
++ @radix-ui/react-collapsible@1.2.1
++ @radix-ui/react-context-menu@2.4.1
++ @radix-ui/react-dialog@1.3.1
++ @radix-ui/react-dropdown-menu@2.2.1
++ @radix-ui/react-hover-card@1.2.1
++ @radix-ui/react-label@2.1.17
++ @radix-ui/react-menubar@1.2.1
++ @radix-ui/react-navigation-menu@1.4.1
++ @radix-ui/react-popover@1.3.1
++ @radix-ui/react-progress@1.2.1
++ @radix-ui/react-radio-group@1.5.1
++ @radix-ui/react-scroll-area@1.4.0
++ @radix-ui/react-select@2.4.1
++ @radix-ui/react-separator@1.2.0
++ @radix-ui/react-slider@1.6.1
++ @radix-ui/react-slot@1.5.0
++ @radix-ui/react-switch@1.4.1
++ @radix-ui/react-tabs@1.2.1
++ @radix-ui/react-toast@1.3.1
++ @radix-ui/react-toggle@1.2.1
++ @radix-ui/react-toggle-group@1.2.1
++ @radix-ui/react-tooltip@1.4.1
++ @reactuses/core@6.5.9
++ @tanstack/react-query@5.104.2
++ @tanstack/react-table@8.21.3
++ @types/three@0.185.4
++ class-variance-authority@0.7.1
++ clsx@2.1.1
++ cmdk@1.1.1
++ date-fns@4.4.0
++ embla-carousel-react@8.6.0
++ framer-motion@12.43.0
++ input-otp@1.5.0
++ lucide-react@0.525.0
++ next@16.4.0
++ next-auth@4.24.15
++ next-intl@4.14.9
++ next-themes@0.4.6
++ prisma@6.19.3
++ react@19.3.1
++ react-day-picker@9.14.0
++ react-dom@19.3.1
++ react-hook-form@7.90.0
++ react-markdown@10.1.0
++ react-resizable-panels@3.0.6
++ react-syntax-highlighter@15.6.6
++ recharts@2.15.4
++ sharp@0.34.5
++ sonner@2.0.8
++ tailwind-merge@3.7.0
++ tailwindcss-animate@1.0.7
++ three@0.185.1
++ uuid@11.1.1
++ vaul@1.1.2
++ z-ai-web-dev-sdk@0.0.18
++ zod@4.6.7
++ zustand@5.0.15
+
+870 packages installed [8.34s]
+install EXIT: 0
+===== STAGE 2: prisma generate =====
+Prisma schema loaded from prisma/schema.prisma
+┌─────────────────────────────────────────────────────────┐
+│  Update available 6.19.3 -> 8.0.0-rc.23                 │
+│                                                         │
+│  This is a major update - please follow the guide at    │
+│  https://pris.ly/d/major-version-upgrade                │
+│                                                         │
+│  Run the following to update                            │
+│    npm i --save-dev prisma@latest                       │
+│    npm i @prisma/client@latest                          │
+└─────────────────────────────────────────────────────────┘
+
+✔ Generated Prisma Client (v6.19.3) to ./node_modules/@prisma/client in 68ms
+
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+
+Tip: Need your database queries to be 1000x faster? Accelerate offers you that and more: https://pris.ly/tip-2-accelerate
+
+prisma EXIT: 0
+===== STAGE 3: tsc --noEmit =====
+tsc EXIT: 0
+===== STAGE 4: vitest run =====
+
+ RUN  v5.0.4 /home/z/my-project/verify253/scratch-barrier
+
+ ✓ src/lib/iono/msis/msisInit.test.ts (14 tests) 142ms
+ ✓ src/lib/iono/sgp4/sgpPin.test.ts (19 tests) 7ms
+ ✓ src/lib/iono/satellites/catalog.test.ts (22 tests) 33ms
+ ✓ src/lib/iono/profileGrid.test.ts (18 tests) 27ms
+ ✓ src/lib/iono/layerProfile.test.ts (16 tests) 10ms
+ ✓ src/lib/iono/densityVolume.test.ts (14 tests) 7ms
+ ✓ src/lib/iono/godrays.test.ts (18 tests) 13ms
+ ✓ src/lib/iono/cme.test.ts (12 tests) 8ms
+ ✓ src/lib/iono/slice.test.ts (15 tests) 69ms
+ ✓ src/lib/iono/volumeMarch.test.ts (9 tests) 9ms
+stdout | src/lib/iono/sgp4/sgpVer.test.ts > 313 binding oracle: official SGP4 verification set > propagates every .e row within the dual criterion, error-free
+rows=506 worstAbsPos=2.674187271622941e-8 worstAbsVel=4.996953961722284e-10 worstRelPos=3.2600843306082026e-9 worstRelVel=3.940650076319174e-8
+
+ ✓ src/lib/iono/sgp4/sgpVer.test.ts (1 test) 26ms
+ ✓ src/lib/iono/magnetosphere.test.ts (24 tests) 10ms
+ ✓ src/lib/iono/sgp4/sgpErr.test.ts (7 tests) 25ms
+ ✓ src/lib/iono/satellites/sky.test.ts (4 tests) 287ms
+ ✓ src/lib/iono/lightning.test.ts (8 tests) 7ms
+ ✓ src/lib/iono/replay.test.ts (16 tests) 5ms
+ ✓ src/lib/iono/msis/msisRegression.test.ts (1 test) 174ms
+ ✓ src/lib/iono/alerts.test.ts (7 tests) 5ms
+ ✓ src/lib/iono/fallback.test.ts (9 tests) 6ms
+ ✓ src/lib/iono/msis/msisTfn.test.ts (7 tests) 98ms
+ ✓ src/lib/iono/wspr.test.ts (11 tests) 8ms
+ ✓ src/lib/iono/fadeout.test.ts (13 tests) 33ms
+ ✓ src/lib/iono/sgp4/sgpTle.test.ts (6 tests) 11ms
+ ✓ src/lib/iono/flare.test.ts (9 tests) 6ms
+ ✓ src/lib/iono/satellites/scheduler.test.ts (7 tests) 59ms
+ ✓ src/lib/iono/greyline.test.ts (7 tests) 8ms
+ ✓ src/lib/iono/sgp4/sgpCoord.test.ts (8 tests) 5ms
+ ✓ src/lib/iono/parker.test.ts (8 tests) 6ms
+ ✓ src/lib/iono/satellites/ring1963.test.ts (5 tests) 60ms
+ ✓ src/lib/iono/msis/msisGrid.test.ts (4 tests) 145ms
+ ✓ src/lib/iono/dst.test.ts (5 tests) 5ms
+ ✓ src/lib/iono/satellites/panel.test.ts (5 tests) 4ms
+ ✓ src/lib/iono/wiring.test.ts (6 tests) 4ms
+ ✓ src/lib/iono/solar.test.ts (5 tests) 4ms
+ ✓ src/lib/iono/voyager.test.ts (8 tests) 5ms
+ ✓ src/lib/iono/refshells.test.ts (8 tests) 5ms
+ ✓ src/lib/iono/colormaps.test.ts (5 tests) 8ms
+ ✓ src/lib/iono/export.test.ts (7 tests) 5ms
+ ✓ src/lib/iono/belts.test.ts (5 tests) 5ms
+ ✓ src/lib/iono/electrojets.test.ts (4 tests) 5ms
+ ✓ src/lib/iono/volumeShadow.test.ts (6 tests) 3ms
+ ✓ src/lib/iono/volumeJitter.test.ts (4 tests) 6ms
+ ✓ src/lib/iono/tour.test.ts (6 tests) 4ms
+
+ Test Files  43 passed (43)
+      Tests  393 passed (393)
+   Start at  22:30:39
+   Duration  6.77s (tests 50%, transform 24%, import 19%, worker 6%)
+
+    Isolate  43 workers spawned · ~88ms startup each (spawn + environment, per file)
+             at least ~3.68s faster with isolate: false — reuses workers across files instead of one per file
+
+vitest EXIT: 0
+===== STAGE 5: next build =====
+▲ Next.js 16.4.0 (Turbopack)
+✓ Running next.config.ts took 22ms
+Attention: Next.js now collects completely anonymous telemetry regarding usage.
+This information is used to shape Next.js' roadmap and prioritize features.
+You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+https://nextjs.org/telemetry
+
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 8.6s
+  Skipping validation of types
+  Finished TypeScript config validation in 7ms ...
+  Collecting page data using 1 worker ...
+  Generating static pages using 1 worker (0/4) ...
+  Generating static pages using 1 worker (1/4) 
+  Generating static pages using 1 worker (2/4) 
+  Generating static pages using 1 worker (3/4) 
+✓ Generating static pages using 1 worker (4/4) in 706ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ƒ /api
+├ ƒ /api/ae
+├ ƒ /api/aurora
+├ ƒ /api/cme
+├ ƒ /api/dst
+├ ƒ /api/flares
+├ ƒ /api/ionosondes
+├ ƒ /api/lightning
+├ ƒ /api/msis
+├ ƒ /api/rbe
+├ ƒ /api/satellites
+├ ƒ /api/solar-image
+├ ƒ /api/space-weather
+├ ƒ /api/voyager
+└ ƒ /api/wspr
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+build EXIT: 0
+Route (app)
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+===== STAGE 6: aserción HTML prerender =====
+placeholder --:--:-- : 2 | horas horneadas: 0
+===== BARRERA TERMINADA =====

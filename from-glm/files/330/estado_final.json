@@ -1,0 +1,168 @@
+{
+ "pines": {
+  "src/lib/iono/msis/msisInit.test.ts": {
+   "pin": "317d641",
+   "ok": true,
+   "got": "317d641dc4c8e49afe33b10bc37b649e76b93f3d"
+  },
+  "src/lib/iono/msis/README.md": {
+   "pin": "237d7c8",
+   "ok": true,
+   "got": "237d7c81125bdd86d5851aa6b482b2a0bb3d2cb7"
+  },
+  "src/lib/iono/msis/msisGrid.ts": {
+   "pin": "710d702",
+   "ok": true,
+   "got": "710d702178982d36690a0d2566f762d1fd02865d"
+  },
+  "src/lib/iono/msis/msisGrid.test.ts": {
+   "pin": "2cd7436",
+   "ok": true,
+   "got": "2cd743687d0a8dc13bfb38b6b78271dec308d2a7"
+  },
+  "src/app/api/msis/route.ts": {
+   "pin": "a5616e1",
+   "ok": true,
+   "got": "a5616e1a9916e6fc5c40688878d40a172ce5f5ee"
+  },
+  "src/components/ionosphere/hud/MsisPanel.tsx": {
+   "pin": "749c7e3",
+   "ok": true,
+   "got": "749c7e322f664911b8105dd185791124bc4eadcd"
+  },
+  "src/app/api/satellites/route.ts": {
+   "pin": "157b3f71",
+   "ok": true,
+   "got": "157b3f71ee4f4f29922301cb77d51679ed31dad5"
+  },
+  "src/lib/iono/satellites/catalog.ts": {
+   "pin": "fbb2394a",
+   "ok": true,
+   "got": "fbb2394a7cc36de5ecc3ae28a7bb1268bf259e15"
+  },
+  "src/lib/iono/satellites/catalog.test.ts": {
+   "pin": "137423a0",
+   "ok": true,
+   "got": "137423a066e41a00ea54d3e7e41e87e8fcf0b477"
+  },
+  "src/lib/iono/satellites/active-2026-10-17.tle": {
+   "pin": "3a1121bb",
+   "ok": true,
+   "got": "3a1121bb00ffaf853717f680fab8c9393995a84a"
+  },
+  "src/lib/iono/sgp4/README.md": {
+   "pin": "cb476928",
+   "ok": true,
+   "got": "cb4769282a6c8a9f765247e3f2dedbc3484ac18c"
+  },
+  "src/lib/iono/satellites/scheduler.ts": {
+   "pin": "566b4a16",
+   "ok": true,
+   "got": "566b4a168f97174a03fcebf1d08cf48b1e220800"
+  },
+  "src/lib/iono/satellites/sky.ts": {
+   "pin": "3a441d84",
+   "ok": true,
+   "got": "3a441d845e8bacaa8fb0610e3b1108ab5774d8de"
+  },
+  "src/lib/iono/satellites/panel.ts": {
+   "pin": "d886635a",
+   "ok": true,
+   "got": "d886635ac3814ceae0ba1180b9fcb12ad0857614"
+  },
+  "src/lib/iono/satellites/scheduler.test.ts": {
+   "pin": "d3ab7d1a",
+   "ok": true,
+   "got": "d3ab7d1a2d875dc2d941d2990252fffb0a3ec5af"
+  },
+  "src/lib/iono/satellites/sky.test.ts": {
+   "pin": "678ba304",
+   "ok": true,
+   "got": "678ba304368be68b75158505af7e1b27605c8da4"
+  },
+  "src/lib/iono/satellites/panel.test.ts": {
+   "pin": "47fb043a",
+   "ok": true,
+   "got": "47fb043a6f5fec3ccf9cc730eb21351a8b4fa3df"
+  },
+  "src/components/ionosphere/hud/SatellitePanel.tsx": {
+   "pin": "d2c09775",
+   "ok": true,
+   "got": "d2c097757be36ab6084d98f11db9d64465581963"
+  },
+  "src/components/ionosphere/types.ts": {
+   "pin": "db95cbdf",
+   "ok": true,
+   "got": "db95cbdf8fade4322c6fc200b6e6a7093e8c8b32"
+  },
+  "src/components/ionosphere/hud/LayersPanel.tsx": {
+   "pin": "6385b70e",
+   "ok": true,
+   "got": "6385b70ea7fcb9509dd313004625694270799a50"
+  },
+  "src/components/ionosphere/hud/Legend.tsx": {
+   "pin": "4566d77e",
+   "ok": true,
+   "got": "4566d77ec86b16d20e0985825be7bbd2db03bbcc"
+  },
+  "src/components/ionosphere/IonosphereScene.tsx": {
+   "pin": "9485d4a5",
+   "ok": true,
+   "got": "9485d4a5a7ce38ad073c7db666137da33bf264d9"
+  },
+  "src/app/page.tsx": {
+   "pin": "6ca79f43",
+   "ok": true,
+   "got": "6ca79f43b3984c44d538ba94a2d74828b95b10bc"
+  },
+  "src/lib/iono/satellites/ring1963.ts": {
+   "pin": "b1e4f78f",
+   "ok": true,
+   "got": "b1e4f78f9d5dfddf223d225dcc6c7d797149cf10"
+  },
+  "src/lib/iono/satellites/ring1963.test.ts": {
+   "pin": "67cf0e2d",
+   "ok": true,
+   "got": "67cf0e2d3c171893fe23dde362b64c0da6f7a3aa"
+  },
+  "src/lib/iono/satellites/README.md": {
+   "pin": "f8c44003",
+   "ok": true,
+   "got": "f8c44003e1a0ca00d446ad8cffcdf2b387ad4344"
+  },
+  "src/components/ionosphere/hud/TimeBar.tsx": {
+   "pin": "6b6238458972269aefde08572194dcafe4e069a1",
+   "ok": true,
+   "got": "6b6238458972269aefde08572194dcafe4e069a1"
+  },
+  "src/lib/iono/voyager.ts": {
+   "pin": "1f81fc3",
+   "ok": true,
+   "got": "1f81fc32329ce1a06ae6087fd067bc9fa415506e"
+  },
+  "src/lib/iono/replay.test.ts": {
+   "pin": "0c307fc6",
+   "ok": true,
+   "got": "0c307fc6a2e46aaf2f3164c414729457462d5c27"
+  },
+  "src/lib/iono/msis/msis21.parm": {
+   "pin": "8809e7b",
+   "ok": true,
+   "got": "8809e7b4fbe413407b7934ca2d92839125f93428"
+  },
+  "src/lib/iono/msis/nrlmsis2.1_license.txt": {
+   "pin": "244ab19",
+   "ok": true,
+   "got": "244ab19226bef2d40323b8116ebccc0a9a6f1397"
+  },
+  "LICENSE": {
+   "pin": "f288702",
+   "ok": true,
+   "got": "f288702d2fa16d3cdf0035b15a9fcbc552cd88e7"
+  }
+ },
+ "pass": 33,
+ "fail": 0,
+ "inventario": 247,
+ "inventario_ok": false
+}
