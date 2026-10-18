@@ -1,0 +1,97 @@
+From t <t@t> Mon Oct 12 00:00:00 2026 +0200
+From: t <t@t>
+Date: Sun, 18 Oct 2026 15:10:00 +0200
+Subject: [PATCH] w329-timebar-slider (P-328 s6.1)
+
+---
+ src/components/ionosphere/hud/TimeBar.tsx | 6    +++
+ src/components/ionosphere/types.ts | 9    +++++++++
+ src/lib/iono/replay.test.ts | 20   ++++++++++++++++++++
+ 3 files changed, 32 insertions(+), 3 deletions(-)
+
+diff --git a/src/components/ionosphere/hud/TimeBar.tsx b/src/components/ionosphere/hud/TimeBar.tsx
+index 6b62384..56bc254 100644
+--- a/src/components/ionosphere/hud/TimeBar.tsx
++++ b/src/components/ionosphere/hud/TimeBar.tsx
+@@ -2,7 +2,7 @@
+ 
+ import { useEffect, useState } from "react";
+ import { Clock, Play, Pause, RotateCcw, Repeat } from "lucide-react";
+-import { SceneSettings } from "../types";
++import { SceneSettings, replaySliderOffset } from "../types";
+ 
+ const SPEEDS = [0.5, 1, 2, 4, 8];
+ 
+@@ -24,7 +24,7 @@ export default function TimeBar({ settings, onChange, maxReplayMin }: Props) {
+   }, []);
+ 
+   const replay = settings.timeMode === "replay";
+-  const minutesBack = maxReplayMin - settings.replayMinutes; // slider: 0 = presente
++  const minutesBack = replaySliderOffset(maxReplayMin, settings.replayMinutes); // 0 = −max (izq) · max = «ahora» (der)
+   const effMin = settings.timeMode === "replay" ? settings.replayMinutes : 0;
+   const eff = new Date(nowMs - effMin * 60_000);
+ 
+@@ -62,7 +62,7 @@ export default function TimeBar({ settings, onChange, maxReplayMin }: Props) {
+           onPointerDown={() => setScrubbing(true)}
+           onPointerUp={() => setScrubbing(false)}
+           onChange={(e) => {
+-            const back = parseFloat(e.target.value);
++            const back = replaySliderOffset(maxReplayMin, parseFloat(e.target.value));
+             onChange({ timeMode: back > 0 ? "replay" : "live", replayMinutes: back });
+           }}
+           className={`w-full h-1.5 rounded-full appearance-none cursor-pointer transition-opacity ${
+diff --git a/src/components/ionosphere/types.ts b/src/components/ionosphere/types.ts
+index db95cbd..c4b89a2 100644
+--- a/src/components/ionosphere/types.ts
++++ b/src/components/ionosphere/types.ts
+@@ -356,6 +356,15 @@ export function replayAdvance(
+   return Math.min(maxMin, next);
+ }
+ 
++/** Mapeo espejo del slider del TimeBar (W-4 C1): la posición va de 0
++ * (izquierda, −max) a maxReplayMin (derecha, «ahora»). Convierte en ambos
++ * sentidos (es su propia inversa): posición → minutos atrás y minutos →
++ * posición. Unifica value={minutesBack} y el onChange (quirk espejo
++ * reportado en 326/328). Puro. TU: replay.test.ts. */
++export function replaySliderOffset(maxReplayMin: number, position: number): number {
++  return maxReplayMin - position;
++}
++
+ /** Referencia del tamaño de punto (default 11 == base 140 del shader). */
+ export const STATION_POINT_REF = 11;
+ 
+diff --git a/src/lib/iono/replay.test.ts b/src/lib/iono/replay.test.ts
+index 0c307fc..e1dc75f 100644
+--- a/src/lib/iono/replay.test.ts
++++ b/src/lib/iono/replay.test.ts
+@@ -7,6 +7,7 @@ import { describe, expect, it } from "vitest";
+ import {
+   sampleStationAt,
+   replayAdvance,
++  replaySliderOffset,
+   DEFAULT_SETTINGS,
+   STATION_POINT_REF,
+   stationPointSizeClamp,
+@@ -103,3 +104,22 @@ describe("settings E-tail o6: point-size (App.cpp:4293)", () => {
+     expect(stationPointSizeClamp(99)).toBe(30);
+   });
+ });
++
++describe("TimeBar slider: mapeo espejo (quirk 326/328)", () => {
++  const MAX = 10080; // 168 h
++  it("extremos: derecha = «ahora» (0 min), izquierda = −168 h", () => {
++    expect(replaySliderOffset(MAX, MAX)).toBe(0);
++    expect(replaySliderOffset(MAX, 0)).toBe(MAX);
++  });
++  it("caso −2 h del smoke: pulgar a 9960 -> 120 min atras, y el pulgar no salta", () => {
++    const raw = 9960;
++    const rp = replaySliderOffset(MAX, raw);
++    expect(rp).toBe(120);
++    expect(replaySliderOffset(MAX, rp)).toBe(raw); // value={minutesBack} == raw
++  });
++  it("es su propia inversa: posicion -> minutos -> posicion estable", () => {
++    for (const pos of [0, 5, 120, 5040, 9960, 10075, MAX]) {
++      expect(replaySliderOffset(MAX, replaySliderOffset(MAX, pos))).toBe(pos);
++    }
++  });
++});
